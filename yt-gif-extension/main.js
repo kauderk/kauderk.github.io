@@ -66,12 +66,10 @@ async function isHTML_AND_InputsSetUP()
 {
     const topbarEl = document.querySelector("#app > div > div.roam-app > div.flex-h-box > div.roam-main > div.rm-files-dropzone > div > span:nth-child(8)")
 
-    const response = await fetch(links.html.dropDownMenu);
+    const response = await fetch(links.html.dropDownMenu); // firt time fetching something... This is cool
     const text = await response.text();
 
     topbarEl.insertAdjacentHTML("afterend", text);
-
-    debugger;
 
 
     //this took a solid hour. thak you thank you
@@ -121,9 +119,10 @@ async function isHTML_AND_InputsSetUP()
 
 async function GettingReady()
 {
-    const s = await isHTML_AND_InputsSetUP();
     const m = await LoadCSS(links.css.dropDownMenu);
     const p = await LoadCSS(links.css.player);
+    const s = await isHTML_AND_InputsSetUP();
+
     ObserveIframesAndDelployYTPlayers();
 
     function LoadCSS(cssURL) // 'cssURL' is the stylesheet's URL, i.e. /css/styles.css
@@ -135,11 +134,7 @@ async function GettingReady()
             link.href = cssURL;
             document.head.appendChild(link);
 
-            link.onload = function ()
-            {
-                resolve();
-                console.log(`${cssURL} CSS has loaded!`);
-            };
+            link.onload = () => resolve();
         });
     }
 }
