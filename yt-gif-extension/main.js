@@ -62,8 +62,31 @@ const setUP = setInterval(() =>
 
 }, 500);
 
+async function GettingReady()
+{
+    const m = await LoadCSS(links.css.dropDownMenu);
+    const p = await LoadCSS(links.css.player);
+    const s = await isHTML_AND_InputsSetUP();
+
+    ObserveIframesAndDelployYTPlayers();
+
+    function LoadCSS(cssURL) // 'cssURL' is the stylesheet's URL, i.e. /css/styles.css
+    {
+        return new Promise(function (resolve, reject)
+        {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = cssURL;
+            document.head.appendChild(link);
+
+            link.onload = () => resolve();
+        });
+    }
+}
+
 async function isHTML_AND_InputsSetUP()
 {
+    // 1. charge the drop down menu html
     const topbarEl = document.querySelector("#app > div > div.roam-app > div.flex-h-box > div.roam-main > div.rm-files-dropzone > div > span:nth-child(8)")
 
     const response = await fetch(links.html.dropDownMenu); // firt time fetching something... This is cool
@@ -72,7 +95,7 @@ async function isHTML_AND_InputsSetUP()
     topbarEl.insertAdjacentHTML("afterend", text);
 
 
-    //this took a solid hour. thak you thank you
+    // 2. assign the User Interface Inputs to their variables - this took a solid hour. thak you thank you
     for (const property in UI)
     {
         for (let key in UI[property])
@@ -99,6 +122,8 @@ async function isHTML_AND_InputsSetUP()
         }
     }
 
+
+    // 3. One time - the timestamp scroll offset updates on changes
     UI.range.wheelOffset.addEventListener("change", () => UpdateRangeValue());
     UI.range.wheelOffset.addEventListener("wheel", (e) =>
     {
@@ -107,57 +132,42 @@ async function isHTML_AND_InputsSetUP()
         UI.range.wheelOffset.value = Number(dir + parsed);
         UpdateRangeValue();
     });
-
-
     UpdateRangeValue();
 
+    //#region utils
     function UpdateRangeValue()
     {
         UI.label.rangeValue.innerHTML = UI.range.wheelOffset.value;
     }
-}
-
-async function GettingReady()
-{
-    const m = await LoadCSS(links.css.dropDownMenu);
-    const p = await LoadCSS(links.css.player);
-    const s = await isHTML_AND_InputsSetUP();
-
-    ObserveIframesAndDelployYTPlayers();
-
-    function LoadCSS(cssURL) // 'cssURL' is the stylesheet's URL, i.e. /css/styles.css
-    {
-        return new Promise(function (resolve, reject)
-        {
-            const link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.href = cssURL;
-            document.head.appendChild(link);
-
-            link.onload = () => resolve();
-        });
-    }
+    //#endregion
 }
 
 function ObserveIframesAndDelployYTPlayers()
 {
-    const rawIframes = document.querySelectorAll(".rm-video-player__container");
+    const cssClass = 'rm-video-player__container';
 
     // 1. set up all visible YT GIFs
-    const visible = inViewport(rawIframes);
+    const visible = inViewport(document.querySelectorAll('.' + cssClass));
     for (const i of visible)
     {
         onYouTubePlayerAPIReady(i, 'first wave');
     }
 
-    // 2. then await till they are visible to do the same
-    const later = document.querySelectorAll(".rm-video-player__container");
-    for (const i of later)
+    // 2. IntersectionObserver attached to deploy when visible
+    const hidden = document.querySelectorAll('.' + cssClass);
+    for (const i of hidden)
     {
         ObserveIntersectToSetUpPlayer(i, "second wave"); // I'm quite impressed with this... I mean...
     }
 
+    // 3. ready to observe and deploy iframes
+    const targetNode = document.getElementById('app');
+    const config = { childList: true, subtree: true };
+    const observer = new MutationObserver(mutation_callback);
 
+    observer.observe(targetNode, config);
+
+    //#region observer utils
     function ObserveIntersectToSetUpPlayer(iterator, message = 'YscrollObserver')
     {
         const yobs = new IntersectionObserver(Ycallback, { threshold: [0] });
@@ -182,15 +192,7 @@ function ObserveIframesAndDelployYTPlayers()
 
         return yobs;
     }
-
-
-    // Select the node that will be observed for mutations
-    const targetNode = document.getElementById('app');
-
-    // Options for the observer (which mutations to observe)
-    const config = { childList: true, subtree: true };
-
-    // Callback function to execute when mutations are observed
+    // ObserveIntersectToSetUpPlayer when cssClass is added to the DOM
     function mutation_callback(mutationsList, observer)
     {
         const found = [];
@@ -200,14 +202,14 @@ function ObserveIframesAndDelployYTPlayers()
             {
                 if (!node.tagName) continue; // not an element
 
-                if (node.classList.contains('rm-video-player__container'))
+                if (node.classList.contains(cssClass))
                 {
                     found.push(node);
                 }
                 else if (node.firstElementChild)
                 {
                     // javascript is crazy and i don't get how or what this is doing... man...
-                    found.push(...node.getElementsByClassName('rm-video-player__container'));
+                    found.push(...node.getElementsByClassName(cssClass));
                 }
             }
         }
@@ -216,13 +218,7 @@ function ObserveIframesAndDelployYTPlayers()
             ObserveIntersectToSetUpPlayer(node, "valid entries MutationObserver");
         }
     };
-
-    // Create an observer instance linked to the callback function
-    const observer = new MutationObserver(mutation_callback);
-
-    // Start observing the target node for configured mutations
-    observer.observe(targetNode, config);
-
+    //#endregion
 }
 
 
@@ -231,10 +227,9 @@ function ObserveIframesAndDelployYTPlayers()
 //
 async function onYouTubePlayerAPIReady(playerWrap, message = "I don't know")
 {
-    if (!playerWrap) return;
-    //console.count(message);
+    if (!playerWrap) return; //console.count(message);
 
-    // uid slicing the last 9 characters form closest blockID
+    // 1. last 9 letter form the closest blockID
     const uid = playerWrap.closest("span[data-uid]")?.getAttribute("data-uid") ||
         closestBlockID(playerWrap).slice(-9) ||
         closestBlockID(document.querySelector(".bp3-popover-open")).slice(-9);
@@ -242,7 +237,7 @@ async function onYouTubePlayerAPIReady(playerWrap, message = "I don't know")
     const newId = iframeIDprfx + Number(++creationCounter);
 
 
-    //the div that the YTiframe will replace
+    // 2. the div that the YTiframe will replace
     playerWrap.className = 'YTwrapper dont-focus-block';
     playerWrap.innerHTML = "";
     playerWrap.insertAdjacentHTML("afterbegin", `<div id="${newId}"></div>
@@ -251,11 +246,13 @@ async function onYouTubePlayerAPIReady(playerWrap, message = "I don't know")
         <div class="YT-clip-time">00:00/00:00</div>
     </div>`);
 
-    //weird recursive function
+
+    // 3. weird recursive function... guys...
     const url = await InputBlockVideoParams(uid);
     allVideoParameters.set(newId, urlConfig(url));
 
-    // to record a target's point of reference
+
+    // 4. to record a target's point of reference
     const record = Object.create(sesionIDs);
     sesionIDs.uid = uid;
     const blockID = closestBlockID(playerWrap);
@@ -263,7 +260,7 @@ async function onYouTubePlayerAPIReady(playerWrap, message = "I don't know")
         recordedIDs.set(blockID, record);
 
 
-    //ACTUAL CREATION OF THE EMBEDED YOUTUBE VIDEO PLAYER (target)
+    // 5. ACTUAL CREATION OF THE EMBEDED YOUTUBE VIDEO PLAYER (target)
     return new window.YT.Player(newId, playerConfig());
 
     //#region local utilites
