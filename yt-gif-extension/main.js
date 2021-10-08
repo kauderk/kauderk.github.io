@@ -84,9 +84,32 @@ const setUP = setInterval(() =>
     if (isHTML_AND_InputsSetUP() === true)
     {
         clearInterval(setUP);
-        ObserveIframesAndDelployYTPlayers();
+        GettingReady();
     }
 }, 500);
+async function GettingReady()
+{
+    const m = await LoadCSS("dropdown");
+    const p = await LoadCSS("player");
+    ObserveIframesAndDelployYTPlayers();
+}
+
+function LoadCSS(cssURL) // 'cssURL' is the stylesheet's URL, i.e. /css/styles.css
+{
+    return new Promise(function (resolve, reject)
+    {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = cssURL;
+        document.head.appendChild(link);
+        link.onload = function ()
+        {
+            resolve();
+            console.log(`${cssURL} CSS has loaded!`);
+        };
+    });
+}
+
 function isHTML_AND_InputsSetUP()
 {
     //arbitrary child to check if custom HTML is attached to the DOM

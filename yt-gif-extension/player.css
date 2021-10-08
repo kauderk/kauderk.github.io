@@ -1,0 +1,74 @@
+.rm-video-player__comment-button {
+  background-color: transparent;
+}
+
+.rm-video-player__container,
+.rm-video-player__spacing-wrapper {
+  display: -webkit-inline-box !important;
+  max-width: 220px;
+  min-height: 124px;
+  aspect-ratio: 16 / 9;
+}
+
+.YTwrapper,
+.YTwrapper-OnTheaterMode {
+  filter: brightness(0.75);
+}
+.YTwrapper {
+  position: relative;
+  --Yoffset: -70px;
+}
+.YTwrapper iframe,
+.rm-inline-img {
+  border-radius: 5px;
+}
+.YTwrapper-HihgerZIndex {
+  z-index: 1;
+}
+
+.YT-controls {
+  height: 20px;
+  width: 100%;
+  display: flex;
+  position: absolute;
+  transform: translate(0px, var(--Yoffset));
+  justify-content: center;
+  align-items: center;
+  cursor: initial;
+  gap: 10px;
+}
+.YT-clip-time,
+.theaterModeDiv {
+  color: transparent;
+}
+.YT-clip-time {
+  position: relative;
+  margin: 0px 5px;
+
+  right: 0;
+  bottom: 0;
+  overscroll-behavior: contain;
+  overflow: auto;
+  height: 1.134em;
+}
+
+.YT-clip-time:hover {
+  color: white;
+}
+
+.theaterModeDiv {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+}
+.theaterModeDiv:hover {
+  background-color: gray;
+}
+.YTwrapper-OnTheaterMode {
+  height: unset;
+  width: 80vw;
+  max-height: 85vh;
+  position: absolute;
+  aspect-ratio: 16 / 9;
+}
