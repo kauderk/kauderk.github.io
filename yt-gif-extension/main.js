@@ -30,7 +30,15 @@ const sesionIDs = {
     uid: "---------"
 }
 /*-----------------------------------*/
-
+const links = {
+    css: {
+        dropDownMenu: 'https://kauderk.github.io/yt-gif-extension/drop-down-menu.css',
+        player: 'https://kauderk.github.io/yt-gif-extension/player.css',
+    },
+    html: {
+        dropDownMenu: 'https://kauderk.github.io/yt-gif-extension/drop-down-menu.html'
+    }
+}
 
 
 // wait for APIs to exist, load dropdown menu and deploy iframes
@@ -60,125 +68,16 @@ function isHTML_AND_InputsSetUP()
     //arbitrary child to check if custom HTML is attached to the DOM
     if (document.querySelector("#start_form_previous_timestamp") == null)
     {
-        document.querySelector("#app > div > div.roam-app > div.flex-h-box > div.roam-main > div.rm-files-dropzone > div > span:nth-child(8)")
-            .insertAdjacentHTML("afterend", `<div class="rm-topbar__spacer-sm"></div>
-            <span class="bp3-popover-wrapper">
-                <span class="bp3-popover-target">
-                    <span class="bp3-popover-wrapper">
-                        <span class="bp3-popover-target">
-                            <div class="dropdown">
-                                <span class="dropbtn bp3-button bp3-minimal bp3-small bp3-icon-more ty-gif-icon">
-                                    <svg class="yt-gif-svg" width="24px" height="24px" viewBox="0 0 24 24"
-                                        xmlns="http://www.w3.org/2000/svg">
-                                        <path class="yt-gif-svg-bg-none" fill="none" d="m11 14 7-4-7-4z" />
-                                        <path class="yt-gif-svg-bg" d="M4 8H2v12c0 1.103.897 2 2 2h12v-2H4V8z" />
-                                        <path class="yt-gif-svg-bg"
-                                            d="M20 2H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zm-9 12V6l7 4-7 4z" />
-                                    </svg>
-                                </span>
-                                <div class="dropdown-content">
-                                    <span class="dropdown-item">
-                                        <label for="" class="dropdown-item-description"
-                                            title="Seek to last timestamp before editing a block">Start from previous
-                                            timestamp</label>
-                                        <input type="checkbox" name="" id="start_form_previous_timestamp" checked>
-                                    </span>
-                                    <span class="dropdown-item">
-                                        <label for="" class="dropdown-item-description"
-                                            title="Display the clip remaindings and it's duration only">Clip lifespan
-                                            format</label>
-                                        <input type="checkbox" name="" id="clip_life_span_format" checked>
-                                    </span>
-                                    <span class="dropdown-item">
-                                        <label for="" class="dropdown-item-description"
-                                            title="Should use the last timestamp from it's referenced parent">Referenced start
-                                            timestamp</label>
-                                        <input type="checkbox" name="" id="referenced_start_timestamp" checked>
-                                    </span>
-                                    <span class="dropdown-item">
-                                        <label for="" class="dropdown-item-description"
-                                            title="Exit Fullscreen when the clip ends">Smoll Vid When Big Ends</label>
-                                        <input type="checkbox" name="" id="smoll_vid_when_big_ends" checked>
-                                    </span>
-                                    <div class="dropdown yt-gif-style yt-gif-sound-style">
-                                        <span class="dropdown-info-message">Sound Style</span>
-                                        <div class="dropdown-content dropdown-info-box">
-                                            <span class="dropdown-item">
-                                                <label for="" class="dropdown-item-description"
-                                                    title="Maximum of 1 YT GIF to play unmuted at a time">Strict & recommended -
-                                                    mute everything except current</label>
-                                                <input type="radio" name="muteStyle" id="strict_mute_everything_except_current"
-                                                    checked>
-                                            </span>
-                                            <span class="dropdown-item">
-                                                <label for="" class="dropdown-item-description"
-                                                    title="Play the video without sound when hovering the frame">muted on mouse
-                                                    enter</label>
-                                                <input type="radio" name="muteStyle" id="muted_on_mouse_over">
-                                            </span>
-                                            <span class="dropdown-item">
-                                                <label for="" class="dropdown-item-description"
-                                                    title="Holding the middle mouse button or the In and Out Keys won't unmute the YT GIF">muted
-                                                    either way</label>
-                                                <input type="radio" name="muteStyle" id="muted_on_any_mouse_interaction">
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="dropdown yt-gif-style yt-gif-play-style">
-                                        <span class="dropdown-info-message">Play Style</span>
-                                        <div class="dropdown-content dropdown-info-box">
-                                            <span class="dropdown-item">
-                                                <label for="" class="dropdown-item-description"
-                                                    title="In and Out Keys or not, all get muted exect currten">Strict &
-                                                    Recomended - play current on mouse enter</label>
-                                                <input type="radio" name="playStyle" id="strict_current_play_on_mouse_over"
-                                                    checked>
-                                            </span>
-                                            <span class="dropdown-item">
-                                                <label for="" class="dropdown-item-description"
-                                                    title="All videos are paused to focus on one at the time">Play
-                                                    on mouse enter</label>
-                                                <input type="radio" name="playStyle" id="play_on_mouse_over" checked>
-                                            </span>
-                                            <span class="dropdown-item">
-                                                <label for="" class="dropdown-item-description"
-                                                    title="Loaded videos autoplay and keep on playing">Visible clips begin to
-                                                    play unmuted</label>
-                                                <input type="radio" name="playStyle" id="visible_clips_start_to_play_unmuted">
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <span class="dropdown-item rangeOffset">
-                                        <span class="dropdown-info-message dropdown-item-description">Time offset on scroll
-                                            wheel</span>
-                                        <div class="dropdown-item-contain-two">
-                                            <input type="range" min="1" max="60" value="1" class="slider" id="wheelOffset">
-                                            <label for="" class="dropdown-item-description"
-                                                title="Amount of seconds | scroll wheel" id="rangeValue">1</label>
-                                        </div>
-                                    </span>
-                                    <div class="dropdown dropdown-show-info">
-                                        <span class="dropdown-info-message">Show Info</span>
-                                        <div class="dropdown-content dropdown-info-box">
-                                            <span class="dropdown-item">
-                                                <label for="" class="dropdown-item-description">💡 Hover over the YT GIFs to
-                                                    enable them</label>
-                                            </span>
-                                            <span class="dropdown-item">
-                                                <label for="" class="dropdown-item-description">🗲 While hovering out HOLD the
-                                                    middle mouse 🖱️ button
-                                                    (in and out keys) to keep on playing the YT GIF</label>
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </span>
-                        <div class="bp3-overlay bp3-overlay-inline"></div>
-                    </span>
-                </span>
-                <div class="bp3-overlay bp3-overlay-inline"></div>
-            </span>`);
+        const topbarEl = document.querySelector("#app > div > div.roam-app > div.flex-h-box > div.roam-main > div.rm-files-dropzone > div > span:nth-child(8)")
+        // topbarEl.insertAdjacentHTML("afterend", ``);
+
+        const req = new XMLHttpRequest();
+
+        req.onload = () => topbarEl.innerHTML = this.responseText;
+        req.open("get", links.html.dropDownMenu, true);
+        req.send();
+
+        console.count(topbarEl.innerHTML);
     }
     // FINALLY assign all valid dom elements
     else
@@ -232,8 +131,8 @@ function isHTML_AND_InputsSetUP()
 
 async function GettingReady()
 {
-    const m = await LoadCSS("https://kauderk.github.io/yt-gif-extension/drop-down-menu.css");
-    const p = await LoadCSS("https://kauderk.github.io/yt-gif-extension/player.css");
+    const m = await LoadCSS(links.css.dropDownMenu);
+    const p = await LoadCSS(links.css.player);
     ObserveIframesAndDelployYTPlayers();
 
     function LoadCSS(cssURL) // 'cssURL' is the stylesheet's URL, i.e. /css/styles.css
