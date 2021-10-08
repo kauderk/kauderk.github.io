@@ -87,28 +87,6 @@ const setUP = setInterval(() =>
         GettingReady();
     }
 }, 500);
-async function GettingReady()
-{
-    const m = await LoadCSS("dropdown");
-    const p = await LoadCSS("player");
-    ObserveIframesAndDelployYTPlayers();
-}
-
-function LoadCSS(cssURL) // 'cssURL' is the stylesheet's URL, i.e. /css/styles.css
-{
-    return new Promise(function (resolve, reject)
-    {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = cssURL;
-        document.head.appendChild(link);
-        link.onload = function ()
-        {
-            resolve();
-            console.log(`${cssURL} CSS has loaded!`);
-        };
-    });
-}
 
 function isHTML_AND_InputsSetUP()
 {
@@ -284,6 +262,31 @@ function isHTML_AND_InputsSetUP()
         }
     }
 }
+
+async function GettingReady()
+{
+    const m = await LoadCSS("https://kauderk.github.io/yt-gif-extension/drop-down-menu.css");
+    const p = await LoadCSS("https://kauderk.github.io/yt-gif-extension/player.css");
+    ObserveIframesAndDelployYTPlayers();
+
+    function LoadCSS(cssURL) // 'cssURL' is the stylesheet's URL, i.e. /css/styles.css
+    {
+        return new Promise(function (resolve, reject)
+        {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = cssURL;
+            document.head.appendChild(link);
+
+            link.onload = function ()
+            {
+                resolve();
+                console.log(`${cssURL} CSS has loaded!`);
+            };
+        });
+    }
+}
+
 function ObserveIframesAndDelployYTPlayers()
 {
     const rawIframes = document.querySelectorAll(".rm-video-player__container");
