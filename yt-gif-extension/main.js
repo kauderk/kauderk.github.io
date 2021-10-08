@@ -39,6 +39,21 @@ const links = {
         dropDownMenu: 'https://kauderk.github.io/yt-gif-extension/drop-down-menu.html'
     }
 }
+/*-----------------------------------*/
+const styleIs = {
+    sound: {
+        mute: "yt-mute",
+        unMute: "yt-unmute"
+    },
+    play: {
+        playing: "yt-playing",
+        paused: "yt-paused"
+    },
+    extra: {
+        readyToEnable: "readyToEnable"
+    }
+}
+/*-----------------------------------*/
 
 
 // wait for APIs to exist, load dropdown menu and deploy iframes
@@ -70,6 +85,7 @@ async function GettingReady()
 
     ObserveIframesAndDelployYTPlayers();
 
+    //#region uitils
     function LoadCSS(cssURL) // 'cssURL' is the stylesheet's URL, i.e. /css/styles.css
     {
         return new Promise(function (resolve, reject)
@@ -82,6 +98,7 @@ async function GettingReady()
             link.onload = () => resolve();
         });
     }
+    //#endregion
 }
 
 async function isHTML_AND_InputsSetUP()
@@ -451,49 +468,9 @@ function onPlayerReady(event)
     let updateStartTime = start;
     //
     let globalHumanInteraction = false;
-    //#region Utilies
-    let tick = (target = t) => target?.getCurrentTime();
-    let bounded = (x) => start < x && x < end;
-    //
-    function videoIsPlayingWithSound(boo = true)
-    {
-        if (boo)
-            t.unMute();
-        else
-            t.mute();
-        togglePlay(boo);
-    }
-    function togglePlay(bol, playing = true)
-    {
-        if (bol && playing)
-        {
-            t.__proto__.isPlaying = true;
-            t.playVideo();
-        }
-        else
-        {
-            t.__proto__.isPlaying = false;
-            t.pauseVideo();
-        }
-    }
-    function anyValidInAndOutKey(e)
-    {
-        for (const name in UI.InAndOutKeys)
-            if (e[name] && isTrue(UI.InAndOutKeys[name]))
-                return true;
-        //
-        return false;
-    }
-    function AnyPlayOnHover()
-    {
-        return UI.playStyle.play_on_mouse_over.checked || UI.playStyle.strict_current_play_on_mouse_over.checked
-    }
-    function CanUnmute()
-    {
-        //NotMuteAnyHover
-        return !UI.muteStyle.muted_on_mouse_over.checked && !UI.muteStyle.muted_on_any_mouse_interaction.checked
-    }
-    //#endregion
+
+
+
 
     //
     t.setVolume(volume);
@@ -792,6 +769,7 @@ function onPlayerReady(event)
                 const targetExist = document.querySelector("#" + key) == iframe;
                 if (targetExist)
                     return console.log(`${key} is displaced, not removed, thus is not destroyed.`);
+
                 //or destroy it after 1000ms
                 setTimeout(() =>
                 {
@@ -866,6 +844,74 @@ function onPlayerReady(event)
             }
         }, 200);
     }
+    //#endregion
+
+    //#region Utils
+    let tick = (target = t) => target?.getCurrentTime();
+    let bounded = (x) => start < x && x < end;
+    //
+    function videoIsPlayingWithSound(boo = true)
+    {
+        if (boo)
+        {
+            SoundIs(styleIs.sound.unMute);
+            t.unMute();
+        }
+        else
+        {
+            SoundIs(styleIs.sound.mute);
+            t.mute();
+        }
+        togglePlay(boo);
+    }
+    function togglePlay(bol, playing = true)
+    {
+        if (bol && playing)
+        {
+            t.__proto__.isPlaying = true;
+            PlayIs(styleIs.play.playing);
+            t.playVideo();
+        }
+        else
+        {
+            t.__proto__.isPlaying = false;
+            PlayIs(styleIs.play.paused);
+            t.pauseVideo();
+        }
+    }
+    function anyValidInAndOutKey(e)
+    {
+        for (const name in UI.InAndOutKeys)
+            if (e[name] && isTrue(UI.InAndOutKeys[name]))
+                return true;
+        //
+        return false;
+    }
+    function AnyPlayOnHover()
+    {
+        return UI.playStyle.play_on_mouse_over.checked || UI.playStyle.strict_current_play_on_mouse_over.checked
+    }
+    function CanUnmute()
+    {
+        //NotMuteAnyHover
+        return !UI.muteStyle.muted_on_mouse_over.checked && !UI.muteStyle.muted_on_any_mouse_interaction.checked
+    }
+
+    function SoundIs(style, el = iframe)
+    {
+        StyleAttribute(styleIs.sound, style, el);
+    }
+    function PlayIs(style, el = iframe)
+    {
+        StyleAttribute(styleIs.play, style, el);
+    }
+    function StyleAttribute(subStyle, style, el)
+    {
+        for (const key in subStyle)
+            el.removeAttribute(subStyle[key]);
+        el.setAttribute(style, '');
+    }
+
     //#endregion
 
 }
