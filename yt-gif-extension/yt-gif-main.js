@@ -589,17 +589,17 @@ function onPlayerReady(event)
             //#region local utils
             function LoopTroughVisibleYTGIFs(config = { styleQuery, BlockID_notSelf_callback, BlockID_self_callback })
             {
-                const ytGifs = inViewport(allIframeStyle(styleQuery));
+                const ytGifs = inViewport(allIframeStyle(config?.styleQuery));
                 for (const i of ytGifs)
                 {
                     const blockID = closestBlockID(i);
                     if (i != iframe)
                     {
-                        config.BlockID_notSelf_callback(blockID, i);
+                        config?.BlockID_notSelf_callback(blockID, i);
                     }
                     else if (config.BlockID_self_callback)
                     {
-                        config.BlockID_self_callback(blockID, i);
+                        config?.BlockID_self_callback(blockID, i);
                     }
                 }
             }
