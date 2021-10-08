@@ -56,81 +56,72 @@ const setUP = setInterval(() =>
         console.count("this is ugly | YT");
         return;
     }
-    if (isHTML_AND_InputsSetUP() === true)
-    {
-        clearInterval(setUP);
-        GettingReady();
-    }
+
+    clearInterval(setUP);
+    GettingReady();
+
 }, 500);
 
-function isHTML_AND_InputsSetUP()
+async function isHTML_AND_InputsSetUP()
 {
-    //arbitrary child to check if custom HTML is attached to the DOM
-    if (document.querySelector("#start_form_previous_timestamp") == null)
+    const topbarEl = document.querySelector("#app > div > div.roam-app > div.flex-h-box > div.roam-main > div.rm-files-dropzone > div > span:nth-child(8)")
+
+    const response = await fetch(links.html.dropDownMenu);
+    const text = await response.text();
+
+    topbarEl.insertAdjacentHTML("afterend", text);
+
+    debugger;
+
+
+    //this took a solid hour. thak you thank you
+    for (const property in UI)
     {
-        const topbarEl = document.querySelector("#app > div > div.roam-app > div.flex-h-box > div.roam-main > div.rm-files-dropzone > div > span:nth-child(8)")
-        // topbarEl.insertAdjacentHTML("afterend", ``);
-
-        const req = new XMLHttpRequest();
-
-        req.onload = () => topbarEl.innerHTML = this.responseText;
-        req.open("get", links.html.dropDownMenu, true);
-        req.send();
-
-        console.count(topbarEl.innerHTML);
-    }
-    // FINALLY assign all valid dom elements
-    else
-    {
-        //this took a solid hour. thak you thank you
-        for (const property in UI)
+        for (let key in UI[property])
         {
-            for (let key in UI[property])
-            {
-                const userValue = UI[property][key];
-                const domEl = document.getElementById(key);
-                //don't mess up any other variable
-                if (domEl) UI[property][key] = domEl;
+            const userValue = UI[property][key];
+            const domEl = document.getElementById(key);
+            //don't mess up any other variable
+            if (domEl) UI[property][key] = domEl;
 
-                switch (property)
-                {
-                    case "permutations":
-                    case "muteStyle":
-                    case "playStyle":
-                        UI[property][key].checked = isTrue(userValue);
-                        break;
-                    case "range":
-                        UI[property][key].value = Number(userValue);
-                        break;
-                    case "label":
-                        UI[property][key].innerHTML = userValue;
-                        break;
-                }
+            switch (property)
+            {
+                case "permutations":
+                case "muteStyle":
+                case "playStyle":
+                    UI[property][key].checked = isTrue(userValue);
+                    break;
+                case "range":
+                    UI[property][key].value = Number(userValue);
+                    break;
+                case "label":
+                    UI[property][key].innerHTML = userValue;
+                    break;
             }
         }
+    }
 
-        UI.range.wheelOffset.addEventListener("change", () => UpdateRangeValue());
-        UI.range.wheelOffset.addEventListener("wheel", (e) =>
-        {
-            let dir = Math.sign(e.deltaY) * -1;
-            let parsed = parseInt(UI.range.wheelOffset.value, 10);
-            UI.range.wheelOffset.value = Number(dir + parsed);
-            UpdateRangeValue();
-        });
-        //
+    UI.range.wheelOffset.addEventListener("change", () => UpdateRangeValue());
+    UI.range.wheelOffset.addEventListener("wheel", (e) =>
+    {
+        let dir = Math.sign(e.deltaY) * -1;
+        let parsed = parseInt(UI.range.wheelOffset.value, 10);
+        UI.range.wheelOffset.value = Number(dir + parsed);
         UpdateRangeValue();
+    });
 
-        return true;
 
-        function UpdateRangeValue()
-        {
-            UI.label.rangeValue.innerHTML = UI.range.wheelOffset.value;
-        }
+    UpdateRangeValue();
+
+    function UpdateRangeValue()
+    {
+        UI.label.rangeValue.innerHTML = UI.range.wheelOffset.value;
     }
 }
 
 async function GettingReady()
 {
+    const s = await isHTML_AND_InputsSetUP();
     const m = await LoadCSS(links.css.dropDownMenu);
     const p = await LoadCSS(links.css.player);
     ObserveIframesAndDelployYTPlayers();
