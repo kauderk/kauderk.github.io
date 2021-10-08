@@ -450,7 +450,7 @@ function onPlayerReady(event)
     const end = map?.end || t.getDuration();
     const clipSpan = end - start;
     const speed = map?.speed || 1;
-    const volume = map?.volume || 30;
+    const volume = map?.volume || videoParams.volume;
     const tickOffset = 1000 / speed;
     //
     const blockID = closestBlockID(iframe);
@@ -470,9 +470,6 @@ function onPlayerReady(event)
     let globalHumanInteraction = false;
 
 
-
-
-    //
     t.setVolume(volume);
     iframe.removeAttribute("title");
     t.setPlaybackRate(speed);
@@ -537,9 +534,9 @@ function onPlayerReady(event)
             globalHumanInteraction = true;
             //
             togglePlay(true);
-            //
-            //
-            //
+
+
+
             // kinda spaguetti code🚧 
             if (UI.muteStyle.strict_mute_everything_except_current.checked)
             {
@@ -553,9 +550,9 @@ function onPlayerReady(event)
                 LoopTroughVisibleYTGIFs((blockID) => recordedIDs.get(blockID)?.target?.pauseVideo(), false);
             }
             // ...but how else...? 🚧
-            //
-            //
-            //
+
+
+
             if (CanUnmute())
                 t.unMute();
 
@@ -684,16 +681,6 @@ function onPlayerReady(event)
         t.__proto__.timeDisplayHumanInteraction = false;
         ClearTimers();
     }
-    function OptionToKeepPlaying(e)
-    {
-        e = e || window.event;
-
-        if (UI.muteStyle.muted_on_any_mouse_interaction.checked)
-            return;
-
-        if (e.buttons == 4 || anyValidInAndOutKey(e))
-            videoIsPlayingWithSound();
-    }
     // for the timeDisplay | Utilie
     function ClearTimers()
     {
@@ -720,22 +707,19 @@ function onPlayerReady(event)
     timeDisplay.addEventListener("mouseenter", HumanInteractionHandeler);
     timeDisplay.addEventListener("mouseenter", ContinuouslyUpdateTimeDisplay);
     timeDisplay.addEventListener("mouseleave", ResetTrackingValues);
-    //
-    parent.addEventListener("mouseleave", OptionToKeepPlaying);
     // #endregion 
 
 
 
-    const withEventListeners = [parent, parent.parentNode, timeDisplay, ...UI.playStyle];
+    const withEventListeners = [parent, parent.parentNode, timeDisplay, ...Object.values(UI.playStyle)];
 
 
     //#region OnDestroyed | UpdateNextSesionValues | Delete allVideoParameters | removeEventListeners
     const OnDestroyedObserver = new MutationObserver(function (mutations)
     {
         // check for removed target
-        mutations.forEach(function (mutation)
+        for (const mutation of mutation)
         {
-
             const nodes = Array.from(mutation.removedNodes);
             const directMatch = nodes.indexOf(iframe) > -1
             const parentMatch = nodes.some(parent => parent.contains(iframe));
@@ -743,7 +727,8 @@ function onPlayerReady(event)
             if (directMatch)
             {
                 console.log('node', iframe, 'was directly removed!');
-            } else if (parentMatch)
+            }
+            else if (parentMatch)
             {
                 // expensive for sure 🙋
                 for (const el of withEventListeners)
@@ -781,7 +766,8 @@ function onPlayerReady(event)
                     }
                 }, 1000);
             }
-        });
+
+        }
     });
 
     const config = {
