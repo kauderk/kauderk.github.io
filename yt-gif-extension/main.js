@@ -967,6 +967,8 @@ function onStateChange(state)
             exitFullscreen();
         }
     }
+
+
     if (state.data === YT.PlayerState.PLAYING)
     {
         t.__proto__.isPlaying = true;
@@ -976,6 +978,8 @@ function onStateChange(state)
             t.__proto__.enter();
         }
     }
+
+
     if (state.data === YT.PlayerState.PAUSED)
     {
         t.__proto__.isPlaying = false;
