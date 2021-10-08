@@ -21,7 +21,7 @@ const videoParams = {
     end: 000,
     speed: 1,
     updateTime: 0,
-    volume: 30
+    volume: 40
 };
 //
 const recordedIDs = new Map();
@@ -57,7 +57,7 @@ const styleIs = {
 
 
 // wait for APIs to exist, load dropdown menu and deploy iframes
-const setUP = setInterval(() =>
+const almostReady = setInterval(() =>
 {
     if ((typeof window.roam42?.common == 'undefined'))
     {
@@ -72,7 +72,7 @@ const setUP = setInterval(() =>
         return;
     }
 
-    clearInterval(setUP);
+    clearInterval(almostReady);
     GettingReady();
 
 }, 500);
@@ -296,7 +296,7 @@ async function onYouTubePlayerAPIReady(playerWrap, message = "I don't know")
             if (pURL) return pURL;
         }
 
-        // ok so... the recursive youtube class didn't register... don't look at me.
+        // ok so... the recursive youtube class didn't quite register... don't look at me.
 
         for (const i of innerUIDs)
         {
@@ -356,6 +356,8 @@ async function onYouTubePlayerAPIReady(playerWrap, message = "I don't know")
             media.volume = volumeInt;
             //
             success = true;
+
+            //#region util
             function ExtractFromURL(key, regexedValue)
             {
                 let pass;
@@ -391,6 +393,7 @@ async function onYouTubePlayerAPIReady(playerWrap, message = "I don't know")
                 }
                 return desiredValue;
             }
+            //#endregion
         }
 
         if (success) { return media; }
@@ -470,6 +473,11 @@ function onPlayerReady(event)
     let globalHumanInteraction = false;
 
 
+
+
+
+
+
     t.setVolume(volume);
     iframe.removeAttribute("title");
     t.setPlaybackRate(speed);
@@ -497,19 +505,19 @@ function onPlayerReady(event)
             let players = document.querySelectorAll(`[id*=${iframeIDprfx}]`);
             for (let i = 0; i < players.length; i++)
             {
-                //ignore itself
-                if (players[i] === iframe) continue;
+                if (players[i] === iframe) continue; //ignore itself
+
                 if (players[i]?.src?.slice(0, -11) == iframe?.src?.slice(0, -11))
                 { //removes at least "widgetid=··" so they reconize each other
-                    //
+
                     const desiredBlockID = blockID || document.querySelector("body > span[blockID]")?.getAttribute("blockID") || closestBlockID(players[i]);
-                    //
+
                     const desiredTarget = recordedIDs.get(desiredBlockID)?.target || t;
                     const desiredTime = tick(desiredTarget) || start;
                     const desiredVolume = desiredTarget?.getVolume();
-                    //
+
                     seekToUpdatedTime(desiredTime)
-                    t.setVolume(desiredVolume);
+
                     console.count(`loaded referenced values to ${key} from ${desiredBlockID}`);
                 }
             }
@@ -530,11 +538,9 @@ function onPlayerReady(event)
         //🌿
         if (e.type == "mouseenter")
         {
-            // I'm afraid this event is slower to get attached than 200ms intervals... well 
-            globalHumanInteraction = true;
-            //
-            togglePlay(true);
+            globalHumanInteraction = true; // I'm afraid this event is slower to get attached than 200ms intervals... well 
 
+            togglePlay(true);
 
 
             // kinda spaguetti code🚧 
@@ -554,7 +560,10 @@ function onPlayerReady(event)
 
 
             if (CanUnmute())
+            {
+                SoundIs(styleIs.sound.unMute);
                 t.unMute();
+            }
 
             //#region local utils
             function LoopTroughVisibleYTGIFs(BlockID_callback, self = true)
@@ -584,23 +593,24 @@ function onPlayerReady(event)
     }
     function playStyleDDMO()
     {
-        //play all VISIBLE Players
-        if (!inViewport(iframe)) return;
+        if (!inViewport(iframe)) return; //play all VISIBLE Players
 
         if (UI.playStyle.visible_clips_start_to_play_unmuted.checked)
+        {
             togglePlay(UI.playStyle.visible_clips_start_to_play_unmuted.checked);
+        }
         if (AnyPlayOnHover())
+        {
             togglePlay(!AnyPlayOnHover());
+        }
     }
-
     //#endregion
 
 
     // #region EventListeners | from DDMO
-    // toggle them all it's playing state
     for (const checkbox in UI.playStyle)
     {
-        UI.playStyle[checkbox].addEventListener("change", playStyleDDMO);
+        UI.playStyle[checkbox].addEventListener("change", playStyleDDMO); // all valid, toggle play state
     }
     //toggle visuals or sound on hover
     parent.addEventListener("mouseenter", InAndOutHoverStatesDDMO);
@@ -619,32 +629,38 @@ function onPlayerReady(event)
     // for the timeDisplay
     function ContinuouslyUpdateTimeDisplay()
     {
-        //🙋
+        //🙋 this is too uggly
         if (document.querySelector("#" + key) == null)
         {
-            //this is too uggly
             t.__proto__.enter = () => { };
             t.destroy();
             return;
         }
         //🙋
         if (t.__proto__.timeDisplayHumanInteraction === false) return;
-        //
+
+
         UpdateTimeDisplay();
+
         t.__proto__.timerID = window.setInterval(() => UpdateTimeDisplay(), tickOffset);
         t.__proto__.timers.push(t.__proto__.timerID);
+
     }
     function UpdateTimeDisplay()
     {
         const sec = Math.abs(clipSpan - (end - tick()));
-        //console.count(`UpdateTimeDisplay for ${key} with timer -> ${t.__proto__.timerID}`);
 
         //timeDisplay.innerHTML = "00:00/00:00"
-        if (UI.permutations.clip_life_span_format.checked) //"sec":"clip end"
-            timeDisplay.innerHTML = `${fmtMSS(sec)}/${fmtMSS(clipSpan)}`;
-        else //"update":"end"
-            timeDisplay.innerHTML = `${fmtMSS(tick())}/${fmtMSS(end)}`;
+        if (UI.permutations.clip_life_span_format.checked) 
+        {
+            timeDisplay.innerHTML = `${fmtMSS(sec)}/${fmtMSS(clipSpan)}`; //"sec":"clip end"
+        }
+        else
+        {
+            timeDisplay.innerHTML = `${fmtMSS(tick())}/${fmtMSS(end)}`; //"update":"end"
+        }
 
+        //#region util
         function fmtMSS(seconds)
         {
             const format = val => `0${Math.floor(val)}`.slice(-2);
@@ -654,27 +670,40 @@ function onPlayerReady(event)
 
             return displayFormat.map(format).join(':');
         }
+        //#endregion
     }
+
     function BoundWheelValueToSeek(e)
     {
         videoIsPlayingWithSound(false);
-        //
+
         let dir = tick() + (Math.sign(e.deltaY) * Math.round(UI.range.wheelOffset.value) * -1);
-        if (dir <= start) dir = end - 1;
-        if (dir >= end) dir = start;
+        if (UI.permutations.clip_life_span_format)
+        {
+            if (dir <= start)
+                dir = end - 1;
+
+            if (dir >= end)
+                dir = start;
+        }
+
         t.seekTo(dir);
         UpdateTimeDisplay();
-        //
+
         setTimeout(() =>
-        { //nice delay to show feedback
+        {
             if (t.__proto__.timeDisplayHumanInteraction)
+            {
                 videoIsPlayingWithSound();
-        }, tickOffset);
+            }
+        }, tickOffset); //nice delay to show feedback
     }
+
     function HumanInteractionHandeler()
     {
         t.__proto__.timeDisplayHumanInteraction = true
     }
+
     // for the parent
     function ResetTrackingValues()
     {
@@ -686,15 +715,14 @@ function onPlayerReady(event)
     {
         window.clearInterval(t.__proto__.timerID);
         t.__proto__.timerID = null;
-        //
+
         if (t.__proto__.timers != [])
         {
-            //
-            t.__proto__.timers.forEach(tmr =>
+            for (const tmr of t.__proto__.timers)
             {
                 clearInterval(tmr);
-            });
-            //
+            }
+
             t.__proto__.timers = [];
         }
     }
@@ -770,10 +798,8 @@ function onPlayerReady(event)
         });
     });
 
-    const config = {
-        subtree: true,
-        childList: true
-    };
+    const config = { subtree: true, childList: true };
+
     OnDestroyedObserver.observe(document.body, config);
     //#endregion
 
@@ -785,7 +811,9 @@ function onPlayerReady(event)
             YscrollObserver.disconnect();
 
         if (tick() > updateStartTime + loadingMarginOfError && globalHumanInteraction === false) // and the interval function "OneFrame" to prevent the loading black screen
+        {
             togglePlay(entries[0]?.isIntersecting, UI.playStyle.visible_clips_start_to_play_unmuted.checked);
+        }
     }, { threshold: [0] });
     YscrollObserver.observe(iframe);
     //#endregion
@@ -801,12 +829,15 @@ function onPlayerReady(event)
     //simulate hover
     if (autoplayParent)
     {
-        const simHover = new MouseEvent('mouseenter', {
-            'view': window,
-            'bubbles': true,
-            'cancelable': true
-        });
+        const simHover = new MouseEvent('mouseenter',
+            {
+                'view': window,
+                'bubbles': true,
+                'cancelable': true
+            });
+
         parent.dispatchEvent(simHover);
+
         t.__proto__.timeDisplayHumanInteraction = false;
     }
     else //Freeze
@@ -815,14 +846,12 @@ function onPlayerReady(event)
         {
             if (tick() > updateStartTime + loadingMarginOfError)
             {
-                //
-                if (globalHumanInteraction)
+                if (globalHumanInteraction) // usees is listening, don't interrupt
                 {
                     videoIsPlayingWithSound(true);
                 }
                 else if (inViewport(iframe) && globalHumanInteraction === false)
                 {
-
                     togglePlay(UI.playStyle.visible_clips_start_to_play_unmuted.checked);
                 }
 
@@ -841,7 +870,8 @@ function onPlayerReady(event)
     {
         return start < x && x < end;
     }
-    //
+
+
     function videoIsPlayingWithSound(boo = true)
     {
         if (boo)
@@ -856,6 +886,8 @@ function onPlayerReady(event)
         }
         togglePlay(boo);
     }
+
+
     function togglePlay(bol, playing = true)
     {
         if (bol && playing)
@@ -871,21 +903,26 @@ function onPlayerReady(event)
             t.pauseVideo();
         }
     }
+
+
     function anyValidInAndOutKey(e)
     {
         for (const name in UI.InAndOutKeys)
             if (e[name] && isTrue(UI.InAndOutKeys[name]))
                 return true;
-        //
+
         return false;
     }
+
+
     function AnyPlayOnHover()
     {
         return UI.playStyle.play_on_mouse_over.checked || UI.playStyle.strict_current_play_on_mouse_over.checked
     }
-    function CanUnmute()
+
+
+    function CanUnmute()//NotMuteAnyHover
     {
-        //NotMuteAnyHover
         return !UI.muteStyle.muted_on_mouse_over.checked && !UI.muteStyle.muted_on_any_mouse_interaction.checked
     }
 
@@ -893,10 +930,12 @@ function onPlayerReady(event)
     {
         StyleAttribute(styleIs.sound, style, el);
     }
+
     function PlayIs(style, el = iframe)
     {
         StyleAttribute(styleIs.play, style, el);
     }
+
     function StyleAttribute(subStyle, style, el)
     {
         for (const key in subStyle)
