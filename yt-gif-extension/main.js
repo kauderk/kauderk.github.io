@@ -833,8 +833,14 @@ function onPlayerReady(event)
     //#endregion
 
     //#region Utils
-    let tick = (target = t) => target?.getCurrentTime();
-    let bounded = (x) => start < x && x < end;
+    function tick(target = t)
+    {
+        return target?.getCurrentTime();
+    }
+    function bounded(x)
+    {
+        return start < x && x < end;
+    }
     //
     function videoIsPlayingWithSound(boo = true)
     {
