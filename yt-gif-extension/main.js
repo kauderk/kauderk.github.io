@@ -543,17 +543,38 @@ function onPlayerReady(event)
             togglePlay(true);
 
 
+
             // kinda spaguetti code🚧 
             if (UI.muteStyle.strict_mute_everything_except_current.checked)
             {
                 if ((e.buttons == 4 || anyValidInAndOutKey(e)))
                 {
-                    LoopTroughVisibleYTGIFs((blockID) => recordedIDs.get(blockID)?.target?.mute());
+                    const muteWithBlock = (id) => recordedIDs.get(id)?.target?.mute();
+
+                    const config = {
+                        styleQuery: styleIs.sound.unMute,
+                        self_callback: (id) => muteWithBlock(id),
+                        notSelf_callback: (id, el) =>
+                        {
+                            muteWithBlock(id)
+                            SoundIs(styleIs.sound.mute, el);
+                            recordedIDs.get(id)?.target?.mute();
+                        }
+                    }
+                    LoopTroughVisibleYTGIFs(config);
                 }
             }
             if (UI.playStyle.strict_current_play_on_mouse_over.checked)
             {
-                LoopTroughVisibleYTGIFs((blockID) => recordedIDs.get(blockID)?.target?.pauseVideo(), false);
+                const config = {
+                    styleQuery: styleIs.play.playing,
+                    notSelf_callback: (id, el) =>
+                    {
+                        PlayIs(styleIs.play.paused, el);
+                        recordedIDs.get(id)?.target?.pauseVideo()
+                    }
+                }
+                LoopTroughVisibleYTGIFs(config);
             }
             // ...but how else...? 🚧
 
@@ -566,16 +587,20 @@ function onPlayerReady(event)
             }
 
             //#region local utils
-            function LoopTroughVisibleYTGIFs(BlockID_callback, self = true)
+            function LoopTroughVisibleYTGIFs(config = { styleQuery, BlockID_notSelf_callback, BlockID_self_callback })
             {
-                const ytGifs = inViewport(allIframeIDprfx());
-                for (let i = 0; i < ytGifs.length; i++)
+                const ytGifs = inViewport(allIframeStyle(styleQuery));
+                for (const i of ytGifs)
                 {
-                    const blockID = closestBlockID(ytGifs[i]);
-                    if (ytGifs[i] != iframe)
-                        BlockID_callback(blockID);
-                    else if (self)
-                        BlockID_callback(blockID);
+                    const blockID = closestBlockID(i);
+                    if (i != iframe)
+                    {
+                        config.BlockID_notSelf_callback(blockID, i);
+                    }
+                    else if (config.BlockID_self_callback)
+                    {
+                        config.BlockID_self_callback(blockID, i);
+                    }
                 }
             }
             //#endregion
@@ -584,25 +609,32 @@ function onPlayerReady(event)
         {
             globalHumanInteraction = false;
 
-            //if playStyle.play_on_mouse_over == false && video isPlying == true
             //weird
             if (!UI.muteStyle.muted_on_any_mouse_interaction.checked)
+            {
                 togglePlay(!AnyPlayOnHover() && t.__proto__.isPlaying);
-            t.mute();
+            }
+
+            if (e.buttons == 4 || anyValidInAndOutKey(e))
+            {
+                videoIsPlayingWithSound();
+            }
+            else
+            {
+                SoundIs(styleIs.sound.mute);
+                t.mute();
+            }
         }
     }
     function playStyleDDMO()
     {
-        if (!inViewport(iframe)) return; //play all VISIBLE Players
+        //play all VISIBLE Players
+        if (!inViewport(iframe)) return;
 
         if (UI.playStyle.visible_clips_start_to_play_unmuted.checked)
-        {
             togglePlay(UI.playStyle.visible_clips_start_to_play_unmuted.checked);
-        }
         if (AnyPlayOnHover())
-        {
             togglePlay(!AnyPlayOnHover());
-        }
     }
     //#endregion
 
