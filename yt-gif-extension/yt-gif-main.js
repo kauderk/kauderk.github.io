@@ -668,7 +668,7 @@ function onPlayerReady(event)
         {
             togglePlay(!AnyPlayOnHover());
         }
-        console.count("playStyleDDMO");
+        //console.count("playStyleDDMO");
     }
 
     function muteStyleDDMO()
@@ -679,7 +679,7 @@ function onPlayerReady(event)
         {
             isSoundingFine(false);
         }
-        console.count("muteStyleDDMO");
+        //console.count("muteStyleDDMO");
     }
     //#endregion
 
