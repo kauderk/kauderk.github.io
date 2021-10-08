@@ -346,13 +346,16 @@ function ObserveIframesAndDelployYTPlayers()
 //
 async function onYouTubePlayerAPIReady(playerWrap, message = "I don't know")
 {
-    console.count(message);
-    const newId = iframeIDprfx + Number(++creationCounter);
+    if (!playerWrap) return;
+    //console.count(message);
 
     // uid slicing the last 9 characters form closest blockID
     const uid = playerWrap.closest("span[data-uid]")?.getAttribute("data-uid") ||
         closestBlockID(playerWrap).slice(-9) ||
         closestBlockID(document.querySelector(".bp3-popover-open")).slice(-9);
+
+    const newId = iframeIDprfx + Number(++creationCounter);
+
 
     //the div that the YTiframe will replace
     playerWrap.className = 'YTwrapper dont-focus-block';
