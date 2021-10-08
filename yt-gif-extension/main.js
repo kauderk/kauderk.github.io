@@ -718,7 +718,7 @@ function onPlayerReady(event)
     const OnDestroyedObserver = new MutationObserver(function (mutationsList)
     {
         // check for removed target
-        for (const { mutation } of mutationsList)
+        mutationsList.forEach(function (mutation)
         {
             const nodes = Array.from(mutation.removedNodes);
             const directMatch = nodes.indexOf(iframe) > -1
@@ -767,7 +767,7 @@ function onPlayerReady(event)
                 }, 1000);
             }
 
-        }
+        });
     });
 
     const config = {
