@@ -715,10 +715,10 @@ function onPlayerReady(event)
 
 
     //#region OnDestroyed | UpdateNextSesionValues | Delete allVideoParameters | removeEventListeners
-    const OnDestroyedObserver = new MutationObserver(function (mutations)
+    const OnDestroyedObserver = new MutationObserver(function (mutationsList)
     {
         // check for removed target
-        for (const mutation of mutations)
+        for (const { mutation } of mutationsList)
         {
             const nodes = Array.from(mutation.removedNodes);
             const directMatch = nodes.indexOf(iframe) > -1
