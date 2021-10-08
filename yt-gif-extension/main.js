@@ -718,7 +718,7 @@ function onPlayerReady(event)
     const OnDestroyedObserver = new MutationObserver(function (mutations)
     {
         // check for removed target
-        for (const mutation of mutation)
+        for (const mutation of mutations)
         {
             const nodes = Array.from(mutation.removedNodes);
             const directMatch = nodes.indexOf(iframe) > -1
