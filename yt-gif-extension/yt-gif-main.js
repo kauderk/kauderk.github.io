@@ -5,6 +5,40 @@ tag.src = "https://www.youtube.com/player_api";
 const firstScriptTag = document.getElementsByTagName('script')[0];
 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
+window.YTGIF = {
+    /* permutations - checkbox */
+    permutations: {
+        start_form_previous_timestamp: '1',
+        clip_life_span_format: '1',
+        referenced_start_timestamp: '1',
+        smoll_vid_when_big_ends: '1',
+    },
+    /* one at the time - radio */
+    muteStyle: {
+        strict_mute_everything_except_current: '1',
+        muted_on_mouse_over: '',
+        muted_on_any_mouse_interaction: '',
+    },
+    /* one at the time - radio */
+    playStyle: {
+        strict_current_play_on_mouse_over: '1',
+        play_on_mouse_over: '',
+        visible_clips_start_to_play_unmuted: '',
+    },
+    range: {
+        /*seconds up to 60*/
+        wheelOffset: '5',
+    },
+    label: {
+        rangeValue: ''
+    },
+    InAndOutKeys: {
+        ctrlKey: '1',
+        shiftKey: '',
+        altKey: '',
+    }
+}
+
 /*-----------------------------------*/
 /* USER SETTINGS  */
 const UI = window.YTGIF;
@@ -473,11 +507,6 @@ function onPlayerReady(event)
     let globalHumanInteraction = false;
 
 
-
-
-
-
-
     t.setVolume(volume);
     iframe.removeAttribute("title");
     t.setPlaybackRate(speed);
@@ -547,7 +576,7 @@ function onPlayerReady(event)
             // kinda spaguetti code🚧 
             if (UI.muteStyle.strict_mute_everything_except_current.checked)
             {
-                if ((e.buttons == 4 || anyValidInAndOutKey(e)))
+                if (anyValidInAndOutKey(e))
                 {
                     const muteWithBlock = (id) => recordedIDs.get(id)?.target?.mute();
 
@@ -568,6 +597,7 @@ function onPlayerReady(event)
             {
                 const config = {
                     styleQuery: styleIs.play.playing,
+                    self_callback: (id) => { },
                     notSelf_callback: (id, el) =>
                     {
                         PlayIs(styleIs.play.paused, el);
@@ -587,7 +617,7 @@ function onPlayerReady(event)
             }
 
             //#region local utils
-            function LoopTroughVisibleYTGIFs(config = { styleQuery, BlockID_notSelf_callback, BlockID_self_callback })
+            function LoopTroughVisibleYTGIFs(config = { styleQuery, notSelf_callback: () => { }, self_callback: () => { } })
             {
                 const ytGifs = inViewport(allIframeStyle(config?.styleQuery));
                 for (const i of ytGifs)
@@ -595,11 +625,11 @@ function onPlayerReady(event)
                     const blockID = closestBlockID(i);
                     if (i != iframe)
                     {
-                        config?.BlockID_notSelf_callback(blockID, i);
+                        config?.notSelf_callback(blockID, i);
                     }
                     else if (config.BlockID_self_callback)
                     {
-                        config?.BlockID_self_callback(blockID, i);
+                        config?.self_callback(blockID, i);
                     }
                 }
             }
@@ -609,40 +639,59 @@ function onPlayerReady(event)
         {
             globalHumanInteraction = false;
 
+            togglePlay(!AnyPlayOnHover() && t.__proto__.isPlaying);
             //weird
             if (!UI.muteStyle.muted_on_any_mouse_interaction.checked)
             {
-                togglePlay(!AnyPlayOnHover() && t.__proto__.isPlaying);
             }
-
-            if (e.buttons == 4 || anyValidInAndOutKey(e))
+            //ﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠ//the same as: if it's true, then the other posibilities are false
+            if (anyValidInAndOutKey(e) && !UI.muteStyle.muted_on_any_mouse_interaction.checked)
             {
                 videoIsPlayingWithSound();
             }
             else
             {
-                SoundIs(styleIs.sound.mute);
-                t.mute();
+                isSoundingFine(false);
             }
         }
     }
     function playStyleDDMO()
     {
-        //play all VISIBLE Players
-        if (!inViewport(iframe)) return;
+        if (!inViewport(iframe)) return; //play all VISIBLE Players, this will be called on all visible iframes
 
         if (UI.playStyle.visible_clips_start_to_play_unmuted.checked)
-            togglePlay(UI.playStyle.visible_clips_start_to_play_unmuted.checked);
-        if (AnyPlayOnHover())
+        {
+            togglePlay(true);
+            isSoundingFine(false);
+        }
+        else if (AnyPlayOnHover())
+        {
             togglePlay(!AnyPlayOnHover());
+        }
+        console.count("playStyleDDMO");
+    }
+
+    function muteStyleDDMO()
+    {
+        if (!inViewport(iframe)) return; //mute all VISIBLE Players, this will be called on all visible iframes
+
+        if (UI.muteStyle.strict_mute_everything_except_current.checked)
+        {
+            isSoundingFine(false);
+        }
+        console.count("muteStyleDDMO");
     }
     //#endregion
 
 
     // #region EventListeners | from DDMO
-    for (const checkbox in UI.playStyle)
+    for (const p in UI.playStyle)
     {
-        UI.playStyle[checkbox].addEventListener("change", playStyleDDMO); // all valid, toggle play state
+        UI.playStyle[p].addEventListener("change", playStyleDDMO); // all valid, toggle play state
+    }
+    for (const m in UI.muteStyle)
+    {
+        UI.muteStyle[m].addEventListener("change", muteStyleDDMO); // all valid, toggle play state
     }
     //toggle visuals or sound on hover
     parent.addEventListener("mouseenter", InAndOutHoverStatesDDMO);
@@ -771,8 +820,8 @@ function onPlayerReady(event)
 
 
 
-    const withEventListeners = [parent, parent.parentNode, timeDisplay, ...Object.values(UI.playStyle)];
-
+    //const withEventListeners = [parent, parent.parentNode, timeDisplay, ...Object.values(UI.playStyle), ...Object.values(UI.muteStyle)];
+    const withEventListeners = [parent, parent.parentNode, timeDisplay];
 
     //#region OnDestroyed | UpdateNextSesionValues | Delete allVideoParameters | removeEventListeners
     const OnDestroyedObserver = new MutationObserver(function (mutationsList)
@@ -794,6 +843,14 @@ function onPlayerReady(event)
                 for (const el of withEventListeners)
                 {
                     el.replaceWith(el.cloneNode(true));
+                }
+                for (const p in UI.playStyle)
+                {
+                    UI.playStyle[p].removeEventListener("change", playStyleDDMO); // all valid, toggle play state
+                }
+                for (const m in UI.muteStyle)
+                {
+                    UI.muteStyle[m].removeEventListener("change", muteStyleDDMO); // all valid, toggle play state
                 }
 
                 //🚧
@@ -906,16 +963,7 @@ function onPlayerReady(event)
 
     function videoIsPlayingWithSound(boo = true)
     {
-        if (boo)
-        {
-            SoundIs(styleIs.sound.unMute);
-            t.unMute();
-        }
-        else
-        {
-            SoundIs(styleIs.sound.mute);
-            t.mute();
-        }
+        isSoundingFine(boo);
         togglePlay(boo);
     }
 
@@ -936,9 +984,24 @@ function onPlayerReady(event)
         }
     }
 
+    function isSoundingFine(boo)
+    {
+        if (boo)
+        {
+            SoundIs(styleIs.sound.unMute);
+            t.unMute();
+        }
+        else
+        {
+            SoundIs(styleIs.sound.mute);
+            t.mute();
+        }
+    }
 
     function anyValidInAndOutKey(e)
     {
+        if (e.buttons == 4) return true;
+
         for (const name in UI.InAndOutKeys)
             if (e[name] && isTrue(UI.InAndOutKeys[name]))
                 return true;
