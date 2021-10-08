@@ -1100,7 +1100,10 @@ function allIframeIDprfx()
 {
     return document.querySelectorAll(`[id*=${iframeIDprfx}]`);
 }
-
+function allIframeStyle(style)
+{
+    return document.querySelectorAll(`[${style}]`);
+}
 
 function htmlToElement(html)
 {
