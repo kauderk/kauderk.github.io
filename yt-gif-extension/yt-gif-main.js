@@ -34,16 +34,21 @@ const sesionIDs = {
     uid: "---------"
 }
 /*-----------------------------------*/
+function URLFolder(f)
+{
+    return `https://kauderk.github.io/yt-gif-extension/${f}`
+};
 const links = {
     css: {
-        dropDownMenu: 'https://kauderk.github.io/yt-gif-extension/drop-down-menu.css',
-        player: 'https://kauderk.github.io/yt-gif-extension/player.css',
+        dropDownMenu: URLFolder('drop-down-menu.css'),
+        player: URLFolder('player.css'),
     },
     html: {
-        dropDownMenu: 'https://kauderk.github.io/yt-gif-extension/drop-down-menu.html'
+        dropDownMenu: URLFolder('drop-down-menu.html'),
+        playerControls: URLFolder('player-controls.html')
     },
     js: {
-        main: 'https://kauderk.github.io/yt-gif-extension/yt-gif-main.js'
+        main: URLFolder('yt-gif-main.js')
     }
 }
 /*-----------------------------------*/
@@ -113,8 +118,7 @@ async function isHTML_AND_InputsSetUP()
     // 1. charge the drop down menu html
     const moreIcon = document.querySelector('.bp3-icon-more').closest('.rm-topbar .rm-topbar__spacer-sm + .bp3-popover-wrapper');
 
-    const response = await fetch(links.html.dropDownMenu); // firt time fetching something... This is cool
-    const htmlText = await response.text();
+    const htmlText = await FetchText(links.html.dropDownMenu);
 
     moreIcon.insertAdjacentHTML("afterend", htmlText);
 
@@ -264,11 +268,9 @@ async function onYouTubePlayerAPIReady(playerWrap, message = "I don't know")
     // 2. the div that the YTiframe will replace
     playerWrap.className = 'YTwrapper dont-focus-block';
     playerWrap.innerHTML = "";
-    playerWrap.insertAdjacentHTML("afterbegin", `<div id="${newId}"></div>
-    <div class="YT-controls">
-        <div class="theaterModeDiv"></div>
-        <div class="YT-clip-time">00:00/00:00</div>
-    </div>`);
+    const htmlText = await FetchText(links.html.playerControls);
+    playerWrap.insertAdjacentHTML("afterbegin", htmlText);
+    parent.getElementById("empty-player").id = newId;
 
 
     // 3. weird recursive function... guys...
@@ -453,7 +455,7 @@ function onPlayerReady(event)
 {
     const t = event.target;
     const iframe = document.querySelector("#" + t.h.id) || t.getIframe();
-    const parent = iframe.parentElement;
+    const parent = iframe.closest(".YTwrapper") || iframe.parentElement;
     //
     const key = t.h.id;
     const map = allVideoParameters.get(key); //videoParams
@@ -1185,6 +1187,13 @@ function isTrue(value)
         default:
             return false;
     }
+}
+
+
+async function FetchText(url)
+{
+    const response = await fetch(url); // firt time fetching something... This is cool
+    return await response.text();
 }
 //#endregion
 
