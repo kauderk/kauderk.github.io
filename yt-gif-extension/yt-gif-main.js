@@ -1,5 +1,41 @@
 //This code is updated?
 //- Hello? 1
+window.YTGIF = {
+    /* permutations - checkbox */
+    permutations: {
+        start_form_previous_timestamp: '1',
+        clip_life_span_format: '1',
+        referenced_start_timestamp: '1',
+        smoll_vid_when_big_ends: '1',
+    },
+    /* one at the time - radio */
+    muteStyle: {
+        strict_mute_everything_except_current: '1',
+        muted_on_mouse_over: '',
+        muted_on_any_mouse_interaction: '',
+    },
+    /* one at the time - radio */
+    playStyle: {
+        strict_current_play_on_mouse_over: '1',
+        play_on_mouse_over: '',
+        visible_clips_start_to_play_unmuted: '',
+    },
+    range: {
+        /*seconds up to 60*/
+        wheelOffset: '5',
+    },
+    label: {
+        rangeValue: ''
+    },
+    InAndOutKeys: {
+        ctrlKey: '1',
+        shiftKey: '',
+        altKey: '',
+    },
+    defaultPlayer: {
+        volume: 30
+    }
+}
 
 //verion 24 - semi-refactored
 // Load the IFrame Player API.
@@ -270,7 +306,7 @@ async function onYouTubePlayerAPIReady(playerWrap, message = "I don't know")
     playerWrap.innerHTML = "";
     const htmlText = await FetchText(links.html.playerControls);
     playerWrap.insertAdjacentHTML("afterbegin", htmlText);
-    parent.getElementById("empty-player").id = newId;
+    playerWrap.querySelector(".yt-gif-player").id = newId;
 
 
     // 3. weird recursive function... guys...
