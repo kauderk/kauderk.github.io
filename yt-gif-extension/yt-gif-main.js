@@ -1,41 +1,4 @@
-//This code is updated - Hello?
-
-window.YTGIF = {
-    /* permutations - checkbox */
-    permutations: {
-        start_form_previous_timestamp: '1',
-        clip_life_span_format: '1',
-        referenced_start_timestamp: '1',
-        smoll_vid_when_big_ends: '1',
-    },
-    /* one at the time - radio */
-    muteStyle: {
-        strict_mute_everything_except_current: '1',
-        muted_on_mouse_over: '',
-        muted_on_any_mouse_interaction: '',
-    },
-    /* one at the time - radio */
-    playStyle: {
-        strict_current_play_on_mouse_over: '1',
-        play_on_mouse_over: '',
-        visible_clips_start_to_play_unmuted: '',
-    },
-    range: {
-        /*seconds up to 60*/
-        wheelOffset: '5',
-    },
-    label: {
-        rangeValue: ''
-    },
-    InAndOutKeys: {
-        ctrlKey: '1',
-        shiftKey: '',
-        altKey: '',
-    },
-    defaultPlayer: {
-        volume: 30
-    }
-}
+//This code is updated - Hello? 1
 
 //verion 24 - semi-refactored
 // Load the IFrame Player API.
@@ -147,36 +110,36 @@ async function GettingReady()
 async function isHTML_AND_InputsSetUP()
 {
     // 1. charge the drop down menu html
-    const topbarEl = document.querySelector('.bp3-icon-more').closest('.rm-topbar .bp3-popover-wrapper');
+    const moreIcon = document.querySelector('.bp3-icon-more').closest('.rm-topbar .rm-topbar__spacer-sm + .bp3-popover-wrapper');
 
     const response = await fetch(links.html.dropDownMenu); // firt time fetching something... This is cool
-    const text = await response.text();
+    const htmlText = await response.text();
 
-    topbarEl.insertAdjacentHTML("afterend", text);
+    moreIcon.insertAdjacentHTML("afterend", htmlText);
 
 
     // 2. assign the User Interface Inputs to their variables - this took a solid hour. thak you thank you
-    for (const property in UI)
+    for (const parentKey in UI)
     {
-        for (let key in UI[property])
+        for (const childKey in UI[parentKey])
         {
-            const userValue = UI[property][key];
-            const domEl = document.getElementById(key);
+            const userValue = UI[parentKey][childKey];
+            const domEl = document.getElementById(childKey);
             //don't mess up any other variable
-            if (domEl) UI[property][key] = domEl;
+            if (domEl) UI[parentKey][childKey] = domEl;
 
-            switch (property)
+            switch (parentKey)
             {
                 case "permutations":
                 case "muteStyle":
                 case "playStyle":
-                    UI[property][key].checked = isTrue(userValue);
+                    UI[parentKey][childKey].checked = isTrue(userValue);
                     break;
                 case "range":
-                    UI[property][key].value = Number(userValue);
+                    UI[parentKey][childKey].value = Number(userValue);
                     break;
                 case "label":
-                    UI[property][key].innerHTML = userValue;
+                    UI[parentKey][childKey].innerHTML = userValue;
                     break;
             }
         }
@@ -187,8 +150,8 @@ async function isHTML_AND_InputsSetUP()
     UI.range.wheelOffset.addEventListener("change", () => UpdateRangeValue());
     UI.range.wheelOffset.addEventListener("wheel", (e) =>
     {
-        let dir = Math.sign(e.deltaY) * -1;
-        let parsed = parseInt(UI.range.wheelOffset.value, 10);
+        const dir = Math.sign(e.deltaY) * -1;
+        const parsed = parseInt(UI.range.wheelOffset.value, 10);
         UI.range.wheelOffset.value = Number(dir + parsed);
         UpdateRangeValue();
     });
@@ -204,20 +167,20 @@ async function isHTML_AND_InputsSetUP()
 
 function ObserveIframesAndDelployYTPlayers()
 {
-    const cssClass = 'rm-video-player__container';
+    const targetClass = 'rm-video-player__container';
 
     // 1. set up all visible YT GIFs
-    const visible = inViewport(document.querySelectorAll('.' + cssClass));
-    for (const i of visible)
+    const visible = inViewport(document.querySelectorAll('.' + targetClass));
+    for (const wrapper of visible)
     {
-        onYouTubePlayerAPIReady(i, 'first wave');
+        onYouTubePlayerAPIReady(wrapper, 'first wave');
     }
 
     // 2. IntersectionObserver attached to deploy when visible
-    const hidden = document.querySelectorAll('.' + cssClass);
-    for (const i of hidden)
+    const hidden = document.querySelectorAll('.' + targetClass);
+    for (const wrapper of hidden)
     {
-        ObserveIntersectToSetUpPlayer(i, "second wave"); // I'm quite impressed with this... I mean...
+        ObserveIntersectToSetUpPlayer(wrapper, "second wave"); // I'm quite impressed with this... I mean...
     }
 
     // 3. ready to observe and deploy iframes
@@ -262,14 +225,14 @@ function ObserveIframesAndDelployYTPlayers()
             {
                 if (!node.tagName) continue; // not an element
 
-                if (node.classList.contains(cssClass))
+                if (node.classList.contains(targetClass))
                 {
                     found.push(node);
                 }
                 else if (node.firstElementChild)
                 {
                     // javascript is crazy and i don't get how or what this is doing... man...
-                    found.push(...node.getElementsByClassName(cssClass));
+                    found.push(...node.getElementsByClassName(targetClass));
                 }
             }
         }
