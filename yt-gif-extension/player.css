@@ -3,7 +3,7 @@
 /* video size */
 .yt-gif-wrapper,
 .yt-gif-iframe-wrapper {
-  max-width: 350px;
+  max-width: 350px; /* this is what you want */
   min-height: 100%;
   aspect-ratio: 16 / 9;
 }
