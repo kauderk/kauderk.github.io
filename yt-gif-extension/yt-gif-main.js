@@ -5,46 +5,13 @@ tag.src = "https://www.youtube.com/player_api";
 const firstScriptTag = document.getElementsByTagName('script')[0];
 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-window.YTGIF = {
-    /* permutations - checkbox */
-    permutations: {
-        start_form_previous_timestamp: '1',
-        clip_life_span_format: '1',
-        referenced_start_timestamp: '1',
-        smoll_vid_when_big_ends: '1',
-    },
-    /* one at the time - radio */
-    muteStyle: {
-        strict_mute_everything_except_current: '1',
-        muted_on_mouse_over: '',
-        muted_on_any_mouse_interaction: '',
-    },
-    /* one at the time - radio */
-    playStyle: {
-        strict_current_play_on_mouse_over: '1',
-        play_on_mouse_over: '',
-        visible_clips_start_to_play_unmuted: '',
-    },
-    range: {
-        /*seconds up to 60*/
-        wheelOffset: '5',
-    },
-    label: {
-        rangeValue: ''
-    },
-    InAndOutKeys: {
-        ctrlKey: '1',
-        shiftKey: '',
-        altKey: '',
-    }
-}
-
 /*-----------------------------------*/
 /* USER SETTINGS  */
 const UI = window.YTGIF;
 /*-----------------------------------*/
 const iframeIDprfx = "player_";
 let creationCounter = -1;
+let fullscreenPlayer = '';
 /*-----------------------------------*/
 const allVideoParameters = new Map();
 const lastBlockIDParameters = new Map();
@@ -71,6 +38,9 @@ const links = {
     },
     html: {
         dropDownMenu: 'https://kauderk.github.io/yt-gif-extension/drop-down-menu.html'
+    },
+    js: {
+        main: 'https://kauderk.github.io/yt-gif-extension/yt-gif-main.js'
     }
 }
 /*-----------------------------------*/
@@ -504,7 +474,7 @@ function onPlayerReady(event)
     const loadingMarginOfError = 1; //seconds
     let updateStartTime = start;
     //
-    let globalHumanInteraction = false;
+    t.__proto__.globalHumanInteraction = false;
 
 
     t.setVolume(volume);
@@ -567,7 +537,7 @@ function onPlayerReady(event)
         //🌿
         if (e.type == "mouseenter")
         {
-            globalHumanInteraction = true; // I'm afraid this event is slower to get attached than 200ms intervals... well 
+            t.__proto__.globalHumanInteraction = true; // I'm afraid this event is slower to get attached than 200ms intervals... well 
 
             togglePlay(true);
 
@@ -637,7 +607,7 @@ function onPlayerReady(event)
         }
         else if (e.type == "mouseleave")
         {
-            globalHumanInteraction = false;
+            t.__proto__.globalHumanInteraction = false;
 
             togglePlay(!AnyPlayOnHover() && t.__proto__.isPlaying);
             //weird
@@ -899,7 +869,7 @@ function onPlayerReady(event)
         if (!entries[0])
             YscrollObserver.disconnect();
 
-        if (tick() > updateStartTime + loadingMarginOfError && globalHumanInteraction === false) // and the interval function "OneFrame" to prevent the loading black screen
+        if (tick() > updateStartTime + loadingMarginOfError && t.__proto__.globalHumanInteraction === false) // and the interval function "OneFrame" to prevent the loading black screen
         {
             togglePlay(entries[0]?.isIntersecting, UI.playStyle.visible_clips_start_to_play_unmuted.checked);
         }
@@ -935,11 +905,11 @@ function onPlayerReady(event)
         {
             if (tick() > updateStartTime + loadingMarginOfError)
             {
-                if (globalHumanInteraction) // usees is listening, don't interrupt
+                if (t.__proto__.globalHumanInteraction) // usees is listening, don't interrupt
                 {
                     videoIsPlayingWithSound(true);
                 }
-                else if (inViewport(iframe) && globalHumanInteraction === false)
+                else if (inViewport(iframe) && t.__proto__.globalHumanInteraction === false)
                 {
                     togglePlay(UI.playStyle.visible_clips_start_to_play_unmuted.checked);
                 }
@@ -949,6 +919,10 @@ function onPlayerReady(event)
         }, 200);
     }
     //#endregion
+
+
+    // detect fullscreen mode
+    iframe.addEventListener("fullscreenchange", () => fullscreenPlayer = t.h.id);
 
     //#region Utils
     function tick(target = t)
@@ -1057,9 +1031,12 @@ function onStateChange(state)
     {
         t.seekTo(map?.start || 0);
 
-        if (UI.permutations.smoll_vid_when_big_ends.checked)
+        if (UI.permutations.smoll_vid_when_big_ends.checked && (fullscreenPlayer === t.h.id)) // let's not talk about that this took at least 30 mins. Don't. Ughhhh
         {
-            exitFullscreen();
+            if (document.fullscreenElement)
+            {
+                exitFullscreen();
+            }
         }
     }
 
@@ -1142,8 +1119,6 @@ function emptyEl(classList, el)
 
 function exitFullscreen()
 {
-    //if (window.innerHeight == screen.height) return false;
-    if (!document.fullscreenElement) return false;
     if (document.exitFullscreen)
     {
         document.exitFullscreen();
