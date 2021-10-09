@@ -1,10 +1,18 @@
+/*---------------------------------------------*/
+
 /* video size */
 .yt-gif-wrapper,
 .yt-gif-iframe-wrapper {
-  display: -webkit-inline-box !important;
-  max-width: 300px; /* this is what you want*/
+  max-width: 350px;
   min-height: 100%;
   aspect-ratio: 16 / 9;
+}
+/* + nice round edges */
+.yt-gif-wrapper iframe {
+  border-radius: 7px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
 }
 
 /*---------------------------------------------*/
@@ -13,11 +21,6 @@
 .yt-gif-wrapper {
   filter: brightness(0.75);
   position: relative;
-}
-
-/* nice round edges */
-.yt-gif-wrapper iframe {
-  border-radius: 7px;
 }
 
 /*---------------------------------------------*/
