@@ -45,7 +45,7 @@
   background-color: var(--drop-menu-btn-h);
 }
 .ty-gif-icon {
-  padding: 0px 3px !important;
+  padding: 0px 0px !important;
 }
 .ty-gif-icon:before {
   display: none;
