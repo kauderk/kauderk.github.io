@@ -3,10 +3,11 @@
 }
 
 .rm-video-player__container,
-.rm-video-player__spacing-wrapper {
+.rm-video-player__spacing-wrapper,
+.YTwrapper{
   display: -webkit-inline-box !important;
-  max-width: 220px;
-  min-height: 124px;
+  max-width: 350px;
+  min-height: 100%;
   aspect-ratio: 16 / 9;
 }
 
