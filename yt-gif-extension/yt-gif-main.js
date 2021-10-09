@@ -1,5 +1,41 @@
-//Hi
-//version 23 - semi-refactored
+window.YTGIF = {
+    /* permutations - checkbox */
+    permutations: {
+        start_form_previous_timestamp: '1',
+        clip_life_span_format: '1',
+        referenced_start_timestamp: '1',
+        smoll_vid_when_big_ends: '1',
+    },
+    /* one at the time - radio */
+    muteStyle: {
+        strict_mute_everything_except_current: '1',
+        muted_on_mouse_over: '',
+        muted_on_any_mouse_interaction: '',
+    },
+    /* one at the time - radio */
+    playStyle: {
+        strict_current_play_on_mouse_over: '1',
+        play_on_mouse_over: '',
+        visible_clips_start_to_play_unmuted: '',
+    },
+    range: {
+        /*seconds up to 60*/
+        wheelOffset: '5',
+    },
+    label: {
+        rangeValue: ''
+    },
+    InAndOutKeys: {
+        ctrlKey: '1',
+        shiftKey: '',
+        altKey: '',
+    },
+    defaultPlayer: {
+        volume: 5
+    }
+}
+
+//verion 22 - semi-refactored
 // Load the IFrame Player API.
 const tag = document.createElement('script');
 tag.src = "https://www.youtube.com/player_api";
@@ -23,8 +59,7 @@ const videoParams = {
     end: 000,
     speed: 1,
     updateTime: 0,
-    volume: 40,
-    interval: []
+    volume: UI.defaultPlayer.volume
 };
 //
 const recordedIDs = new Map();
@@ -110,7 +145,7 @@ async function GettingReady()
 async function isHTML_AND_InputsSetUP()
 {
     // 1. charge the drop down menu html
-    const topbarEl = document.querySelector("#app > div > div.roam-app > div.flex-h-box > div.roam-main > div.rm-files-dropzone > div > span:nth-child(8)")
+    const topbarEl = document.querySelector("div.roam-main > div.rm-files-dropzone > div > span:nth-child(8)") || document.querySelector("div.roam-main > div.rm-files-dropzone > div > span:nth-child(12)");
 
     const response = await fetch(links.html.dropDownMenu); // firt time fetching something... This is cool
     const text = await response.text();
@@ -353,13 +388,6 @@ async function onYouTubePlayerAPIReady(playerWrap, message = "I don't know")
             const volume = /(vl=)(?:\d+)/g;
             const volumeInt = ExtractFromURL("int", volume);
 
-            //relative to whatﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠN
-            //from last timestampﾠﾠﾠﾠﾠﾠﾠﾠﾠ+
-            //up to nineﾠﾠﾠﾠﾠﾠﾠn 
-            //array  ﾠﾠﾠﾠﾠﾠﾠﾠt    =
-            const interval = /(t(\d+)=)(?:(\+)?(\d+))/g;
-            const intervalsSeconds = ExtractFromURL("int", interval);
-
 
             media.src = url;
             media.type = "youtube";
@@ -467,7 +495,7 @@ function onPlayerReady(event)
     const end = map?.end || t.getDuration();
     const clipSpan = end - start;
     const speed = map?.speed || 1;
-    const volume = map?.volume || videoParams.volume;
+    const volume = map?.volume || videoParams.volume || 40;
     const tickOffset = 1000 / speed;
     //
     const blockID = closestBlockID(iframe);
