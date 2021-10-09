@@ -1,75 +1,75 @@
-.rm-video-player__comment-button {
-  background-color: transparent;
-}
-
-.rm-video-player__container,
-.rm-video-player__spacing-wrapper,
-.YTwrapper{
+/* video size */
+.yt-gif-wrapper,
+.yt-gif-iframe-wrapper {
   display: -webkit-inline-box !important;
-  max-width: 350px;
+  max-width: 300px; /* this is what you want*/
   min-height: 100%;
   aspect-ratio: 16 / 9;
 }
 
-.YTwrapper,
-.YTwrapper-OnTheaterMode {
+/*---------------------------------------------*/
+
+/* multiple videos are annoying and too bright */
+.yt-gif-wrapper {
   filter: brightness(0.75);
-}
-.YTwrapper {
   position: relative;
-  --Yoffset: -70px;
-}
-.YTwrapper iframe,
-.rm-inline-img {
-  border-radius: 5px;
-}
-.YTwrapper-HihgerZIndex {
-  z-index: 1;
 }
 
-.YT-controls {
+/* nice round edges */
+.yt-gif-wrapper iframe {
+  border-radius: 7px;
+}
+
+/*---------------------------------------------*/
+
+/* down middle the video */
+.yt-gif-controls {
   height: 20px;
   width: 100%;
+
   display: flex;
+  gap: 10px;
+
   position: absolute;
-  transform: translate(0px, var(--Yoffset));
+  bottom: 0;
+  transform: translate(0px, -30px);
+
   justify-content: center;
   align-items: center;
+
   cursor: initial;
-  gap: 10px;
 }
-.YT-clip-time,
-.theaterModeDiv {
-  color: transparent;
-}
-.YT-clip-time {
+/* main feature 00:00/00:00 */
+.yt-gif-timestamp {
   position: relative;
   margin: 0px 5px;
 
   right: 0;
   bottom: 0;
-  overscroll-behavior: contain;
+
+  overscroll-behavior: contain; /* so you can scroll back and forward in time and not the actual document */
   overflow: auto;
+
   height: 1.134em;
 }
-
-.YT-clip-time:hover {
+.yt-gif-timestamp.yt-gif-invisible-element:hover {
   color: white;
 }
 
-.theaterModeDiv {
+/*---------------------------------------------*/
+
+/* beta functionality */
+.yt-gif-theater-mode {
   position: relative;
   width: 20px;
   height: 20px;
   border-radius: 50%;
 }
-.theaterModeDiv:hover {
+.yt-gif-theater-mode.yt-gif-invisible-element:hover {
   background-color: gray;
 }
-.YTwrapper-OnTheaterMode {
-  height: unset;
-  width: 80vw;
-  max-height: 85vh;
-  position: absolute;
-  aspect-ratio: 16 / 9;
+
+/*---------------------------------------------*/
+.yt-gif-invisible-element {
+  color: transparent;
 }

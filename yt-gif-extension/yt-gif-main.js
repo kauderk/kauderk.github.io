@@ -1,41 +1,5 @@
 //This code is updated?
-//- Hello? 1
-window.YTGIF = {
-    /* permutations - checkbox */
-    permutations: {
-        start_form_previous_timestamp: '1',
-        clip_life_span_format: '1',
-        referenced_start_timestamp: '1',
-        smoll_vid_when_big_ends: '1',
-    },
-    /* one at the time - radio */
-    muteStyle: {
-        strict_mute_everything_except_current: '1',
-        muted_on_mouse_over: '',
-        muted_on_any_mouse_interaction: '',
-    },
-    /* one at the time - radio */
-    playStyle: {
-        strict_current_play_on_mouse_over: '1',
-        play_on_mouse_over: '',
-        visible_clips_start_to_play_unmuted: '',
-    },
-    range: {
-        /*seconds up to 60*/
-        wheelOffset: '5',
-    },
-    label: {
-        rangeValue: ''
-    },
-    InAndOutKeys: {
-        ctrlKey: '1',
-        shiftKey: '',
-        altKey: '',
-    },
-    defaultPlayer: {
-        volume: 30
-    }
-}
+//- Hello? 2
 
 //verion 24 - semi-refactored
 // Load the IFrame Player API.
@@ -87,6 +51,10 @@ const links = {
         main: URLFolder('yt-gif-main.js')
     }
 }
+const cssData = {
+    yt_gif_wrapper: 'yt-gif-wrapper',
+    yt_gif_timestamp: 'yt-gif-timestamp'
+}
 /*-----------------------------------*/
 const styleIs = {
     sound: {
@@ -127,9 +95,9 @@ const almostReady = setInterval(() =>
 
 async function GettingReady()
 {
-    const m = await LoadCSS(links.css.dropDownMenu);
-    const p = await LoadCSS(links.css.player);
-    const s = await isHTML_AND_InputsSetUP();
+    await LoadCSS(links.css.dropDownMenu);
+    await LoadCSS(links.css.player);
+    await isHTML_AND_InputsSetUP();
 
     ObserveIframesAndDelployYTPlayers();
 
@@ -208,7 +176,7 @@ async function isHTML_AND_InputsSetUP()
 
 function ObserveIframesAndDelployYTPlayers()
 {
-    const targetClass = 'rm-video-player__container';
+    const targetClass = 'rm-video-player__spacing-wrapper';
 
     // 1. set up all visible YT GIFs
     const visible = inViewport(document.querySelectorAll('.' + targetClass));
@@ -302,10 +270,17 @@ async function onYouTubePlayerAPIReady(playerWrap, message = "I don't know")
 
 
     // 2. the div that the YTiframe will replace
-    playerWrap.className = 'YTwrapper dont-focus-block';
+    playerWrap.className = `${cssData.yt_gif_wrapper} dont-focus-block`;
     playerWrap.innerHTML = "";
     const htmlText = await FetchText(links.html.playerControls);
     playerWrap.insertAdjacentHTML("afterbegin", htmlText);
+    //     playerWrap.insertAdjacentHTML("afterbegin", `<div class="yt-gif-iframe-wrapper">
+    //     <div id="yt-gif-empty-player" class="yt-gif-player"></div>
+    // </div>
+    // <div class="yt-gif-controls">
+    //     <div class="yt-gif-theater-mode yt-gif-invisible-element"></div>
+    //     <div class="yt-gif-timestamp yt-gif-invisible-element">00:00/00:00</div>
+    // </div>`);
     playerWrap.querySelector(".yt-gif-player").id = newId;
 
 
@@ -491,7 +466,7 @@ function onPlayerReady(event)
 {
     const t = event.target;
     const iframe = document.querySelector("#" + t.h.id) || t.getIframe();
-    const parent = iframe.closest(".YTwrapper") || iframe.parentElement;
+    const parent = iframe.closest('.' + cssData.yt_gif_wrapper) || iframe.parentElement;
     //
     const key = t.h.id;
     const map = allVideoParameters.get(key); //videoParams
@@ -520,11 +495,11 @@ function onPlayerReady(event)
 
 
     t.setVolume(volume);
-    iframe.removeAttribute("title");
+    iframe.removeAttribute('title');
     t.setPlaybackRate(speed);
 
     //huh
-    const timeDisplay = parent.querySelector("div.YT-clip-time");
+    const timeDisplay = parent.querySelector('div.' + cssData.yt_gif_timestamp);
 
     //#region Loading values 🌿
     // load last sesion values
