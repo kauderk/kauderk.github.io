@@ -1,10 +1,11 @@
 /*---------------------------------------------*/
-
+/* from version 25*/
 /* video size */
 .yt-gif-wrapper,
 .yt-gif-iframe-wrapper {
-  max-width: 350px; /* this is what you want */
-  min-height: 100%;
+  width: 100%; /* this is what you want */
+  max-width: 1000px;
+  height: 100%;
   aspect-ratio: 16 / 9;
 }
 /* + nice round edges */
