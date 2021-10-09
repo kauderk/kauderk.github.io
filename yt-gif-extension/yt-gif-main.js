@@ -548,18 +548,18 @@ function onPlayerReady(event)
             {
                 if (anyValidInAndOutKey(e))
                 {
-                    const muteWithBlock = (id) => recordedIDs.get(id)?.target?.mute();
+                    function muteWithBlock(id, el)
+                    {
+                        SoundIs(styleIs.sound.mute, el);
+                        recordedIDs.get(id)?.target?.mute();
+                    }
 
                     const config = {
                         styleQuery: styleIs.sound.unMute,
-                        self_callback: (id) => muteWithBlock(id),
-                        notSelf_callback: (id, el) =>
-                        {
-                            muteWithBlock(id)
-                            SoundIs(styleIs.sound.mute, el);
-                            recordedIDs.get(id)?.target?.mute();
-                        }
+                        self_callback: (id, el) => muteWithBlock(id, el),
+                        others_callback: (id, el) => muteWithBlock(id, el)
                     }
+
                     LoopTroughVisibleYTGIFs(config);
                 }
             }
@@ -567,8 +567,7 @@ function onPlayerReady(event)
             {
                 const config = {
                     styleQuery: styleIs.play.playing,
-                    self_callback: (id) => { },
-                    notSelf_callback: (id, el) =>
+                    others_callback: (id, el) =>
                     {
                         PlayIs(styleIs.play.paused, el);
                         recordedIDs.get(id)?.target?.pauseVideo()
@@ -582,12 +581,15 @@ function onPlayerReady(event)
 
             if (CanUnmute())
             {
-                SoundIs(styleIs.sound.unMute);
-                t.unMute();
+                isSoundingFine();
+            }
+            else if (UI.muteStyle.muted_on_mouse_over.checked)
+            {
+                isSoundingFine(false);
             }
 
             //#region local utils
-            function LoopTroughVisibleYTGIFs(config = { styleQuery, notSelf_callback: () => { }, self_callback: () => { } })
+            function LoopTroughVisibleYTGIFs(config = { styleQuery, others_callback: () => { }, self_callback: () => { } })
             {
                 const ytGifs = inViewport(allIframeStyle(config?.styleQuery));
                 for (const i of ytGifs)
@@ -595,7 +597,7 @@ function onPlayerReady(event)
                     const blockID = closestBlockID(i);
                     if (i != iframe)
                     {
-                        config?.notSelf_callback(blockID, i);
+                        config?.others_callback(blockID, i);
                     }
                     else if (config.BlockID_self_callback)
                     {
@@ -610,10 +612,7 @@ function onPlayerReady(event)
             t.__proto__.globalHumanInteraction = false;
 
             togglePlay(!AnyPlayOnHover() && t.__proto__.isPlaying);
-            //weird
-            if (!UI.muteStyle.muted_on_any_mouse_interaction.checked)
-            {
-            }
+
             //ﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠ//the same as: if it's true, then the other posibilities are false
             if (anyValidInAndOutKey(e) && !UI.muteStyle.muted_on_any_mouse_interaction.checked)
             {
@@ -645,7 +644,7 @@ function onPlayerReady(event)
     {
         if (!inViewport(iframe)) return; //mute all VISIBLE Players, this will be called on all visible iframes
 
-        if (UI.muteStyle.strict_mute_everything_except_current.checked)
+        if (UI.muteStyle.strict_mute_everything_except_current.checked || UI.muteStyle.muted_on_any_mouse_interaction.checked)
         {
             isSoundingFine(false);
         }
@@ -958,7 +957,7 @@ function onPlayerReady(event)
         }
     }
 
-    function isSoundingFine(boo)
+    function isSoundingFine(boo = true)
     {
         if (boo)
         {
