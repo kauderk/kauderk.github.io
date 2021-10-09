@@ -1,4 +1,5 @@
-//verion 22 - semi-refactored
+//Hi
+//version 23 - semi-refactored
 // Load the IFrame Player API.
 const tag = document.createElement('script');
 tag.src = "https://www.youtube.com/player_api";
@@ -22,7 +23,8 @@ const videoParams = {
     end: 000,
     speed: 1,
     updateTime: 0,
-    volume: 40
+    volume: 40,
+    interval: []
 };
 //
 const recordedIDs = new Map();
@@ -350,6 +352,14 @@ async function onYouTubePlayerAPIReady(playerWrap, message = "I don't know")
             // get volume
             const volume = /(vl=)(?:\d+)/g;
             const volumeInt = ExtractFromURL("int", volume);
+
+            //relative to whatﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠN
+            //from last timestampﾠﾠﾠﾠﾠﾠﾠﾠﾠ+
+            //up to nineﾠﾠﾠﾠﾠﾠﾠn 
+            //array  ﾠﾠﾠﾠﾠﾠﾠﾠt    =
+            const interval = /(t(\d+)=)(?:(\+)?(\d+))/g;
+            const intervalsSeconds = ExtractFromURL("int", interval);
+
 
             media.src = url;
             media.type = "youtube";
