@@ -14,4 +14,4 @@
 
 ---
 
-## [HERE ARE SOME DEMOS AN USE CASES](https://github.com/kauderk/code-snippets/tree/master/yt-gif-extension-shareable-ver1/DEMOS)
+## [HERE ARE SOME DEMOS AN USE CASES](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/DEMOS)
