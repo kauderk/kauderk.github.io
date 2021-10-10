@@ -5,7 +5,7 @@
 
 ![Snag_69882c03](https://user-images.githubusercontent.com/65237382/136669187-4e74380e-0f4c-4faf-bcbf-6c4d40f33ab0.png)
 
-### Both extensions back to back, running
+### Both extensions running back-to-back 
 ##### You might need to reload your graph
 
 ![Snag_6ad1dca6](https://user-images.githubusercontent.com/65237382/136676624-617237ad-20cb-424c-a173-111777d4bec1.png)
