@@ -9,3 +9,9 @@
 ##### You might need to reload your graph
 
 ![Snag_6ad1dca6](https://user-images.githubusercontent.com/65237382/136676624-617237ad-20cb-424c-a173-111777d4bec1.png)
+
+## [YOU CAN CUSTUMIZE THE STYLES INSIDE YOUR GRAPH](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/themes)
+
+---
+
+## [HERE ARE SOME DEMOS AN USE CASES](https://github.com/kauderk/code-snippets/tree/master/yt-gif-extension-shareable-ver1/DEMOS)
