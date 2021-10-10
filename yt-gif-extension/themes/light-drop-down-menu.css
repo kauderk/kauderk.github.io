@@ -1,0 +1,20 @@
+:root- {
+  --dropdown--bg: #fff;
+  --dropdown-shadow: rgb(105 119 131);
+  --dropdown-c: inherit;
+
+  --yt-gif-icon-bg: #5c7080;
+
+  --dropdown-main-btn-bg-h: rgb(148 161 171 / 24%);
+  --dropdown-btns-h: var(--dropdown-main-btn-bg-h);
+
+  --submenu-message-bg: rgb(93 112 128 / 12%);
+
+  --submenu-styles-content-bg: #e3e5e7;
+  --submenu-styles-item-bg-h: #b8c0c8;
+
+  --submenu-info-btn-bg: #e6e6e7;
+  --submenu-info-btn-bg-h: rgb(87 184 144);
+
+  --submenu-info-item-bg-h: rgb(87 184 144 / 45%);
+}

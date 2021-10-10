@@ -7,7 +7,46 @@ const tag = document.createElement('script');
 tag.src = "https://www.youtube.com/player_api";
 const firstScriptTag = document.getElementsByTagName('script')[0];
 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
+window.YTGIF = {
+    /* permutations - checkbox */
+    permutations: {
+        start_form_previous_timestamp: '1',
+        clip_life_span_format: '1',
+        referenced_start_timestamp: '1',
+        smoll_vid_when_big_ends: '1',
+    },
+    /* one at a time - radio */
+    muteStyle: {
+        strict_mute_everything_except_current: '1',
+        muted_on_mouse_over: '',
+        muted_on_any_mouse_interaction: '',
+    },
+    /* one at a time - radio */
+    playStyle: {
+        strict_current_play_on_mouse_over: '1',
+        play_on_mouse_over: '',
+        visible_clips_start_to_play_unmuted: '',
+    },
+    range: {
+        /*seconds up to 60*/
+        wheelOffset: '5',
+    },
+    label: {
+        rangeValue: ''
+    },
+    InAndOutKeys: {
+        ctrlKey: '1',
+        shiftKey: '',
+        altKey: '',
+    },
+    default: {
+        video_volume: 30,
+        /* 'dark' or 'light' */
+        yt_gif_drop_down_menu_theme: 'light',
+        /* empty means 100% - only valid css units like px or % */
+        player_span: '30%'
+    }
+}
 /*-----------------------------------*/
 /* USER SETTINGS  */
 const UI = window.YTGIF;
@@ -15,6 +54,7 @@ const UI = window.YTGIF;
 const iframeIDprfx = "player_";
 let creationCounter = -1;
 let fullscreenPlayer = '';
+let masterObserver = undefined;
 /*-----------------------------------*/
 const allVideoParameters = new Map();
 const lastBlockIDParameters = new Map();
@@ -25,7 +65,7 @@ const videoParams = {
     end: 000,
     speed: 1,
     updateTime: 0,
-    volume: UI.defaultPlayer.volume
+    volume: UI.default.video_volume
 };
 //
 const recordedIDs = new Map();
@@ -42,6 +82,10 @@ const links = {
     css: {
         dropDownMenu: URLFolder('drop-down-menu.css'),
         player: URLFolder('player.css'),
+        themes: {
+            dark_dropDownMenu: URLFolder('themes/drop-down-menu.css'),
+            light_dropDownMenu: URLFolder('themes/light-down-menu.css'),
+        }
     },
     html: {
         dropDownMenu: URLFolder('drop-down-menu.html'),
@@ -95,11 +139,105 @@ const almostReady = setInterval(() =>
 
 async function GettingReady()
 {
-    await LoadCSS(links.css.dropDownMenu);
-    await LoadCSS(links.css.player);
-    await isHTML_AND_InputsSetUP();
+    // 1.
+    const a1 = await LoadCSS(links.css.dropDownMenu);
+    const a2 = await LoadCSS(links.css.player);
 
-    ObserveIframesAndDelployYTPlayers();
+    // 2.
+    const a3 = await deal_with_user_custimizations();
+
+    // 3. 
+    const a4 = await load_html_drop_down_menu();
+
+    // 4. assign the User Inputs (UI) to their variables
+    drop_down_menu_inputs_as_variables();
+
+    // 5. One time - the timestamp scroll offset updates on changes
+    timestamp_offset_feature_ready();
+
+    // 6. is nice to have te option to stop the observer for good
+    masterObserver = ObserveIframesAndDelployYTPlayers();
+
+
+    //#region hidden functions
+    async function deal_with_user_custimizations()
+    {
+        if (UI.default.yt_gif_drop_down_menu_theme === 'dark')
+            await LoadCSS(links.css.themes.dark_dropDownMenu);
+
+        else
+            await LoadCSS(links.css.themes.light_dropDownMenu);
+
+        if (validateCssUnitValue(UI.default.player_span))
+        {
+            create_css_rule(`.yt-gif-wrapper, .yt-gif-iframe-wrapper {
+                width: ${UI.default.player_span};
+                lol: F;
+            }`);
+        }
+    }
+
+    async function load_html_drop_down_menu()
+    {
+        const moreIcon = document.querySelector('.bp3-icon-more').closest('.rm-topbar .rm-topbar__spacer-sm + .bp3-popover-wrapper');
+
+        const htmlText = await FetchText(links.html.dropDownMenu);
+
+        moreIcon.insertAdjacentHTML("afterend", htmlText);
+    }
+
+
+    function drop_down_menu_inputs_as_variables()
+    {
+        // this took a solid hour. thak you thank you
+        for (const parentKey in UI)
+        {
+            for (const childKey in UI[parentKey])
+            {
+                const userValue = UI[parentKey][childKey];
+                const domEl = document.getElementById(childKey);
+                //don't mess up any other variable
+                if (domEl)
+                    UI[parentKey][childKey] = domEl;
+
+                switch (parentKey)
+                {
+                    case "permutations":
+                    case "muteStyle":
+                    case "playStyle":
+                        UI[parentKey][childKey].checked = isTrue(userValue);
+                        break;
+                    case "range":
+                        UI[parentKey][childKey].value = Number(userValue);
+                        break;
+                    case "label":
+                        UI[parentKey][childKey].innerHTML = userValue;
+                        break;
+                }
+            }
+        }
+    }
+
+    function timestamp_offset_feature_ready()
+    {
+        UI.range.wheelOffset.addEventListener("change", () => UpdateRangeValue());
+        UI.range.wheelOffset.addEventListener("wheel", (e) =>
+        {
+            const dir = Math.sign(e.deltaY) * -1;
+            const parsed = parseInt(UI.range.wheelOffset.value, 10);
+            UI.range.wheelOffset.value = Number(dir + parsed);
+            UpdateRangeValue();
+        });
+        UpdateRangeValue();
+
+        //#region  local utils
+        function UpdateRangeValue()
+        {
+            UI.label.rangeValue.innerHTML = UI.range.wheelOffset.value;
+        }
+        //#endregion
+    }
+    //#endregion
 
     //#region uitils
     function LoadCSS(cssURL) // 'cssURL' is the stylesheet's URL, i.e. /css/styles.css
@@ -114,63 +252,7 @@ async function GettingReady()
             link.onload = () => resolve();
         });
     }
-    //#endregion
-}
 
-async function isHTML_AND_InputsSetUP()
-{
-    // 1. charge the drop down menu html
-    const moreIcon = document.querySelector('.bp3-icon-more').closest('.rm-topbar .rm-topbar__spacer-sm + .bp3-popover-wrapper');
-
-    const htmlText = await FetchText(links.html.dropDownMenu);
-
-    moreIcon.insertAdjacentHTML("afterend", htmlText);
-
-
-    // 2. assign the User Interface Inputs to their variables - this took a solid hour. thak you thank you
-    for (const parentKey in UI)
-    {
-        for (const childKey in UI[parentKey])
-        {
-            const userValue = UI[parentKey][childKey];
-            const domEl = document.getElementById(childKey);
-            //don't mess up any other variable
-            if (domEl) UI[parentKey][childKey] = domEl;
-
-            switch (parentKey)
-            {
-                case "permutations":
-                case "muteStyle":
-                case "playStyle":
-                    UI[parentKey][childKey].checked = isTrue(userValue);
-                    break;
-                case "range":
-                    UI[parentKey][childKey].value = Number(userValue);
-                    break;
-                case "label":
-                    UI[parentKey][childKey].innerHTML = userValue;
-                    break;
-            }
-        }
-    }
-
-
-    // 3. One time - the timestamp scroll offset updates on changes
-    UI.range.wheelOffset.addEventListener("change", () => UpdateRangeValue());
-    UI.range.wheelOffset.addEventListener("wheel", (e) =>
-    {
-        const dir = Math.sign(e.deltaY) * -1;
-        const parsed = parseInt(UI.range.wheelOffset.value, 10);
-        UI.range.wheelOffset.value = Number(dir + parsed);
-        UpdateRangeValue();
-    });
-    UpdateRangeValue();
-
-    //#region utils
-    function UpdateRangeValue()
-    {
-        UI.label.rangeValue.innerHTML = UI.range.wheelOffset.value;
-    }
     //#endregion
 }
 
@@ -198,6 +280,8 @@ function ObserveIframesAndDelployYTPlayers()
     const observer = new MutationObserver(mutation_callback);
 
     observer.observe(targetNode, config);
+
+    return observer
 
     //#region observer utils
     function ObserveIntersectToSetUpPlayer(iterator, message = 'YscrollObserver')
@@ -274,13 +358,6 @@ async function onYouTubePlayerAPIReady(playerWrap, message = "I don't know")
     playerWrap.innerHTML = "";
     const htmlText = await FetchText(links.html.playerControls);
     playerWrap.insertAdjacentHTML("afterbegin", htmlText);
-    //     playerWrap.insertAdjacentHTML("afterbegin", `<div class="yt-gif-iframe-wrapper">
-    //     <div id="yt-gif-empty-player" class="yt-gif-player"></div>
-    // </div>
-    // <div class="yt-gif-controls">
-    //     <div class="yt-gif-theater-mode yt-gif-invisible-element"></div>
-    //     <div class="yt-gif-timestamp yt-gif-invisible-element">00:00/00:00</div>
-    // </div>`);
     playerWrap.querySelector(".yt-gif-player").id = newId;
 
 
@@ -1205,6 +1282,32 @@ async function FetchText(url)
 {
     const response = await fetch(url); // firt time fetching something... This is cool
     return await response.text();
+}
+
+function create_css_rule(css_rules = 'starndard css rules')
+{
+    const style = document.createElement('style');
+    style.setAttribute('type', 'text/css');
+    style.innerHTML = css_rules;
+    document.getElementsByTagName('head')[0].appendChild(style);
+}
+function validateCssUnitValue(value)
+{
+    //  valid CSS unit types
+    const CssUnitTypes = ['em', 'ex', 'ch', 'rem', 'vw', 'vh', 'vmin',
+        'vmax', '%', 'cm', 'mm', 'in', 'px', 'pt', 'pc'];
+
+    // create a set of regexps that will validate the CSS unit value
+    const regexps = CssUnitTypes.map((unit) =>
+    {
+        // creates a regexp that matches "#unit" or "#.#unit" for every unit type
+        return new RegExp(`^[0-9]+${unit}$|^[0-9]+\\.[0-9]+${unit}$`, 'i');
+    });
+
+    // attempt to find a regexp that tests true for the CSS value
+    const isValid = regexps.find((regexp) => regexp.test(value)) !== undefined;
+
+    return isValid;
 }
 //#endregion
 
