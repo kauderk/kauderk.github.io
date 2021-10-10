@@ -19,13 +19,13 @@ window.YTGIF = {
         referenced_start_timestamp: '1',
         smoll_vid_when_big_ends: '1',
     },
-    /* one at the time - radio */
+    /* one at a time - radio */
     muteStyle: {
         strict_mute_everything_except_current: '1',
         muted_on_mouse_over: '',
         muted_on_any_mouse_interaction: '',
     },
-    /* one at the time - radio */
+    /* one at a time - radio */
     playStyle: {
         strict_current_play_on_mouse_over: '1',
         play_on_mouse_over: '',
@@ -35,13 +35,18 @@ window.YTGIF = {
         /*seconds up to 60*/
         wheelOffset: '5',
     },
-    label: {
-        rangeValue: ''
-    },
     InAndOutKeys: {
+        /* middle mouse button is on by default */
         ctrlKey: '1',
         shiftKey: '',
         altKey: '',
+    },
+    default: {
+        video_volume: 40,
+        /* 'dark' or 'light' */
+        yt_gif_drop_down_menu_theme: 'dark',
+        /* empty means 50% - only valid css units like px  %  vw */
+        player_span: '40%'
     }
 }
 var existing = document.getElementById('yt-gif-main');
