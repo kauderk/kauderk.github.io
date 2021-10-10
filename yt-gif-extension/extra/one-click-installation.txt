@@ -42,9 +42,6 @@ window.YTGIF = {
         ctrlKey: '1',
         shiftKey: '',
         altKey: '',
-    },
-    defaultPlayer: {
-        volume: 30
     }
 }
 var existing = document.getElementById('yt-gif-main');

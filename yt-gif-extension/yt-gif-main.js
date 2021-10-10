@@ -1,66 +1,31 @@
 //This code is updated?
-//- Hello? 3
+//- Hello? 5
 
-//verion 25 - semi-refactored
+// version 26 - semi-refactored
 // Load the IFrame Player API.
 const tag = document.createElement('script');
-tag.src = "https://www.youtube.com/player_api";
+tag.src = 'https://www.youtube.com/player_api';
 const firstScriptTag = document.getElementsByTagName('script')[0];
 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-window.YTGIF = {
-    /* permutations - checkbox */
-    permutations: {
-        start_form_previous_timestamp: '1',
-        clip_life_span_format: '1',
-        referenced_start_timestamp: '1',
-        smoll_vid_when_big_ends: '1',
-    },
-    /* one at a time - radio */
-    muteStyle: {
-        strict_mute_everything_except_current: '1',
-        muted_on_mouse_over: '',
-        muted_on_any_mouse_interaction: '',
-    },
-    /* one at a time - radio */
-    playStyle: {
-        strict_current_play_on_mouse_over: '1',
-        play_on_mouse_over: '',
-        visible_clips_start_to_play_unmuted: '',
-    },
-    range: {
-        /*seconds up to 60*/
-        wheelOffset: '5',
-    },
-    label: {
-        rangeValue: ''
-    },
-    InAndOutKeys: {
-        ctrlKey: '1',
-        shiftKey: '',
-        altKey: '',
-    },
-    default: {
-        video_volume: 30,
-        /* 'dark' or 'light' */
-        yt_gif_drop_down_menu_theme: 'light',
-        /* empty means 100% - only valid css units like px or % */
-        player_span: '30%'
-    }
-}
+
 /*-----------------------------------*/
 /* USER SETTINGS  */
 const UI = window.YTGIF;
+/* user doen't need to see this */
+UI.label = {
+    rangeValue: ''
+}
 /*-----------------------------------*/
-const iframeIDprfx = "player_";
+const iframeIDprfx = 'player_';
 let creationCounter = -1;
-let fullscreenPlayer = '';
-let masterObserver = undefined;
+let currentFullscreenPlayer = '';
+let currentMasterObserver = undefined;
 /*-----------------------------------*/
 const allVideoParameters = new Map();
 const lastBlockIDParameters = new Map();
 const videoParams = {
-    src: "https://www.youtube.com/embed/---------?",
-    id: "---------",
+    src: 'https://www.youtube.com/embed/---------?',
+    id: '---------',
     start: 000,
     end: 000,
     speed: 1,
@@ -71,7 +36,7 @@ const videoParams = {
 const recordedIDs = new Map();
 const sesionIDs = {
     target: null,
-    uid: "---------"
+    uid: '---------'
 }
 /*-----------------------------------*/
 function URLFolder(f)
@@ -83,8 +48,8 @@ const links = {
         dropDownMenu: URLFolder('drop-down-menu.css'),
         player: URLFolder('player.css'),
         themes: {
-            dark_dropDownMenu: URLFolder('themes/drop-down-menu.css'),
-            light_dropDownMenu: URLFolder('themes/light-down-menu.css'),
+            dark_dropDownMenu: URLFolder('themes/dark-drop-down-menu.css'),
+            light_dropDownMenu: URLFolder('themes/light-drop-down-menu.css'),
         }
     },
     html: {
@@ -102,61 +67,61 @@ const cssData = {
 /*-----------------------------------*/
 const styleIs = {
     sound: {
-        mute: "yt-mute",
-        unMute: "yt-unmute"
+        mute: 'yt-mute',
+        unMute: 'yt-unmute'
     },
     play: {
-        playing: "yt-playing",
-        paused: "yt-paused"
+        playing: 'yt-playing',
+        paused: 'yt-paused'
     },
     extra: {
-        readyToEnable: "readyToEnable"
+        readyToEnable: 'readyToEnable'
     }
 }
 /*-----------------------------------*/
 
 
-// wait for APIs to exist, load dropdown menu and deploy iframes
+// wait for APIs to exist
 const almostReady = setInterval(() =>
 {
     if ((typeof window.roam42?.common == 'undefined'))
     {
         //this is ugly - 
-        console.count("activating YT GIF extension | common");
+        console.count('activating YT GIF extension | common');
         return;
     }
     if ((typeof (YT) == 'undefined'))
     {
-        console.count("activating YT libraries | common");
-        console.count("this is ugly | YT");
+        console.count('activating YT libraries | common');
+        console.count('this is ugly | YT');
         return;
     }
 
     clearInterval(almostReady);
-    GettingReady();
+    Ready(); // load dropdown menu and deploy iframes
 
 }, 500);
 
-async function GettingReady()
+async function Ready()
 {
     // 1.
-    const a1 = await LoadCSS(links.css.dropDownMenu);
-    const a2 = await LoadCSS(links.css.player);
+    await LoadCSS(links.css.dropDownMenu);
+    await LoadCSS(links.css.player);
 
     // 2.
-    const a3 = await deal_with_user_custimizations();
+    await deal_with_user_custimizations();
 
     // 3. 
-    const a4 = await load_html_drop_down_menu();
+    await load_html_drop_down_menu();
 
     // 4. assign the User Inputs (UI) to their variables
     drop_down_menu_inputs_as_variables();
 
     // 5. One time - the timestamp scroll offset updates on changes
-    timestamp_offset_feature_ready();
+    timestamp_offset_features();
 
-    // 6. is nice to have te option to stop the observer for good
-    masterObserver = ObserveIframesAndDelployYTPlayers();
+    // 6. is nice to have an option to stop the masterObserver for good
+    currentMasterObserver = ObserveIframesAndDelployYTPlayers();
 
 
     //#region hidden functions
@@ -168,11 +133,10 @@ async function GettingReady()
         else
             await LoadCSS(links.css.themes.light_dropDownMenu);
 
-        if (validateCssUnitValue(UI.default.player_span))
+        if (isValidCSSUnit(UI.default.player_span))
         {
-            create_css_rule(`.yt-gif-wrapper, .yt-gif-iframe-wrapper {
-                width: ${UI.default.player_span};
-                lol: F;
+            create_css_rule(`.${cssData.yt_gif_wrapper}, .yt-gif-iframe-wrapper {
+                width: ${UI.default.player_span} !important;
             }`);
         }
     }
@@ -180,10 +144,8 @@ async function GettingReady()
     async function load_html_drop_down_menu()
     {
         const moreIcon = document.querySelector('.bp3-icon-more').closest('.rm-topbar .rm-topbar__spacer-sm + .bp3-popover-wrapper');
-
         const htmlText = await FetchText(links.html.dropDownMenu);
-
-        moreIcon.insertAdjacentHTML("afterend", htmlText);
+        moreIcon.insertAdjacentHTML('afterend', htmlText);
     }
 
 
@@ -202,15 +164,15 @@ async function GettingReady()
 
                 switch (parentKey)
                 {
-                    case "permutations":
-                    case "muteStyle":
-                    case "playStyle":
+                    case 'permutations':
+                    case 'muteStyle':
+                    case 'playStyle':
                         UI[parentKey][childKey].checked = isTrue(userValue);
                         break;
-                    case "range":
+                    case 'range':
                         UI[parentKey][childKey].value = Number(userValue);
                         break;
-                    case "label":
+                    case 'label':
                         UI[parentKey][childKey].innerHTML = userValue;
                         break;
                 }
@@ -218,10 +180,10 @@ async function GettingReady()
         }
     }
 
-    function timestamp_offset_feature_ready()
+    function timestamp_offset_features()
     {
-        UI.range.wheelOffset.addEventListener("change", () => UpdateRangeValue());
-        UI.range.wheelOffset.addEventListener("wheel", (e) =>
+        UI.range.wheelOffset.addEventListener('change', () => UpdateRangeValue());
+        UI.range.wheelOffset.addEventListener('wheel', (e) =>
         {
             const dir = Math.sign(e.deltaY) * -1;
             const parsed = parseInt(UI.range.wheelOffset.value, 10);
@@ -240,8 +202,10 @@ async function GettingReady()
     //#endregion
 
     //#region uitils
-    function LoadCSS(cssURL) // 'cssURL' is the stylesheet's URL, i.e. /css/styles.css
+    async function LoadCSS(cssURL) // 'cssURL' is the stylesheet's URL, i.e. /css/styles.css
     {
+        if (await !tryingToFetch(cssURL)) return;
+
         return new Promise(function (resolve, reject)
         {
             const link = document.createElement('link');
@@ -271,14 +235,13 @@ function ObserveIframesAndDelployYTPlayers()
     const hidden = document.querySelectorAll('.' + targetClass);
     for (const wrapper of hidden)
     {
-        ObserveIntersectToSetUpPlayer(wrapper, "second wave"); // I'm quite impressed with this... I mean...
+        ObserveIntersectToSetUpPlayer(wrapper, 'second wave'); // I'm quite impressed with this... I mean...
     }
 
     // 3. ready to observe and deploy iframes
     const targetNode = document.getElementById('app');
     const config = { childList: true, subtree: true };
     const observer = new MutationObserver(mutation_callback);
-
     observer.observe(targetNode, config);
 
     return observer
@@ -331,7 +294,7 @@ function ObserveIframesAndDelployYTPlayers()
         }
         for (const node of found)
         {
-            ObserveIntersectToSetUpPlayer(node, "valid entries MutationObserver");
+            ObserveIntersectToSetUpPlayer(node, 'valid entries MutationObserver');
         }
     };
     //#endregion
@@ -341,24 +304,26 @@ function ObserveIframesAndDelployYTPlayers()
 
 /*↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓*/
 //
-async function onYouTubePlayerAPIReady(playerWrap, message = "I don't know")
+async function onYouTubePlayerAPIReady(playerWrap, message = 'I dunno')
 {
     if (!playerWrap) return; //console.count(message);
 
     // 1. last 9 letter form the closest blockID
-    const uid = playerWrap.closest("span[data-uid]")?.getAttribute("data-uid") ||
-        closestBlockID(playerWrap).slice(-9) ||
-        closestBlockID(document.querySelector(".bp3-popover-open")).slice(-9);
+    const uid = playerWrap.closest('span[data-uid]')?.getAttribute('data-uid') ||
+        closestBlockID(playerWrap)?.slice(-9) ||
+        closestBlockID(document.querySelector('.bp3-popover-open'))?.slice(-9);
+
+    if (!uid) return;
 
     const newId = iframeIDprfx + Number(++creationCounter);
 
 
     // 2. the div that the YTiframe will replace
     playerWrap.className = `${cssData.yt_gif_wrapper} dont-focus-block`;
-    playerWrap.innerHTML = "";
+    playerWrap.innerHTML = '';
     const htmlText = await FetchText(links.html.playerControls);
-    playerWrap.insertAdjacentHTML("afterbegin", htmlText);
-    playerWrap.querySelector(".yt-gif-player").id = newId;
+    playerWrap.insertAdjacentHTML('afterbegin', htmlText);
+    playerWrap.querySelector('.yt-gif-player').id = newId;
 
 
     // 3. weird recursive function... guys...
@@ -382,7 +347,7 @@ async function onYouTubePlayerAPIReady(playerWrap, message = "I don't know")
     {
         const [finalURL, innerUIDs] = await TryToFindURL(tempUID);
         //
-        const aliasText = document.querySelector(".bp3-popover-open .rm-alias--block")?.textContent;
+        const aliasText = document.querySelector('.bp3-popover-open .rm-alias--block')?.textContent;
         // lucky guy, this block contains a valid url
         if (finalURL && aliasText == null) return finalURL;
 
@@ -431,22 +396,22 @@ async function onYouTubePlayerAPIReady(playerWrap, message = "I don't know")
 
             // get start & end seconds
             const start = /(t=|start=)(?:\d+)/g;
-            const startSeconds = ExtractFromURL("int", start);
+            const startSeconds = ExtractFromURL('int', start);
             //
             const end = /(end=)(?:\d+)/g;
-            const endSeconds = ExtractFromURL("int", end);
+            const endSeconds = ExtractFromURL('int', end);
 
             // get playback speed
             const speed = /(s=|speed=)([-+]?\d*\.\d+|\d+)/g;
-            const speedFloat = ExtractFromURL("float", speed);
+            const speedFloat = ExtractFromURL('float', speed);
 
             // get volume
             const volume = /(vl=)(?:\d+)/g;
-            const volumeInt = ExtractFromURL("int", volume);
+            const volumeInt = ExtractFromURL('int', volume);
 
 
             media.src = url;
-            media.type = "youtube";
+            media.type = 'youtube';
             media.id = videoId;
             media.start = startSeconds;
             media.end = endSeconds;
@@ -463,7 +428,7 @@ async function onYouTubePlayerAPIReady(playerWrap, message = "I don't know")
                 let valueCallback = () => { };
                 switch (key)
                 {
-                    case "int":
+                    case 'int':
                         valueCallback = (desiredValue, pass) =>
                         {
                             desiredValue = pass[0].match(/\d+/g).map(Number);
@@ -471,7 +436,7 @@ async function onYouTubePlayerAPIReady(playerWrap, message = "I don't know")
                             return desiredValue;
                         }
                         break;
-                    case "float":
+                    case 'float':
                         valueCallback = (desiredValue, pass) =>
                         {
                             desiredValue = pass[0].match(/[+-]?\d+(\.\d+)?/g).map(function (v) { return parseFloat(v); });
@@ -495,7 +460,7 @@ async function onYouTubePlayerAPIReady(playerWrap, message = "I don't know")
         }
 
         if (success) { return media; }
-        else { alert("No valid media id detected"); }
+        else { alert('No valid media id detected'); }
         return false;
     }
     function playerConfig()
@@ -542,7 +507,7 @@ async function onYouTubePlayerAPIReady(playerWrap, message = "I don't know")
 function onPlayerReady(event)
 {
     const t = event.target;
-    const iframe = document.querySelector("#" + t.h.id) || t.getIframe();
+    const iframe = document.querySelector('#' + t.h.id) || t.getIframe();
     const parent = iframe.closest('.' + cssData.yt_gif_wrapper) || iframe.parentElement;
     //
     const key = t.h.id;
@@ -592,18 +557,18 @@ function onPlayerReady(event)
     // load referenced values
     else
     {
-        //Future Brand new adition to "lastBlockIDParameters" map
+        //Future Brand new adition to 'lastBlockIDParameters' map
         if (UI.permutations.referenced_start_timestamp.checked)
         {
-            let players = document.querySelectorAll(`[id*=${iframeIDprfx}]`);
+            const players = document.querySelectorAll(`[id*=${iframeIDprfx}]`);
             for (let i = 0; i < players.length; i++)
             {
                 if (players[i] === iframe) continue; //ignore itself
 
                 if (players[i]?.src?.slice(0, -11) == iframe?.src?.slice(0, -11))
-                { //removes at least "widgetid=··" so they reconize each other
+                { //removes at least 'widgetid=··' so they reconize each other
 
-                    const desiredBlockID = blockID || document.querySelector("body > span[blockID]")?.getAttribute("blockID") || closestBlockID(players[i]);
+                    const desiredBlockID = blockID || document.querySelector('body > span[blockID]')?.getAttribute('blockID') || closestBlockID(players[i]);
 
                     const desiredTarget = recordedIDs.get(desiredBlockID)?.target || t;
                     const desiredTime = tick(desiredTarget) || start;
@@ -612,6 +577,7 @@ function onPlayerReady(event)
                     seekToUpdatedTime(desiredTime)
 
                     console.count(`loaded referenced values to ${key} from ${desiredBlockID}`);
+                    break;
                 }
             }
         }
@@ -625,11 +591,11 @@ function onPlayerReady(event)
 
 
 
-    //#region Event Handelers | DDMO stands for "Drop Down Menu Option"
+    //#region Event Handelers | DDMO stands for 'Drop Down Menu Option'
     function InAndOutHoverStatesDDMO(e)
     {
         //🌿
-        if (e.type == "mouseenter")
+        if (e.type == 'mouseenter')
         {
             t.__proto__.globalHumanInteraction = true; // I'm afraid this event is slower to get attached than 200ms intervals... well 
 
@@ -701,7 +667,7 @@ function onPlayerReady(event)
             }
             //#endregion
         }
-        else if (e.type == "mouseleave")
+        else if (e.type == 'mouseleave')
         {
             t.__proto__.globalHumanInteraction = false;
 
@@ -731,7 +697,7 @@ function onPlayerReady(event)
         {
             togglePlay(!AnyPlayOnHover());
         }
-        //console.count("playStyleDDMO");
+        //console.count('playStyleDDMO');
     }
 
     function muteStyleDDMO()
@@ -742,7 +708,7 @@ function onPlayerReady(event)
         {
             isSoundingFine(false);
         }
-        //console.count("muteStyleDDMO");
+        //console.count('muteStyleDDMO');
     }
     //#endregion
 
@@ -750,15 +716,15 @@ function onPlayerReady(event)
     // #region EventListeners | from DDMO
     for (const p in UI.playStyle)
     {
-        UI.playStyle[p].addEventListener("change", playStyleDDMO); // all valid, toggle play state
+        UI.playStyle[p].addEventListener('change', playStyleDDMO); // all valid, toggle play state
     }
     for (const m in UI.muteStyle)
     {
-        UI.muteStyle[m].addEventListener("change", muteStyleDDMO); // all valid, toggle play state
+        UI.muteStyle[m].addEventListener('change', muteStyleDDMO); // all valid, toggle play state
     }
     //toggle visuals or sound on hover
-    parent.addEventListener("mouseenter", InAndOutHoverStatesDDMO);
-    parent.addEventListener("mouseleave", InAndOutHoverStatesDDMO);
+    parent.addEventListener('mouseenter', InAndOutHoverStatesDDMO);
+    parent.addEventListener('mouseleave', InAndOutHoverStatesDDMO);
     //#endregion
 
 
@@ -774,7 +740,7 @@ function onPlayerReady(event)
     function ContinuouslyUpdateTimeDisplay()
     {
         //🙋 this is too uggly
-        if (document.querySelector("#" + key) == null)
+        if (document.querySelector('#' + key) == null)
         {
             t.__proto__.enter = () => { };
             t.destroy();
@@ -794,14 +760,14 @@ function onPlayerReady(event)
     {
         const sec = Math.abs(clipSpan - (end - tick()));
 
-        //timeDisplay.innerHTML = "00:00/00:00"
+        //timeDisplay.innerHTML = '00:00/00:00'
         if (UI.permutations.clip_life_span_format.checked) 
         {
-            timeDisplay.innerHTML = `${fmtMSS(sec)}/${fmtMSS(clipSpan)}`; //"sec":"clip end"
+            timeDisplay.innerHTML = `${fmtMSS(sec)}/${fmtMSS(clipSpan)}`; //'sec':'clip end'
         }
         else
         {
-            timeDisplay.innerHTML = `${fmtMSS(tick())}/${fmtMSS(end)}`; //"update":"end"
+            timeDisplay.innerHTML = `${fmtMSS(tick())}/${fmtMSS(end)}`; //'update':'end'
         }
 
         //#region util
@@ -875,10 +841,10 @@ function onPlayerReady(event)
 
 
     //#region EventListeners | from Elements
-    timeDisplay.addEventListener("wheel", BoundWheelValueToSeek);
-    timeDisplay.addEventListener("mouseenter", HumanInteractionHandeler);
-    timeDisplay.addEventListener("mouseenter", ContinuouslyUpdateTimeDisplay);
-    timeDisplay.addEventListener("mouseleave", ResetTrackingValues);
+    timeDisplay.addEventListener('wheel', BoundWheelValueToSeek);
+    timeDisplay.addEventListener('mouseenter', HumanInteractionHandeler);
+    timeDisplay.addEventListener('mouseenter', ContinuouslyUpdateTimeDisplay);
+    timeDisplay.addEventListener('mouseleave', ResetTrackingValues);
     // #endregion 
 
 
@@ -909,11 +875,11 @@ function onPlayerReady(event)
                 }
                 for (const p in UI.playStyle)
                 {
-                    UI.playStyle[p].removeEventListener("change", playStyleDDMO); // all valid, toggle play state
+                    UI.playStyle[p].removeEventListener('change', playStyleDDMO); // all valid, toggle play state
                 }
                 for (const m in UI.muteStyle)
                 {
-                    UI.muteStyle[m].removeEventListener("change", muteStyleDDMO); // all valid, toggle play state
+                    UI.muteStyle[m].removeEventListener('change', muteStyleDDMO); // all valid, toggle play state
                 }
 
                 //🚧
@@ -931,7 +897,7 @@ function onPlayerReady(event)
                 t.__proto__.enter = () => { };
 
                 // either keep target
-                const targetExist = document.querySelector("#" + key) == iframe;
+                const targetExist = document.querySelector('#' + key) == iframe;
                 if (targetExist)
                     return console.log(`${key} is displaced, not removed, thus is not destroyed.`);
 
@@ -942,7 +908,7 @@ function onPlayerReady(event)
                     if (!targetExist)
                     {
                         t.destroy();
-                        console.count("Destroyed! " + key);
+                        console.count('Destroyed! ' + key);
                     }
                 }, 1000);
             }
@@ -962,7 +928,7 @@ function onPlayerReady(event)
         if (!entries[0])
             YscrollObserver.disconnect();
 
-        if (tick() > updateStartTime + loadingMarginOfError && t.__proto__.globalHumanInteraction === false) // and the interval function "OneFrame" to prevent the loading black screen
+        if (tick() > updateStartTime + loadingMarginOfError && t.__proto__.globalHumanInteraction === false) // and the interval function 'OneFrame' to prevent the loading black screen
         {
             togglePlay(entries[0]?.isIntersecting, UI.playStyle.visible_clips_start_to_play_unmuted.checked);
         }
@@ -974,9 +940,9 @@ function onPlayerReady(event)
 
     //🚧 🌿
     //#region unMute if referenced |OR| Pause and Avoid black screen loading bar
-    const autoplayParent = iframe.closest(".rm-alias-tooltip__content") || //tooltip
-        iframe.closest(".bp3-card") || //card
-        iframe.closest(".myPortal"); //myPortal
+    const autoplayParent = iframe.closest('.rm-alias-tooltip__content') || //tooltip
+        iframe.closest('.bp3-card') || //card
+        iframe.closest('.myPortal'); //myPortal
 
     //simulate hover
     if (autoplayParent)
@@ -1015,7 +981,7 @@ function onPlayerReady(event)
 
 
     // detect fullscreen mode
-    iframe.addEventListener("fullscreenchange", () => fullscreenPlayer = t.h.id);
+    iframe.addEventListener('fullscreenchange', () => currentFullscreenPlayer = t.h.id);
 
     //#region Utils
     function tick(target = t)
@@ -1114,7 +1080,7 @@ function onPlayerReady(event)
 /*↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓*/
 /*↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓*/
 //
-//loops between "start" and "end" boundaries
+//loops between 'start' and 'end' boundaries
 function onStateChange(state)
 {
     const t = state.target;
@@ -1124,7 +1090,7 @@ function onStateChange(state)
     {
         t.seekTo(map?.start || 0);
 
-        if (UI.permutations.smoll_vid_when_big_ends.checked && (fullscreenPlayer === t.h.id)) // let's not talk about that this took at least 30 mins. Don't. Ughhhh
+        if (UI.permutations.smoll_vid_when_big_ends.checked && (currentFullscreenPlayer === t.h.id)) // let's not talk about that this took at least 30 mins. Don't. Ughhhh
         {
             if (document.fullscreenElement)
             {
@@ -1225,7 +1191,7 @@ function exitFullscreen()
 }
 function closestBlockID(el)
 {
-    return el?.closest(".rm-block__input")?.id
+    return el?.closest('.rm-block__input')?.id
 }
 function allIframeIDprfx()
 {
@@ -1246,7 +1212,7 @@ function htmlToElement(html)
 
 function cleanUpHTML(content)
 {
-    var dom = document.createElement("div");
+    var dom = document.createElement('div');
     dom.innerHTML = content;
     var elems = dom.getElementsByTagName('*');
     for (var i = 0; i < elems.length; i++)
@@ -1266,11 +1232,11 @@ function isTrue(value)
     switch (value)
     {
         case true:
-        case "true":
+        case 'true':
         case 1:
-        case "1":
-        case "on":
-        case "yes":
+        case '1':
+        case 'on':
+        case 'yes':
             return true;
         default:
             return false;
@@ -1280,8 +1246,24 @@ function isTrue(value)
 
 async function FetchText(url)
 {
-    const response = await fetch(url); // firt time fetching something... This is cool
-    return await response.text();
+    const [response, err] = await tryingToFetch(url); // firt time fetching something... This is cool
+    if (response)
+        return await response.text();
+}
+async function tryingToFetch(url)
+{
+    try
+    {
+        const response = await fetch(url);
+        if (!response.ok)
+            throw new Error('Request failed.');
+        return [response, null];
+    }
+    catch (error)
+    {
+        console.log(`Your custom link ${url} is corrupt. ;c`);
+        return [null, error];
+    };
 }
 
 function create_css_rule(css_rules = 'starndard css rules')
@@ -1291,7 +1273,7 @@ function create_css_rule(css_rules = 'starndard css rules')
     style.innerHTML = css_rules;
     document.getElementsByTagName('head')[0].appendChild(style);
 }
-function validateCssUnitValue(value)
+function isValidCSSUnit(value)
 {
     //  valid CSS unit types
     const CssUnitTypes = ['em', 'ex', 'ch', 'rem', 'vw', 'vh', 'vmin',
@@ -1300,7 +1282,7 @@ function validateCssUnitValue(value)
     // create a set of regexps that will validate the CSS unit value
     const regexps = CssUnitTypes.map((unit) =>
     {
-        // creates a regexp that matches "#unit" or "#.#unit" for every unit type
+        // creates a regexp that matches '#unit' or '#.#unit' for every unit type
         return new RegExp(`^[0-9]+${unit}$|^[0-9]+\\.[0-9]+${unit}$`, 'i');
     });
 

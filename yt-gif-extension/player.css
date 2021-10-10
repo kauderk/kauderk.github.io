@@ -4,7 +4,6 @@
 .yt-gif-wrapper,
 .yt-gif-iframe-wrapper {
   width: 100%; /* this is what you want */
-  max-width: 1000px;
   height: 100%;
   aspect-ratio: 16 / 9;
 }
