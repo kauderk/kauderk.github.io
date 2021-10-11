@@ -4,6 +4,7 @@
         <span class="bp3-popover-wrapper">
             <span class="bp3-popover-target">
                 <div class="dropdown">
+                    <!-- THE id NAMING convention for this element: they_must_be_separated_by_underscores-->
                     <span class="dropbtn bp3-button bp3-minimal bp3-small bp3-icon-more ty-gif-icon">
                         <svg class="yt-gif-svg" width="24px" height="24px" viewBox="0 0 24 24"
                             xmlns="http://www.w3.org/2000/svg">
@@ -34,9 +35,47 @@
                         </span>
                         <span class="dropdown-item">
                             <label for="" class="dropdown-item-description"
-                                title="Exit Fullscreen when the clip ends">Smoll Vid When Big Ends</label>
-                            <input type="checkbox" name="" id="smoll_vid_when_big_ends" checked>
+                                title="Nothing sounds? Probably the provided URL isn't working">Sound when video
+                                loops</label>
+                            <input type="checkbox" name="" id="sound_when_video_loops" checked>
                         </span>
+                        <div class="dropdown yt-gif-style yt-gif-inactive-style">
+                            <span class="dropdown-info-message">Inactive Window</span>
+                            <div class="dropdown-content dropdown-info-box">
+                                <span class="dropdown-info-message dropdown-info-message--aditional">Feature on hold. I
+                                    can't build it. - Can you?</span>
+                                <span class="dropdown-item">
+                                    <label for="" class="dropdown-item-description" title="">Mute when document is
+                                        inactive</label>
+                                    <input type="checkbox" name="fullscreen" id="mute_on_inactive_window">
+                                </span>
+                                <span class="dropdown-item">
+                                    <label for="" class="dropdown-item-description" title="">Pause when document is
+                                        inactive</label>
+                                    <input type="checkbox" name="fullscreen" id="pause_on_inactive_window">
+                                </span>
+                            </div>
+                        </div>
+                        <div class="dropdown yt-gif-style yt-gif-fullscreen-style">
+                            <span class="dropdown-info-message">Fullscreen style</span>
+                            <div class="dropdown-content dropdown-info-box">
+                                <span class="dropdown-item">
+                                    <label for="" class="dropdown-item-description"
+                                        title="Exit Fullscreen when the clip ends">Smoll Vid When Big Ends</label>
+                                    <input type="checkbox" name="fullscreen" id="smoll_vid_when_big_ends" checked>
+                                </span>
+                                <span class="dropdown-item">
+                                    <label for="" class="dropdown-item-description" title="">Mute when exiting
+                                        fullscreen</label>
+                                    <input type="checkbox" name="fullscreen" id="mute_on_exit_fullscreenchange">
+                                </span>
+                                <span class="dropdown-item">
+                                    <label for="" class="dropdown-item-description" title="">Pause when exiting
+                                        fullscreen</label>
+                                    <input type="checkbox" name="fullscreen" id="pause_on_exit_fullscreenchange">
+                                </span>
+                            </div>
+                        </div>
                         <div class="dropdown yt-gif-style yt-gif-sound-style">
                             <span class="dropdown-info-message">Sound Style</span>
                             <div class="dropdown-content dropdown-info-box">
@@ -66,7 +105,7 @@
                             <div class="dropdown-content dropdown-info-box">
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description"
-                                        title="In and Out Keys or not, all get muted exect currten">Strict &
+                                        title="In and Out Keys or not, all get muted, except current">Strict &
                                         Recomended - play current on mouse enter</label>
                                     <input type="radio" name="playStyle" id="strict_current_play_on_mouse_over" checked>
                                 </span>

@@ -1,9 +1,17 @@
+/*This code is updated?
+Hello? from 7 */
+/*---------------------------------------------*/
+/* acomodate editable block and inline referece on the bottom right*/
+.yt-gif-wrapper,
+.yt-gif-iframe-wrapper {
+  display: -webkit-inline-box;
+}
 /*---------------------------------------------*/
 /* from version 25*/
 /* video size */
 .yt-gif-wrapper,
 .yt-gif-iframe-wrapper {
-  width: 100%; /* this is what you want */
+  width: 50%; /* this is what you want */
   height: 100%;
   aspect-ratio: 16 / 9;
 }
