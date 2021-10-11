@@ -7,5 +7,5 @@ span[data-tag^=":"] {
 }
 .roam-block-container[data-page-links*="rm-g"] > .rm-block-children {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 265px));
+  grid-template-columns: repeat(auto-fit, minmax(210px, XXX)); /*hwo much width should they have? 300px? 50%?*/
 }
