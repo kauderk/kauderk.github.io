@@ -29,72 +29,75 @@ You might need to reload your graph ![Snag_728a31a0](https://user-images.githubu
 
 
   - ```javascript
-    window.YTGIF = {
-        /* permutations - checkbox */
-        permutations: {
-            start_form_previous_timestamp: '1',
-            clip_life_span_format: '1',
-            referenced_start_timestamp: '1',
-        },
-        experience: {
-            sound_when_video_loops: '1'
-        },
-        /* permutations - checkbox */
-        inactiveStyle: {
-            mute_on_inactive_window: '1',
-            pause_on_inactive_window: '',
-        },
-        /* permutations - checkbox */
-        fullscreenStyle: {
-            smoll_vid_when_big_ends: '1',
-            mute_on_exit_fullscreenchange: '',
-            pause_on_exit_fullscreenchange: '',
-        },
-        /* one at a time - radio */
-        muteStyle: {
-            strict_mute_everything_except_current: '1',
-            muted_on_mouse_over: '',
-            muted_on_any_mouse_interaction: '',
-        },
-        /* one at a time - radio */
-        playStyle: {
-            strict_current_play_on_mouse_over: '1',
-            play_on_mouse_over: '',
-            visible_clips_start_to_play_unmuted: '',
-        },
-        range: {
-            /*seconds up to 60*/
-            wheelOffset: '5',
-        },
-        InAndOutKeys: {
-            /* middle mouse button is on by default */
-            ctrlKey: '1',
-            shiftKey: '',
-            altKey: '',
-        },
-        default: {
-            video_volume: 40,
-            /* 'dark' or 'light' */
-            yt_gif_drop_down_menu_theme: 'dark',
-            /* empty means 50% - only valid css units like px  %  vw */
-            player_span: '50%',
-            /* distinguish between {{[[video]]:}} from {{[[yt-gif]]:}} or 'both' which is also valid*/
-            override_roam_video_component: '',
-            /* src sound when yt gif makes a loop, empty if unwanted */
-            clip_end_sound: 'https://freesound.org/data/previews/256/256113_3263906-lq.mp3',
-        },
-    }
+      window.YTGIF = {
+          /* permutations - checkbox */
+          permutations: {
+              start_form_previous_timestamp: '1',
+              clip_life_span_format: '1',
+              referenced_start_timestamp: '1',
+          },
+          experience: {
+              sound_when_video_loops: '1'
+          },
+          /* permutations - checkbox */
+          inactiveStyle: {
+              mute_on_inactive_window: '1',
+              pause_on_inactive_window: '',
+          },
+          /* permutations - checkbox */
+          fullscreenStyle: {
+              smoll_vid_when_big_ends: '1',
+              mute_on_exit_fullscreenchange: '',
+              pause_on_exit_fullscreenchange: '',
+          },
+          /* one at a time - radio */
+          muteStyle: {
+              strict_mute_everything_except_current: '1',
+              muted_on_mouse_over: '',
+              muted_on_any_mouse_interaction: '',
+          },
+          /* one at a time - radio */
+          playStyle: {
+              strict_current_play_on_mouse_over: '1',
+              play_on_mouse_over: '',
+              visible_clips_start_to_play_unmuted: '',
+          },
+          range: {
+              /*seconds up to 60*/
+              wheelOffset: '5',
+          },
+          InAndOutKeys: {
+              /* middle mouse button is on by default */
+              ctrlKey: '1',
+              shiftKey: '',
+              altKey: '',
+          },
+          default: {
+              video_volume: 40,
+              /* 'dark' or 'light' */
+              yt_gif_drop_down_menu_theme: 'dark',
+              /* empty means 50% - only valid css units like px  %  vw */
+              player_span: '50%',
+              /* distinguish between {{[[video]]:}} from {{[[yt-gif]]:}} or 'both' which is also valid*/
+              override_roam_video_component: '',
+              /* src sound when yt gif makes a loop, empty if unwanted */
+              clip_end_sound: 'https://freesound.org/data/previews/256/256113_3263906-lq.mp3',
+          },
+      }
 
-    var existing = document.getElementById('yt-gif-main');
-    if (!existing) 
-    {
-      var extension = document.createElement("script");
-      extension.src = "https://kauderk.github.io/yt-gif-extension/yt-gif-main.js";
-      extension.id = "yt-gif-main";
-      extension.async = true;
-      extension.type = "text/javascript";
-      document.getElementsByTagName("head")[0].appendChild(extension);
-    }
-
-
+      var existing = document.getElementById('yt-gif-main');
+      if (!existing) 
+      {
+        var extension = document.createElement("script");
+        extension.src = "https://kauderk.github.io/yt-gif-extension/yt-gif-main.js";
+        extension.id = "yt-gif-main";
+        extension.async = true;
+        extension.type = "text/javascript";
+        document.getElementsByTagName("head")[0].appendChild(extension);
+      }
      ```
+
+
+
+
+ﾠ
