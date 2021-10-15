@@ -168,3 +168,60 @@ div.dropdown-show-info:hover > span.dropdown-info-message{
 span.dropdown-info {
   color: var(--dropdown-c);
 }
+
+
+/* deployment funcionality feedback */
+.dropdown_forbidden-input{
+  --deployment-extreme-bg:var(--deployment-forbidden-extreme-bg);
+  --deployment-mid-bg:var(--deployment-forbidden-mid-bg);
+}
+
+.dropdown_allright-input{
+  --deployment-extreme-bg:var(--deployment-forbidden-extreme-bg);
+  --deployment-mid-bg:var(--deployment-allright-mid-bg);
+}
+
+.dropdown_fadeIt-bg_animation {    
+    background-image:none !important;
+    animation: fadeIt 10s ease-in-out; 
+}
+
+@keyframes fadeIt {
+  0%   { background-color: var(--deployment-extreme-bg); }
+  50%  { background-color: var(--deployment-mid-bg); }
+  100% { background-color: var(--deployment-extreme-bg); }
+}
+
+/* should be added and removed through javascript*/
+.dropdown--hidden {
+  display: none !important;
+}
+.dropdown_not-allowed_input *{
+  cursor: not-allowed;
+}
+
+/* Treat it like a perma highlight */
+.dropdown_deployment-style > .dropdown-info-message {
+  --submenu-message-bg: var(--submenu-message-bg-high);
+}
+
+/* pusling animation for visible deployiment style*/
+.drodown_item-pulse-animation {
+  cursor: pointer;
+  animation: pulse_dropdown_item 3s infinite;
+}
+.drodown_item-pulse-animation:hover {
+  animation: none;
+}
+
+@keyframes pulse_dropdown_item {
+  0% {
+    box-shadow: 0 0 0 0 var(--dropdown-pulse-anim-box-shadow-start);
+  }
+  70% {
+    box-shadow: 0 0 0 10px var(--dropdown-pulse-anim-box-shadow-mid);
+  }
+  100% {
+    box-shadow: 0 0 0 0 var(--dropdown-pulse-anim-box-shadow-end);
+  }
+}

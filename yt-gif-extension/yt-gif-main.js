@@ -1,5 +1,4 @@
-//- Hello? 10
-// version 27 - semi-refactored
+// version 29 - semi-refactored
 // Load the IFrame Player API.
 const tag = document.createElement('script');
 tag.src = 'https://www.youtube.com/player_api';
@@ -7,18 +6,34 @@ const firstScriptTag = document.getElementsByTagName('script')[0];
 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 
+
+
 /*-----------------------------------*/
 /* USER SETTINGS  */
 const UI = window.YTGIF;
 /* user doesn't need to see this */
 UI.label = {
-    rangeValue: ''
+    rangeValue: '',
+    loop_volume_displayed: '',
+}
+UI.deploymentStyle = {
+    //menu
+    suspend_yt_gif_deployment: '',
+
+    // radio hidden submenu
+    deployment_style_yt_gif: '1',
+    deployment_style_video: '',
+    deployment_style_both: '',
+
+    // hidden submenu
+    deploy_yt_gifs: '',
 }
 /*-----------------------------------*/
 const iframeIDprfx = 'player_';
 let creationCounter = -1;
 let currentFullscreenPlayer = '';
-let MasterObservers = [undefined];
+let MasterMutationObservers = [];
+let MasterIntersectionObservers = [];
 /*-----------------------------------*/
 const allVideoParameters = new Map();
 const lastBlockIDParameters = new Map();
@@ -40,20 +55,32 @@ const sesionIDs = {
 /*-----------------------------------*/
 function URLFolder(f)
 {
-    return `https://kauderk.github.io/code-snippets/yt-gif-extension/${f}`
+    return `https://kauderk.github.io/yt-gif-extension/${f}`
+};
+function URLFolderCSS(f)
+{
+    return URLFolder(`css/${f}`)
+};
+function URLFolderHTML(f)
+{
+    return URLFolder(`html/${f}`)
+};
+function URLFolderJS(f)
+{
+    return URLFolder(`js/${f}`)
 };
 const links = {
     css: {
-        dropDownMenu: URLFolder('drop-down-menu.css'),
-        player: URLFolder('player.css'),
+        dropDownMenu: URLFolderCSS('drop-down-menu.css'),
+        player: URLFolderCSS('player.css'),
         themes: {
-            dark_dropDownMenu: URLFolder('themes/dark-drop-down-menu.css'),
-            light_dropDownMenu: URLFolder('themes/light-drop-down-menu.css'),
+            dark_dropDownMenu: URLFolderCSS('themes/dark-drop-down-menu.css'),
+            light_dropDownMenu: URLFolderCSS('themes/light-drop-down-menu.css'),
         }
     },
     html: {
-        dropDownMenu: URLFolder('drop-down-menu.html'),
-        playerControls: URLFolder('player-controls.html'),
+        dropDownMenu: URLFolderHTML('drop-down-menu.html'),
+        playerControls: URLFolderHTML('player-controls.html'),
         fetched: {
             playerControls: '',
         },
@@ -65,8 +92,34 @@ const links = {
 const cssData = {
     yt_gif: 'yt-gif',
     yt_gif_wrapper: 'yt-gif-wrapper',
+    yt_gif_iframe_wrapper: 'yt-gif-iframe-wrapper',
     yt_gif_timestamp: 'yt-gif-timestamp',
-    yt_gif_audio: 'yt-gif-audio'
+    yt_gif_audio: 'yt-gif-audio',
+    yt_gif_custom_player_span_first_usage: 'ty-gif-custom-player-span-first-usage',
+
+
+    awiting_player_pulse_anim: 'yt-gif-awaiting-palyer--pulse-animation',
+    awaitng_player_user_input: 'yt-gif-awaiting-for-user-input',
+    awaitng_input_with_thumbnail: 'yt-gif-awaiting-for-user-input-with-thumbnail',
+
+
+    dwn_no_input: 'dropdown_not-allowed_input',
+    dropdown_fadeIt_bg_animation: 'dropdown_fadeIt-bg_animation',
+    dropdown_forbidden_input: 'dropdown_forbidden-input',
+    dropdown_allright_input: 'dropdown_allright-input',
+
+    dropdown__hidden: 'dropdown--hidden',
+    dropdown_deployment_style: 'dropdown_deployment-style',
+    dwp_message: 'dropdown-info-message',
+
+    dwn_pulse_anim: 'drodown_item-pulse-animation',
+}
+const attrData = {
+    initialize_bg: 'initialize-bg',
+    initialize_loop: 'initialize-loop',
+}
+const attrInfo = {
+    videoUrl: 'data-video-url',
 }
 /*-----------------------------------*/
 const ytGifAttr = {
@@ -83,9 +136,23 @@ const ytGifAttr = {
     }
 }
 /*-----------------------------------*/
-const observeEls = {
-    yt_gif: `rm-xparser-default-${cssData.yt_gif}`,
-    video: 'rm-video-player__spacing-wrapper'
+const rm_components_base = {
+    video: {
+        description: '{{[[video]]}}',
+        classToObserve: 'rm-video-player__spacing-wrapper'
+    },
+    yt_gif: {
+        description: '{{[[yt-gif]]}}',
+        classToObserve: `rm-xparser-default-${cssData.yt_gif}`
+    },
+    current: {
+        key: ''
+    },
+}
+const rm_components = rm_components_base;
+rm_components.both = {
+    description: `${rm_components.video} and ${rm_components.yt_gif}`,
+    classesToObserve: [rm_components.video.classToObserve, rm_components.yt_gif.classToObserve]
 }
 /*-----------------------------------*/
 
@@ -95,19 +162,10 @@ const observeEls = {
 // wait for APIs to exist
 const almostReady = setInterval(() =>
 {
-    if ((typeof window.roam42?.common == 'undefined'))
-    {
-        //this is ugly - 
-        console.count('activating YT GIF extension | common');
-        return;
-    }
     if ((typeof (YT) == 'undefined'))
     {
-        console.count('activating YT libraries | common');
-        console.count('this is ugly | YT');
         return;
     }
-
     clearInterval(almostReady);
     Ready(); // load dropdown menu and deploy iframes
 
@@ -115,63 +173,97 @@ const almostReady = setInterval(() =>
 
 async function Ready()
 {
+    // the objects "UI", "links" and "cssData" are binded to all of these functions
     // 1.
     await LoadCSS(links.css.dropDownMenu);
     await LoadCSS(links.css.player);
 
+    await CssThemes_UCS(); // UCS - user customizations
+    await CssPlayer_UCS();
+
+    links.html.fetched.playerControls = await PlayerHtml_UCS();
+
+    await Load_DDM_onTopbar(); // DDM - drop down menu
+
+
     // 2.
-    await deal_with_visual_user_custimizations();
-    await load_html_player_attrs();
+    DDM_to_UI_variables();
 
-    // 3. 
-    await load_html_drop_down_menu();
+    //Flip DDM item Visibility Based On Linked Input Value
+    DDM_FlipBindedDataAttr_RTM([`${cssData.dropdown__hidden}`]); // RTM runtime
 
-    // 4. assign the User Inputs (UI) to their variables
-    drop_down_menu_inputs_as_variables();
+    UpdateOnScroll_RTM('timestamp_display_scroll_offset', UI.label.rangeValue);
+    UpdateOnScroll_RTM('end_loop_sound_volume', UI.label.loop_volume_displayed);
 
-    // 5. One time - the timestamp scroll offset updates on changes
-    timestamp_offset_features();
 
-    // 6. is nice to have an option to stop the masterObserver for good
-    what_components_to_observe_and_deploy();
+    // 3.
+    rm_components.current.key = KeyToObserve_UCS();
 
+    await MasterObserver_UCS_RTM(); // listening for changes
+
+    TogglePlayerThumbnails_DDM_RTM();
+
+    RunMasterObserverWithKey(rm_components.current.key);
+
+    console.log('YT GIF extension activated');
 
     //#region hidden functions
-    async function deal_with_visual_user_custimizations()
+    async function CssThemes_UCS()
     {
-        if (UI.default.yt_gif_drop_down_menu_theme === 'dark')
+        if (UI.default.css_theme === 'dark')
+        {
             await LoadCSS(links.css.themes.dark_dropDownMenu);
-
-        else
+        }
+        else // light
+        {
             await LoadCSS(links.css.themes.light_dropDownMenu);
+        }
+    }
 
+    function CssPlayer_UCS()
+    {
         if (isValidCSSUnit(UI.default.player_span))
         {
-            create_css_rule(`.${cssData.yt_gif_wrapper}, .yt-gif-iframe-wrapper {
+            const css_rule = `.${cssData.yt_gif_wrapper}, .${cssData.yt_gif_iframe_wrapper} {
                 width: ${UI.default.player_span};
-            }`);
+            }`;
+
+            const id = `${cssData.ty_gif_custom_player_span}-${UI.default.player_span}`
+
+            create_css_rule(css_rule, id);
+
+            //#region util
+            function create_css_rule(css_rules = 'starndard css rules', id = `${cssData.yt_gif}-custom`)
+            {
+                const style = document.createElement('style'); // could be it's own function
+                style.id = id;
+                style.setAttribute('type', 'text/css');
+                style.innerHTML = css_rules;
+                document.getElementsByTagName('head')[0].appendChild(style);
+            }
+            //#endregion
         }
     }
 
-    async function load_html_drop_down_menu()
-    {
-        const moreIcon = document.querySelector('.bp3-icon-more').closest('.rm-topbar .rm-topbar__spacer-sm + .bp3-popover-wrapper');
-        const htmlText = await FetchText(links.html.dropDownMenu);
-        moreIcon.insertAdjacentHTML('afterend', htmlText);
-    }
-
-    async function load_html_player_attrs()
+    async function PlayerHtml_UCS()
     {
         let htmlText = await FetchText(links.html.playerControls);
-        if (UI.default.clip_end_sound != '')
+        if (UI.default.end_loop_sound_src != '')
         {
-            htmlText = htmlText.replace(/(?<=<source src=\")(?=")/gm, UI.default.clip_end_sound);
+            htmlText = htmlText.replace(/(?<=<source src=\")(?=")/gm, UI.default.end_loop_sound_src);
         }
-        links.html.fetched.playerControls = htmlText;
         return htmlText
     }
 
-    function drop_down_menu_inputs_as_variables()
+    async function Load_DDM_onTopbar()
+    {
+        const rm_moreIcon = document.querySelector('.bp3-icon-more').closest('.rm-topbar .rm-topbar__spacer-sm + .bp3-popover-wrapper');
+        const htmlText = await FetchText(links.html.dropDownMenu);
+        rm_moreIcon.insertAdjacentHTML('afterend', htmlText);
+    }
+
+
+    function DDM_to_UI_variables()
     {
         // this took a solid hour. thak you thank you
         for (const parentKey in UI)
@@ -187,6 +279,7 @@ async function Ready()
                 switch (parentKey)
                 {
                     case 'permutations':
+                    case 'deploymentStyle':
                     case 'experience':
                     case 'inactiveStyle':
                     case 'fullscreenStyle':
@@ -194,7 +287,7 @@ async function Ready()
                     case 'playStyle':
                         const binaryInput = UI[parentKey][childKey];
                         binaryInput.checked = isTrue(userValue);
-                        binaryInput.previousElementSibling.setAttribute('for', binaryInput.id);
+                        linkClickPreviousElement(binaryInput);
                         break;
                     case 'range':
                         UI[parentKey][childKey].value = Number(userValue);
@@ -207,46 +300,294 @@ async function Ready()
         }
     }
 
-    function timestamp_offset_features()
+    function KeyToObserve_UCS()
     {
-        UI.range.wheelOffset.addEventListener('change', () => UpdateRangeValue());
-        UI.range.wheelOffset.addEventListener('wheel', (e) =>
-        {
-            const dir = Math.sign(e.deltaY) * -1;
-            const parsed = parseInt(UI.range.wheelOffset.value, 10);
-            UI.range.wheelOffset.value = Number(dir + parsed);
-            UpdateRangeValue();
-        });
-        UpdateRangeValue();
-
-        //#region  local utils
-        function UpdateRangeValue()
-        {
-            UI.label.rangeValue.innerHTML = UI.range.wheelOffset.value;
-        }
-        //#endregion
-    }
-
-    function what_components_to_observe_and_deploy()
-    {
+        let currentKey; // this can be shorter for sure, how though?
         if (isTrue(UI.default.override_roam_video_component)) //video
         {
-            MasterObservers.push(ObserveIframesAndDelployYTPlayers(observeEls.video));
+            currentKey = 'video';
         }
-        else if (UI.default.override_roam_video_component === 'both') //observeEls values
+        else if (UI.default.override_roam_video_component === 'both') // both
         {
-            for (const key in observeEls)
-            {
-                MasterObservers.push(ObserveIframesAndDelployYTPlayers(observeEls[key]));
-            }
+            currentKey = 'both';
         }
         else // yt-gif
         {
-            MasterObservers.push(ObserveIframesAndDelployYTPlayers(observeEls.yt_gif));
+            currentKey = 'yt_gif';
+        }
+        return currentKey;
+    }
+
+    //
+    function RunMasterObserverWithKey(key)
+    {
+        const options = {
+            video: () => video_MasterObserver(),
+            yt_gif: () => yt_gif_MasterObserver(),
+            both: () => both_MasterObserver(),
+        }
+        rm_components.current.key = key;
+
+        options[key]();
+        //#region local utils
+        function both_MasterObserver()
+        {
+            for (const classValue of rm_components.both.classesToObserve)
+            {
+                MasterMutationObservers.push(ObserveIframesAndDelployYTPlayers(classValue));
+            }
+        }
+
+        function video_MasterObserver()
+        {
+            MasterMutationObservers.push(ObserveIframesAndDelployYTPlayers(rm_components.video.classToObserve));
+        }
+
+        function yt_gif_MasterObserver()
+        {
+            MasterMutationObservers.push(ObserveIframesAndDelployYTPlayers(rm_components.yt_gif.classToObserve));
+        }
+        //#endregion
+    }
+    //
+
+    function DDM_FlipBindedDataAttr_RTM(hiddenClass = [])
+    {
+        for (const key in attrData)
+        {
+            const value = attrData[key];
+            const main = document.querySelector(data_MAIN_with(value));
+            const all = [...document.querySelectorAll(data_bind_with(value, '*'))];
+            const valid = all.filter(el => el != main);
+
+            toggleValidItemClasses();
+            main.addEventListener('change', toggleValidItemClasses);
+
+            //#region local utils
+            function toggleValidItemClasses()
+            {
+                for (const i of valid)
+                {
+                    toggleClasses(!main.checked, hiddenClass, i);
+                }
+            }
+            //#endregion
+        }
+
+        //#region local utils
+        function data_MAIN_with(value, selector = '')
+        {
+            return `[data-main${selector}='${value}']`;
+        }
+        function data_bind_with(value, selector = '')
+        {
+            return `[data-bind${selector}='${value}']`;
+        }
+
+        //#endregion
+    }
+
+    function TogglePlayerThumbnails_DDM_RTM()
+    {
+        const withThumbnails = UI.experience.awaiting_with_video_thumnail_as_bg;
+        withThumbnails.addEventListener('change', handleIMGbgSwap);
+        function handleIMGbgSwap(e)
+        {
+            const awaitingGifs = [...document.querySelectorAll(`.${cssData.awaitng_input_with_thumbnail}`)];
+            for (const i of awaitingGifs)
+            {
+                if (withThumbnails.checked)
+                {
+                    applyIMGbg(i, i.dataset.videoUrl);
+                }
+                else
+                {
+                    removeIMGbg(i); // spaguetti
+                }
+            }
         }
     }
 
+    async function MasterObserver_UCS_RTM()
+    {
+        const checkMenu = UI.deploymentStyle.suspend_yt_gif_deployment;
+
+        const checkMenuParent = checkMenu.parentElement;
+        const labelCheckMenu = checkMenu.previousElementSibling;
+        //#region labelCheckMenu utils
+        function islabel(str) { return labelCheckMenu.innerHTML == str; }
+        function labelTxt(str) { return labelCheckMenu.innerHTML = str; }
+        //#endregion
+
+        const subHiddenDDM = document.querySelector(`.${cssData.dropdown__hidden}.${cssData.dropdown_deployment_style}`);
+        const subHiddenDDM_message = subHiddenDDM.querySelector(`.${cssData.dwp_message}`);
+
+        const subMenuCheck = UI.deploymentStyle.deploy_yt_gifs;
+        const subMenuCheckParent = subMenuCheck.parentElement;
+
+        //#region checkboxes utils
+        const DeployCheckboxes = [checkMenu, subMenuCheck];
+        function DeployCheckboxesDisabled(b) { DeployCheckboxes.forEach(check => check.disabled = b) }
+        function DeployCheckboxesChecked(b) { DeployCheckboxes.forEach(check => check.checked = b) }
+        //#endregion
+
+
+        //animations css classes
+        const noInputAnimation = [cssData.dwn_no_input]
+        const baseAnimation = [cssData.dropdown_fadeIt_bg_animation, cssData.dwn_no_input];
+        const redAnimationNoInputs = [...baseAnimation, cssData.dropdown_forbidden_input];
+        const greeAnimationInputReady = [...baseAnimation, cssData.dropdown_allright_input];
+
+
+
+
+        const deployInfo = {
+            suspend: `Suspend Observers`,
+            deploy: `Deploy Observers`,
+            discharging: `** Disconecting Observers **`,
+            loading: `** Setting up Observers **`,
+        }
+
+
+
+        labelCheckMenu.innerHTML = deployInfo.suspend;
+
+        checkMenu.addEventListener('change', handleAnimationsInputRestriction);
+        subMenuCheck.addEventListener('change', handleSubmitOptional_rm_comp);
+
+
+        //#region event handelers
+        async function handleAnimationsInputRestriction(e)
+        {
+            if (checkMenu.checked)
+            {
+                if (islabel(deployInfo.suspend))
+                {
+                    await redAnimationCombo(); //after the 10 seconds allow inputs again
+                }
+                else if (islabel(deployInfo.deploy))
+                {
+                    await greenAnimationCombo();
+                }
+            }
+            //#region local util
+            async function redAnimationCombo()
+            {
+                labelTxt(deployInfo.discharging);
+                isVisualFeedbackPlaying(false)
+                CleanMasterObservers();
+                await restricInputsfor10SecMeanWhile(redAnimationNoInputs); //showing the red animation, because you are choosing to suspend
+                labelTxt(deployInfo.deploy);
+
+                //#region local utils
+                function CleanMasterObservers()
+                {
+                    let mutCnt = 0, inscCnt = 0;
+                    for (let i = MasterMutationObservers.length - 1; i >= 0; i--)
+                    {
+                        MasterMutationObservers[i].disconnect();
+                        MasterMutationObservers.splice(i, 1);
+                        mutCnt++; // i don't understand why this ins't counting
+                    }
+                    for (let i = MasterIntersectionObservers.length - 1; i >= 0; i--)
+                    {
+                        MasterIntersectionObservers[i].disconnect();
+                        MasterIntersectionObservers.splice(i, 1);
+                        inscCnt++;
+                    }
+
+                    console.log(`${mutCnt} mutation and ${inscCnt} intersection master observers cleaned`);
+                }
+                //#endregion
+            }
+            //#endregion
+        }
+
+
+        async function handleSubmitOptional_rm_comp(e)
+        {
+            if (subMenuCheck.checked && (islabel(deployInfo.deploy)))
+            {
+                await greenAnimationCombo();
+            }
+        }
+
+
+        //#region utils
+        function ChargeMasterObservers()
+        {
+            const deploymentRadioStates = {
+                video: () => UI.deploymentStyle.deployment_style_video.checked,
+                yt_gif: () => UI.deploymentStyle.deployment_style_yt_gif.checked,
+                both: () => UI.deploymentStyle.deployment_style_both.checked,
+            }
+
+            for (const key in deploymentRadioStates)
+            {
+                if (isTrue(deploymentRadioStates[key]())) // THIS IS CRAZY
+                {
+                    RunMasterObserverWithKey(key)
+                    return;
+                }
+            }
+        }
+        async function greenAnimationCombo()
+        {
+            ChargeMasterObservers();
+            labelTxt(deployInfo.loading); //change label to suspend
+            isVisualFeedbackPlaying(true)
+            await restricInputsfor10SecMeanWhile(greeAnimationInputReady);
+            labelTxt(deployInfo.suspend);
+        }
+        function isVisualFeedbackPlaying(bol)
+        {
+            isSubMenuHidden(bol);
+            isSubDDMpulsing(!bol);
+            //#region local utils
+            function isSubMenuHidden(bol)
+            {
+                const hiddenClass = [`${cssData.dropdown__hidden}`]
+                toggleClasses(bol, hiddenClass, subHiddenDDM);
+            }
+            function isSubDDMpulsing(bol)
+            {
+                const pulseAnim = [cssData.dwn_pulse_anim]; // spagguetti
+                toggleClasses(bol, pulseAnim, subHiddenDDM_message); // spagguetti
+            }
+            //#endregion
+        }
+        function restricInputsfor10SecMeanWhile(animation, duration = 10000)
+        {
+            return new Promise(function (resolve, reject)
+            {
+                DeployCheckboxesDisabled(true);
+                DeployCheckboxesChecked(false);
+                DeployCheckboxesToggleAnims(true, animation);
+
+                setTimeout(() =>
+                {
+                    DeployCheckboxesDisabled(false);
+                    DeployCheckboxesChecked(false);
+                    DeployCheckboxesToggleAnims(false, animation);
+                    resolve();
+
+                }, duration);
+            });
+        }
+
+        function DeployCheckboxesToggleAnims(bol, animation)
+        {
+            toggleClasses(bol, animation, checkMenuParent);
+            toggleClasses(bol, noInputAnimation, subMenuCheckParent);
+        }
+        //#endregion
+
+
+        //#endregion
+    }
+
     //#endregion
+
 
     //#region uitils
     async function LoadCSS(cssURL) // 'cssURL' is the stylesheet's URL, i.e. /css/styles.css
@@ -257,11 +598,31 @@ async function Ready()
         {
             const link = document.createElement('link');
             link.rel = 'stylesheet';
-            link.href = cssURL;
+            link.href = NoCash(cssURL);
             document.head.appendChild(link);
 
             link.onload = () => resolve();
         });
+    }
+
+    function UpdateOnScroll_RTM(key, labelEl)
+    {
+        function UpdateLabel()
+        {
+            labelEl.innerHTML = UI.range[key].value;
+        }
+
+        UI.range[key].addEventListener('change', () => UpdateLabel());
+        UI.range[key].addEventListener('wheel', (e) =>
+        {
+            const dir = Math.sign(e.deltaY) * -1;
+            const parsed = parseInt(UI.range[key].value, 10);
+            UI.range[key].value = Number(dir + parsed);
+
+            UpdateLabel();
+        });
+
+        UpdateLabel();
     }
 
     //#endregion
@@ -276,11 +637,12 @@ function ObserveIframesAndDelployYTPlayers(targetClass)
         onYouTubePlayerAPIReady(component, 'first wave');
     }
 
-    // 2. IntersectionObserver attached to deploy when visible
+    // 2. IntersectionObserver attache, to deploy when visible
     const hidden = AvoidAllZoomChilds();
     for (const component of hidden)
     {
-        ObserveIntersectToSetUpPlayer(component, 'second wave'); // I'm quite impressed with this... I mean...
+        // I'm quite impressed with this... I mean...
+        MasterIntersectionObservers.push(ObserveIntersectToSetUpPlayer(component, 'second wave'));
     }
 
     // 3. ready to observe and deploy iframes
@@ -316,7 +678,7 @@ function ObserveIframesAndDelployYTPlayers(targetClass)
 
         return yobs;
     }
-    // ObserveIntersectToSetUpPlayer when cssClass is added to the DOM
+    // ObserveIntersectToSetUpPlaye when cssClass is added to the DOM
     function mutation_callback(mutationsList, observer)
     {
         const found = [];
@@ -340,7 +702,9 @@ function ObserveIframesAndDelployYTPlayers(targetClass)
         for (const node of found)
         {
             if (isNotZoomPath(node))
-                ObserveIntersectToSetUpPlayer(node, 'valid entries MutationObserver');
+            {
+                MasterIntersectionObservers.push(ObserveIntersectToSetUpPlayer(node, 'valid entries MutationObserver'));
+            }
         }
     };
     //#endregion
@@ -358,6 +722,9 @@ function ObserveIframesAndDelployYTPlayers(targetClass)
     }
     //#endregion
 }
+
+
+
 
 
 
@@ -409,10 +776,43 @@ async function onYouTubePlayerAPIReady(wrapper, message = 'I dunno')
 
 
     //console.count(message);
+    if (UI.experience.awaiting_for_mouseenter_to_initialize.checked)
+    {
+        const awaitingAnimation = [cssData.awiting_player_pulse_anim, cssData.awaitng_player_user_input];
+        const awaitingAnimationThumbnail = [...awaitingAnimation, cssData.awaitng_input_with_thumbnail];
 
-    // 5. ACTUAL CREATION OF THE EMBEDED YOUTUBE VIDEO PLAYER (target)
-    return new window.YT.Player(newId, playerConfig());
+        let mainAnimation = awaitingAnimationThumbnail
+        wrapper.setAttribute(attrInfo.videoUrl, url);
 
+        if (UI.experience.awaiting_with_video_thumnail_as_bg.checked)
+        {
+            applyIMGbg(wrapper, url);
+        }
+        else
+        {
+            mainAnimation = awaitingAnimation;
+        }
+
+        toggleClasses(true, mainAnimation, wrapper);
+        wrapper.addEventListener('mouseenter', CreateYTPlayer);
+
+        //#region handler
+        function CreateYTPlayer(e)
+        {
+            toggleClasses(false, mainAnimation, wrapper);
+            removeIMGbg(wrapper);
+            wrapper.removeEventListener('mouseenter', CreateYTPlayer);
+
+            // 5. ACTUAL CREATION OF THE EMBEDED YOUTUBE VIDEO PLAYER (target)
+            return new window.YT.Player(newId, playerConfig());
+        }
+        //#endregion handler
+    }
+    else
+    {
+        // 5. ACTUAL CREATION OF THE EMBEDED YOUTUBE VIDEO PLAYER (target)
+        return new window.YT.Player(newId, playerConfig());
+    }
     //#region local utilites
     async function InputBlockVideoParams(tempUID)
     {
@@ -445,7 +845,8 @@ async function onYouTubePlayerAPIReady(wrapper, message = 'I dunno')
 
         async function TryToFindURL(desiredUID)
         {
-            const info = await window.roam42.common.getBlockInfoByUID(desiredUID);
+            // const info42 = await window.roam42.common.getBlockInfoByUID(desiredUID);
+            const info = await window.roamAlphaAPI.q(`[:find (pull ?b [:block/string]):where [?b :block/uid "${desiredUID}"]]`);
             const rawText = info[0][0].string;
             const urls = rawText.match(/(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(\S+)?[^ }]/);
             const innerUIDs = rawText.match(/(?<=\(\()([^(].*?[^)])(?=\)\))/gm);
@@ -460,7 +861,7 @@ async function onYouTubePlayerAPIReady(wrapper, message = 'I dunno')
         const media = Object.create(videoParams);
         if (url.match('https://(www.)?youtube|youtu\.be'))
         {
-            // get ids //url = 'https://www.youtube.com/embed//JD-tF73Lyqo?t=423?end=425';
+            // get ids //url = 'https://www.youtube.com/embed//JD-tF73Lyqo?t=413?end=435';
             const stepOne = url.split('?')[0];
             const stepTwo = stepOne.split('/');
             const videoId = stepTwo[stepTwo.length - 1];
@@ -654,13 +1055,26 @@ function onPlayerReady(event)
                     {
                         t.setVolume(desiredVolume);
                     }
-
-                    console.count(`${key} referenced from ${desiredBlockID}`);
+                    const saveMessage = stringWithNoEmail(desiredBlockID);
+                    console.count(`${key} referenced from ${saveMessage}`);
                     break;
+                    //#region local util
+                    function stringWithNoEmail(myString)
+                    {
+                        if (myString.search(/([^.@\s]+)(\.[^.@\s]+)*@([^.@\s]+\.)+([^.@\s]+)/) !== -1)
+                        {
+                            // There is an email! Remove it...
+                            myString = myString.replace(/([^.@\s]+)(\.[^.@\s]+)*@([^.@\s]+\.)+([^.@\s]+)/, "");
+                        }
+                        return myString
+                    }
+                    //#endregion
                 }
             }
         }
     }
+
+
     function seekToUpdatedTime(desiredTime)
     {
         updateStartTime = desiredTime;
@@ -702,7 +1116,7 @@ function onPlayerReady(event)
                     LoopTroughVisibleYTGIFs(config);
                 }
             }
-            if (UI.playStyle.strict_current_play_on_mouse_over.checked)
+            if (UI.playStyle.strict_play_current_on_mouse_over.checked)
             {
                 const config = {
                     styleQuery: ytGifAttr.play.playing,
@@ -862,7 +1276,7 @@ function onPlayerReady(event)
     {
         videoIsPlayingWithSound(false);
 
-        let dir = tick() + (Math.sign(e.deltaY) * Math.round(UI.range.wheelOffset.value) * -1);
+        let dir = tick() + (Math.sign(e.deltaY) * Math.round(UI.range.timestamp_display_scroll_offset.value) * -1);
         if (UI.permutations.clip_life_span_format.checked)
         {
             if (dir <= start)
@@ -927,7 +1341,7 @@ function onPlayerReady(event)
     {
         currentFullscreenPlayer = t.h.id;
 
-        if (!document.fullscreenElement)
+        if (!document.fullscreenElement && isParentHover()) //https://stackoverflow.com/questions/36767196/check-if-mouse-is-inside-div#:~:text=if%20(element.parentNode.matches(%22%3Ahover%22))%20%7B
         {
             if (UI.fullscreenStyle.mute_on_exit_fullscreenchange.checked)
             {
@@ -1053,19 +1467,24 @@ function onPlayerReady(event)
 
         t.__proto__.timeDisplayHumanInteraction = false;
     }
+    else if (isParentHover()) // human wants to hear and watch
+    {
+        videoIsPlayingWithSound(true);
+    }
     else //Freeze
     {
         const OneFrame = setInterval(() =>
         {
             if (tick() > updateStartTime + loadingMarginOfError)
             {
+                // or if mouse is inside parent
                 if (t.__proto__.globalHumanInteraction) // usees is listening, don't interrupt
                 {
                     videoIsPlayingWithSound(true);
                 }
                 else if (inViewport(iframe) && !t.__proto__.globalHumanInteraction)
                 {
-                    togglePlay(UI.playStyle.visible_clips_start_to_play_unmuted.checked);
+                    togglePlay(UI.playStyle.visible_clips_start_to_play_unmuted.checked); // pause
                 }
 
                 clearInterval(OneFrame);
@@ -1141,7 +1560,12 @@ function onPlayerReady(event)
 
     function AnyPlayOnHover()
     {
-        return UI.playStyle.play_on_mouse_over.checked || UI.playStyle.strict_current_play_on_mouse_over.checked
+        return UI.playStyle.play_on_mouse_over.checked || UI.playStyle.strict_play_current_on_mouse_over.checked
+    }
+
+    function isParentHover()
+    {
+        return parent.matches(":hover");
     }
 
 
@@ -1192,11 +1616,11 @@ function onStateChange(state)
     {
         t.seekTo(map?.start || 0);
 
-        if (UI.default.clip_end_sound != '')
+        if (isValidUrl(UI.default.end_loop_sound_src))
         {
             if (UI.experience.sound_when_video_loops.checked)
             {
-                play(UI.default.clip_end_sound);
+                play(UI.default.end_loop_sound_src);
                 //#region util
                 function play(url)
                 {
@@ -1204,6 +1628,7 @@ function onStateChange(state)
                     { // return a promise
                         var audio = new Audio();                     // create audio wo/ src
                         audio.preload = "auto";                      // intend to play through
+                        audio.volume = mapRange(UI.range.end_loop_sound_volume.value, 0, 100, 0, 1.0);
                         audio.autoplay = true;                       // autoplay when loaded
                         audio.onerror = reject;                      // on error, reject
                         audio.onended = resolve;                     // when done, resolve
@@ -1245,6 +1670,27 @@ function onStateChange(state)
 
 
 //#region Utilies
+function linkClickPreviousElement(el)
+{
+    el.previousElementSibling.setAttribute('for', el.id); // link clicks
+}
+
+function applyIMGbg(wrapper, url)
+{
+    wrapper.style.backgroundImage = `url(${get_youtube_thumbnail(url)})`;
+}
+function removeIMGbg(wrapper)
+{
+    wrapper.style.backgroundImage = 'none';
+}
+
+
+function NoCash(url)
+{
+    return url + "?" + new Date().getTime()
+}
+
+
 function inViewport(els)
 {
     let matches = [],
@@ -1268,6 +1714,8 @@ function inViewport(els)
     }
     return matches;
 }
+
+
 
 function div(classList)
 {
@@ -1295,12 +1743,25 @@ function label(classList)
     return emptyEl(classList, el);
 }
 
+
 function emptyEl(classList, el)
 {
     if (classList)
         el.classList.add(classList);
     return el;
 }
+function toggleClasses(bol, classNames, el)
+{
+    if (bol)
+    {
+        el.classList.add(...classNames);
+    }
+    else
+    {
+        el.classList.remove(...classNames);
+    }
+}
+
 
 function exitFullscreen()
 {
@@ -1327,6 +1788,7 @@ function allIframeStyle(style)
 {
     return document.querySelectorAll(`[${style}]`);
 }
+
 
 function htmlToElement(html)
 {
@@ -1368,11 +1830,15 @@ function isTrue(value)
             return false;
     }
 }
+function isValidUrl(value)
+{
+    return /^(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:[/?#]\S*)?$/i.test(value);
+}
 
 
 async function FetchText(url)
 {
-    const [response, err] = await isValidFetch(url); // firt time fetching something... This is cool
+    const [response, err] = await isValidFetch(NoCash(url)); // firt time fetching something... This is cool
     if (response)
         return await response.text();
 }
@@ -1380,7 +1846,7 @@ async function isValidFetch(url)
 {
     try
     {
-        const response = await fetch(url);
+        const response = await fetch(url, { cache: "no-store" });
         if (!response.ok)
             throw new Error('Request failed.');
         return [response, null];
@@ -1391,14 +1857,48 @@ async function isValidFetch(url)
         return [null, error];
     };
 }
-
-function create_css_rule(css_rules = 'starndard css rules')
+function get_youtube_thumbnail(url, quality)
 {
-    const style = document.createElement('style');
-    style.setAttribute('type', 'text/css');
-    style.innerHTML = css_rules;
-    document.getElementsByTagName('head')[0].appendChild(style);
+    //https://stackoverflow.com/questions/18681788/how-to-get-a-youtube-thumbnail-from-a-youtube-iframe
+    if (url)
+    {
+        var video_id, thumbnail, result;
+        if (result = url.match(/youtube\.com.*(\?v=|\/embed\/)(.{11})/))
+        {
+            video_id = result.pop();
+        }
+        else if (result = url.match(/youtu.be\/(.{11})/))
+        {
+            video_id = result.pop();
+        }
+
+        if (video_id)
+        {
+            if (typeof quality == "undefined")
+            {
+                quality = 'high';
+            }
+
+            var quality_key = 'maxresdefault'; // Max quality
+            if (quality == 'low')
+            {
+                quality_key = 'sddefault';
+            } else if (quality == 'medium')
+            {
+                quality_key = 'mqdefault';
+            } else if (quality == 'high')
+            {
+                quality_key = 'hqdefault';
+            }
+
+            var thumbnail = "https://img.youtube.com/vi/" + video_id + "/" + quality_key + ".jpg";
+            return thumbnail;
+        }
+    }
+    return false;
 }
+
+
 function isValidCSSUnit(value)
 {
     //  valid CSS unit types
@@ -1465,8 +1965,176 @@ function targetNotTogglePlay(id, bol = false)
 {
     return recordedIDs.get(id)?.target?.togglePlay(bol);
 }
+
+// linearly maps value from the range (a..b) to (c..d)
+function mapRange(value, a, b, c, d)
+{
+    // first map value from (a..b) to (0..1)
+    value = (value - a) / (b - a);
+    // then map it from (0..1) to (c..d) and return it
+    return c + value * (d - c);
+}
+
+
 //#endregion
 
+//#region 0 refences
+function handleMyMouseMove(e)
+{
+    //https://stackoverflow.com/questions/5730433/keep-mouse-inside-a-div
+    e = e || window.event;
+    var mouseX = e.clientX;
+    var mouseY = e.clientY;
+    if (mousepressed)
+    {
+        divChild.style.left = mouseX + "px";
+        divChild.style.top = mouseY + "px";
+    }
+}
+function element_mouse_is_inside(elementToBeChecked, mouseEvent, with_margin, offset_object)
+{
+    if (!with_margin)
+    {
+        with_margin = false;
+    }
+    if (typeof offset_object !== 'object')
+    {
+        offset_object = {};
+    }
+    var elm_offset = elementToBeChecked.offset();
+    var element_width = elementToBeChecked.width();
+    element_width += parseInt(elementToBeChecked.css("padding-left").replace("px", ""));
+    element_width += parseInt(elementToBeChecked.css("padding-right").replace("px", ""));
+    var element_height = elementToBeChecked.height();
+    element_height += parseInt(elementToBeChecked.css("padding-top").replace("px", ""));
+    element_height += parseInt(elementToBeChecked.css("padding-bottom").replace("px", ""));
+    if (with_margin)
+    {
+        element_width += parseInt(elementToBeChecked.css("margin-left").replace("px", ""));
+        element_width += parseInt(elementToBeChecked.css("margin-right").replace("px", ""));
+        element_height += parseInt(elementToBeChecked.css("margin-top").replace("px", ""));
+        element_height += parseInt(elementToBeChecked.css("margin-bottom").replace("px", ""));
+    }
+
+    elm_offset.rightBorder = elm_offset.left + element_width;
+    elm_offset.bottomBorder = elm_offset.top + element_height;
+
+    if (offset_object.hasOwnProperty("top"))
+    {
+        elm_offset.top += parseInt(offset_object.top);
+    }
+    if (offset_object.hasOwnProperty("left"))
+    {
+        elm_offset.left += parseInt(offset_object.left);
+    }
+    if (offset_object.hasOwnProperty("bottom"))
+    {
+        elm_offset.bottomBorder += parseInt(offset_object.bottom);
+    }
+    if (offset_object.hasOwnProperty("right"))
+    {
+        elm_offset.rightBorder += parseInt(offset_object.right);
+    }
+    var mouseX = mouseEvent.pageX;
+    var mouseY = mouseEvent.pageY;
+
+    if ((mouseX > elm_offset.left && mouseX < elm_offset.rightBorder)
+        && (mouseY > elm_offset.top && mouseY < elm_offset.bottomBorder))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+function element_mouse_is_inside_mod(elementToBeChecked, mouseEvent, with_margin, offset_object)
+{
+    if (!with_margin)
+    {
+        with_margin = false;
+    }
+    if (typeof offset_object !== 'object')
+    {
+        offset_object = {};
+    }
+    debugger;
+    const elm_offset = elementToBeChecked.offsetTop;
+
+    let element_width = elementToBeChecked.offsetWidth;
+    // element_width += parseInt(elementToBeChecked.style.paddingLeft.replace("px", ""));
+    // element_width += parseInt(elementToBeChecked.style.paddingRight.replace("px", ""));
+
+    debugger;
+    let element_height = elementToBeChecked.offsetHeight;
+    // element_height += parseInt(elementToBeChecked.style.paddingTop.replace("px", ""));
+    // element_height += parseInt(elementToBeChecked.style.paddingBottom.replace("px", ""));
+
+
+    if (with_margin)
+    {
+        element_width += parseInt(elementToBeChecked.marginLeft.replace("px", ""));
+        element_width += parseInt(elementToBeChecked.marginRight.replace("px", ""));
+        element_height += parseInt(elementToBeChecked.marginTop.replace("px", ""));
+        element_height += parseInt(elementToBeChecked.marginBottom.replace("px", ""));
+        debugger;
+    }
+
+
+    // elm_offset.rightBorder = elm_offset.offsetLeft + element_width;
+    // elm_offset.bottomBorder = elm_offset.offsetTop + element_height;
+
+    debugger;
+
+    if (offset_object.hasOwnProperty("top"))
+    {
+        elm_offset.top += parseInt(offset_object.top);
+    }
+    if (offset_object.hasOwnProperty("left"))
+    {
+        elm_offset.left += parseInt(offset_object.left);
+    }
+    if (offset_object.hasOwnProperty("bottom"))
+    {
+        elm_offset.bottomBorder += parseInt(offset_object.bottom);
+    }
+    if (offset_object.hasOwnProperty("right"))
+    {
+        elm_offset.rightBorder += parseInt(offset_object.right);
+    }
+    debugger;
+
+    mouseEvent = mouseEvent || window;
+    const mouseX = mouseEvent?.pageX || mouseEvent?.clientX;
+    const mouseY = mouseEvent?.pageY || mouseEvent?.clientY;
+    debugger;
+
+
+    if ((mouseX > elm_offset.left && mouseX < elm_offset.rightBorder)
+        && (mouseY > elm_offset.top && mouseY < elm_offset.bottomBorder))
+    {
+        debugger;
+        return true;
+    }
+    else
+    {
+        debugger;
+        return false;
+    }
+}
+function is_mouse_inside(el, e)
+{
+    const px = e.clientX;
+    const x = el.width();
+    const py = 0;
+    const y = e.clientY;
+    const horizontal = px > x && px < x
+    if (px > x)
+    {
+
+    }
+}
+//#endregion
 
 
 
@@ -1474,6 +2142,17 @@ function targetNotTogglePlay(id, bol = false)
 // I want to add ☐ ☑
 // radios : mute pause when document is inactive ☑ ✘
 // click the item checks the btn ☑ ☑
+
+// use only one audio?? ☑ ☑ url so is customizable by nature
+// loop sound adjusment with slider hidden inside sub menu | ohhhh bind main checkbox to hidde it's "for"
+// deploy on mouse enter ☑ ☑
+// scrolwheel is broke, fix ☑ ☑
+
+// to apply volume on end loop audio ☑ ☑
+// http vs https ☑ ☑
+// coding train shifman mouse inside div, top, left ✘ ☑ ☑
+
+// bind thumbnail input element hiddeness to initialize checkbox
 
 // play a sound to indicate the current gif makes loop ☑ ☑
 // https://freesound.org/people/candy299p/sounds/250091/          * film ejected *

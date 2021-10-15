@@ -34,11 +34,67 @@
                             <input type="checkbox" name="" id="referenced_start_timestamp" checked>
                         </span>
                         <span class="dropdown-item">
-                            <label for="" class="dropdown-item-description"
-                                title="Nothing sounds? Probably the provided URL isn't working">Sound when video
-                                loops</label>
-                            <input type="checkbox" name="" id="sound_when_video_loops" checked>
+                            <label for="" class="dropdown-item-description" title="">Suspend YT GIF deployment</label>
+                            <input type="checkbox" name="deploy" id="suspend_yt_gif_deployment" checked>
                         </span>
+                        <div class="dropdown yt-gif-style dropdown--hidden dropdown_deployment-style">
+                            <span class="dropdown-info-message">YT GIFs Deployment Style</span>
+                            <div class="dropdown-content dropdown-info-box">
+                                <span class="dropdown-item">
+                                    <label for="" class="dropdown-item-description" title="">{{[[yt-gif]]}}</label>
+                                    <input type="radio" name="deployment" id="deployment_style_yt_gif">
+                                </span>
+                                <span class="dropdown-item">
+                                    <label for="" class="dropdown-item-description" title="">{{[[video]]}}</label>
+                                    <input type="radio" name="deployment" id="deployment_style_video">
+                                </span>
+                                <span class="dropdown-item">
+                                    <label for="" class="dropdown-item-description" title="">{{[[yt-gif]]}} and
+                                        {{[[video]]}}</label>
+                                    <input type="radio" name="deployment" id="deployment_style_both">
+                                </span>
+                                <span class="dropdown-item">
+                                    <label for="" class="dropdown-item-description" title="">Deploy YT
+                                        GIFs</label>
+                                    <input type="checkbox" name="deploy" id="deploy_yt_gifs">
+                                </span>
+                            </div>
+                        </div>
+                        <div class="dropdown yt-gif-style yt-gif-inactive-style">
+                            <span class="dropdown-info-message">Experience</span>
+                            <div class="dropdown-content dropdown-info-box">
+                                <span class="dropdown-item">
+                                    <label for="" class="dropdown-item-description"
+                                        title="Initialize on mouse enter">Initialize
+                                        on mouse enter</label>
+                                    <input type="checkbox" name="" data-main="initialize-bg"
+                                        id="awaiting_for_mouseenter_to_initialize" checked>
+                                </span>
+                                <span class="dropdown-item" data-bind="initialize-bg-item">
+                                    <label for="" class="dropdown-item-description"
+                                        title="Initialize on mouse enter">Awaiting with video thumbnail</label>
+                                    <input type="checkbox" name="" id="awaiting_with_video_thumnail_as_bg" checked>
+                                </span>
+                                <span class="dropdown-item">
+                                    <label for="" class="dropdown-item-description"
+                                        title="Nothing sounds? Probably the provided URL isn't working">Sound when video
+                                        loops</label>
+                                    <input type="checkbox" name="end_loop_sound" data-main="initialize-loop"
+                                        id="sound_when_video_loops" checked>
+                                </span>
+                                <span class="dropdown-item rangeOffset sub-dropdown--range" name="end_loop_sound"
+                                    data-bind="initialize-loop-item">
+                                    <span class="dropdown-info-message dropdown-item-description">Volume of looping
+                                        sound</span>
+                                    <div class="dropdown-item-contain-two">
+                                        <input type="range" min="1" max="100" value="50" class="slider"
+                                            id="end_loop_sound_volume">
+                                        <label for="" class="dropdown-item-description" title="Amount | scroll wheel"
+                                            id="loop_volume_displayed">50</label>
+                                    </div>
+                                </span>
+                            </div>
+                        </div>
                         <div class="dropdown yt-gif-style yt-gif-inactive-style">
                             <span class="dropdown-info-message">Inactive Window</span>
                             <div class="dropdown-content dropdown-info-box">
@@ -64,6 +120,8 @@
                                         title="Exit Fullscreen when the clip ends">Smoll Vid When Big Ends</label>
                                     <input type="checkbox" name="fullscreen" id="smoll_vid_when_big_ends" checked>
                                 </span>
+                                <span class="dropdown-info-message dropdown-info-message--aditional">While hovering the
+                                    frame</span>
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description" title="">Mute when exiting
                                         fullscreen</label>
@@ -107,7 +165,7 @@
                                     <label for="" class="dropdown-item-description"
                                         title="In and Out Keys or not, all get muted, except current">Strict &
                                         Recomended - play current on mouse enter</label>
-                                    <input type="radio" name="playStyle" id="strict_current_play_on_mouse_over" checked>
+                                    <input type="radio" name="playStyle" id="strict_play_current_on_mouse_over" checked>
                                 </span>
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description"
@@ -127,7 +185,8 @@
                             <span class="dropdown-info-message dropdown-item-description">Time offset on scroll
                                 wheel</span>
                             <div class="dropdown-item-contain-two">
-                                <input type="range" min="1" max="60" value="1" class="slider" id="wheelOffset">
+                                <input type="range" min="1" max="60" value="1" class="slider"
+                                    id="timestamp_display_scroll_offset">
                                 <label for="" class="dropdown-item-description" title="Amount of seconds | scroll wheel"
                                     id="rangeValue">1</label>
                             </div>
