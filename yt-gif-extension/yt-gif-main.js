@@ -861,35 +861,18 @@ async function onYouTubePlayerAPIReady(wrapper, message = 'I dunno')
         const media = Object.create(videoParams);
         if (url.match('https://(www.)?youtube|youtu\.be'))
         {
-            // get ids //url = 'https://www.youtube.com/embed//JD-tF73Lyqo?t=413?end=435';
-            const stepOne = url.split('?')[0];
-            const stepTwo = stepOne.split('/');
-            const videoId = stepTwo[stepTwo.length - 1];
+            media.id = YouTubeGetID(url);
 
-            // get start & end seconds
-            const start = /(t=|start=)(?:\d+)/g;
-            const startSeconds = ExtractFromURL('int', start);
-            //
-            const end = /(end=)(?:\d+)/g;
-            const endSeconds = ExtractFromURL('int', end);
+            media.start = ExtractFromURL('int', /(t=|start=)(?:\d+)/g);
+            media.end = ExtractFromURL('int', /(end=)(?:\d+)/g);
 
-            // get playback speed
-            const speed = /(s=|speed=)([-+]?\d*\.\d+|\d+)/g;
-            const speedFloat = ExtractFromURL('float', speed);
+            media.speed = ExtractFromURL('float', /(s=|speed=)([-+]?\d*\.\d+|\d+)/g);
 
-            // get volume
-            const volume = /(vl=)(?:\d+)/g;
-            const volumeInt = ExtractFromURL('int', volume);
-
+            media.volume = ExtractFromURL('int', /(vl=|volume=)(?:\d+)/g);
 
             media.src = url;
             media.type = 'youtube';
-            media.id = videoId;
-            media.start = startSeconds;
-            media.end = endSeconds;
-            media.speed = speedFloat;
-            media.volume = volumeInt;
-            //
+
             success = true;
 
             //#region util
@@ -927,6 +910,11 @@ async function onYouTubePlayerAPIReady(wrapper, message = 'I dunno')
                     desiredValue = valueCallback(desiredValue, pass);
                 }
                 return desiredValue;
+            }
+            function YouTubeGetID(url)
+            {//https://stackoverflow.com/questions/28735459/how-to-validate-youtube-url-in-client-side-in-text-box#:~:text=function%20matchYoutubeUrl(url)%20%7B
+                url = url.split(/(vi\/|v=|\/v\/|youtu\.be\/|\/embed\/)/);
+                return (url[2] !== undefined) ? url[2].split(/[^0-9a-z_\-]/i)[0] : url[0];
             }
             //#endregion
         }
