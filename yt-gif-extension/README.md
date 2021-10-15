@@ -6,10 +6,20 @@ Loops videos between the `start` and `end` YouTube URL parameters.
 `{{[[yt-gif]]: https://youtu.be/46A01oukux0?t=20&end=100 }}` Simple as that, create as many "**YouTube Gifs**" and begin to visualize some ideas.
 
 
-# HOW
+# Features
+
+| **Persmutations**              | **ON**                                                        | **OFF**                                                 |
+|:------------------------------:|:-------------------------------------------------------------:|:-------------------------------------------------------:|
+| Start from previous timestamps | From the same edited block                                    | Always start from `t=`.                                 |
+| Clip lifespan format           | Display the duration from `t=` to `end=`                      | Display the clip timestamp relative to the entire video |
+| Referenced start timestamp     | `Shift click`: the block will start from the referenced block | Always start from `t=`.                                 |
+| Observers                      | Stop or change the functionality of the YT GIF extension      | Depends on the request                                  |
+
 
 
 # Examples
+
+
 
 ##### `DISCALIMER` these styles && DARK CSS rules are not part of the demo
 
