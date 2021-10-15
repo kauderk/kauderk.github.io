@@ -38,4 +38,7 @@
   --awaiting-player-pulse-anim-box-shadow-start: rgb(126 126 126 / 79%);
   --awaiting-player-pulse-anim-box-shadow-mid: #565656;
   --awaiting-player-pulse-anim-box-shadow-end: rgb(126 126 126 / 79%);
+
+  --ddm-tooltip-c: #989898;
+  --ddm-tooltip-bg: #333;
 }

@@ -38,4 +38,7 @@
   --awaiting-player-pulse-anim-box-shadow-start: rgba(204, 169, 44, 0.4);
   --awaiting-player-pulse-anim-box-shadow-mid: rgba(204, 169, 44, 0);
   --awaiting-player-pulse-anim-box-shadow-end: rgba(204, 169, 44, 0);
+
+  --ddm-tooltip-c: #333;
+  --ddm-tooltip-bg: #989898;
 }
