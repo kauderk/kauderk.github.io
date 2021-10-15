@@ -42,7 +42,7 @@ YT GIF EXTENSION {{[[roam/js]]}}
           },
           experience: {
               sound_when_video_loops: '1',
-              awaiting_for_mouseenter_to_initialize: '1',
+              awaiting_for_mouseenter_to_initialize: '',
               awaiting_with_video_thumnail_as_bg: '1',
           },
           /* permutations - checkbox */
