@@ -4,7 +4,7 @@
         <span class="bp3-popover-wrapper">
             <span class="bp3-popover-target">
                 <div class="dropdown">
-                    <!-- THE id NAMING convention for this element: they_must_be_separated_by_underscores-->
+                    <!-- THE > id < NAMING convention for this element: they_must_be_separated_by_underscores-->
                     <span class="dropbtn bp3-button bp3-minimal bp3-small bp3-icon-more ty-gif-icon">
                         <svg class="yt-gif-svg" width="24px" height="24px" viewBox="0 0 24 24"
                             xmlns="http://www.w3.org/2000/svg">
@@ -17,79 +17,86 @@
                     <div class="dropdown-content">
                         <span class="dropdown-item">
                             <label for="" class="dropdown-item-description"
-                                title="Seek to last timestamp before editing a block">Start from previous
+                                data-tooltip="Remember timestamp or rely on default">Start from previous
                                 timestamp</label>
                             <input type="checkbox" name="" id="start_form_previous_timestamp" checked>
                         </span>
                         <span class="dropdown-item">
                             <label for="" class="dropdown-item-description"
-                                title="Display the clip remaindings and it's duration only">Clip lifespan
+                                data-tooltip="Clip duration or relative to entire video">Clip lifespan
                                 format</label>
                             <input type="checkbox" name="" id="clip_life_span_format" checked>
                         </span>
                         <span class="dropdown-item">
                             <label for="" class="dropdown-item-description"
-                                title="Should use the last timestamp from it's referenced parent">Referenced start
-                                timestamp</label>
+                                data-tooltip="For new blocks with the same id or rely on default">Referenced
+                                start timestamp</label>
                             <input type="checkbox" name="" id="referenced_start_timestamp" checked>
                         </span>
                         <span class="dropdown-item">
-                            <label for="" class="dropdown-item-description" title="">Suspend YT GIF deployment</label>
+                            <label for="" class="dropdown-item-description"
+                                data-tooltip="STOP or CHANGE the behaviour of the extension">Suspend YT GIF
+                                deployment</label>
                             <input type="checkbox" name="deploy" id="suspend_yt_gif_deployment" checked>
                         </span>
                         <div class="dropdown yt-gif-style dropdown--hidden dropdown_deployment-style">
-                            <span class="dropdown-info-message">YT GIFs Deployment Style</span>
+                            <span class="dropdown-info-message" data-tooltip="Look for components to create YT GIFs">YT
+                                GIFs Deployment Style</span>
                             <div class="dropdown-content dropdown-info-box">
                                 <span class="dropdown-item">
-                                    <label for="" class="dropdown-item-description" title="">{{[[yt-gif]]}}</label>
+                                    <label for="" class="dropdown-item-description"
+                                        data-tooltip="">{{[[yt-gif]]}}</label>
                                     <input type="radio" name="deployment" id="deployment_style_yt_gif">
                                 </span>
                                 <span class="dropdown-item">
-                                    <label for="" class="dropdown-item-description" title="">{{[[video]]}}</label>
+                                    <label for="" class="dropdown-item-description"
+                                        data-tooltip="">{{[[video]]}}</label>
                                     <input type="radio" name="deployment" id="deployment_style_video">
                                 </span>
                                 <span class="dropdown-item">
-                                    <label for="" class="dropdown-item-description" title="">{{[[yt-gif]]}} and
+                                    <label for="" class="dropdown-item-description" data-tooltip="">{{[[yt-gif]]}} and
                                         {{[[video]]}}</label>
                                     <input type="radio" name="deployment" id="deployment_style_both">
                                 </span>
                                 <span class="dropdown-item">
-                                    <label for="" class="dropdown-item-description" title="">Deploy YT
-                                        GIFs</label>
+                                    <label for="" class="dropdown-item-description" data-tooltip="Submit changes">Deploy
+                                        YT GIFs</label>
                                     <input type="checkbox" name="deploy" id="deploy_yt_gifs">
                                 </span>
                             </div>
                         </div>
                         <div class="dropdown yt-gif-style yt-gif-inactive-style">
-                            <span class="dropdown-info-message">Experience</span>
+                            <span class="dropdown-info-message" data-tooltip="Quality of life Features">
+                                Experience</span>
                             <div class="dropdown-content dropdown-info-box">
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description"
-                                        title="Initialize on mouse enter">Initialize
+                                        data-tooltip="Performance mode - Don't load until interaction">Initialize
                                         on mouse enter</label>
                                     <input type="checkbox" name="" data-main="initialize-bg"
                                         id="awaiting_for_mouseenter_to_initialize" checked>
                                 </span>
                                 <span class="dropdown-item" data-bind="initialize-bg-item">
                                     <label for="" class="dropdown-item-description"
-                                        title="Initialize on mouse enter">Awaiting with video thumbnail</label>
+                                        data-tooltip="Aesthetics - or - minimalism">Awaiting with video
+                                        thumbnail</label>
                                     <input type="checkbox" name="" id="awaiting_with_video_thumnail_as_bg" checked>
                                 </span>
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description"
-                                        title="Nothing sounds? Probably the provided URL isn't working">Sound when video
-                                        loops</label>
+                                        data-tooltip="Reminds you that the clip has ended">Sound
+                                        when video loops</label>
                                     <input type="checkbox" name="end_loop_sound" data-main="initialize-loop"
-                                        id="sound_when_video_loops" checked>
+                                        data-tooltip="From 0 to 100" id="sound_when_video_loops" checked>
                                 </span>
                                 <span class="dropdown-item rangeOffset sub-dropdown--range" name="end_loop_sound"
                                     data-bind="initialize-loop-item">
-                                    <span class="dropdown-info-message dropdown-item-description">Volume of looping
+                                    <span class="dropdown-info-message dropdown-item-description">Volume - End loop
                                         sound</span>
                                     <div class="dropdown-item-contain-two">
                                         <input type="range" min="1" max="100" value="50" class="slider"
                                             id="end_loop_sound_volume">
-                                        <label for="" class="dropdown-item-description" title="Amount | scroll wheel"
+                                        <label for="" class="dropdown-item-description" data-tooltip="From 0 to 100"
                                             id="loop_volume_displayed">50</label>
                                     </div>
                                 </span>
@@ -101,12 +108,13 @@
                                 <span class="dropdown-info-message dropdown-info-message--aditional">Feature on hold. I
                                     can't build it. - Can you?</span>
                                 <span class="dropdown-item">
-                                    <label for="" class="dropdown-item-description" title="">Mute when document is
-                                        inactive</label>
+                                    <label for="" class="dropdown-item-description" data-tooltip="F">Mute when document
+                                        is inactive</label>
                                     <input type="checkbox" name="fullscreen" id="mute_on_inactive_window">
                                 </span>
                                 <span class="dropdown-item">
-                                    <label for="" class="dropdown-item-description" title="">Pause when document is
+                                    <label for="" class="dropdown-item-description" data-tooltip="F">Pause when document
+                                        is
                                         inactive</label>
                                     <input type="checkbox" name="fullscreen" id="pause_on_inactive_window">
                                 </span>
@@ -117,42 +125,45 @@
                             <div class="dropdown-content dropdown-info-box">
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description"
-                                        title="Exit Fullscreen when the clip ends">Smoll Vid When Big Ends</label>
+                                        data-tooltip="Exit Fullscreen when the clip ends?">Smoll Vid When Big
+                                        Ends</label>
                                     <input type="checkbox" name="fullscreen" id="smoll_vid_when_big_ends" checked>
                                 </span>
                                 <span class="dropdown-info-message dropdown-info-message--aditional">While hovering the
                                     frame</span>
                                 <span class="dropdown-item">
-                                    <label for="" class="dropdown-item-description" title="">Mute when exiting
+                                    <label for="" class="dropdown-item-description" data-tooltip="">Mute when exiting
                                         fullscreen</label>
                                     <input type="checkbox" name="fullscreen" id="mute_on_exit_fullscreenchange">
                                 </span>
                                 <span class="dropdown-item">
-                                    <label for="" class="dropdown-item-description" title="">Pause when exiting
+                                    <label for="" class="dropdown-item-description" data-tooltip="">Pause when exiting
                                         fullscreen</label>
                                     <input type="checkbox" name="fullscreen" id="pause_on_exit_fullscreenchange">
                                 </span>
                             </div>
                         </div>
                         <div class="dropdown yt-gif-style yt-gif-sound-style">
-                            <span class="dropdown-info-message">Sound Style</span>
+                            <span class="dropdown-info-message" data-tooltip="Mute some - unmute some">Sound
+                                Style</span>
                             <div class="dropdown-content dropdown-info-box">
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description"
-                                        title="Maximum of 1 YT GIF to play unmuted at a time">Strict & recommended -
-                                        mute everything except current</label>
+                                        data-tooltip="Maximum of 1 YT GIF plays unmuted at a time">Strict &
+                                        recommended - mute everything except current</label>
                                     <input type="radio" name="muteStyle" id="strict_mute_everything_except_current"
                                         checked>
                                 </span>
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description"
-                                        title="Play the video without sound when hovering the frame">muted on mouse
-                                        enter</label>
+                                        data-tooltip="Play without sound. But the in and out keys can unmute it.">muted
+                                        on
+                                        mouse enter</label>
                                     <input type="radio" name="muteStyle" id="muted_on_mouse_over">
                                 </span>
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description"
-                                        title="Holding the middle mouse button or the In and Out Keys won't unmute the YT GIF">muted
+                                        data-tooltip="The InAndOutKeys won't unmute the YT GIF">muted
                                         either way</label>
                                     <input type="radio" name="muteStyle" id="muted_on_any_mouse_interaction">
                                 </span>
@@ -163,32 +174,32 @@
                             <div class="dropdown-content dropdown-info-box">
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description"
-                                        title="In and Out Keys or not, all get muted, except current">Strict &
+                                        data-tooltip="InandOutKeys or not, all get muted, except current">Strict &
                                         Recomended - play current on mouse enter</label>
                                     <input type="radio" name="playStyle" id="strict_play_current_on_mouse_over" checked>
                                 </span>
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description"
-                                        title="All videos are paused to focus on one at the time">Play
+                                        data-tooltip="The InandOutKeys have priority over this">Play
                                         on mouse enter</label>
                                     <input type="radio" name="playStyle" id="play_on_mouse_over" checked>
                                 </span>
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description"
-                                        title="Loaded videos autoplay and keep on playing">Visible clips begin to
-                                        play unmuted</label>
+                                        data-tooltip="Loaded videos will autoplay and keep on playing">Visible clips
+                                        begin to play unmuted</label>
                                     <input type="radio" name="playStyle" id="visible_clips_start_to_play_unmuted">
                                 </span>
                             </div>
                         </div>
                         <span class="dropdown-item rangeOffset">
-                            <span class="dropdown-info-message dropdown-item-description">Time offset on scroll
-                                wheel</span>
+                            <span class="dropdown-info-message dropdown-item-description"
+                                data-tooltip="Go back on forward when scrolling inside the timestamp display">Time
+                                offset on scroll wheel</span>
                             <div class="dropdown-item-contain-two">
                                 <input type="range" min="1" max="60" value="1" class="slider"
-                                    id="timestamp_display_scroll_offset">
-                                <label for="" class="dropdown-item-description" title="Amount of seconds | scroll wheel"
-                                    id="rangeValue">1</label>
+                                    id="timestamp_display_scroll_offset" data-tooltip="from 1 to 60">
+                                <label for="" class="dropdown-item-description" id="rangeValue">1</label>
                             </div>
                         </span>
                         <div class="dropdown dropdown-show-info">
@@ -196,12 +207,15 @@
                             <div class="dropdown-content dropdown-info-box">
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description">💡 Hover over the YT GIFs to
-                                        enable them</label>
+                                        enable them. Unmute. Start Playing.</label>
                                 </span>
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description">🗲 While hovering out HOLD the
                                         middle mouse 🖱️ button
-                                        (in and out keys) to keep on playing the YT GIF</label>
+                                        <span
+                                            data-tooltip="Control, Alt or Shift; customizable when installing the extension.">(in
+                                            and out keys)
+                                        </span> to keep on playing the YT GIF</label>
                                 </span>
                             </div>
                         </div>
