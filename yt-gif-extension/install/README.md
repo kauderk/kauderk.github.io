@@ -10,6 +10,10 @@
 
 ---
 
+![Installing YT GIF](https://user-images.githubusercontent.com/65237382/137433155-79f1a29a-4b1b-4f2b-8a56-8627e71ac44d.gif)
+
+---
+
 ## [Features](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/README.md#features)
 
 # Installation
