@@ -16,9 +16,10 @@
     core funcionality, while exiting the frame: 
     to unmute videos; hold down the middle mouse button
     or the "InAndOutKeys"
-    ?t= start | &end= end - timestamps - optional
-    &s=                   - playback speed up to 2 - optional 
-    &vl=                  - volume form 0 to 100 - optional
+    ?t=                   - start timestamp boundary - get the most out the extension - optional
+    &end=                 - end timestamp boundary   - get the most out the extension - optional
+    &s=                   - playback speed up to 2   - optional 
+    &vl=                  - volume form 0 to 100     - optional
     Example ⬇️
     {{[[yt-gif]]: https://youtu.be/sFFwvr6l2mM?t=60&end=120 }}
     */
