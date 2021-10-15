@@ -1,3 +1,8 @@
+/*well*/
+span.yt-gif-drop-down-menu-toolbar .dropdown:first-child {
+  z-index: 1000;
+}
+
 /*YT GIF ICON - on the topbar*/
 .dropdown:hover .dropbtn {
   background-color: var(--drop-menu-btn-h);
