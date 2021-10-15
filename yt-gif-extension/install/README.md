@@ -10,10 +10,13 @@
 
 ---
 
+![Installing YT GIF](https://user-images.githubusercontent.com/65237382/137433155-79f1a29a-4b1b-4f2b-8a56-8627e71ac44d.gif)
+
+---
+
+## [Features](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/README.md#features)
+
 # Installation
-
-
-
 
 ```javascript
 YT GIF EXTENSION {{[[roam/js]]}}
@@ -39,7 +42,7 @@ YT GIF EXTENSION {{[[roam/js]]}}
           },
           experience: {
               sound_when_video_loops: '1',
-              awaiting_for_mouseenter_to_initialize: '1',
+              awaiting_for_mouseenter_to_initialize: '',
               awaiting_with_video_thumnail_as_bg: '1',
           },
           /* permutations - checkbox */

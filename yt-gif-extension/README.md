@@ -1,9 +1,12 @@
 # **YT GIF an extension for Roam Research**
 
 
-# What?
+# What does it do?
 Loops videos between the `start` and `end` YouTube URL parameters.
 `{{[[yt-gif]]: https://youtu.be/46A01oukux0?t=20&end=100 }}` Simple as that, create as many "**YouTube Gifs**" and begin to visualize some ideas.
+
+
+## [Installation](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install#installation)
 
 
 # Features
