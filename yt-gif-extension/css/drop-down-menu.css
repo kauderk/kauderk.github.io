@@ -1,14 +1,12 @@
 :root{
-  --ddm-tooltip-c: #989898;
-  --ddm-tooltip-bg: #333;
   --ddm-tooltip-arrow-size: 2ch;
   --ddm-scale-tooltip: 0;
   --ddm-tooltip-traslate-y: 0;
   /*https://youtu.be/ujlpzTyJp-M*/
 }
 
-:is(label.dropdown-item-description)::before,
-:is(label.dropdown-item-description)::after {
+.dropdown :is(span[data-tooltip], label[data-tooltip])::before,
+.dropdown :is(span[data-tooltip], label[data-tooltip])::after {
   color: var(--ddm-tooltip-c);
 
   font-size: .8em;
@@ -28,18 +26,18 @@
   transform-origin: bottom center;
 }
 
-:is(label.dropdown-item-description)::before {
+.dropdown :is(span[data-tooltip], label[data-tooltip])::before {
   content: attr(data-tooltip);
   background-color: var(--ddm-tooltip-bg);
-  
+  border-radius: .7em;
   padding: 0ch 1ch;
 
   --ddm-tooltip-traslate-y: calc(-100% - var(--ddm-tooltip-arrow-size));
   
 }
 
-:is(label.dropdown-item-description):hover::before,
-:is(label.dropdown-item-description):hover::after {
+.dropdown :is(span[data-tooltip], label[data-tooltip]):hover::before,
+.dropdown :is(span[data-tooltip], label[data-tooltip]):hover::after {
   --ddm-scale-tooltip: 1;
 }
 /* broke - down arrow - for two or more lines F 
@@ -133,7 +131,7 @@ span.dropdown-info-message.dropdown-item-description{
   background-color: transparent;
 }
 
-:is(span.dropdown-item, .yt-gif-style):hover {
+:is(span.dropdown-item, .yt-gif-style, span[data-tooltip]):hover {
   background-color: var(--dropdown-main-btn-bg-h);
 }
 span.dropdown-item *,
@@ -179,6 +177,9 @@ span.rangeOffset label {
 }
 span.rangeOffset input {
   width: 100%;
+}
+.dropdown input[type=range]{
+  cursor: col-resize;
 }
 
 /*SUB DROPDOWN MENU */
