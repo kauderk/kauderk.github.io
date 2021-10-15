@@ -2,7 +2,6 @@
 ![Snag_726f9e19](https://user-images.githubusercontent.com/65237382/136782227-2fa80c84-bf90-47c2-aa85-e07852c589e7.png)
 
 
-## Before you install
 1. #### Watch [all the features in action and explained](https://www.youtube.com/watch?v=RW_vkyf0Uek&list=PLsUa74AKSzOrSLn0hYz6taAuQ_XfhPQIg&index=1)
       - Or [skim through them in table form.](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension#features) 
 3. #### [YOU CAN CUSTUMIZE THE STYLES INSIDE YOUR GRAPH](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/themes)
@@ -11,7 +10,14 @@
 
 ---
 
-- ` YT GIF EXTENSION {{[[roam/js]]}} ` 
+# Installation
+
+
+
+
+```javascript
+YT GIF EXTENSION {{[[roam/js]]}}
+```
   - ```javascript
     /*
     core funcionality, while exiting the frame: 
