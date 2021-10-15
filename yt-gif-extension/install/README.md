@@ -87,7 +87,7 @@ YT GIF EXTENSION {{[[roam/js]]}}
               /* empty means 50% - only valid css units like px  %  vw */
               player_span: '50%',
               /* distinguish between {{[[video]]:}} from {{[[yt-gif]]:}} or 'both' which is also valid*/
-              override_roam_video_component: 'both',
+              override_roam_video_component: '',
               /* src sound when yt gif makes a loop, empty if unwanted */
               end_loop_sound_src: 'https://freesound.org/data/previews/256/256113_3263906-lq.mp3',
           },
