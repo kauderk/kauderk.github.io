@@ -20,9 +20,8 @@ YT GIF EXTENSION {{[[roam/js]]}}
 ```
   - ```javascript
     /*
-    core funcionality, while exiting the frame: 
-    to unmute videos; hold down the middle mouse button
-    or the "InAndOutKeys"
+    core funcionality: while exiting the frame, hold down the 
+    middle mouse button ("InAndOutKeys") to unmute videos
     ?t=                   - start timestamp boundary - get the most out the extension - optional
     &end=                 - end timestamp boundary   - get the most out the extension - optional
     &s=                   - playback speed up to 2   - optional 
