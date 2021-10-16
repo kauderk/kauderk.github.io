@@ -113,6 +113,8 @@ const cssData = {
     dwp_message: 'dropdown-info-message',
 
     dwn_pulse_anim: 'drodown_item-pulse-animation',
+
+    ddm_exist: 'yt-gif-drop-down-menu-toolbar',
 }
 const attrData = {
     initialize_bg: 'initialize-bg',
@@ -173,6 +175,9 @@ const almostReady = setInterval(() =>
 
 async function Ready()
 {
+    if (document.querySelector('.' + cssData.ddm_exist))
+        return console.log('YT Extension was already installed');
+
     // the objects "UI", "links" and "cssData" are binded to all of these functions
     // 1.
     await LoadCSS(links.css.dropDownMenu);
