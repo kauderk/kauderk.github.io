@@ -35,15 +35,14 @@ Hello? from 7 */
 
 /* down middle the video */
 .yt-gif-controls {
-  height: 20px;
+  height: fit-content;
   width: 100%;
 
   display: flex;
   gap: 10px;
 
   position: absolute;
-  bottom: 0;
-  transform: translate(0px, -30px);
+  bottom: 20%; /* Y axis positioning */
 
   justify-content: center;
   align-items: center;
@@ -61,7 +60,9 @@ Hello? from 7 */
   overscroll-behavior: contain; /* so you can scroll back and forward in time and not the actual document */
   overflow: auto;
 
-  height: 1.134em;
+  --fs: 1.5em; /* everyone's font size varies */
+  height: calc(var(--fs) + 0.1em);
+  font-size: var(--fs);
 }
 .yt-gif-timestamp.yt-gif-invisible-element:hover {
   color: white;
