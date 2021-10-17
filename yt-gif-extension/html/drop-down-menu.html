@@ -5,7 +5,7 @@
             <span class="bp3-popover-target">
                 <div class="dropdown">
                     <!-- THE > id < NAMING convention for this element: they_must_be_separated_by_underscores-->
-                    <span class="dropbtn bp3-button bp3-minimal bp3-small bp3-icon-more ty-gif-icon">
+                    <span class="dropbtn bp3-button bp3-minimal bp3-small bp3-icon-more ty-gif-icon" tabindex="-1">
                         <svg class="yt-gif-svg" width="24px" height="24px" viewBox="0 0 24 24"
                             xmlns="http://www.w3.org/2000/svg">
                             <path class="yt-gif-svg-bg-none" fill="none" d="m11 14 7-4-7-4z" />
@@ -17,21 +17,9 @@
                     <div class="dropdown-content">
                         <span class="dropdown-item">
                             <label for="" class="dropdown-item-description"
-                                data-tooltip="Remember timestamp or rely on default">Start from previous
-                                timestamp</label>
-                            <input type="checkbox" name="" id="start_form_previous_timestamp" checked>
-                        </span>
-                        <span class="dropdown-item">
-                            <label for="" class="dropdown-item-description"
                                 data-tooltip="Clip duration or relative to entire video">Clip lifespan
                                 format</label>
                             <input type="checkbox" name="" id="clip_life_span_format" checked>
-                        </span>
-                        <span class="dropdown-item">
-                            <label for="" class="dropdown-item-description"
-                                data-tooltip="For new blocks with the same id or rely on default">Referenced
-                                start timestamp</label>
-                            <input type="checkbox" name="" id="referenced_start_timestamp" checked>
                         </span>
                         <span class="dropdown-item">
                             <label for="" class="dropdown-item-description"
@@ -62,6 +50,41 @@
                                     <label for="" class="dropdown-item-description" data-tooltip="Submit changes">Deploy
                                         YT GIFs</label>
                                     <input type="checkbox" name="deploy" id="deploy_yt_gifs">
+                                </span>
+                            </div>
+                        </div>
+                        <div class="dropdown yt-gif-style yt-gif-previous-style">
+                            <span class="dropdown-info-message"
+                                data-tooltip="While editing the same block text">Previous parameters</span>
+                            <div class="dropdown-content dropdown-info-box">
+                                <span class="dropdown-item">
+                                    <label for="" class="dropdown-item-description"
+                                        data-tooltip="Remember timestamp or rely on default">Start from previous
+                                        timestamp</label>
+                                    <input type="checkbox" name="" id="start_timestamp" checked>
+                                </span>
+                                <span class="dropdown-item">
+                                    <label for="" class="dropdown-item-description"
+                                        data-tooltip="Remember voluem or rely on default">Set previous volume</label>
+                                    <input type="checkbox" name="" id="start_volume" checked>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="dropdown yt-gif-style yt-gif-referenced-style">
+                            <span class="dropdown-info-message"
+                                data-tooltip="Shift click or brand new blocks with same id">Referenced parameters</span>
+                            <div class="dropdown-content dropdown-info-box">
+                                <span class="dropdown-item">
+                                    <label for="" class="dropdown-item-description"
+                                        data-tooltip="For new blocks with the same id or rely on default">Referenced
+                                        start timestamp</label>
+                                    <input type="checkbox" name="" id="block_timestamp" checked>
+                                </span>
+                                <span class="dropdown-item">
+                                    <label for="" class="dropdown-item-description"
+                                        data-tooltip="For new blocks with the same id or rely on default">Set Referenced
+                                        volume</label>
+                                    <input type="checkbox" name="" id="block_volume" checked>
                                 </span>
                             </div>
                         </div>
@@ -106,7 +129,8 @@
                             <span class="dropdown-info-message">Inactive Window</span>
                             <div class="dropdown-content dropdown-info-box">
                                 <span class="dropdown-info-message dropdown-info-message--aditional">Feature on hold. I
-                                    can't build it. - Can you?</span>
+                                    can't build it. - <a href="https://github.com/kauderk/kauderk.github.io/issues"
+                                        data-tooltip="kauderk.github.io/issues">Can you?</a></span>
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description" data-tooltip="F">Mute when document
                                         is inactive</label>
@@ -203,21 +227,28 @@
                                     id="rangeValue">1</label>
                             </div>
                         </span>
-                        <div class="dropdown dropdown-show-info">
-                            <span class="dropdown-info-message">Show Info</span>
-                            <div class="dropdown-content dropdown-info-box">
-                                <span class="dropdown-item">
-                                    <label for="" class="dropdown-item-description">💡 Hover over the YT GIFs to
-                                        enable them. Unmute. Start Playing.</label>
-                                </span>
-                                <span class="dropdown-item">
-                                    <label for="" class="dropdown-item-description">🗲 While hovering out HOLD the
-                                        middle mouse 🖱️ button
-                                        <span
-                                            data-tooltip="Control, Alt or Shift; customizable when installing the extension.">(in
-                                            and out keys)
-                                        </span> to keep on playing the YT GIF</label>
-                                </span>
+                        <div class="dropdown-item-contain-two"
+                            data-tooltip="'My extension behaves abnormally'. Please, consider updating it.">
+                            <span class="dropdown-info-message dropdown-info-message--aditional"><a
+                                    href="https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/install/README.md#update"
+                                    data-tooltip="kauderk.github.io">Update</a>
+                            </span>
+                            <div class="dropdown dropdown-show-info">
+                                <span class="dropdown-info-message">Show Info</span>
+                                <div class="dropdown-content dropdown-info-box">
+                                    <span class="dropdown-item">
+                                        <label for="" class="dropdown-item-description">💡 Hover over the YT GIFs to
+                                            enable them. Unmute. Start Playing.</label>
+                                    </span>
+                                    <span class="dropdown-item">
+                                        <label for="" class="dropdown-item-description">🗲 While hovering out HOLD the
+                                            middle mouse 🖱️ button
+                                            <span
+                                                data-tooltip="Control, Alt or Shift; customizable when installing the extension.">(in
+                                                and out keys)
+                                            </span> to keep on playing the YT GIF</label>
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>

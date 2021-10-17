@@ -1,4 +1,4 @@
-// version 29 - semi-refactored
+// version 30 - semi-refactored
 // Load the IFrame Player API.
 const tag = document.createElement('script');
 tag.src = 'https://www.youtube.com/player_api';
@@ -115,6 +115,8 @@ const cssData = {
     dwn_pulse_anim: 'drodown_item-pulse-animation',
 
     ddm_exist: 'yt-gif-drop-down-menu-toolbar',
+
+    ddm_focus: 'dropdown-focus',
 }
 const attrData = {
     initialize_bg: 'initialize-bg',
@@ -193,6 +195,8 @@ async function Ready()
 
     // 2.
     DDM_to_UI_variables();
+
+    DDM_IconFocusFlurEvents();
 
     //Flip DDM item Visibility Based On Linked Input Value
     DDM_FlipBindedDataAttr_RTM([`${cssData.dropdown__hidden}`]); // RTM runtime
@@ -283,7 +287,9 @@ async function Ready()
 
                 switch (parentKey)
                 {
-                    case 'permutations':
+                    case 'display':
+                    case 'previous':
+                    case 'referenced':
                     case 'deploymentStyle':
                     case 'experience':
                     case 'inactiveStyle':
@@ -303,6 +309,28 @@ async function Ready()
                 }
             }
         }
+    }
+
+    function DDM_IconFocusFlurEvents()
+    {
+        const mainDDM = document.querySelector("span.yt-gif-drop-down-menu-toolbar .dropdown > .dropdown-content");
+        const icon = document.querySelector(".ty-gif-icon");
+        const classNames = [cssData.ddm_focus];
+
+        icon.addEventListener("click", iconGainFocus, true);
+        icon.addEventListener("blur", IconLooseFocus, true);
+
+        //#region event handle
+        function iconGainFocus(e)
+        {
+            icon.focus();
+            toggleClasses(true, classNames, mainDDM);
+        }
+        function IconLooseFocus(e, el)
+        {
+            toggleClasses(false, classNames, mainDDM);
+        }
+        //#endregion
     }
 
     function KeyToObserve_UCS()
@@ -1017,16 +1045,21 @@ function onPlayerReady(event)
     {
         const sesion = lastBlockIDParameters.get(blockID);
 
-        if (UI.permutations.start_form_previous_timestamp?.checked && bounded(sesion.updateTime))
+        if (UI.previous.start_timestamp?.checked && bounded(sesion.updateTime))
+        {
             seekToUpdatedTime(sesion.updateTime);
+        }
 
-        t.setVolume(sesion.volume);
+        if (UI.previous.start_volume?.checked)
+        {
+            t.setVolume(sesion.volume);
+        }
     }
     // load referenced values
     else
     {
         //Future Brand new adition to 'lastBlockIDParameters' map
-        if (UI.permutations.referenced_start_timestamp.checked)
+        if (UI.referenced.block_timestamp.checked)
         {
             const ytGifs = allIframeIDprfx();
             for (const i of ytGifs)
@@ -1042,14 +1075,22 @@ function onPlayerReady(event)
                     const desiredTime = tick(desiredTarget) || start;
                     const desiredVolume = desiredTarget?.getVolume() || validVolume();
 
-                    seekToUpdatedTime(desiredTime)
+                    if (UI.referenced.block_timestamp?.checked)
+                    {
+                        seekToUpdatedTime(desiredTime)
+                    }
 
-                    if ((typeof (desiredTarget.__proto__.globalHumanInteraction) != 'undefined'))
+                    if (UI.referenced.block_volume?.check && (typeof (desiredTarget.__proto__.globalHumanInteraction) != 'undefined'))
                     {
                         t.setVolume(desiredVolume);
                     }
-                    const saveMessage = stringWithNoEmail(desiredBlockID);
-                    console.count(`${key} referenced from ${saveMessage}`);
+
+                    // don't sweat it if there are no valid user checks
+                    if (UI.referenced.block_timestamp?.checked || UI.referenced.block_volume?.check)
+                    {
+                        const saveMessage = stringWithNoEmail(desiredBlockID);
+                        console.count(`${key} referenced from ${saveMessage}`);
+                    }
                     break;
                     //#region local util
                     function stringWithNoEmail(myString)
@@ -1245,7 +1286,7 @@ function onPlayerReady(event)
         const sec = Math.abs(clipSpan - (end - tick()));
 
         //timeDisplay.innerHTML = '00:00/00:00'
-        if (UI.permutations.clip_life_span_format.checked) 
+        if (UI.display.clip_life_span_format?.checked) 
         {
             timeDisplay.innerHTML = `${fmtMSS(sec)}/${fmtMSS(clipSpan)}`; //'sec':'clip end'
         }
@@ -1273,7 +1314,7 @@ function onPlayerReady(event)
 
         let dir = tick() + (Math.sign(e.deltaY) * Math.round(UI.range.timestamp_display_scroll_offset.value) * -1);
 
-        if (UI.permutations.clip_life_span_format.checked)
+        if (UI.previous.clip_life_span_format.checked)
         {
             if (dir <= start)
                 dir = end - 1; //can go beyond that
@@ -1294,7 +1335,9 @@ function onPlayerReady(event)
             }
         }, tickOffset); //nice delay to show feedback
     }
-    //#region local utils
+
+
+    //#region utils for the timeDisplay
     function ClearTimers()
     {
         window.clearInterval(t.__proto__.timerID);
@@ -1379,7 +1422,7 @@ function onPlayerReady(event)
                 //🚧
                 const media = Object.create(videoParams);
                 media.updateTime = bounded(tick()) ? tick() : start;
-                media.volume = t.getVolume();
+                media.volume = t.getVolume() || validVolume();
                 if (blockID != null)
                     lastBlockIDParameters.set(blockID, media);
 
