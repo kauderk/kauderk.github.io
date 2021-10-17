@@ -6,13 +6,17 @@ Loops videos between the `start` and `end` YouTube URL parameters.
 `{{[[yt-gif]]: https://youtu.be/46A01oukux0?t=20&end=100 }}` Simple as that, create as many "**YouTube Gifs**" and begin to visualize some ideas.
 
 
+# Contact [![Twitter URL](https://img.shields.io/twitter/url?label=KauDerK_&style=social&url=https%3A%2F%2Ftwitter.com%2FkauDerk_)](https://twitter.com/kauDerk_)
+"I'm using it to practice a new language." "It's perfect for my classes." "I'll use it to take notes on movies." 
+Those are some of the things people have said. I'm curious, how are you using it?
+
 ## [Installation](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install#installation)
 
 
 # Features
 
 
-| **Persmutations**              | **ON**                                                        | **OFF**                                                 |
+| **Permutations**               | **ON**                                                        | **OFF**                                                 |
 |:------------------------------:|:-------------------------------------------------------------:|:-------------------------------------------------------:|
 | Start from previous timestamps | From the same edited block                                    | Always start from `t=`                                  |
 | Clip lifespan format           | Display the duration from `t=` to `end=`                      | Display the clip timestamp relative to the entire video |
