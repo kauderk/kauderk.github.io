@@ -36,22 +36,26 @@ YT GIF EXTENSION {{[[roam/js]]}}
       */
       window.YTGIF = {
           /* permutations - checkbox */
-          permutations: {
-              start_form_previous_timestamp: '1',
+          display: {
               clip_life_span_format: '1',
-              referenced_start_timestamp: '1',
+          },
+          previous: {
+              start_timestamp: '1',
+              start_volume: '1',
+          },
+          referenced: {
+              block_timestamp: '1',
+              block_volume: '1',
           },
           experience: {
               sound_when_video_loops: '1',
               awaiting_for_mouseenter_to_initialize: '',
               awaiting_with_video_thumnail_as_bg: '1',
           },
-          /* permutations - checkbox */
           inactiveStyle: {
               mute_on_inactive_window: '',
               pause_on_inactive_window: '',
           },
-          /* permutations - checkbox */
           fullscreenStyle: {
               smoll_vid_when_big_ends: '1',
               mute_on_exit_fullscreenchange: '',
@@ -63,7 +67,6 @@ YT GIF EXTENSION {{[[roam/js]]}}
               muted_on_mouse_over: '',
               muted_on_any_mouse_interaction: '',
           },
-          /* one at a time - radio */
           playStyle: {
               strict_play_current_on_mouse_over: '1',
               play_on_mouse_over: '',
@@ -105,6 +108,9 @@ YT GIF EXTENSION {{[[roam/js]]}}
         document.getElementsByTagName("head")[0].appendChild(extension);
       }
      ```
+     
+# Update
+If you were redirected here, please update your YT GIF EXTENSION with code above. This is a temporary thing.
 
 
 
