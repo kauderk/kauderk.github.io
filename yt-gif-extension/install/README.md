@@ -113,7 +113,9 @@ YT GIF EXTENSION {{[[roam/js]]}}
 If you were redirected here, please update your YT GIF EXTENSION with code above. This is a temporary thing.
 
 # Bug Report
-Something broke, doen't work, opposite behaviour, strange beahviour or the extension straight up won't run. 
-      - Submit your issue https://github.com/kauderk/kauderk.github.io/issues
-      - Contact me on [![Twitter URL](https://img.shields.io/twitter/url?label=KauDerK_&style=social&url=https%3A%2F%2Ftwitter.com%2FkauDerk_)](https://twitter.com/kauDerk_)
+
+Something broke, doesn't work, opposite behaviour, strange behavior, or the extension straight up won't run.
+
+- Submit your issue https://github.com/kauderk/kauderk.github.io/issues
+- Contact me on [![Twitter URL](https://img.shields.io/twitter/url?label=KauDerK_&style=social&url=https%3A%2F%2Ftwitter.com%2FkauDerk_)](https://twitter.com/kauDerk_)
 ﾠ
