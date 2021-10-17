@@ -1,7 +1,10 @@
+
 :root{
   --ddm-tooltip-arrow-size: 2ch;
   --ddm-scale-tooltip: 0;
   --ddm-tooltip-traslate-y: 0;
+
+  --base-x-offset-content: 50%;
   /*https://youtu.be/ujlpzTyJp-M*/
 }
 
@@ -92,10 +95,14 @@ path.yt-gif-svg-bg {
 .dropdown {
   display: inline-block;
   position: relative;
-  --content-x-offset: -86.5%;
+  --base-x-offset-content: -50%;
 }
 .dropdown:hover > .dropdown-content {
   display: flex;
+}
+.yt-gif-style > .dropdown-content{
+  left: 50%; /* dead centered*/
+  --base-x-offset-content: -100%; /* dead centered*/ 
 }
 .dropdown-content {
   display: none;
@@ -106,7 +113,7 @@ path.yt-gif-svg-bg {
   align-items: flex-end;
 
   z-index: 11 !important;
-  transform: translateX(var(--content-x-offset));
+  transform: translateX(var(--base-x-offset-content));
 
   background-color: var(--dropdown--bg);
 
@@ -197,6 +204,7 @@ span.rangeOffset input {
 }
 span.dropdown-info-message {
   align-self: center;
+  cursor: default;
 }
 /*YT GIF SYTLE SUB DROP DOWN */
 .yt-gif-style {
@@ -207,7 +215,6 @@ span.dropdown-info-message {
   --dropdown-main-btn-bg-h: var(--submenu-styles-item-bg-h);
   --drop-menu-btn-h: var(--submenu-styles-item-bg-h-h);
   --dropdown--bg: var(--submenu-styles-content-bg);
-  --content-x-offset: -82%;
 }
 
 
@@ -215,7 +222,7 @@ span.dropdown-info-message {
 /*SHOW TEXT INFO DROP DOWN*/
 .dropdown-show-info {
   padding: 15px;
-  --content-x-offset: -40%;
+  --base-x-offset-content: -40%;
   --message-opacity: 0.3;
 }
 
