@@ -1314,7 +1314,7 @@ function onPlayerReady(event)
 
         let dir = tick() + (Math.sign(e.deltaY) * Math.round(UI.range.timestamp_display_scroll_offset.value) * -1);
 
-        if (UI.previous.clip_life_span_format.checked)
+        if (UI.display.clip_life_span_format.checked)
         {
             if (dir <= start)
                 dir = end - 1; //can go beyond that
