@@ -12,7 +12,7 @@ Loops videos between the `start` and `end` YouTube URL parameters.
 # Features
 
 
-| **Persmutations**              | **ON**                                                        | **OFF**                                                 |
+| **Permutations**               | **ON**                                                        | **OFF**                                                 |
 |:------------------------------:|:-------------------------------------------------------------:|:-------------------------------------------------------:|
 | Start from previous timestamps | From the same edited block                                    | Always start from `t=`                                  |
 | Clip lifespan format           | Display the duration from `t=` to `end=`                      | Display the clip timestamp relative to the entire video |
