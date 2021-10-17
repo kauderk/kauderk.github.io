@@ -114,7 +114,7 @@ If you were redirected here, please update your YT GIF EXTENSION with code above
 
 # Bug Report
 
-Something broke, doesn't work, opposite behaviour, strange behavior, or the extension straight up won't run.
+Something broke, doesn't work, opposite/strange behavior or the extension straight up won't run.
 
 - Submit your issue [![Issue URL](https://img.shields.io/badge/GitHub-issue-yellow)](https://github.com/kauderk/kauderk.github.io/issues)
 - Contact me on [![Twitter URL](https://img.shields.io/twitter/url?label=KauDerK_&style=social&url=https%3A%2F%2Ftwitter.com%2FkauDerk_)](https://twitter.com/kauDerk_)
