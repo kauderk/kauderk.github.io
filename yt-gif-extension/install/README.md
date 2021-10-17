@@ -106,7 +106,7 @@ YT GIF EXTENSION {{[[roam/js]]}}
       }
      ```
      
-# Updates
+# Update
 If you were redirected here, please update your YT GIF EXTENSION with code above. This is a temporary thing.
 
 
