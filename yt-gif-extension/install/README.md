@@ -105,6 +105,9 @@ YT GIF EXTENSION {{[[roam/js]]}}
         document.getElementsByTagName("head")[0].appendChild(extension);
       }
      ```
+     
+# Updates
+If you were redirected here, please update your YT GIF EXTENSION with code above. This is a temporary thing.
 
 
 
