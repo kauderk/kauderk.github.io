@@ -54,19 +54,45 @@
                             </div>
                         </div>
                         <div class="dropdown yt-gif-style yt-gif-previous-style">
-                            <span class="dropdown-info-message" data-tooltip="While editing the same block">Previous
+                            <span class="dropdown-info-message" data-tooltip="While editing the same block">Persistant
                                 parameters</span>
                             <div class="dropdown-content dropdown-info-box">
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description"
-                                        data-tooltip="Remember timestamp or rely on default">Start from previous
-                                        timestamp</label>
-                                    <input type="checkbox" name="" id="start_timestamp" checked>
+                                        data-tooltip="URL -start- has priority over persistant timestamp">Strict -
+                                        Persistant timestamp</label>
+                                    <input type="radio" name="start_timestamp" id="strict_start_timestamp" checked>
                                 </span>
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description"
-                                        data-tooltip="Remember volume or rely on default">Set previous volume</label>
-                                    <input type="checkbox" name="" id="start_volume" checked>
+                                        data-tooltip="Remember last timestamp or rely on default">Persistant
+                                        timestamp</label>
+                                    <input type="radio" name="start_timestamp" id="start_timestamp" checked>
+                                </span>
+                                <span class="dropdown-item">
+                                    <label for="" class="dropdown-item-description"
+                                        data-tooltip="Don't rely on persistant timestamp. Default if undefined.">URL
+                                        start only</label>
+                                    <input type="radio" name="start_timestamp" id="fixed_start_timestamp" checked>
+                                </span>
+                                <span class="dropdown-item-separator"></span>
+                                <span class="dropdown-item">
+                                    <label for="" class="dropdown-item-description"
+                                        data-tooltip="URL -volume- has priority over persistant volume">Strict -
+                                        Persistant block volume</label>
+                                    <input type="radio" name="start_volume" id="strict_start_volume" checked>
+                                </span>
+                                <span class="dropdown-item">
+                                    <label for="" class="dropdown-item-description"
+                                        data-tooltip="Remember volume or rely on default">Persistant block
+                                        volume</label>
+                                    <input type="radio" name="start_volume" id="start_volume" checked>
+                                </span>
+                                <span class="dropdown-item">
+                                    <label for="" class="dropdown-item-description"
+                                        data-tooltip="Don't rely on persistant volume. Default if undefined.">URL volume
+                                        only</label>
+                                    <input type="radio" name="start_volume" id="fixed_start_volume" checked>
                                 </span>
                             </div>
                         </div>
@@ -74,6 +100,10 @@
                             <span class="dropdown-info-message"
                                 data-tooltip="Shift click or brand new blocks with same id">Referenced parameters</span>
                             <div class="dropdown-content dropdown-info-box">
+                                <span class="dropdown-info-message dropdown-info-message--aditional">Feature on hold. I
+                                    can't build it. <a href="https://github.com/kauderk/kauderk.github.io/issues"
+                                        data-tooltip="kauderk.github.io/issues">Can you?</a> Some sort of event and
+                                    reference key are needed to notify the most relevant block.</span>
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description"
                                         data-tooltip="For new blocks with the same id or rely on default">Referenced
@@ -129,8 +159,9 @@
                             <span class="dropdown-info-message">Inactive Window</span>
                             <div class="dropdown-content dropdown-info-box">
                                 <span class="dropdown-info-message dropdown-info-message--aditional">Feature on hold. I
-                                    can't build it. - <a href="https://github.com/kauderk/kauderk.github.io/issues"
-                                        data-tooltip="kauderk.github.io/issues">Can you?</a></span>
+                                    can't build it. <a href="https://github.com/kauderk/kauderk.github.io/issues"
+                                        data-tooltip="kauderk.github.io/issues">Can you?</a> Browser compatibility:
+                                    "hidden"/"visible" events are hard to deal with.</span>
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description" data-tooltip="F">Mute when document
                                         is inactive</label>
@@ -181,7 +212,7 @@
                                 </span>
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description"
-                                        data-tooltip="Play without sound. But the in and out keys can unmute it.">muted
+                                        data-tooltip="Play without sound. InAndOutKeys can unmute it.">muted
                                         on mouse enter</label>
                                     <input type="radio" name="muteStyle" id="muted_on_mouse_over">
                                 </span>
@@ -204,7 +235,7 @@
                                 </span>
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description"
-                                        data-tooltip="The InandOutKeys have priority over this">Play
+                                        data-tooltip="InandOutKeys have priority. You can play multiple videos with some control.">Play
                                         on mouse enter</label>
                                     <input type="radio" name="playStyle" id="play_on_mouse_over" checked>
                                 </span>

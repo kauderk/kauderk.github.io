@@ -1,4 +1,4 @@
-// version 30 - semi-refactored
+// version 31 - semi-refactored
 // Load the IFrame Player API.
 const tag = document.createElement('script');
 tag.src = 'https://www.youtube.com/player_api';
@@ -28,6 +28,10 @@ UI.deploymentStyle = {
     // hidden submenu
     deploy_yt_gifs: '',
 }
+UI.referenced = {
+    block_timestamp: '',
+    block_volume: '',
+}
 /*-----------------------------------*/
 const iframeIDprfx = 'player_';
 let creationCounter = -1;
@@ -40,11 +44,18 @@ const lastBlockIDParameters = new Map();
 const videoParams = {
     src: 'https://www.youtube.com/embed/---------?',
     id: '---------',
+
     start: 0,
-    end: 0,
-    speed: 1,
     updateTime: 0,
-    volume: UI.default.video_volume
+    timeURLmapHistory: [],
+
+    end: 0,
+
+    speed: 1,
+
+    volume: UI.default.video_volume,
+    updateVolume: UI.default.video_volume,
+    volumeURLmapHistory: [],
 };
 //
 const recordedIDs = new Map();
@@ -809,6 +820,7 @@ async function onYouTubePlayerAPIReady(wrapper, message = 'I dunno')
 
 
     //console.count(message);
+    //🌿
     if (UI.experience.awaiting_for_mouseenter_to_initialize.checked)
     {
         const awaitingAnimation = [cssData.awiting_player_pulse_anim, cssData.awaitng_player_user_input];
@@ -998,7 +1010,7 @@ async function onYouTubePlayerAPIReady(wrapper, message = 'I dunno')
 /*↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓*/
 /*↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓*/
 //
-function onPlayerReady(event)
+async function onPlayerReady(event)
 {
     const t = event.target;
     const iframe = document.querySelector('#' + t.h.id) || t.getIframe();
@@ -1010,7 +1022,7 @@ function onPlayerReady(event)
     const end = map?.end || t.getDuration();
     const clipSpan = end - start;
     const speed = map?.speed || 1;
-    const volume = validVolume();
+    const entryVolume = validVolumeURL();
     const tickOffset = 1000 / speed;
     //
     const blockID = closestBlockID(iframe);
@@ -1023,7 +1035,16 @@ function onPlayerReady(event)
     const loadingMarginOfError = 1; //seconds
     let updateStartTime = start;
 
+    iframe.removeAttribute('title');
+    t.setVolume(entryVolume);
+    t.setPlaybackRate(speed);
+
+
     // javascript is crazy
+    t.__proto__.changedVolumeOnce = false;
+    t.__proto__.readyToChangeVolumeOnce = readyToChangeVolumeOnce;
+    t.__proto__.newVol = entryVolume;
+
     t.__proto__.timers = [];
     t.__proto__.timerID;
     t.__proto__.ClearTimers = ClearTimers;
@@ -1031,10 +1052,16 @@ function onPlayerReady(event)
     t.__proto__.globalHumanInteraction = undefined;
 
 
-
-    iframe.removeAttribute('title');
-    t.setVolume(volume);
-    t.setPlaybackRate(speed);
+    //#region __proto__
+    function readyToChangeVolumeOnce()
+    {
+        if (!t.__proto__.changedVolumeOnce)
+        {
+            t.__proto__.changedVolumeOnce = true;
+            t.setVolume(t.__proto__.newVol);
+        }
+    }
+    //#endregion
 
 
     const timeDisplay = parent.querySelector('div.' + cssData.yt_gif_timestamp);
@@ -1045,68 +1072,79 @@ function onPlayerReady(event)
     {
         const sesion = lastBlockIDParameters.get(blockID);
 
-        if (UI.previous.start_timestamp?.checked && bounded(sesion.updateTime))
+        if (UI.previous.strict_start_timestamp.checked)
+        {
+            const timeHis = sesion.timeURLmapHistory;
+            if (timeHis[timeHis.length - 1] != start) // new entry is valid ≡ user updated "?t="
+            {
+                timeHis.push(start);
+                seekToUpdatedTime(start);
+            }
+            else 
+            {
+                seekToUpdatedTime(sesion.updateTime);
+            }
+        }
+        else if (UI.previous.start_timestamp.checked && bounded(sesion.updateTime))
         {
             seekToUpdatedTime(sesion.updateTime);
         }
-
-        if (UI.previous.start_volume?.checked)
+        else if (UI.previous.fixed_start_timestamp.checked)
         {
-            t.setVolume(sesion.volume);
+            // don't seek you are already there, it's just semantics and a null option
         }
-    }
-    // load referenced values
-    else
-    {
-        //Future Brand new adition to 'lastBlockIDParameters' map
-        if (UI.referenced.block_timestamp.checked)
+
+        /* ------------------------------------------------------- */
+
+        if (UI.previous.strict_start_volume.checked) // FOCUS ON HERE NOW
         {
-            const ytGifs = allIframeIDprfx();
-            for (const i of ytGifs)
+            const vlHis = sesion.volumeURLmapHistory;
+            if (vlHis[vlHis.length - 1] != entryVolume) // new entry is valid ≡ user updated "&vl="
             {
-                if (i === iframe) continue; //ignore itself
-
-                if (i?.src?.slice(0, -11) == iframe?.src?.slice(0, -11))
-                { //removes at least 'widgetid=··' so they reconize each other
-
-                    const desiredBlockID = blockID || document.querySelector('body > span[blockID]')?.getAttribute('blockID') || closestBlockID(i);
-
-                    const desiredTarget = recordedIDs.get(desiredBlockID)?.target || t;
-                    const desiredTime = tick(desiredTarget) || start;
-                    const desiredVolume = desiredTarget?.getVolume() || validVolume();
-
-                    if (UI.referenced.block_timestamp?.checked)
-                    {
-                        seekToUpdatedTime(desiredTime)
-                    }
-
-                    if (UI.referenced.block_volume?.check && (typeof (desiredTarget.__proto__.globalHumanInteraction) != 'undefined'))
-                    {
-                        t.setVolume(desiredVolume);
-                    }
-
-                    // don't sweat it if there are no valid user checks
-                    if (UI.referenced.block_timestamp?.checked || UI.referenced.block_volume?.check)
-                    {
-                        const saveMessage = stringWithNoEmail(desiredBlockID);
-                        console.count(`${key} referenced from ${saveMessage}`);
-                    }
-                    break;
-                    //#region local util
-                    function stringWithNoEmail(myString)
-                    {
-                        if (myString.search(/([^.@\s]+)(\.[^.@\s]+)*@([^.@\s]+\.)+([^.@\s]+)/) !== -1)
-                        {
-                            // There is an email! Remove it...
-                            myString = myString.replace(/([^.@\s]+)(\.[^.@\s]+)*@([^.@\s]+\.)+([^.@\s]+)/, "");
-                        }
-                        return myString
-                    }
-                    //#endregion
-                }
+                vlHis.push(entryVolume);
+                t.__proto__.newVol = entryVolume;
+            }
+            else // updateVolume has priority then
+            {
+                t.__proto__.newVol = sesion.updateVolume;
             }
         }
+        else if (UI.previous.start_volume.checked)
+        {
+            t.__proto__.newVol = sesion.updateVolume;
+        }
+        else if (UI.previous.fixed_start_volume.checked)
+        {
+            t.__proto__.newVol = validVolumeURL(); // distiguish between volume and updatevolume
+        }
     }
+    /*load referenced values
+        //Future Brand new adition to 'lastBlockIDParameters' map
+        
+        //slice at least 'widgetid=··' so they reconize each other
+
+        //closest referecnce key
+        
+        
+        if (UI.referenced.block_timestamp.checked == "F")
+        {
+            //ignore itself
+
+            // desiredTarget = recordedIDs.get(closest referecnce key)
+
+            // desiredTime = isValidVolNumber(tTime) ? tTime : updateStartTime;
+
+            // seekToUpdatedTime(desiredTime);
+        }
+        if (UI.referenced.block_volume.checked)
+        {
+            // tVol = desiredTarget?.__proto__.newVol;
+
+            // desiredVolume = isValidVolNumber(tVol) ? tVol : t.__proto__.newVol;
+
+            //t.__proto__.newVol = desiredVolume;
+        }
+    */
 
 
     function seekToUpdatedTime(desiredTime)
@@ -1196,6 +1234,7 @@ function onPlayerReady(event)
         }
         else if (e.type == 'mouseleave')
         {
+            t.__proto__.newVol = t.getVolume(); // spaguetti isSoundingFine unMute
             t.__proto__.globalHumanInteraction = false;
 
             //ﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠ//the same as: if it's true, then the other posibilities are false
@@ -1286,7 +1325,7 @@ function onPlayerReady(event)
         const sec = Math.abs(clipSpan - (end - tick()));
 
         //timeDisplay.innerHTML = '00:00/00:00'
-        if (UI.display.clip_life_span_format?.checked) 
+        if (UI.display.clip_life_span_format.checked) 
         {
             timeDisplay.innerHTML = `${fmtMSS(sec)}/${fmtMSS(clipSpan)}`; //'sec':'clip end'
         }
@@ -1335,6 +1374,7 @@ function onPlayerReady(event)
             }
         }, tickOffset); //nice delay to show feedback
     }
+    //#endregion
 
 
     //#region utils for the timeDisplay
@@ -1422,9 +1462,15 @@ function onPlayerReady(event)
                 //🚧
                 const media = Object.create(videoParams);
                 media.updateTime = bounded(tick()) ? tick() : start;
-                media.volume = t.getVolume() || validVolume();
+                media.updateVolume = isValidVolNumber(t.__proto__.newVol) ? t.__proto__.newVol : validUpdateVolume();
+                if (media.timeURLmapHistory.length == 0) // kinda spaguetti, but it's super necesary, so it will not ignore the first block editing - stack change
+                {
+                    media.timeURLmapHistory.push(start);
+                }
                 if (blockID != null)
+                {
                     lastBlockIDParameters.set(blockID, media);
+                }
 
                 // clean...
                 ClearTimers();
@@ -1445,6 +1491,7 @@ function onPlayerReady(event)
                     if (!targetExist)
                     {
                         t.destroy();
+                        //lastBlockIDParameters.delete(blockID);
                         console.count('Destroyed! ' + key);
                     }
                 }, 1000);
@@ -1528,15 +1575,35 @@ function onPlayerReady(event)
     //#region Utils
     function tick(target = t)
     {
-        return target?.getCurrentTime();
+        const crrTime = target?.getCurrentTime();
+        return crrTime;
     }
     function bounded(x)
     {
         return start < x && x < end;
     }
-    function validVolume()
+    function validUpdateVolume()
     {
-        return map?.volume || videoParams.volume || 40;
+        const newVl = map?.updateVolume;
+        if (typeof newVl == 'number')
+            return newVl;
+
+        return videoParams.volume || 40;
+    }
+    function validVolumeURL()
+    {
+        const newVl = map?.volume;
+        if (typeof newVl == 'number')
+            return newVl;
+
+        return videoParams.volume || 40;
+    }
+    function isValidVolNumber(vol)
+    {
+        if (typeof vol == 'number')
+            return true;
+
+        return false;
     }
 
 
@@ -1567,6 +1634,7 @@ function onPlayerReady(event)
         {
             SoundIs(ytGifAttr.sound.unMute, el);
             t.unMute();
+            t.setVolume(t.__proto__.newVol); // spaguetti InAndOutHoverStatesDDMO mouseleave
         }
         else
         {
@@ -1686,6 +1754,8 @@ function onStateChange(state)
 
     if (state.data === YT.PlayerState.PLAYING)
     {
+        t.__proto__.readyToChangeVolumeOnce(); //man...
+
         if (t.__proto__.timerID === null) // NON ContinuouslyUpdateTimeDisplay
         {
             t.__proto__.enter();
@@ -2091,14 +2161,12 @@ function element_mouse_is_inside_mod(elementToBeChecked, mouseEvent, with_margin
     {
         offset_object = {};
     }
-    debugger;
     const elm_offset = elementToBeChecked.offsetTop;
 
     let element_width = elementToBeChecked.offsetWidth;
     // element_width += parseInt(elementToBeChecked.style.paddingLeft.replace("px", ""));
     // element_width += parseInt(elementToBeChecked.style.paddingRight.replace("px", ""));
 
-    debugger;
     let element_height = elementToBeChecked.offsetHeight;
     // element_height += parseInt(elementToBeChecked.style.paddingTop.replace("px", ""));
     // element_height += parseInt(elementToBeChecked.style.paddingBottom.replace("px", ""));
@@ -2110,14 +2178,12 @@ function element_mouse_is_inside_mod(elementToBeChecked, mouseEvent, with_margin
         element_width += parseInt(elementToBeChecked.marginRight.replace("px", ""));
         element_height += parseInt(elementToBeChecked.marginTop.replace("px", ""));
         element_height += parseInt(elementToBeChecked.marginBottom.replace("px", ""));
-        debugger;
     }
 
 
     // elm_offset.rightBorder = elm_offset.offsetLeft + element_width;
     // elm_offset.bottomBorder = elm_offset.offsetTop + element_height;
 
-    debugger;
 
     if (offset_object.hasOwnProperty("top"))
     {
@@ -2135,23 +2201,19 @@ function element_mouse_is_inside_mod(elementToBeChecked, mouseEvent, with_margin
     {
         elm_offset.rightBorder += parseInt(offset_object.right);
     }
-    debugger;
 
     mouseEvent = mouseEvent || window;
     const mouseX = mouseEvent?.pageX || mouseEvent?.clientX;
     const mouseY = mouseEvent?.pageY || mouseEvent?.clientY;
-    debugger;
 
 
     if ((mouseX > elm_offset.left && mouseX < elm_offset.rightBorder)
         && (mouseY > elm_offset.top && mouseY < elm_offset.bottomBorder))
     {
-        debugger;
         return true;
     }
     else
     {
-        debugger;
         return false;
     }
 }
