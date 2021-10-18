@@ -40,12 +40,14 @@ YT GIF EXTENSION {{[[roam/js]]}}
               clip_life_span_format: '1',
           },
           previous: {
-              start_timestamp: '1',
-              start_volume: '1',
-          },
-          referenced: {
-              block_timestamp: '1',
-              block_volume: '1',
+              /* one a time */
+              strict_start_timestamp: '1',
+              start_timestamp: '',
+              fixed_start_timestamp: '',
+              /* one a time */
+              strict_start_volume: '1',
+              start_volume: '',
+              fixed_start_volume: '',
           },
           experience: {
               sound_when_video_loops: '1',
@@ -87,7 +89,7 @@ YT GIF EXTENSION {{[[roam/js]]}}
           default: {
               video_volume: 40,
               /* 'dark' or 'light' */
-              css_theme: 'light',
+              css_theme: 'dark',
               /* empty means 50% - only valid css units like px  %  vw */
               player_span: '50%',
               /* distinguish between {{[[video]]:}} from {{[[yt-gif]]:}} or 'both' which is also valid*/
