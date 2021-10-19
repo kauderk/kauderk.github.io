@@ -58,8 +58,8 @@
 
 
 
-/*well*/
-span.yt-gif-drop-down-menu-toolbar .dropdown:first-child {
+/*well the big boi ddm, the big one*/
+span.yt-gif-drop-down-menu-toolbar .bp3-popover-target > .dropdown {
   z-index: 1000;
 }
 
@@ -204,7 +204,7 @@ span.rangeOffset input {
 }
 span.dropdown-info-message {
   align-self: center;
-  cursor: default;
+  cursor: pointer;
 }
 .dropdown-item-separator {
   width: 100%;
