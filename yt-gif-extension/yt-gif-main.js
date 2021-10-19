@@ -1820,7 +1820,7 @@ function onStateChange(state)
                     { // return a promise
                         var audio = new Audio();                     // create audio wo/ src
                         audio.preload = "auto";                      // intend to play through
-                        audio.volume = mapRange(UI.range.end_loop_sound_volume.value, 0, 100, 0, 1.0);
+                        audio.volume = Utils.mapRange(UI.range.end_loop_sound_volume.value, 0, 100, 0, 1.0);
                         audio.autoplay = true;                       // autoplay when loaded
                         audio.onerror = reject;                      // on error, reject
                         audio.onended = resolve;                     // when done, resolve
