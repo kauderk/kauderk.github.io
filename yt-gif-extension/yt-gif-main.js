@@ -1071,7 +1071,7 @@ async function onYouTubePlayerAPIReady(wrapper, message = 'I dunno')
             },
             events: {
                 'onReady': onPlayerReady,
-                'Utils.onStateChange': Utils.onStateChange
+                'onStateChange': onStateChange
             }
         };
     }
