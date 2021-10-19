@@ -1,6 +1,6 @@
 # **YT GIF an extension for Roam Research**
 
-# What problems does it solves?
+# What problems does it solve?
 Learning a new skill, practicing/mastering something or simply enjoying your favorite content. Things that you know you'll have to see over and over. Now you don't even need to click elements; hovering to play/hear videos is a game changer. You will feel spoiled.
 
 # What does it do?
