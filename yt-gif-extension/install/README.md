@@ -89,7 +89,7 @@ YT GIF EXTENSION {{[[roam/js]]}}
           default: {
               video_volume: 40,
               /* 'dark' or 'light' */
-              css_theme: 'dark',
+              css_theme: 'light',
               /* empty means 50% - only valid css units like px  %  vw */
               player_span: '50%',
               /* distinguish between {{[[video]]:}} from {{[[yt-gif]]:}} or 'both' which is also valid*/
