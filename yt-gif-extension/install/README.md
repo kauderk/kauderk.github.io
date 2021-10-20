@@ -4,7 +4,7 @@
 
 1. #### Watch [all the features in action and explained](https://www.youtube.com/watch?v=RW_vkyf0Uek&list=PLsUa74AKSzOrSLn0hYz6taAuQ_XfhPQIg&index=1)
       - Or [skim through them in table form.](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension#features) 
-3. #### [YOU CAN CUSTUMIZE THE STYLES INSIDE YOUR GRAPH](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/css/themes#dark--light-modes)
+3. #### [YOU CAN CUSTOMIZE THE STYLES INSIDE YOUR GRAPH](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/css/themes#dark--light-modes)
       - ![Snag_728825a4](https://user-images.githubusercontent.com/65237382/136785359-91e3fa14-d1fe-40df-98a7-79d4539109f1.png)![Snag_72882d55](https://user-images.githubusercontent.com/65237382/136785363-98206bb8-8ef7-4270-a60d-28ccc09c7875.png)   
 4. #### [HERE ARE SOME DEMOS AND USE CASES](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/DEMOS#my-use-cases)
 
