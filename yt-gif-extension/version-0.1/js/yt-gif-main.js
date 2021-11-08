@@ -185,6 +185,7 @@ async function LoadExternalResources()
         utilsScript.src = URLFolder(`js/utils.js`);
         utilsScript.id = 'yt-gif-utils';
         utilsScript.type = "text/javascript";
+        document.getElementsByTagName('head')[0].appendChild(utilsScript);
 
         await loadYT_IFRAME_API();
         await loadScript(utilsScript);
