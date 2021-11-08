@@ -195,7 +195,7 @@ async function LoadExternalResources()
         {
             return new Promise((resolve, reject) => { script.onload = () => resolve(script) })
         }
-        function loadYT_IFRAME_API()
+        async function loadYT_IFRAME_API()
         {
             const script = document.createElement('script');
             script.src = 'https://www.youtube.com/player_api';
