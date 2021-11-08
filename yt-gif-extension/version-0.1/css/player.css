@@ -1,0 +1,122 @@
+/*This code is updated?
+Hello? from 7 */
+/*---------------------------------------------*/
+/* acomodate editable block and inline referece on the bottom right*/
+.yt-gif-wrapper,
+.yt-gif-iframe-wrapper {
+  display: -webkit-inline-box;
+}
+/*---------------------------------------------*/
+/* from version 25*/
+/* video size */
+.yt-gif-wrapper,
+.yt-gif-iframe-wrapper {
+  width: 50%; /* this is what you want */
+  height: 100%;
+  aspect-ratio: 16 / 9;
+}
+/* + nice round edges */
+.yt-gif-wrapper iframe {
+  border-radius: 7px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+/*---------------------------------------------*/
+
+/* multiple videos are annoying and too bright */
+.yt-gif-wrapper {
+  filter: brightness(0.75);
+  position: relative;
+}
+
+/*---------------------------------------------*/
+
+/* down middle the video */
+.yt-gif-controls {
+  height: fit-content;
+  width: 100%;
+
+  display: flex;
+  gap: 10px;
+
+  position: absolute;
+  bottom: 20%; /* Y axis positioning */
+
+  justify-content: center;
+  align-items: center;
+
+  cursor: initial;
+}
+/* main feature 00:00/00:00 */
+.yt-gif-timestamp {
+  position: relative;
+  margin: 0px 5px;
+
+  right: 0;
+  bottom: 0;
+
+  overscroll-behavior: contain; /* so you can scroll back and forward in time and not the actual document */
+  overflow: auto;
+
+  --h: 1.5em;
+  height: calc(var(--h) + 0.1em);
+  font-size: 1.5em; /* everyone's font size varies */
+}
+.yt-gif-timestamp.yt-gif-invisible-element:hover {
+  color: white;
+}
+
+/*---------------------------------------------*/
+
+/* beta functionality */
+.yt-gif-theater-mode {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+}
+.yt-gif-theater-mode.yt-gif-invisible-element:hover {
+  background-color: gray;
+}
+
+/*---------------------------------------------*/
+.yt-gif-invisible-element {
+  color: transparent;
+}
+
+/* initialize_yt_gif_on_mouseenter feature */
+.yt-gif-awaiting-for-user-input {
+  background-color: var(--awaiting-player-bg);
+  border-radius: 10px;
+}
+.yt-gif-awaiting-for-user-input-with-thumbnail {
+  background-image: url();
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.yt-gif-awaiting-palyer--pulse-animation {
+  cursor: pointer;
+  animation: pulse_dropdown_awaiting_player 6s infinite;
+}
+.yt-gif-awaiting-palyer--pulse-animation:hover {
+  animation: none;
+}
+
+@keyframes pulse_dropdown_awaiting_player {
+  0% {
+    box-shadow: inset 0 0 2px 1px
+      var(--awaiting-player-pulse-anim-box-shadow-start);
+  }
+  50% {
+    box-shadow: inset 0 0 8px 4px
+      var(--awaiting-player-pulse-anim-box-shadow-mid);
+  }
+  100% {
+    box-shadow: inset 0 0 2px 1px
+      var(--awaiting-player-pulse-anim-box-shadow-end);
+  }
+}
