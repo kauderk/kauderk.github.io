@@ -168,7 +168,6 @@ rm_components.both = {
 let Utils;
 (async function ()
 {
-    debugger;
     await LoadExternalResources();
     Utils = kauderk.util;
     await Ready();
