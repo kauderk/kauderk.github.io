@@ -64,7 +64,37 @@ const YT_GIF_OBSERVERS_TEMP = {
                 counter
             }
         }
-    }
+    },
+    CleanLoadedWrappers: function ()
+    {
+        const wrappers = document.querySelectorAll(`[${attrInfo.target}]`);
+        let wrapperSel = [];
+        let parentSelectors = [];
+        debugger;
+        for (const wrapper_p of wrappers)
+        {
+            wrapperSel.push(UTILS.getUniqueSelector(wrapper_p));
+        }
+
+        // reverse for loop
+        for (let i = wrapperSel.length - 1; i >= 0; i--)
+        {
+            const wrapper_p = document.querySelector(wrapperSel[i]);
+            const dataCmp = wrapper_p.getAttribute(`${attrInfo.target}`);
+
+            parentSelectors.push({ sel: UTILS.getUniqueSelector(wrapper_p.parentNode), target: dataCmp });
+
+            //wrapper_p = UTILS.RemoveAllChildren(wrapper_p);
+            debugger;
+            wrapper_p.parentNode.removeChild(wrapper_p);
+        }
+        for (const selObj of parentSelectors)
+        {
+            const wrapperParent = () => document.querySelector(selObj.sel);
+            //wrapperParent().classList.remove(cssData.yg_wrapper_p);
+            wrapperParent().appendChild(UTILS.span([selObj.target]));
+        }
+    },
 }
 window.YT_GIF_OBSERVERS = (!window.YT_GIF_OBSERVERS) ? YT_GIF_OBSERVERS_TEMP : window.YT_GIF_OBSERVERS;
 /*-----------------------------------*/
@@ -94,22 +124,10 @@ const sesionIDs = {
     uid: '---------'
 }
 /*-----------------------------------*/
-function URLFolder(f)
-{
-    return `https://kauderk.github.io/yt-gif-extension/version-0.2/${f}`
-};
-function URLFolderCSS(f)
-{
-    return URLFolder(`css/${f}`)
-};
-function URLFolderHTML(f)
-{
-    return URLFolder(`html/${f}`)
-};
-function URLFolderJS(f)
-{
-    return URLFolder(`js/${f}`)
-};
+const URLFolder = (f) => `https://kauderk.github.io/yt-gif-extension/version-0.2/${f}`;
+const URLFolderCSS = (f) => URLFolder(`css/${f}`);
+const URLFolderHTML = (f) => URLFolder(`html/${f}`);
+const URLFolderJS = (f) => URLFolder(`js/${f}`);
 const links = {
     css: {
         dropDownMenuStyle: URLFolderCSS('drop-down-menu.css'),
@@ -127,7 +145,10 @@ const links = {
         },
     },
     js: {
-        main: URLFolder('yt-gif-main.js')
+        main: URLFolderJS('yt-gif-main.js'),
+        utils: URLFolderJS('utils.js'),
+        roamAlphaApi: URLFolderJS('utils-roam-alpha-api.js'),
+        settingsPage: URLFolderJS('settings-page.js'),
     },
     help: {
         github_isuues: `https://github.com/kauderk/kauderk.github.io/issues`,
@@ -136,6 +157,7 @@ const links = {
 const cssData = {
     yt_gif: 'yt-gif',
     yt_gif_wrapper: 'yt-gif-wrapper',
+    yg_wrapper_p: 'yt-gif-wrapper-parent',
     yt_gif_iframe_wrapper: 'yt-gif-iframe-wrapper',
     yt_gif_timestamp: 'yt-gif-timestamp',
     yt_gif_audio: 'yt-gif-audio',
@@ -165,6 +187,12 @@ const cssData = {
     ddm_exist: 'yt-gif-drop-down-menu-toolbar',
 
     ddm_focus: 'dropdown-focus',
+
+    stt_allow: 'settings-not-allowed',
+
+    id: {
+        navigate_btn: '#navigate-to-yt-gif-settings-page',
+    }
 }
 const attrData = {
     initialize_bg: 'initialize-bg',
@@ -173,6 +201,7 @@ const attrData = {
 }
 const attrInfo = {
     videoUrl: 'data-video-url',
+    target: 'data-target',
 }
 /*-----------------------------------*/
 const ytGifAttr = {
@@ -316,11 +345,12 @@ async function Ready()
     {
         try
         {
-            window.YT_GIF_OBSERVERS.CleanMasterObservers(); // I was planing on using "code snippets" but the observer api doesn't work there... man...
+            window.YT_GIF_OBSERVERS.CleanMasterObservers();
         } catch (err)
         {
-            console.log('The Masters observers are not defined.');
+            console.warn('The Masters observers are not defined.');
         }
+        window.YT_GIF_OBSERVERS.CleanLoadedWrappers();
         console.log('Reinstalling the YT GIF Extension');
     }
 
@@ -354,11 +384,13 @@ async function Ready()
 
     // 3. set up events
     //#region relevant variables
-    const { ddm_icon, ddm_focus, ddm_info_message_selector, dropdown__hidden, awaitng_input_with_thumbnail, dwn_no_input } = cssData;
+    const { ddm_icon, ddm_focus, ddm_info_message_selector, dropdown__hidden, awaitng_input_with_thumbnail } = cssData;
     const { timestamp_display_scroll_offset, end_loop_sound_volume, iframe_buffer_slider } = UI.range;
     const { rangeValue, loop_volume_displayed, iframe_buffer_label } = UI.label;
     const { awaiting_with_video_thumnail_as_bg } = UI.experience;
     const { iframe_buffer_beta, awaiting_for_mouseenter_to_initialize } = UI.experience;
+    const { dwp_message, stt_allow } = cssData;
+    const { navigate_btn } = cssData.id;
     //#endregion
 
     DDM_IconFocusBlurEvents(ddm_icon, ddm_focus, ddm_info_message_selector);
@@ -371,7 +403,7 @@ async function Ready()
 
     TogglePlayerThumbnails_DDM_RTM(awaiting_with_video_thumnail_as_bg, awaitng_input_with_thumbnail);
 
-    navigateToSettingsPageInSidebar("#navigate-to-yt-gif-settings-page"); // 🚧
+    navigateToSettingsPageInSidebar(navigate_btn, dwp_message, stt_allow);
 
     IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_beta, awaiting_for_mouseenter_to_initialize);
 
@@ -612,12 +644,8 @@ async function Ready()
     //#region 3. events pre observers
     function DDM_IconFocusBlurEvents(ddm_icon, ddm_focus, ddm_info_message_selector)
     {
-        // 1. special case
-        //⚠️
-        const mainDDM = document.querySelector('span.yt-gif-drop-down-menu-toolbar .dropdown > .dropdown-content');
-        const icon = document.querySelector('.' + ddm_icon);
-        spanNegativeTabIndex(icon);
-
+        // 1. ⚠️ special case
+        const { icon, mainDDM } = GetMainYTGIFicon(ddm_icon);
         const classNames = [ddm_focus]; // used inside two local func
 
         icon.addEventListener('click', function (e) { GainFocus(e, this, mainDDM) }, true);
@@ -644,7 +672,7 @@ async function Ready()
         }
 
 
-        //#region event handlers
+        // event handlers
         function GainFocus(e, el, targetEl)
         {
             el.focus();
@@ -654,15 +682,24 @@ async function Ready()
         {
             UTILS.toggleClasses(false, classNames, targetEl);
         }
-        function spanNegativeTabIndex(el)
-        {
-            if (el.tagName)
-            {
-                el.setAttribute('tabindex', '-1'); // because they are "span"
-            }
-        }
-        //#endregion
+
     }
+    function GetMainYTGIFicon(ddm_icon)
+    {
+        // 
+        const mainDDM = document.querySelector('span.yt-gif-drop-down-menu-toolbar .dropdown > .dropdown-content');
+        const icon = document.querySelector('.' + ddm_icon);
+        spanNegativeTabIndex(icon);
+        return { icon, mainDDM };
+    }
+    function spanNegativeTabIndex(el)
+    {
+        if (el.tagName)
+        {
+            el.setAttribute('tabindex', '-1'); // because they are "span"
+        }
+    }
+    /* ************* */
     function DDM_FlipBindedDataAttr_RTM(toggleClassArr = [], attrData)
     {
         for (const key in attrData)
@@ -743,15 +780,18 @@ async function Ready()
             }
         }
     }
-    async function navigateToSettingsPageInSidebar(settingsBtnSelector)
+    async function navigateToSettingsPageInSidebar(settingsBtnID, dwp_message, stt_allow)
     {
-        const anySidebarInstance = () => UTILS.innerElsContains('.rm-sidebar-outline .rm-title-display span', TARGET_PAGE).length >= 1;
+        // ⚠️
+        const SttPages = () => UTILS.innerElsContains('.rm-sidebar-outline .rm-title-display span', TARGET_PAGE);
+        const anySidebarInstance = () => SttPages().length >= 1;
 
-        const settingsBtnWrapper = document.querySelector(settingsBtnSelector);
-        const settingsBtn = settingsBtnWrapper.querySelector('.dropdown-info-message[data-tooltip]')
+        const settingsBtnWrapper = document.querySelector(settingsBtnID);
+        const settingsBtn = settingsBtnWrapper.querySelector(`.${dwp_message}[data-tooltip]`)
 
         const originalTooltip = settingsBtn.getAttribute('data-tooltip');
         const clause = `YT GIF Settings page instance already open within the Sidebar. It's pourpouse is to check values. Change them using this menu.`;
+
 
         settingsBtn.addEventListener('click', async function (e)
         {
@@ -761,20 +801,34 @@ async function Ready()
 
             if (!anySidebarInstance())
             {
-                UTILS.toggleClasses(true, ['settings-not-allowed'], settingsBtnWrapper);
+                UTILS.toggleClasses(true, [stt_allow], settingsBtnWrapper);
                 settingsBtn.setAttribute('data-tooltip', clause);
-                await RAP.openBlockInSidebar(TARGET_UID); // this is a back end execution... should it be here...? //https://stackoverflow.com/questions/12097381/communication-between-scripts-three-methods#:~:text=All%20JS%20scripts%20are%20run%20in%20the%20global%20scope.%20When%20the%20files%20are%20downloaded%20to%20the%20client%2C%20they%20are%20parsed%20in%20the%20global%20scope
+                await RAP.openBlockInSidebar(TARGET_UID); // back end execution... should it be here...? //https://stackoverflow.com/questions/12097381/communication-between-scripts-three-methods#:~:text=All%20JS%20scripts%20are%20run%20in%20the%20global%20scope.%20When%20the%20files%20are%20downloaded%20to%20the%20client%2C%20they%20are%20parsed%20in%20the%20global%20scope
             }
+
+            // firs settings page instance
+            await RAP.sleep(50);
+            SttPages()?.[0]?.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
         });
-        settingsBtn.addEventListener('mouseenter', async function (e)
+
+        settingsBtn.addEventListener('mouseenter', ToogleSettingBtnVisualFeedback);
+
+        const { icon, mainDDM } = GetMainYTGIFicon(ddm_icon);
+        icon.addEventListener('blur', ToogleSettingBtnVisualFeedback, true);
+        icon.addEventListener('mouseenter', ToogleSettingBtnVisualFeedback, true);
+        icon.addEventListener('mouseleave', ToogleSettingBtnVisualFeedback, true);
+
+
+        function ToogleSettingBtnVisualFeedback()
         {
             const open = anySidebarInstance();
             settingsBtn.setAttribute('data-tooltip', (open) ? clause : originalTooltip);
-            UTILS.toggleClasses(open, ['settings-not-allowed'], settingsBtnWrapper);
-        });
+            UTILS.toggleClasses(open, [stt_allow], settingsBtnWrapper);
+        }
     }
     function IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_beta, awaiting_for_mouseenter_to_initialize)
     {
+        spliceIframeBuffer();
         iframe_buffer_beta.addEventListener('change', async function (e)
         {
             if (iframe_buffer_beta.checked)
@@ -959,7 +1013,7 @@ function ObserveIframesAndDelployYTPlayers(targetClass)
     const visible = UTILS.inViewportElsHard(AvoidAllZoomChilds());
     for (const component of visible)
     {
-        onYouTubePlayerAPIReady(component, 'first wave');
+        onYouTubePlayerAPIReady(component, targetClass, 'first wave');
     }
 
     // 2. IntersectionObserver attached, to deploy when visible
@@ -992,7 +1046,7 @@ function ObserveIframesAndDelployYTPlayers(targetClass)
             {
                 if (entry.isIntersecting)
                 {
-                    onYouTubePlayerAPIReady(iterator, message);
+                    onYouTubePlayerAPIReady(iterator, targetClass, message);
                     yobs.disconnect();
                     break;
                 }
@@ -1052,7 +1106,7 @@ function ObserveIframesAndDelployYTPlayers(targetClass)
 
 /*↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓*/
 //
-async function onYouTubePlayerAPIReady(wrapper, message = 'I dunno')
+async function onYouTubePlayerAPIReady(wrapper, targetClass, message = 'I dunno')
 {
     if (!wrapper) return;
 
@@ -1073,6 +1127,7 @@ async function onYouTubePlayerAPIReady(wrapper, message = 'I dunno')
     }
     wrapper.parentElement.classList.add(`${cssData.yt_gif_wrapper}-parent`);
     wrapper.className = `${cssData.yt_gif_wrapper} dont-focus-block`;
+    wrapper.setAttribute(attrInfo.target, targetClass); //🤔
     wrapper.innerHTML = '';
     wrapper.insertAdjacentHTML('afterbegin', links.html.fetched.playerControls);
     wrapper.querySelector('.yt-gif-player').id = newId;
@@ -1256,7 +1311,8 @@ async function onYouTubePlayerAPIReady(wrapper, message = 'I dunno')
         {
             UTILS.toggleClasses(false, mainAnimation, wrapper);
             UTILS.removeIMGbg(wrapper);
-            wrapper.removeEventListener('mouseenter', CreateYTPlayer);
+            if (wrapper.removeEventListener)
+                wrapper.removeEventListener('mouseenter', CreateYTPlayer);
             console.log(message);
             return DeployYT_IFRAME();
         }
@@ -1413,7 +1469,7 @@ async function onPlayerReady(event)
     // 6. store relevant elements with event event listeners to clean them later
     const withEventListeners = [parent, parent.parentNode, timeDisplay, iframe]; // ready to be cleaned
 
-    const parentCssPath = UTILS.getUniqueSelector(parent.parentNode)
+    const parentCssPath = UTILS.getUniqueSelector(parent.parentNode);
 
     // 7. clean data and ready 'previous' paramaters for next sesion with IframeRemmovedFromDom_callback
     const config = { subtree: true, childList: true };
@@ -1776,11 +1832,13 @@ async function onPlayerReady(event)
         UTILS.RemoveElsEventListeners(withEventListeners);
         for (const p in UI.playStyle)
         {
-            UI.playStyle[p].removeEventListener('change', playStyleDDMO); // all valid, toggle play state
+            if (UI.playStyle[p]?.removeEventListener)
+                UI.playStyle[p]?.removeEventListener('change', playStyleDDMO); // all valid, toggle play state | if and when removed from somewhere else... ?.removeEventListener is not a function
         }
         for (const m in UI.muteStyle)
         {
-            UI.muteStyle[m].removeEventListener('change', muteStyleDDMO); // all valid, toggle play state
+            if (UI.muteStyle[m]?.removeEventListener)
+                UI.muteStyle[m]?.removeEventListener('change', muteStyleDDMO); // all valid, toggle play state
         }
 
 

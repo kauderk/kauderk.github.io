@@ -140,7 +140,7 @@ kauderk.util = ((util) =>
         }
     }
     util.RemoveAllChildren = (node) =>
-    {
+    {//https://stackoverflow.com/questions/3955229/remove-all-child-elements-of-a-dom-node-in-javascript#:~:text=var%20cNode%20%3D%20node.cloneNode(false)%3B
         const cNode = node.cloneNode(false);
         node.parentNode.replaceChild(cNode, node);
         return node;
