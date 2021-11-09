@@ -170,7 +170,7 @@ let Utils;
 {
     debugger;
     await LoadExternalResources();
-    Utils = kauderk.utils;
+    Utils = kauderk.util;
     await Ready();
     debugger;
 })();
