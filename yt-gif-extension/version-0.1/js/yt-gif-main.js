@@ -170,7 +170,13 @@ let Utils;
 {
     await LoadExternalResources();
     Utils = kauderk.util;
-    await Ready();
+    try
+    {
+        await Ready();
+    } catch (error)
+    {
+        debugger;
+    }
 })();
 async function LoadExternalResources()
 {
@@ -213,7 +219,6 @@ async function LoadExternalResources()
 
 async function Ready()
 {
-    debugger;
     if (document.querySelector('.' + cssData.ddm_exist))
         return console.log('YT Extension was already installed');
 
