@@ -1491,19 +1491,19 @@ async function onPlayerReady(event)
     RemovedObserver.observe(document.body, config);
 
 
-    // work in progress
+    // 8. Performance Mode - Iframe Buffer & Initalize on interaction synergy
     const parentCssPath = UTILS.getUniqueSelector(parent);
-    PushIframeBuffer(parentCssPath);
+    PushIframeBuffer(parentCssPath); // push[len-1] -> shift [0] 
 
 
-    // 8. 'auto pause' when an iframe goes out the viewport... stop playing and mute
+    // 9. 'auto pause' when an iframe goes out the viewport... stop playing and mute
     const yConfig = { threshold: [0] };
     const ViewportObserver = new IntersectionObserver(PauseOffscreen_callback, yConfig);
     ViewportObserver.observe(iframe);
 
 
 
-    // 9. well well well - pause if user doesn't intents to watch
+    // 10. well well well - pause if user doesn't intents to watch
     HumanInteraction_AutopalyFreeze(); // this being the last one, does matter
 
 
@@ -1924,7 +1924,7 @@ async function onPlayerReady(event)
     //#endregion
 
 
-    //#region 8. pause on off screen
+    //#region 9. pause on off screen
     function PauseOffscreen_callback(entries)
     {
         if (!entries[0])
@@ -1947,7 +1947,7 @@ async function onPlayerReady(event)
     //#endregion
 
 
-    //#region 9. last - let me watch would you
+    //#region 10. last - let me watch would you
     function HumanInteraction_AutopalyFreeze()
     {
         const autoplayParent = iframe.closest('.rm-alias-tooltip__content') || //tooltip
@@ -2184,6 +2184,7 @@ function onStateChange(state)
         t.__proto__.ClearTimers();
     }
 
+
     function PlayEndSound(url)
     {
         return new Promise(function (resolve, reject)
@@ -2198,19 +2199,19 @@ function onStateChange(state)
             audio.src = url
         });
     }
-}
-
-
-//#region Utils
-function validSoundURL()
-{
-    const src = window.YT_GIF_DIRECT_SETTINGS.get('end_loop_sound_src').sessionValue;
-    if (UTILS.isValidUrl(src))
+    function validSoundURL()
     {
-        return src
+        const src = window.YT_GIF_DIRECT_SETTINGS.get('end_loop_sound_src').sessionValue;
+        if (UTILS.isValidUrl(src))
+        {
+            return src
+        }
+        return null
     }
-    return null
 }
+
+
+//#region Performance Mode Utils
 function PushIframeBuffer(parentCssPath)
 {
     let arr = window.YT_GIF_OBSERVERS.masterIframeBuffer;
@@ -2219,7 +2220,7 @@ function PushIframeBuffer(parentCssPath)
     if (parentCssPath)
         arr = UTILS.pushSame(arr, parentCssPath); // start with something to avoid an infinite loop or false positive... will see
 
-    const { shiftedArr, atLeasOne, lastOne } = FitIframeBuffer(arr, cap);
+    const { shiftedArr, atLeasOne, lastOne } = FitIframeBuffer(arr, cap, parentCssPath);
     arr = shiftedArr;
 
     if (atLeasOne)
@@ -2233,118 +2234,39 @@ function PushIframeBuffer(parentCssPath)
     }
 
     window.YT_GIF_OBSERVERS.masterIframeBuffer = arr;
-}
-function FitIframeBuffer(arr, cap)
-{
-    let atLeasOne = false;
-    let lastOne = null;
-    let stop = arr.length + 0;
-    while (arr.length > cap)
+
+    function FitIframeBuffer(arr, cap)
     {
-        if (stop < 0) throw new Error('index out of bounds');
-
-        lastOne = arr[0];
-        const wrapper = document.querySelector(lastOne);
-        if (wrapper)
-            CleanAndBrandNewWrapper(wrapper);
-        arr.shift(lastOne);
-        atLeasOne = true;
-        stop--;
-    }
-
-    // remove any that are no longer in the DOM
-    arr.filter(sel => document.querySelector(sel));
-
-    return { shiftedArr: arr, atLeasOne, lastOne };
-
-    // work in progress
-
-    // const arr = window.YT_GIF_OBSERVERS.masterIframeBuffer;
-
-    // if (!UI.experience.iframe_buffer_beta.checked)
-    // {
-    //     arr.splice(0, arr.length) // clean array
-    //     return;
-    // }
-    // else
-    // {
-
-    // }
-
-    // // reverse for loop
-    // for (let i = len - cap; i >= 0; i--)
-    // {
-
-    // }
-
-    // while (arr.length > cap)
-    // {
-    //     const el = arr.shift();
-    //     el.remove();
-    // }
-
-
-    // . . .
-    // lyly
-    // lyly  fail
-    // lyly  fail  cringe
-    // lyly  fail  cringe  japanese
-    // lyly  fail  cringe  japanese  storytelling
-    // lyly  fail  cringe  japanese  storytelling  EYO!
-
-    // 1    2     3       4             5
-    // 0    1     2       3             4
-    /*
-        // make sure to have a proper list of wrappers
-        window.YT_GIF_OBSERVERS.masterIframeBuffer = [...new Set(window.YT_GIF_OBSERVERS.masterIframeBuffer)];
-    
-        const current = window.YT_GIF_OBSERVERS.masterIframeBuffer.length;
-        const cap = parseInt(UI.range.iframe_buffer_slider.value, 10);
-        if (current < cap + 1)
-        {
-            AwaitingBtn(false);
-            return;
-        }
-    
         let atLeasOne = false;
-        for (let i = 0; i < current - cap; i++)
+        let lastOne = null;
+        let stop = arr.length + 0;
+        let ini = 0; // most defenetly the very first one in the array
+        while (arr.length > cap)
         {
-            if (!atLeasOne) // don't spam it
-                AwaitingBtn(true);
-    
-            const elm = window.YT_GIF_OBSERVERS.masterIframeBuffer[i];
-            window.YT_GIF_OBSERVERS.masterIframeBuffer.shift(elm); // https://stackoverflow.com/questions/8073673/how-can-i-add-new-array-elements-at-the-beginning-of-an-array-in-javascript#:~:text=var%20a%20%3D%20%5B23%2C%2045%2C%2012%2C%2067%5D%3B
-            await TryToFollowBuffer(elm);
-            atLeasOne = true;
-        }
-    
-        async function TryToFollowBuffer(parentCssPath)
-        {
-            const span = UTILS.span([rm_components[rm_components.state.currentKey].classToObserve]);
-            try
+            if (stop < 0) throw new Error('index out of bounds');
+
+            lastOne = arr[ini];
+            const wrapper = document.querySelector(lastOne);
+            if (parentCssPath != lastOne)
             {
-                document.querySelector(parentCssPath).querySelector('.yt-gif-wrapper').remove();
-            } catch (error)
-            {
-                debugger;
-            }
-    
-            // load awaiting for command
-            await RAP.sleep(100);
-    
-            const newYTGIF = document.querySelector(parentCssPath);
-            if (newYTGIF && span)
-            {
-                newYTGIF.appendChild(span);
+                if (wrapper)
+                    CleanAndBrandNewWrapper(wrapper);
+                arr.shift(lastOne);
+                atLeasOne = true;
             }
             else
             {
-                const index = window.YT_GIF_OBSERVERS.masterIframeBuffer.indexOf(parentCssPath);
-                if (index > -1)
-                    window.YT_GIF_OBSERVERS.masterIframeBuffer.splice(index, 1);
+                ini++;
             }
+            stop--;
         }
-    */
+
+        // remove any that are no longer in the DOM
+        arr.filter(sel => document.querySelector(sel));
+
+        return { shiftedArr: arr, atLeasOne, lastOne };
+
+    }
 }
 function AwaitingBtn(bol)
 {
