@@ -170,6 +170,8 @@ const cssData = {
 
     stt_allow: 'settings-not-allowed',
 
+    ditem_allow: 'dropdown-item_not-allowed_input',
+
     id: {
         navigate_btn: '#navigate-to-yt-gif-settings-page',
     }
@@ -808,7 +810,6 @@ async function Ready()
         {
             if (e.currentTarget.parentNode.matches(":hover")) // isParentHover util
             {
-                debugger;
                 updateCheckAwaitngBtn = e.currentTarget.checked;
             }
         });
@@ -2272,8 +2273,13 @@ function AwaitingBtn(bol)
 function AwaitingBtnVisualFeedback(bol)
 {
     const { awaiting_for_mouseenter_to_initialize } = UI.experience;
-    const { dwn_no_input } = cssData;
-    UTILS.toggleClasses(bol, [dwn_no_input], awaiting_for_mouseenter_to_initialize);
+    const { ditem_allow } = cssData;
+
+    UTILS.toggleClasses(bol, [ditem_allow], awaiting_for_mouseenter_to_initialize.parentNode);
+
+    const clause = "Full stack Iframe Buffer has priority."
+    UTILS.toggleAttribute(bol, 'data-tooltip', awaiting_for_mouseenter_to_initialize, clause);
+
     return awaiting_for_mouseenter_to_initialize;
 }
 function CleanAndBrandNewWrapper(wrapper_p)
