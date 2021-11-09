@@ -168,11 +168,9 @@ rm_components.both = {
 let Utils;
 (async function ()
 {
-    debugger;
     await LoadExternalResources();
     Utils = kauderk.util;
     await Ready();
-    debugger;
 })();
 
 async function LoadExternalResources()
@@ -730,6 +728,7 @@ async function Ready()
         } catch (error)
         {
             debugger;
+            throw new Error(`${error}`);
         }
 
         return new Promise(function (resolve, reject)
