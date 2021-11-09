@@ -139,6 +139,12 @@ kauderk.util = ((util) =>
             el.replaceWith(el.cloneNode(true));
         }
     }
+    util.RemoveAllChildren = (node) =>
+    {
+        const cNode = node.cloneNode(false);
+        node.parentNode.replaceChild(cNode, node);
+        return node;
+    }
 
     util.print = (str = 'hi') =>
     {
