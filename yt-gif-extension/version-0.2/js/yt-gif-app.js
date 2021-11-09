@@ -68,31 +68,15 @@ const YT_GIF_OBSERVERS_TEMP = {
     CleanLoadedWrappers: function ()
     {
         const wrappers = document.querySelectorAll(`[${attrInfo.target}]`);
-        let wrapperSel = [];
-        let parentSelectors = [];
-        debugger;
-        for (const wrapper_p of wrappers)
+
+        for (let i = wrappers.length - 1; i >= 0; i--)
         {
-            wrapperSel.push(UTILS.getUniqueSelector(wrapper_p));
-        }
+            const wrapper_p = document.querySelector(UTILS.getUniqueSelector(wrappers[i]));
+            const targetClass = wrapper_p.getAttribute(`${attrInfo.target}`);
+            const parentSel = UTILS.getUniqueSelector(wrapper_p.parentNode);
 
-        // reverse for loop
-        for (let i = wrapperSel.length - 1; i >= 0; i--)
-        {
-            const wrapper_p = document.querySelector(wrapperSel[i]);
-            const dataCmp = wrapper_p.getAttribute(`${attrInfo.target}`);
-
-            parentSelectors.push({ sel: UTILS.getUniqueSelector(wrapper_p.parentNode), target: dataCmp });
-
-            //wrapper_p = UTILS.RemoveAllChildren(wrapper_p);
-            debugger;
             wrapper_p.parentNode.removeChild(wrapper_p);
-        }
-        for (const selObj of parentSelectors)
-        {
-            const wrapperParent = () => document.querySelector(selObj.sel);
-            //wrapperParent().classList.remove(cssData.yg_wrapper_p);
-            wrapperParent().appendChild(UTILS.span([selObj.target]));
+            document.querySelector(parentSel).appendChild(UTILS.span([targetClass])); //wrapperParent -> nest new span
         }
     },
 }
@@ -340,17 +324,17 @@ else
 
 async function Ready()
 {
-    // the objects "UI", "links", "attrData" and "cssData" are binded to all of these functions
+    // 0. the objects "UI", "links", "attrData" and "cssData" are binded to all of these functions
     if (DDM_Els().length > 0)
     {
         try
         {
             window.YT_GIF_OBSERVERS.CleanMasterObservers();
+            window.YT_GIF_OBSERVERS.CleanLoadedWrappers();
         } catch (err)
         {
-            console.warn('The Masters observers are not defined.');
+            console.warn(`YT GIF's Masters observers are not defined.`);
         }
-        window.YT_GIF_OBSERVERS.CleanLoadedWrappers();
         console.log('Reinstalling the YT GIF Extension');
     }
 
