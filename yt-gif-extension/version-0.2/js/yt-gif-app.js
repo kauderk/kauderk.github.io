@@ -71,12 +71,8 @@ const YT_GIF_OBSERVERS_TEMP = {
 
         for (let i = wrappers.length - 1; i >= 0; i--)
         {
-            const wrapper_p = document.querySelector(UTILS.getUniqueSelector(wrappers[i]));
-            const targetClass = wrapper_p.getAttribute(`${attrInfo.target}`);
-            const parentSel = UTILS.getUniqueSelector(wrapper_p.parentNode);
-
-            wrapper_p.parentNode.removeChild(wrapper_p);
-            document.querySelector(parentSel).appendChild(UTILS.span([targetClass])); //wrapperParent -> nest new span
+            const wrapper = document.querySelector(UTILS.getUniqueSelector(wrappers[i]));
+            CleanAndBrandNewWrapper(wrapper); //wrapperParent -> nest new span
         }
     },
 }
@@ -240,6 +236,17 @@ const rm_components = {
         currentKey: '',
         initialKey: '',
     },
+    currentTarget: function ()
+    {
+        if (this[this.state.currentKey] == this['both'])
+        {
+            return this['yt_gif'].classToObserve;
+        }
+        else
+        {
+            this[this.state.currentKey].classToObserve;
+        }
+    },
     assertCurrentKey: function (override_roam_video_component)
     {
         let newKey = null; // this can be shorter for sure, how though?
@@ -324,6 +331,7 @@ else
 
 async function Ready()
 {
+
     // 0. the objects "UI", "links", "attrData" and "cssData" are binded to all of these functions
     if (DDM_Els().length > 0)
     {
@@ -331,6 +339,9 @@ async function Ready()
         {
             window.YT_GIF_OBSERVERS.CleanMasterObservers();
             window.YT_GIF_OBSERVERS.CleanLoadedWrappers();
+
+            window.YT_GIF_OBSERVERS.masterIframeBuffer = new Array();
+            console.log(window.YT_GIF_OBSERVERS.masterIframeBuffer);
         } catch (err)
         {
             console.warn(`YT GIF's Masters observers are not defined.`);
@@ -389,7 +400,7 @@ async function Ready()
 
     navigateToSettingsPageInSidebar(navigate_btn, dwp_message, stt_allow);
 
-    IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_beta, awaiting_for_mouseenter_to_initialize);
+    IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_beta, awaiting_for_mouseenter_to_initialize, iframe_buffer_slider);
 
 
     // 4. run extension and events - set up
@@ -724,10 +735,7 @@ async function Ready()
         scroll.addEventListener('wheel', ValueOnWheel, true);
         function ValueOnWheel(e)
         {
-            const elScroll = e.currentTarget;
-            const dir = Math.sign(e.deltaY) * -1;
-            const parsed = parseInt(elScroll.value, 10);
-            elScroll.value = Number(dir + parsed);
+            e.currentTarget = UpdateSliderOnDirection(e);
 
             UpdateLabelWithEvent(e);
         }
@@ -743,6 +751,15 @@ async function Ready()
 
         UptLabel(scroll);
     }
+    function UpdateSliderOnDirection(e)
+    {
+        const elScroll = e.currentTarget;
+        const dir = Math.sign(e.deltaY) * -1;
+        const parsed = parseInt(elScroll.value, 10);
+        elScroll.value = Number(dir + parsed);
+        return elScroll;
+    }
+
     function TogglePlayerThumbnails_DDM_RTM(awaiting_with_video_thumnail_as_bg, awaitng_input_with_thumbnail)
     {
         // BIND TO SETTINGS PAGE
@@ -810,18 +827,40 @@ async function Ready()
             UTILS.toggleClasses(open, [stt_allow], settingsBtnWrapper);
         }
     }
-    function IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_beta, awaiting_for_mouseenter_to_initialize)
+    function IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_beta, awaiting_for_mouseenter_to_initialize, iframe_buffer_slider)
     {
-        spliceIframeBuffer();
-        iframe_buffer_beta.addEventListener('change', async function (e)
+        let updateCheckAwaitngBtn = awaiting_for_mouseenter_to_initialize.checked;
+
+        awaiting_for_mouseenter_to_initialize.addEventListener('change', function (e)
         {
-            if (iframe_buffer_beta.checked)
+            if (e.currentTarget.parentNode.matches(":hover")) // isParentHover util
             {
-                spliceIframeBuffer();
+                debugger;
+                updateCheckAwaitngBtn = e.currentTarget.checked;
+            }
+        });
+
+        iframe_buffer_beta.addEventListener('change', function (e)
+        {
+            if (e.currentTarget.checked)
+            {
+                PushIframeBuffer();
             }
             else
             {
-                AwaitingBtn(false);
+                AwaitingBtn(updateCheckAwaitngBtn);
+            }
+        });
+
+        iframe_buffer_slider.addEventListener('wheel', function (e)
+        {
+            const min = parseInt(e.currentTarget.min, 10);
+            const max = parseInt(e.currentTarget.max, 10);
+            const value = e.currentTarget.value; //e.currentTarget = UpdateSliderOnDirection(e); two events shouldn't be doing the same thing
+
+            if (value >= min && value <= max)
+            {
+                PushIframeBuffer();
             }
         });
     }
@@ -1453,9 +1492,8 @@ async function onPlayerReady(event)
 
 
     // work in progress
-    const parentCssPath = UTILS.getUniqueSelector(parent.parentNode);
-    window.YT_GIF_OBSERVERS.masterIframeBuffer.push(parentCssPath);
-    spliceIframeBuffer();
+    const parentCssPath = UTILS.getUniqueSelector(parent);
+    PushIframeBuffer(parentCssPath);
 
 
     // 8. 'auto pause' when an iframe goes out the viewport... stop playing and mute
@@ -2173,66 +2211,144 @@ function validSoundURL()
     }
     return null
 }
-async function spliceIframeBuffer()
+function PushIframeBuffer(parentCssPath)
 {
+    let arr = window.YT_GIF_OBSERVERS.masterIframeBuffer;
+    const cap = parseInt(UI.range.iframe_buffer_slider.value, 10); // 1
+
+    if (parentCssPath)
+        arr = UTILS.pushSame(arr, parentCssPath); // start with something to avoid an infinite loop or false positive... will see
+
+    const { shiftedArr, atLeasOne, lastOne } = FitIframeBuffer(arr, cap);
+    arr = shiftedArr;
+
+    if (atLeasOne)
+    {
+        debugger;
+        AwaitingBtn(true); // synergy baby!
+    }
+    else
+    {
+        UI.experience.awaiting_for_mouseenter_to_initialize.dispatchEvent(new Event('change')); // reset to original state
+    }
+
+    window.YT_GIF_OBSERVERS.masterIframeBuffer = arr;
+}
+function FitIframeBuffer(arr, cap)
+{
+    let atLeasOne = false;
+    let lastOne = null;
+    let stop = arr.length + 0;
+    while (arr.length > cap)
+    {
+        if (stop < 0) throw new Error('index out of bounds');
+
+        lastOne = arr[0];
+        const wrapper = document.querySelector(lastOne);
+        if (wrapper)
+            CleanAndBrandNewWrapper(wrapper);
+        arr.shift(lastOne);
+        atLeasOne = true;
+        stop--;
+    }
+
+    // remove any that are no longer in the DOM
+    arr.filter(sel => document.querySelector(sel));
+
+    return { shiftedArr: arr, atLeasOne, lastOne };
+
     // work in progress
 
-    if (!UI.experience.iframe_buffer_beta.checked)
-        return;
+    // const arr = window.YT_GIF_OBSERVERS.masterIframeBuffer;
 
-    // make sure to have a proper list of wrappers
-    window.YT_GIF_OBSERVERS.masterIframeBuffer = [...new Set(window.YT_GIF_OBSERVERS.masterIframeBuffer)];
+    // if (!UI.experience.iframe_buffer_beta.checked)
+    // {
+    //     arr.splice(0, arr.length) // clean array
+    //     return;
+    // }
+    // else
+    // {
 
-    const current = window.YT_GIF_OBSERVERS.masterIframeBuffer.length;
-    const cap = parseInt(UI.range.iframe_buffer_slider.value, 10);
-    if (current < cap + 1)
-    {
-        AwaitingBtn(false);
-        return;
-    }
+    // }
 
-    let atLeasOne = false;
-    for (let i = 0; i < current - cap; i++)
-    {
-        if (!atLeasOne) // don't spam it
-            AwaitingBtn(true);
+    // // reverse for loop
+    // for (let i = len - cap; i >= 0; i--)
+    // {
 
-        const elm = window.YT_GIF_OBSERVERS.masterIframeBuffer[i];
-        window.YT_GIF_OBSERVERS.masterIframeBuffer.shift(elm); // https://stackoverflow.com/questions/8073673/how-can-i-add-new-array-elements-at-the-beginning-of-an-array-in-javascript#:~:text=var%20a%20%3D%20%5B23%2C%2045%2C%2012%2C%2067%5D%3B
-        await TryToFollowBuffer(elm);
-        atLeasOne = true;
-    }
+    // }
 
-    async function TryToFollowBuffer(parentCssPath)
-    {
-        const span = UTILS.span([rm_components[rm_components.state.currentKey].classToObserve]);
-        try
+    // while (arr.length > cap)
+    // {
+    //     const el = arr.shift();
+    //     el.remove();
+    // }
+
+
+    // . . .
+    // lyly
+    // lyly  fail
+    // lyly  fail  cringe
+    // lyly  fail  cringe  japanese
+    // lyly  fail  cringe  japanese  storytelling
+    // lyly  fail  cringe  japanese  storytelling  EYO!
+
+    // 1    2     3       4             5
+    // 0    1     2       3             4
+    /*
+        // make sure to have a proper list of wrappers
+        window.YT_GIF_OBSERVERS.masterIframeBuffer = [...new Set(window.YT_GIF_OBSERVERS.masterIframeBuffer)];
+    
+        const current = window.YT_GIF_OBSERVERS.masterIframeBuffer.length;
+        const cap = parseInt(UI.range.iframe_buffer_slider.value, 10);
+        if (current < cap + 1)
         {
-            document.querySelector(parentCssPath).querySelector('.yt-gif-wrapper').remove();
-        } catch (error)
-        {
-            debugger;
+            AwaitingBtn(false);
+            return;
         }
-
-        // load awaiting for command
-        await RAP.sleep(100);
-
-        const newYTGIF = document.querySelector(parentCssPath);
-        if (newYTGIF && span)
+    
+        let atLeasOne = false;
+        for (let i = 0; i < current - cap; i++)
         {
-            newYTGIF.appendChild(span);
+            if (!atLeasOne) // don't spam it
+                AwaitingBtn(true);
+    
+            const elm = window.YT_GIF_OBSERVERS.masterIframeBuffer[i];
+            window.YT_GIF_OBSERVERS.masterIframeBuffer.shift(elm); // https://stackoverflow.com/questions/8073673/how-can-i-add-new-array-elements-at-the-beginning-of-an-array-in-javascript#:~:text=var%20a%20%3D%20%5B23%2C%2045%2C%2012%2C%2067%5D%3B
+            await TryToFollowBuffer(elm);
+            atLeasOne = true;
         }
-        else
+    
+        async function TryToFollowBuffer(parentCssPath)
         {
-            const index = window.YT_GIF_OBSERVERS.masterIframeBuffer.indexOf(parentCssPath);
-            if (index > -1)
-                window.YT_GIF_OBSERVERS.masterIframeBuffer.splice(index, 1);
+            const span = UTILS.span([rm_components[rm_components.state.currentKey].classToObserve]);
+            try
+            {
+                document.querySelector(parentCssPath).querySelector('.yt-gif-wrapper').remove();
+            } catch (error)
+            {
+                debugger;
+            }
+    
+            // load awaiting for command
+            await RAP.sleep(100);
+    
+            const newYTGIF = document.querySelector(parentCssPath);
+            if (newYTGIF && span)
+            {
+                newYTGIF.appendChild(span);
+            }
+            else
+            {
+                const index = window.YT_GIF_OBSERVERS.masterIframeBuffer.indexOf(parentCssPath);
+                if (index > -1)
+                    window.YT_GIF_OBSERVERS.masterIframeBuffer.splice(index, 1);
+            }
         }
-    }
+    */
 }
 function AwaitingBtn(bol)
 {
-    const { awaiting_for_mouseenter_to_initialize } = UI.experience
+    const { awaiting_for_mouseenter_to_initialize } = UI.experience;
     const { dwn_no_input } = cssData;
 
     awaiting_for_mouseenter_to_initialize.disabled = bol;
@@ -2240,6 +2356,14 @@ function AwaitingBtn(bol)
     UTILS.toggleClasses(bol, [dwn_no_input], awaiting_for_mouseenter_to_initialize);
 
     awaiting_for_mouseenter_to_initialize.dispatchEvent(new Event('change'));
+}
+function CleanAndBrandNewWrapper(wrapper_p)
+{
+    const targetClass = wrapper_p.getAttribute(`${attrInfo.target}`);
+    const parentSel = UTILS.getUniqueSelector(wrapper_p.parentNode);
+
+    wrapper_p.parentNode.removeChild(wrapper_p);
+    document.querySelector(parentSel).appendChild(UTILS.div([targetClass]));
 }
 //#endregion
 
