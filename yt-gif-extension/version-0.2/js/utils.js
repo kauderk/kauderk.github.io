@@ -2,9 +2,11 @@ var kauderk = window.kauderk || {};
 
 kauderk.util = ((util) =>
 {
-    util.span = (classList = []) =>
+    util.div = (classList = []) => util.elm(classList, 'div');
+    util.span = (classList = []) => util.elm(classList, 'span');
+    util.elm = (classList = [], nodeType) =>
     {
-        const span = document.createElement('span');
+        const span = document.createElement(nodeType);
         span.classList.add(...classList);
         return span;
     }
