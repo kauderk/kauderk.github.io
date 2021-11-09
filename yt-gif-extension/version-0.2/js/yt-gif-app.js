@@ -317,7 +317,7 @@ if (
 }
 else
 {
-    console.log(`The YT GIF Extension won't be installed, major scripts are missing... submit your issue here: ${links.help.github_isuues}`);
+    console.warn(`The YT GIF Extension won't be installed, major scripts are missing... submit your issue here: ${links.help.github_isuues}`);
 }
 
 
@@ -1295,8 +1295,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, message = 'I dunno'
         {
             UTILS.toggleClasses(false, mainAnimation, wrapper);
             UTILS.removeIMGbg(wrapper);
-            if (wrapper.removeEventListener)
-                wrapper.removeEventListener('mouseenter', CreateYTPlayer);
+            wrapper.removeEventListener('mouseenter', CreateYTPlayer);
             console.log(message);
             return DeployYT_IFRAME();
         }
@@ -1420,14 +1419,7 @@ async function onPlayerReady(event)
 
 
     // 2. play style | pause style
-    for (const p in UI.playStyle)
-    {
-        UI.playStyle[p].addEventListener('change', playStyleDDMO);
-    }
-    for (const m in UI.muteStyle)
-    {
-        UI.muteStyle[m].addEventListener('change', muteStyleDDMO);
-    }
+    ToggleElsStylesEventListeners(true);
 
 
 
@@ -1453,7 +1445,6 @@ async function onPlayerReady(event)
     // 6. store relevant elements with event event listeners to clean them later
     const withEventListeners = [parent, parent.parentNode, timeDisplay, iframe]; // ready to be cleaned
 
-    const parentCssPath = UTILS.getUniqueSelector(parent.parentNode);
 
     // 7. clean data and ready 'previous' paramaters for next sesion with IframeRemmovedFromDom_callback
     const config = { subtree: true, childList: true };
@@ -1462,6 +1453,7 @@ async function onPlayerReady(event)
 
 
     // work in progress
+    const parentCssPath = UTILS.getUniqueSelector(parent.parentNode);
     window.YT_GIF_OBSERVERS.masterIframeBuffer.push(parentCssPath);
     spliceIframeBuffer();
 
@@ -1475,6 +1467,8 @@ async function onPlayerReady(event)
 
     // 9. well well well - pause if user doesn't intents to watch
     HumanInteraction_AutopalyFreeze(); // this being the last one, does matter
+
+
 
 
     //#region 1. previous parameters
@@ -1531,6 +1525,31 @@ async function onPlayerReady(event)
 
 
     //#region 2. play/mute styles
+    function ToggleElsStylesEventListeners(bol = false)
+    {
+        // hmmmm... Mainly because of CleanLoadedWrappers... UI is window.YT_GIF_OBSERVERS.UI | timestamps persist this way
+        for (const p in UI.playStyle)
+        {
+            UI.playStyle[p] = Flip(UI.playStyle[p], playStyleDDMO);
+        }
+        for (const m in UI.muteStyle)
+        {
+            UI.muteStyle[m] = Flip(UI.muteStyle[m], muteStyleDDMO);
+        }
+        function Flip(binaryInput, styleDDMO = () => { })
+        {
+            if (binaryInput.tagName)
+            {
+                if (bol)
+                    binaryInput.addEventListener('change', styleDDMO);
+                else
+                    binaryInput.removeEventListener('change', styleDDMO);
+            }
+
+            return binaryInput;
+        }
+    }
+    /* ********** */
     function playStyleDDMO()
     {
         if (!UTILS.isElementVisible(iframe)) return; //play all VISIBLE Players, this will be called on all visible iframes
@@ -1814,16 +1833,7 @@ async function onPlayerReady(event)
     {
         // expensive for sure 🙋
         UTILS.RemoveElsEventListeners(withEventListeners);
-        for (const p in UI.playStyle)
-        {
-            if (UI.playStyle[p]?.removeEventListener)
-                UI.playStyle[p]?.removeEventListener('change', playStyleDDMO); // all valid, toggle play state | if and when removed from somewhere else... ?.removeEventListener is not a function
-        }
-        for (const m in UI.muteStyle)
-        {
-            if (UI.muteStyle[m]?.removeEventListener)
-                UI.muteStyle[m]?.removeEventListener('change', muteStyleDDMO); // all valid, toggle play state
-        }
+        ToggleElsStylesEventListeners(false);
 
 
 
@@ -2176,7 +2186,10 @@ async function spliceIframeBuffer()
     const current = window.YT_GIF_OBSERVERS.masterIframeBuffer.length;
     const cap = parseInt(UI.range.iframe_buffer_slider.value, 10);
     if (current < cap + 1)
+    {
+        AwaitingBtn(false);
         return;
+    }
 
     let atLeasOne = false;
     for (let i = 0; i < current - cap; i++)
@@ -2244,7 +2257,6 @@ I want to add ☐ ☑
         and inplement the changes, when the user the user enter the real edit block mode
             🙋
 
-    pause or mute when video plays with while using the inAndOutKeys ☐
 
 added
     visible_clips_start_to_play_unmuted synergy with fullscreenStyle ☑ ☑
@@ -2257,15 +2269,19 @@ added
     bind event and update settings_page obj ☑ ☑
         and update the actual block on the actual page ☑ ☑
 
-TODO ☐ ☑
     delete useless src sound tags - player html ☑ ☑
 
     fixed settings buttn clases ☑ ☑
 
     create scroll iframe buffer amount in experience ☑ ☑
 
-    re add yt icon on orientation change on mobile
-        limit the size to 24 px max - square
+    re add yt icon on orientation change on mobile ☑ ☑
+        limit the size to 24 px max - square ☑ ☑
+
+
+TODO ☐ ☑
+
+
 
 features on hold btn at the bottom ☑ ☑
     focus & blus for sub ddm ☑ ☑
@@ -2292,6 +2308,8 @@ features on hold btn at the bottom ☑ ☑
     https://freesound.org/data/previews/256/256113_3263906-lq.mp3
 
     https://freesound.org/data/previews/35/35631_18799-lq.mp3 - roam research pomodoro * ding! *
+
+    pause or mute when video plays with while using the inAndOutKeys ☐
 
 
 Discarted
