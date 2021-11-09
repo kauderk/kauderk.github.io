@@ -328,3 +328,11 @@ div.settings-not-allowed > span.dropdown-info-message:hover{
     box-shadow: 0 0 0 0 var(--dropdown-pulse-anim-box-shadow-end);
   }
 }
+
+/* show invalid input feedback */
+.dropdown_not-allowed_input{
+  box-shadow: 0px 0px 2px 2px rgb(129 97 0 / 90%);
+}
+.dropdown_not-allowed_input:hover{
+  box-shadow: 0px 0px 2px 2px rgba(255, 193, 7, 0.62);
+}
