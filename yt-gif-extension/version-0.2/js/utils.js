@@ -295,6 +295,17 @@ kauderk.util = ((util) =>
             el.classList.remove(...classNames);
         }
     }
+    util.toggleAttribute = (bol, Name, el, value) =>
+    {
+        if (bol)
+        {
+            el.setAttribute(Name, value);
+        }
+        else
+        {
+            el.removeAttribute(Name);
+        }
+    }
 
 
     util.exitFullscreen = () =>
