@@ -165,8 +165,8 @@ rm_components.both = {
 
 
 
-
-let Utils = LoadExternalResources().then(val =>
+let Utils;
+LoadExternalResources().then(val =>
 {
     debugger;
     Utils = kauderk.util;
