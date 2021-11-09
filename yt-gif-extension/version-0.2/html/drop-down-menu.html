@@ -104,7 +104,7 @@
                             <div class="dropdown-content dropdown-info-box">
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description"
-                                        data-tooltip="Performance mode - Don't load until interaction">Initialize
+                                        data-tooltip="Don't load until interaction">Initialize
                                         on mouse enter</label>
                                     <input type="checkbox" name="" data-main="initialize-bg"
                                         id="awaiting_for_mouseenter_to_initialize" checked>
@@ -115,6 +115,26 @@
                                         thumbnail</label>
                                     <input type="checkbox" name="" id="awaiting_with_video_thumnail_as_bg" checked>
                                 </span>
+                                <span class="dropdown-item-separator"></span>
+                                <span class="dropdown-item">
+                                    <label for="" class="dropdown-item-description"
+                                        data-tooltip="Iframes ≡ Websites ≡ YT GIFs - Create a stack, push and pop at will. Performance Mode.">Iframe/Player
+                                        Buffer</label>
+                                    <input type="checkbox" name="iframe_buffer" data-main="iframe_buffer"
+                                        id="iframe_buffer_beta" checked>
+                                </span>
+                                <span class="dropdown-item rangeOffset sub-dropdown--range" name="iframe_buffer"
+                                    data-bind="iframe_buffer_item">
+                                    <span class="dropdown-info-message dropdown-item-description">Loaded
+                                        simultaneously</span>
+                                    <div class="dropdown-item-contain-two">
+                                        <input type="range" min="1" max="30" value="15" class="slider"
+                                            id="iframe_buffer_slider">
+                                        <label for="" class="dropdown-item-description" data-tooltip="From 1 to 30"
+                                            id="iframe_buffer_label">15</label>
+                                    </div>
+                                </span>
+
                                 <span class="dropdown-item-separator"></span>
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description"
@@ -132,24 +152,6 @@
                                             id="end_loop_sound_volume">
                                         <label for="" class="dropdown-item-description" data-tooltip="From 0 to 100"
                                             id="loop_volume_displayed">50</label>
-                                    </div>
-                                </span>
-                                <span class="dropdown-item-separator"></span>
-                                <span class="dropdown-item">
-                                    <label for="" class="dropdown-item-description"
-                                        data-tooltip="Reminds you that the clip has ended">Iframe/Player Buffer</label>
-                                    <input type="checkbox" name="iframe_buffer" data-main="iframe_buffer"
-                                        id="iframe_buffer_beta" checked>
-                                </span>
-                                <span class="dropdown-item rangeOffset sub-dropdown--range" name="iframe_buffer"
-                                    data-bind="iframe_buffer_item">
-                                    <span class="dropdown-info-message dropdown-item-description">Loaded
-                                        simultaneously</span>
-                                    <div class="dropdown-item-contain-two">
-                                        <input type="range" min="1" max="30" value="15" class="slider"
-                                            id="iframe_buffer_slider">
-                                        <label for="" class="dropdown-item-description" data-tooltip="From 1 to 30"
-                                            id="iframe_buffer_label">15</label>
                                     </div>
                                 </span>
                             </div>
