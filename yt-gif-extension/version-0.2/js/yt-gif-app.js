@@ -454,41 +454,14 @@ async function Ready()
 
         await smart_LoadCSS(CSSThemes[themToLoad], `${prefixID}-main-theme`);
     }
-    function smart_CssPlayer_UCS(player_span, cssData)
+    function smart_CssPlayer_UCS(player_span)
     {
-        const { yt_gif_wrapper, yt_gif_iframe_wrapper, ty_gif_custom_player_span, yt_gif } = cssData;
-
-        if (!UTILS.isValidCSSUnit(player_span)) 
+        if (UTILS.isValidCSSUnit(player_span)) 
         {
-            return null;
+            document.documentElement.style.setProperty('--yt-gif-player-span', player_span);
+            return;
         }
-
-        const css_rule = `.${yt_gif_wrapper}, .${yt_gif_iframe_wrapper} {
-                    width: ${player_span};
-                }`;
-
-        const id = `${ty_gif_custom_player_span}-${player_span}`
-
-        smart_Create_css_rule(css_rule, id); // i could've used a css variable. fuck! jaja
-
-        //#region util
-        function smart_Create_css_rule(css_rules = 'starndard css rules', id = `${yt_gif}-custom`)
-        {
-            if (document.querySelector(`[id='${id}']`))
-            {
-                SytleSheetExistAlready(id);
-            }
-            else
-            {
-                const style = document.createElement('style'); // could be it's own function
-                style.id = id;
-                style.setAttribute('type', 'text/css');
-                style.innerHTML = css_rules;
-                document.getElementsByTagName('head')[0].appendChild(style);
-            }
-        }
-        //#endregion
-
+        return null;
     }
     function SytleSheetExistAlready(id)
     {
@@ -852,6 +825,7 @@ async function Ready()
             }
         });
 
+        iframe_buffer_slider.addEventListener('change', () => PushIframeBuffer());
         iframe_buffer_slider.addEventListener('wheel', function (e)
         {
             const min = parseInt(e.currentTarget.min, 10);
@@ -2214,26 +2188,44 @@ function onStateChange(state)
 //#region Performance Mode Utils
 function PushIframeBuffer(parentCssPath)
 {
+    // 0.
     let arr = window.YT_GIF_OBSERVERS.masterIframeBuffer;
-    const cap = parseInt(UI.range.iframe_buffer_slider.value, 10); // 1
+    const cap = parseInt(UI.range.iframe_buffer_slider.value, 10);
 
+
+    // 1. guard clauses
     if (parentCssPath)
         arr = UTILS.pushSame(arr, parentCssPath); // start with something to avoid an infinite loop or false positive... will see
 
+    if (!UI.experience.iframe_buffer_beta.checked)
+        return;
+
+
+    // 2. while...
     const { shiftedArr, atLeasOne, lastOne } = FitIframeBuffer(arr, cap, parentCssPath);
     arr = shiftedArr;
 
+
+    // 3. mix and match still in progress
     if (atLeasOne)
     {
-        debugger;
         AwaitingBtn(true); // synergy baby!
     }
-    else
+    else if (!atLeasOne || cap > arr.length)
     {
+        AwaitingBtn(false);
         UI.experience.awaiting_for_mouseenter_to_initialize.dispatchEvent(new Event('change')); // reset to original state
     }
+    else if (cap <= arr.length)
+    {
+        AwaitingBtnVisualFeedback(true);
+    }
 
+
+    // 4. pass by value
     window.YT_GIF_OBSERVERS.masterIframeBuffer = arr;
+
+
 
     function FitIframeBuffer(arr, cap)
     {
@@ -2270,14 +2262,19 @@ function PushIframeBuffer(parentCssPath)
 }
 function AwaitingBtn(bol)
 {
-    const { awaiting_for_mouseenter_to_initialize } = UI.experience;
-    const { dwn_no_input } = cssData;
+    const awaiting_for_mouseenter_to_initialize = AwaitingBtnVisualFeedback(bol);
 
     awaiting_for_mouseenter_to_initialize.disabled = bol;
     awaiting_for_mouseenter_to_initialize.checked = bol;
-    UTILS.toggleClasses(bol, [dwn_no_input], awaiting_for_mouseenter_to_initialize);
 
     awaiting_for_mouseenter_to_initialize.dispatchEvent(new Event('change'));
+}
+function AwaitingBtnVisualFeedback(bol)
+{
+    const { awaiting_for_mouseenter_to_initialize } = UI.experience;
+    const { dwn_no_input } = cssData;
+    UTILS.toggleClasses(bol, [dwn_no_input], awaiting_for_mouseenter_to_initialize);
+    return awaiting_for_mouseenter_to_initialize;
 }
 function CleanAndBrandNewWrapper(wrapper_p)
 {
@@ -2293,8 +2290,7 @@ function CleanAndBrandNewWrapper(wrapper_p)
 /*
 
 user requested ☐ ☑
-    yt iframe customizable ui language ☐
-        add yt_api customizable settings ✘ 🙋
+
 
 
 I want to add ☐ ☑
@@ -2324,6 +2320,8 @@ added
     re add yt icon on orientation change on mobile ☑ ☑
         limit the size to 24 px max - square ☑ ☑
 
+    yt iframe customizable ui language ☑ ☑
+        add yt_api customizable settings ✘
 
 TODO ☐ ☑
 
