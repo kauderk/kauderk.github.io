@@ -165,11 +165,12 @@ rm_components.both = {
 
 
 
-let Utils = null;
-LoadExternalResources().then(val =>
+
+let Utils = LoadExternalResources().then(val =>
 {
+    debugger;
     Utils = kauderk.util;
-    Ready();
+    await Ready();
 });
 async function LoadExternalResources()
 {
@@ -182,7 +183,7 @@ async function LoadExternalResources()
     else
     {
         const utilsScript = document.createElement("script");
-        utilsScript.src = URLFolder(`js/utils.js`);
+        utilsScript.src = URLFolderJS(`utils.js`);
         utilsScript.id = 'yt-gif-utils';
         utilsScript.type = "text/javascript";
         document.getElementsByTagName('head')[0].appendChild(utilsScript);
@@ -212,6 +213,7 @@ async function LoadExternalResources()
 
 async function Ready()
 {
+    debugger;
     if (document.querySelector('.' + cssData.ddm_exist))
         return console.log('YT Extension was already installed');
 
