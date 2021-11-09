@@ -166,12 +166,13 @@ rm_components.both = {
 
 
 let Utils;
-LoadExternalResources().then(val =>
+(async function ()
 {
     debugger;
+    await LoadExternalResources();
     Utils = kauderk.util;
     await Ready();
-});
+})();
 async function LoadExternalResources()
 {
     if (typeof kauderk !== 'undefined' &&
