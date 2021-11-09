@@ -724,7 +724,13 @@ async function Ready()
     //#region uitils
     async function LoadCSS(cssURL) // 'cssURL' is the stylesheet's URL, i.e. /css/styles.css
     {
-        if (await !Utils.isValidFetch(cssURL)) return;
+        try
+        {
+            if (await !Utils.isValidFetch(cssURL)) return;
+        } catch (error)
+        {
+            debugger;
+        }
 
         return new Promise(function (resolve, reject)
         {
