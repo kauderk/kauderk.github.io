@@ -21,7 +21,7 @@ kauderk.util = ((util) =>
                 if (!s.includes('@')) continue;
                 const rgx = new RegExp(/(@.*)\.com/, 'gm');
                 const replaceWith = rgx.exec(s)?.[1];
-                s == s.replace(rgx, `\\\\${replaceWith}\\\\`);
+                s = s.replace(rgx, `\\\\${replaceWith}\\\\.com`);
             }
             sel = selArr.join(' > ');
         }
