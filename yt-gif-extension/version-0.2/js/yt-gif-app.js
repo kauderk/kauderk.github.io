@@ -240,14 +240,9 @@ const rm_components = {
     },
     currentTarget: function ()
     {
-        if (this[this.state.currentKey] == this['both'])
-        {
-            return this['yt_gif'].classToObserve;
-        }
-        else
-        {
-            this[this.state.currentKey].classToObserve;
-        }
+        const crr = this.state.currentKey;
+        const tkey = (crr == 'both') ? 'yt_gif' : crr;
+        return this[tkey].classToObserve;
     },
     assertCurrentKey: function (override_roam_video_component)
     {
@@ -341,9 +336,7 @@ async function Ready()
         {
             window.YT_GIF_OBSERVERS.CleanMasterObservers();
             window.YT_GIF_OBSERVERS.CleanLoadedWrappers();
-
             window.YT_GIF_OBSERVERS.masterIframeBuffer = new Array();
-            console.log(window.YT_GIF_OBSERVERS.masterIframeBuffer);
         } catch (err)
         {
             console.warn(`YT GIF's Masters observers are not defined.`);
@@ -365,7 +358,7 @@ async function Ready()
     await smart_LoadCSS(playerStyle, `${yt_gif}-playerStyle`);
 
     await smart_CssThemes_UCS(css_theme.sessionValue, themes, yt_gif); // UCS - user customizations
-    await smart_CssPlayer_UCS(player_span.sessionValue, cssData);
+    await smart_CssPlayer_UCS(player_span.sessionValue);
 
     links.html.fetched.playerControls = await PlayerHtml_UCS(playerControls);
 
@@ -1156,7 +1149,6 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, message = 'I dunno'
     }
     else
     {
-        console.log(message);
         return DeployYT_IFRAME();
     }
 
@@ -1277,29 +1269,8 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, message = 'I dunno'
         return false;
     }
 
+
     // 5.0
-    function setUpWrapperAwaitingAnimation()
-    {
-        const awaitingAnimation = [cssData.awiting_player_pulse_anim, cssData.awaitng_player_user_input];
-        const awaitingAnimationThumbnail = [...awaitingAnimation, cssData.awaitng_input_with_thumbnail];
-
-        let mainAnimation = awaitingAnimationThumbnail;
-        wrapper.setAttribute(attrInfo.videoUrl, url);
-
-        if (UI.experience.awaiting_with_video_thumnail_as_bg.checked)
-        {
-            UTILS.applyIMGbg(wrapper, url);
-        }
-
-        else
-        {
-            mainAnimation = awaitingAnimation;
-        }
-
-        UTILS.toggleClasses(true, mainAnimation, wrapper);
-        return mainAnimation;
-    }
-    // 5.1
     function DeployYT_IFRAME_OnInteraction()
     {
         const mainAnimation = setUpWrapperAwaitingAnimation();
@@ -1310,10 +1281,31 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, message = 'I dunno'
             UTILS.toggleClasses(false, mainAnimation, wrapper);
             UTILS.removeIMGbg(wrapper);
             wrapper.removeEventListener('mouseenter', CreateYTPlayer);
-            console.log(message);
             return DeployYT_IFRAME();
         }
+        function setUpWrapperAwaitingAnimation()
+        {
+            const { awiting_player_pulse_anim, awaitng_player_user_input, awaitng_input_with_thumbnail } = cssData;
+            const awaitingAnimation = [awiting_player_pulse_anim, awaitng_player_user_input];
+            const awaitingAnimationThumbnail = [...awaitingAnimation, awaitng_input_with_thumbnail];
+
+            let mainAnimation = awaitingAnimationThumbnail;
+            wrapper.setAttribute(attrInfo.videoUrl, url);
+
+            if (UI.experience.awaiting_with_video_thumnail_as_bg.checked)
+            {
+                UTILS.applyIMGbg(wrapper, url);
+            }
+            else
+            {
+                mainAnimation = awaitingAnimation;
+            }
+
+            UTILS.toggleClasses(true, mainAnimation, wrapper);
+            return mainAnimation;
+        }
     }
+
 
     // last - customize the iframe api
     function playerConfig(configParams)
@@ -1360,11 +1352,6 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, message = 'I dunno'
             }
         };
     }
-    //https://www.youtube.com/embed/qbUcv3Bc61g?autoplay=1&controls=1&mute=1&hl=ja&cc_lang_pref=0&cc_load_policy=3&vq=hd1080&version=3&feature=oembed&autohide=1&showinfo=0&modestbranding=1&fs=1&rel=0&iv_load_policy=3&enablejsapi=1&origin=https%3A%2F%2Froamresearch.com&widgetid=50
-    //https://www.youtube.com/embed/qbUcv3Bc61g?autoplay=1&controls=1&mute=1&hl=ja&cc_lang_pref=0&vq=hd1080&version=3&feature=oembed&autohide=1&showinfo=0&modestbranding=1&fs=1&rel=0&iv_load_policy=3&enablejsapi=1&origin=https%3A%2F%2Froamresearch.com&widgetid=51
-    //https://www.youtube.com/embed/qbUcv3Bc61g?autoplay=1&controls=1&mute=1&hl=ja&vq=hd1080&version=3&feature=oembed&autohide=1&showinfo=0&modestbranding=1&fs=1&rel=0&iv_load_policy=3&enablejsapi=1&origin=https%3A%2F%2Froamresearch.com&widgetid=52
-    //https://www.youtube.com/embed/qbUcv3Bc61g?autoplay=1&controls=1&mute=1&vq=hd1080&version=3&feature=oembed&autohide=1&showinfo=0&modestbranding=1&fs=1&rel=0&cc_load_policy=3&iv_load_policy=3&enablejsapi=1&origin=https%3A%2F%2Froamresearch.com&widgetid=54
-
     function DeployYT_IFRAME()
     {
         return new window.YT.Player(newId, playerConfig(configParams));
@@ -1466,7 +1453,7 @@ async function onPlayerReady(event)
     RemovedObserver.observe(document.body, config);
 
 
-    // 8. Performance Mode - Iframe Buffer & Initalize on interaction synergy
+    // 8. Performance Mode - Iframe Buffer & Initalize on interaction - synergy
     const parentCssPath = UTILS.getUniqueSelector(parent);
     PushIframeBuffer(parentCssPath); // push[len-1] -> shift [0] 
 
@@ -1959,6 +1946,10 @@ async function onPlayerReady(event)
                     {
                         togglePlay(UI.playStyle.visible_clips_start_to_play_unmuted.checked); // pause
                     }
+                    else if (!isParentHover())
+                    {
+                        togglePlay(false); // pause
+                    }
 
                     clearInterval(OneFrame);
                 }
@@ -1980,7 +1971,9 @@ async function onPlayerReady(event)
     //#endregion
 
 
-    //#region local utils
+    /* ****************************************************** */
+
+    //#region target utils
     function seekToUpdatedTime(desiredTime)
     {
         updateStartTime = desiredTime;
@@ -1991,6 +1984,10 @@ async function onPlayerReady(event)
         const crrTime = target?.getCurrentTime();
         return crrTime;
     }
+    //#endregion
+
+
+    //#region validate - check values utils
     function bounded(x)
     {
         return start < x && x < end;
@@ -2018,15 +2015,19 @@ async function onPlayerReady(event)
 
         return false;
     }
+    function CanUnmute()//NotMuteAnyHover
+    {
+        return !UI.muteStyle.muted_on_mouse_over.checked && !UI.muteStyle.muted_on_any_mouse_interaction.checked
+    }
+    //#endregion
 
 
+    //#region play/pause utils
     function videoIsPlayingWithSound(boo = true)
     {
         isSoundingFine(boo);
         togglePlay(boo);
     }
-
-
     function togglePlay(bol, el = iframe)
     {
         if (bol)
@@ -2040,7 +2041,6 @@ async function onPlayerReady(event)
             t.pauseVideo();
         }
     }
-
     function isSoundingFine(boo = true, el = iframe)
     {
         if (boo)
@@ -2055,7 +2055,10 @@ async function onPlayerReady(event)
             t.mute();
         }
     }
+    //#endregion
 
+
+    //#region hover/interactions utils
     function anyValidInAndOutKey(e)
     {
         if (e.buttons == 4) return true;
@@ -2066,13 +2069,10 @@ async function onPlayerReady(event)
 
         return false;
     }
-
-
     function AnyPlayOnHover()
     {
         return UI.playStyle.play_on_mouse_over.checked || UI.playStyle.strict_play_current_on_mouse_over.checked
     }
-
     function isParentHover()
     {
         return parent.matches(":hover");
@@ -2081,30 +2081,24 @@ async function onPlayerReady(event)
     {
         return timeDisplay.matches(":hover");
     }
+    //#endregion
 
 
-    function CanUnmute()//NotMuteAnyHover
-    {
-        return !UI.muteStyle.muted_on_mouse_over.checked && !UI.muteStyle.muted_on_any_mouse_interaction.checked
-    }
-
+    //#region play/mute attr styles utils
     function SoundIs(style, el = iframe)
     {
         StyleAttribute(ytGifAttr.sound, style, el);
     }
-
     function PlayIs(style, el = iframe)
     {
         StyleAttribute(ytGifAttr.play, style, el);
     }
-
     function StyleAttribute(subStyle, style, el)
     {
         for (const key in subStyle)
             el.removeAttribute(subStyle[key]);
         el.setAttribute(style, '');
     }
-
     //#endregion
 
 }
@@ -2199,7 +2193,10 @@ function PushIframeBuffer(parentCssPath)
         arr = UTILS.pushSame(arr, parentCssPath); // start with something to avoid an infinite loop or false positive... will see
 
     if (!UI.experience.iframe_buffer_beta.checked)
+    {
+        AwaitingBtnVisualFeedback(false);
         return;
+    }
 
 
     // 2. while...
@@ -2277,7 +2274,7 @@ function AwaitingBtnVisualFeedback(bol)
 
     UTILS.toggleClasses(bol, [ditem_allow], awaiting_for_mouseenter_to_initialize.parentNode);
 
-    const clause = "Full stack Iframe Buffer has priority."
+    const clause = "Full stack Iframe Buffer has priority"
     UTILS.toggleAttribute(bol, 'data-tooltip', awaiting_for_mouseenter_to_initialize, clause);
 
     return awaiting_for_mouseenter_to_initialize;
