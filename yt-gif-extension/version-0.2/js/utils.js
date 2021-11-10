@@ -10,6 +10,23 @@ kauderk.util = ((util) =>
         span.classList.add(...classList);
         return span;
     }
+    util.getUniqueSelectorSmart = (selector) =>
+    {
+        let sel = util.getUniqueSelector(selector);
+        if (sel.includes('@')) // if string begins with invalid character, such as '@---.com' -> '\\@---.com\\
+        {
+            let selArr = sel.split(' > ');
+            for (const s of selArr)
+            {
+                if (!s.includes('@')) continue;
+                const rgx = new RegExp(/(@.*)\.com/, 'gm');
+                const replaceWith = rgx.exec(s)?.[1];
+                s == s.replace(rgx, `\\\\${replaceWith}\\\\`);
+            }
+            sel = selArr.join(' > ');
+        }
+        return sel;
+    }
     util.getUniqueSelector = (elSrc) =>
     {
         // https://stackoverflow.com/questions/3620116/get-css-path-from-dom-element#:~:text=Doing%20a%20reverse%20CSS%20selector%20lookup%20is%20an%20inherently%20tricky%20thing.%20I%27ve%20generally%20come%20across%20two%20types%20of%20solutions%3A
