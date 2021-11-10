@@ -34,6 +34,7 @@ UI.referenced = {
 /*-----------------------------------*/
 const iframeIDprfx = 'player_';
 let currentFullscreenPlayer = null;
+let initialCheck_awaitngBtn = undefined;
 let userActiveChoice_awaitingBtn = undefined;
 /*-----------------------------------*/
 const YT_GIF_OBSERVERS_TEMP = {
@@ -72,7 +73,7 @@ const YT_GIF_OBSERVERS_TEMP = {
 
         for (let i = wrappers.length - 1; i >= 0; i--)
         {
-            const wrapper = document.querySelector(UTILS.getUniqueSelector(wrappers[i]));
+            const wrapper = document.querySelector(UTILS.getUniqueSelectorSmart(wrappers[i]));
             CleanAndBrandNewWrapper(wrapper); //wrapperParent -> nest new span
         }
     },
@@ -730,7 +731,6 @@ async function Ready()
         elScroll.value = Number(dir + parsed);
         return elScroll;
     }
-
     function TogglePlayerThumbnails_DDM_RTM(awaiting_with_video_thumnail_as_bg, awaitng_input_with_thumbnail)
     {
         // BIND TO SETTINGS PAGE
@@ -800,7 +800,7 @@ async function Ready()
     }
     function IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_mouseenter_to_initialize, iframe_buffer_slider)
     {
-
+        initialCheck_awaitngBtn = awaiting_for_mouseenter_to_initialize.checked;
         awaiting_for_mouseenter_to_initialize.addEventListener('change', function (e)
         {
             if (e.currentTarget.parentNode.matches(":hover")) // isParentHover util
@@ -813,19 +813,16 @@ async function Ready()
         {
             if (e.currentTarget.checked)
             {
-                PushIframeBuffer();
+                PushNew_ShiftAllOlder_IframeBuffer();
             }
             else
             {
-                if (typeof userActiveChoice_awaitingBtn !== 'undefined')
-                {
-                    AwaitingBtn_ActiveCheck(userActiveChoice_awaitingBtn);
-                }
+                smart_AwaitingBtn_Dispatch_ActiveCheck();
                 AwaitingBtn_VisualFeedback(false, false);
             }
         });
 
-        iframe_buffer_slider.addEventListener('click', () => PushIframeBuffer());
+        iframe_buffer_slider.addEventListener('click', () => PushNew_ShiftAllOlder_IframeBuffer());
         iframe_buffer_slider.addEventListener('wheel', function (e)
         {
             const min = parseInt(e.currentTarget.min, 10);
@@ -834,7 +831,7 @@ async function Ready()
 
             if (value >= min && value <= max)
             {
-                PushIframeBuffer();
+                PushNew_ShiftAllOlder_IframeBuffer();
             }
         });
     }
@@ -1417,7 +1414,7 @@ async function onPlayerReady(event)
     const { previousTimestamp, previousVolume } = UI; // still inner objects
     if (lastBlockIDParameters.has(blockID))
     {
-        // 🚧? because, this object/functionalities are only relevant when a frame destroyed ≡ or when the script goes full cricle... Hmmmm?
+        // 🚧? because, this object/functionalities are only relevant when it's iframe destroyed ≡ or when the script goes full cricle... Hmmmm?
         const sesion = lastBlockIDParameters.get(blockID);
         RunWithPrevious_TimestampStyle(sesion, previousTimestamp);
         RunWithPrevious_VolumeStyle(sesion, previousVolume);
@@ -1460,8 +1457,8 @@ async function onPlayerReady(event)
 
 
     // 8. Performance Mode - Iframe Buffer & Initalize on interaction - synergy
-    const parentCssPath = UTILS.getUniqueSelector(parent);
-    PushIframeBuffer(parentCssPath); // push[len-1] -> shift [0] 
+    const parentCssPath = UTILS.getUniqueSelectorSmart(parent);
+    PushNew_ShiftAllOlder_IframeBuffer(parentCssPath); // push[len-1] -> shift[0] 
 
 
     // 9. 'auto pause' when an iframe goes out the viewport... stop playing and mute
@@ -1868,6 +1865,7 @@ async function onPlayerReady(event)
 
 
         observer.disconnect();
+        PushNew_ShiftAllOlder_IframeBuffer();
 
 
         // either save the target
@@ -2187,7 +2185,7 @@ function onStateChange(state)
 
 
 //#region Performance Mode Utils
-function PushIframeBuffer(parentCssPath)
+function PushNew_ShiftAllOlder_IframeBuffer(parentCssPath)
 {
     // 0.
     let arr = window.YT_GIF_OBSERVERS.masterIframeBuffer;
@@ -2212,15 +2210,12 @@ function PushIframeBuffer(parentCssPath)
     // 3. mix and match
     if (atLeastOne || cap <= arr.length)
     {
-        AwaitingBtn_ActiveCheck(true); // synergy baby!
-        AwaitingBtn_VisualFeedback(true).dispatchEvent(new Event('change'));
+        AwaitingBtn_Dispatch_ActiveCheck(true);
+        AwaitingBtn_VisualFeedback(true);
     }
     else if (!atLeastOne || cap > arr.length)
     {
-        if (typeof userActiveChoice_awaitingBtn !== 'undefined')
-        {
-            AwaitingBtn_ActiveCheck(userActiveChoice_awaitingBtn).dispatchEvent(new Event('change')); // reset to original state
-        }
+        smart_AwaitingBtn_Dispatch_ActiveCheck();
         AwaitingBtn_VisualFeedback(false, false);
     }
 
@@ -2256,18 +2251,40 @@ function PushIframeBuffer(parentCssPath)
             stop--;
         }
 
-        // remove any that are no longer in the DOM
-        arr.filter(sel => document.querySelector(sel));
+        arr = arr.filter(sel => document.querySelector(sel) != null); // remove any that are no longer in the DOM
+        arr = [...new Set(arr)]; // remove duplicates
 
         return { shiftedArr: arr, atLeastOne, lastOne };
 
     }
 }
-function AwaitingBtn_ActiveCheck(bol)
+function smart_AwaitingBtn_Dispatch_ActiveCheck()
+{
+    let validCheck = undefined;
+    if (typeof userActiveChoice_awaitingBtn !== 'undefined')
+    {
+        validCheck = userActiveChoice_awaitingBtn;
+    }
+    else if (typeof initialCheck_awaitngBtn !== 'undefined')
+    {
+        validCheck = initialCheck_awaitngBtn;
+    }
+
+    if (typeof validCheck !== 'undefined')
+    {
+        return AwaitingBtn_Dispatch_ActiveCheck(validCheck);
+    }
+
+    return undefined;
+}
+function AwaitingBtn_Dispatch_ActiveCheck(bol)
 {
     const { awaiting_for_mouseenter_to_initialize } = UI.experience;
     awaiting_for_mouseenter_to_initialize.disabled = bol;
     awaiting_for_mouseenter_to_initialize.checked = bol;
+
+    awaiting_for_mouseenter_to_initialize.dispatchEvent(new Event('change'));
+
     return awaiting_for_mouseenter_to_initialize;
 }
 function AwaitingBtn_VisualFeedback(bol, disabled = undefined)
@@ -2290,7 +2307,7 @@ function AwaitingBtn_VisualFeedback(bol, disabled = undefined)
 function CleanAndBrandNewWrapper(wrapper_p)
 {
     const targetClass = wrapper_p.getAttribute(`${attrInfo.target}`);
-    const parentSel = UTILS.getUniqueSelector(wrapper_p.parentNode);
+    const parentSel = UTILS.getUniqueSelectorSmart(wrapper_p.parentNode);
 
     wrapper_p.parentNode.removeChild(wrapper_p);
     document.querySelector(parentSel).appendChild(UTILS.div([targetClass]));
