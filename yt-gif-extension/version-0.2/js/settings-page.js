@@ -57,7 +57,7 @@ window.YT_GIF_SETTINGS_PAGE = {
         sound_when_video_loops: dom('1'),
         awaiting_for_mouseenter_to_initialize: dom(),
         awaiting_with_video_thumnail_as_bg: dom('1'),
-        iframe_buffer_stack: dom(),
+        iframe_buffer_stack: dom('1'),
     },
     fullscreenStyle: {
         baseKey: BaseSetting(chk),
@@ -88,7 +88,7 @@ window.YT_GIF_SETTINGS_PAGE = {
             elsv_opt: InlinePmt(`integers from 0 to 100`),
         },
         iframe_buffer_slider: {
-            baseKey: BaseDom('15', int),
+            baseKey: BaseDom('10', int),
             ibs_opt: InlinePmt(`integers from 1 to 30`),
         },
     },
