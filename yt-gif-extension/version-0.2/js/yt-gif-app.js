@@ -381,7 +381,7 @@ async function Ready()
     const { timestamp_display_scroll_offset, end_loop_sound_volume, iframe_buffer_slider } = UI.range;
     const { rangeValue, loop_volume_displayed, iframe_buffer_label } = UI.label;
     const { awaiting_with_video_thumnail_as_bg } = UI.experience;
-    const { iframe_buffer_beta, awaiting_for_mouseenter_to_initialize } = UI.experience;
+    const { iframe_buffer_stack, awaiting_for_mouseenter_to_initialize } = UI.experience;
     const { dwp_message, stt_allow } = cssData;
     const { navigate_btn } = cssData.id;
     //#endregion
@@ -398,7 +398,7 @@ async function Ready()
 
     navigateToSettingsPageInSidebar(navigate_btn, dwp_message, stt_allow);
 
-    IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_beta, awaiting_for_mouseenter_to_initialize, iframe_buffer_slider);
+    IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_mouseenter_to_initialize, iframe_buffer_slider);
 
 
     // 4. run extension and events - set up
@@ -798,7 +798,7 @@ async function Ready()
             UTILS.toggleClasses(open, [stt_allow], settingsBtnWrapper);
         }
     }
-    function IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_beta, awaiting_for_mouseenter_to_initialize, iframe_buffer_slider)
+    function IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_mouseenter_to_initialize, iframe_buffer_slider)
     {
 
         awaiting_for_mouseenter_to_initialize.addEventListener('change', function (e)
@@ -809,7 +809,7 @@ async function Ready()
             }
         });
 
-        iframe_buffer_beta.addEventListener('change', function (e)
+        iframe_buffer_stack.addEventListener('change', function (e)
         {
             if (e.currentTarget.checked)
             {
@@ -2198,7 +2198,7 @@ function PushIframeBuffer(parentCssPath)
     if (parentCssPath)
         arr = UTILS.pushSame(arr, parentCssPath); // start with something to avoid an infinite loop or false positive... will see
 
-    if (!UI.experience.iframe_buffer_beta.checked)
+    if (!UI.experience.iframe_buffer_stack.checked)
     {
         return;
     }
