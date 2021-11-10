@@ -1410,6 +1410,7 @@ async function onPlayerReady(event)
 
     const timeDisplay = parent.querySelector('div.' + cssData.yt_gif_timestamp);
 
+
     // 1. previous parameters if available
     const { previousTimestamp, previousVolume } = UI; // still inner objects
     if (lastBlockIDParameters.has(blockID))
@@ -1450,15 +1451,18 @@ async function onPlayerReady(event)
     const withEventListeners = [parent, parent.parentNode, timeDisplay, iframe]; // ready to be cleaned
 
 
+
     // 7. clean data and ready 'previous' paramaters for next sesion with IframeRemmovedFromDom_callback
     const config = { subtree: true, childList: true };
     const RemovedObserver = new MutationObserver(IframeMutationRemoval_callback); // will fire IframeRemmovedFromDom_callback... the acutal logic
     RemovedObserver.observe(document.body, config);
 
 
+
     // 8. Performance Mode - Iframe Buffer & Initalize on interaction - synergy
     const parentCssPath = UTILS.getUniqueSelectorSmart(parent);
     PushNew_ShiftAllOlder_IframeBuffer(parentCssPath); // push[len-1] -> shift[0] 
+
 
 
     // 9. 'auto pause' when an iframe goes out the viewport... stop playing and mute
@@ -1515,7 +1519,7 @@ async function onPlayerReady(event)
                 seekToUpdatedTime(sesion.updateTime);
             }
         }
-        else if (start_timestamp.checked && bounded(sesion.updateTime))
+        else if (start_timestamp.checked && isBounded(sesion.updateTime))
         {
             seekToUpdatedTime(sesion.updateTime);
         }
@@ -1717,7 +1721,7 @@ async function onPlayerReady(event)
             timeDisplay.innerHTML = `${fmtMSS(tick())}/${fmtMSS(end)}`; //'update':'end'
         }
 
-        //#region util
+
         function fmtMSS(seconds)
         {
             const format = val => `0${Math.floor(val)}`.slice(-2);
@@ -1727,7 +1731,6 @@ async function onPlayerReady(event)
 
             return displayFormat.map(format).join(':');
         }
-        //#endregion
     }
     // scroll wheel
     function BoundWheelValueToSeek(e)
@@ -1843,7 +1846,7 @@ async function onPlayerReady(event)
 
         //🚧 UpdateNextSesionValues
         const media = JSON.parse(JSON.stringify(videoParams));
-        media.updateTime = bounded(tick()) ? tick() : start;
+        media.updateTime = isBounded(tick()) ? tick() : start;
         media.updateVolume = isValidVolNumber(t.__proto__.newVol) ? t.__proto__.newVol : validUpdateVolume();
         if (media.timeURLmapHistory.length == 0) // kinda spaguetti, but it's super necesary - This will not ignore the first block editing - stack change
         {
@@ -1977,6 +1980,7 @@ async function onPlayerReady(event)
 
     /* ****************************************************** */
 
+
     //#region target utils
     function seekToUpdatedTime(desiredTime)
     {
@@ -1985,14 +1989,13 @@ async function onPlayerReady(event)
     }
     function tick(target = t)
     {
-        const crrTime = target?.getCurrentTime();
-        return crrTime;
+        return target?.getCurrentTime();
     }
     //#endregion
 
 
     //#region validate - check values utils
-    function bounded(x)
+    function isBounded(x)
     {
         return start < x && x < end;
     }
