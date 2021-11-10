@@ -16,7 +16,7 @@ kauderk.util = ((util) =>
         if (sel.includes('@')) // if string begins with invalid character, such as '@---.com' -> '\\@---.com\\
         {
             let selArr = sel.split(' > ');
-            for (const s of selArr)
+            for (let s of selArr)
             {
                 if (!s.includes('@')) continue;
                 const rgx = new RegExp(/(@.*)\.com/, 'gm');
