@@ -16,12 +16,12 @@ kauderk.util = ((util) =>
         if (sel.includes('@')) // if string begins with invalid character, such as '@---.com' -> '\\@---.com\\
         {
             let selArr = sel.split(' > ');
-            for (let s of selArr)
+            for (let i = 0; i < selArr.length; i++)
             {
-                if (!s.includes('@')) continue;
+                if (!selArr[i].includes('@')) continue;
                 const rgx = new RegExp(/(@.*)\.com/, 'gm');
-                const replaceWith = rgx.exec(s)?.[1];
-                s = s.replace(rgx, `\\\\${replaceWith}\\\\.com`);
+                const replaceWith = rgx.exec(selArr[i])?.[1];
+                selArr[i] = selArr[i].replace(rgx, `\\\\${replaceWith}\\\\.com`);
             }
             sel = selArr.join(' > ');
         }
