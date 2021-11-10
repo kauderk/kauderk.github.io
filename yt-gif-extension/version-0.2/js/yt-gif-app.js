@@ -1,4 +1,4 @@
-// version 36 - semi-refactored
+// version 37 - semi-refactored
 /**
  * @summary USER INPUTS
  * @type Object
@@ -2390,6 +2390,10 @@ Bugs
             > mouse enter a new frame holding middle mouse
             > mutes the previous, but the previous video still plays unmuted
              even though play_on_mouse_over enebled ☐
+
+
+    sometimes and specially after CleanLoadedWrappers
+        they begin to play after loadingMarginOfError...
 
 Fixed
      videoParams ☑ ☑
