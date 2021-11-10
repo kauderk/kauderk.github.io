@@ -34,6 +34,7 @@ UI.referenced = {
 /*-----------------------------------*/
 const iframeIDprfx = 'player_';
 let currentFullscreenPlayer = null;
+let userActiveChoice_awaitingBtn = undefined;
 /*-----------------------------------*/
 const YT_GIF_OBSERVERS_TEMP = {
     masterMutationObservers: [],
@@ -171,6 +172,8 @@ const cssData = {
     stt_allow: 'settings-not-allowed',
 
     ditem_allow: 'dropdown-item_not-allowed_input',
+
+    p_controls: 'yt-gif-controls',
 
     id: {
         navigate_btn: '#navigate-to-yt-gif-settings-page',
@@ -797,13 +800,12 @@ async function Ready()
     }
     function IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_beta, awaiting_for_mouseenter_to_initialize, iframe_buffer_slider)
     {
-        let updateCheckAwaitngBtn = awaiting_for_mouseenter_to_initialize.checked;
 
         awaiting_for_mouseenter_to_initialize.addEventListener('change', function (e)
         {
             if (e.currentTarget.parentNode.matches(":hover")) // isParentHover util
             {
-                updateCheckAwaitngBtn = e.currentTarget.checked;
+                userActiveChoice_awaitingBtn = e.currentTarget.checked;
             }
         });
 
@@ -815,11 +817,15 @@ async function Ready()
             }
             else
             {
-                AwaitingBtn(updateCheckAwaitngBtn);
+                if (typeof userActiveChoice_awaitingBtn !== 'undefined')
+                {
+                    AwaitingBtn_ActiveCheck(userActiveChoice_awaitingBtn);
+                }
+                AwaitingBtn_VisualFeedback(false, false);
             }
         });
 
-        iframe_buffer_slider.addEventListener('change', () => PushIframeBuffer());
+        iframe_buffer_slider.addEventListener('click', () => PushIframeBuffer());
         iframe_buffer_slider.addEventListener('wheel', function (e)
         {
             const min = parseInt(e.currentTarget.min, 10);
@@ -1772,7 +1778,7 @@ async function onPlayerReady(event)
     }
     function isThereAnyTimeDisplayInteraction()
     {
-        return isTimeDisplayHover() && isParentHover();
+        return isTimeDisplayHover() || isParentHover();
     }
     //#endregion
 
@@ -2194,29 +2200,28 @@ function PushIframeBuffer(parentCssPath)
 
     if (!UI.experience.iframe_buffer_beta.checked)
     {
-        AwaitingBtnVisualFeedback(false);
         return;
     }
 
 
     // 2. while...
-    const { shiftedArr, atLeasOne, lastOne } = FitIframeBuffer(arr, cap, parentCssPath);
+    const { shiftedArr, atLeastOne, lastOne } = FitIframeBuffer(arr, cap, parentCssPath);
     arr = shiftedArr;
 
 
-    // 3. mix and match still in progress
-    if (atLeasOne)
+    // 3. mix and match
+    if (atLeastOne || cap <= arr.length)
     {
-        AwaitingBtn(true); // synergy baby!
+        AwaitingBtn_ActiveCheck(true); // synergy baby!
+        AwaitingBtn_VisualFeedback(true).dispatchEvent(new Event('change'));
     }
-    else if (!atLeasOne || cap > arr.length)
+    else if (!atLeastOne || cap > arr.length)
     {
-        AwaitingBtn(false);
-        UI.experience.awaiting_for_mouseenter_to_initialize.dispatchEvent(new Event('change')); // reset to original state
-    }
-    else if (cap <= arr.length)
-    {
-        AwaitingBtnVisualFeedback(true);
+        if (typeof userActiveChoice_awaitingBtn !== 'undefined')
+        {
+            AwaitingBtn_ActiveCheck(userActiveChoice_awaitingBtn).dispatchEvent(new Event('change')); // reset to original state
+        }
+        AwaitingBtn_VisualFeedback(false, false);
     }
 
 
@@ -2227,7 +2232,7 @@ function PushIframeBuffer(parentCssPath)
 
     function FitIframeBuffer(arr, cap)
     {
-        let atLeasOne = false;
+        let atLeastOne = false;
         let lastOne = null;
         let stop = arr.length + 0;
         let ini = 0; // most defenetly the very first one in the array
@@ -2242,7 +2247,7 @@ function PushIframeBuffer(parentCssPath)
                 if (wrapper)
                     CleanAndBrandNewWrapper(wrapper);
                 arr.shift(lastOne);
-                atLeasOne = true;
+                atLeastOne = true;
             }
             else
             {
@@ -2254,20 +2259,18 @@ function PushIframeBuffer(parentCssPath)
         // remove any that are no longer in the DOM
         arr.filter(sel => document.querySelector(sel));
 
-        return { shiftedArr: arr, atLeasOne, lastOne };
+        return { shiftedArr: arr, atLeastOne, lastOne };
 
     }
 }
-function AwaitingBtn(bol)
+function AwaitingBtn_ActiveCheck(bol)
 {
-    const awaiting_for_mouseenter_to_initialize = AwaitingBtnVisualFeedback(bol);
-
+    const { awaiting_for_mouseenter_to_initialize } = UI.experience;
     awaiting_for_mouseenter_to_initialize.disabled = bol;
     awaiting_for_mouseenter_to_initialize.checked = bol;
-
-    awaiting_for_mouseenter_to_initialize.dispatchEvent(new Event('change'));
+    return awaiting_for_mouseenter_to_initialize;
 }
-function AwaitingBtnVisualFeedback(bol)
+function AwaitingBtn_VisualFeedback(bol, disabled = undefined)
 {
     const { awaiting_for_mouseenter_to_initialize } = UI.experience;
     const { ditem_allow } = cssData;
@@ -2276,6 +2279,11 @@ function AwaitingBtnVisualFeedback(bol)
 
     const clause = "Full stack Iframe Buffer has priority"
     UTILS.toggleAttribute(bol, 'data-tooltip', awaiting_for_mouseenter_to_initialize, clause);
+
+    if (typeof disabled !== 'undefined')
+    {
+        awaiting_for_mouseenter_to_initialize.disabled = disabled; // spaghetti? Yes. Confusing. Kinda. But it works, as the btn names (semantics) suggest, maybe that's my problem.
+    }
 
     return awaiting_for_mouseenter_to_initialize;
 }
