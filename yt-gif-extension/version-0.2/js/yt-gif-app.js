@@ -159,10 +159,7 @@ const cssData = {
     dropdown_forbidden_input: 'dropdown_forbidden-input',
     dropdown_allright_input: 'dropdown_allright-input',
 
-    /*dwn_unfold_anim: 'dropdown-unfold-animation', /* dropdown--hidden */
-    dwn_fold_anim: 'dropdown-fold-animation',
-    dwn_unfold_anim: 'dropdown-unfold-animation',
-
+    dropdown__hidden: 'dropdown--hidden',
     dropdown_deployment_style: 'dropdown_deployment-style',
     dwp_message: 'dropdown-info-message',
     ddm_info_message_selector: `.dropdown .dropdown-info-message`,
@@ -381,7 +378,7 @@ async function Ready()
 
     // 3. set up events
     //#region relevant variables
-    const { ddm_icon, ddm_focus, ddm_info_message_selector, dwn_unfold_anim, dwn_fold_anim, awaitng_input_with_thumbnail } = cssData;
+    const { ddm_icon, ddm_focus, ddm_info_message_selector, dropdown__hidden, awaitng_input_with_thumbnail } = cssData;
     const { timestamp_display_scroll_offset, end_loop_sound_volume, iframe_buffer_slider } = UI.range;
     const { rangeValue, loop_volume_displayed, iframe_buffer_label } = UI.label;
     const { awaiting_with_video_thumnail_as_bg } = UI.experience;
@@ -392,7 +389,7 @@ async function Ready()
 
     DDM_IconFocusBlurEvents(ddm_icon, ddm_focus, ddm_info_message_selector);
 
-    DDM_FlipBindedDataAttr_RTM([dwn_unfold_anim], [dwn_fold_anim], attrData); // RTM runtime
+    DDM_FlipBindedDataAttr_RTM([dropdown__hidden], attrData); // RTM runtime
 
     UpdateOnScroll_RTM(timestamp_display_scroll_offset, rangeValue);
     UpdateOnScroll_RTM(end_loop_sound_volume, loop_volume_displayed);
@@ -670,7 +667,7 @@ async function Ready()
         }
     }
     /* ************* */
-    function DDM_FlipBindedDataAttr_RTM(toggleClassArr = [], ComplementaryClassInit = [], attrData)
+    function DDM_FlipBindedDataAttr_RTM(toggleClassArr = [], attrData)
     {
         for (const key in attrData)
         {
@@ -682,10 +679,6 @@ async function Ready()
             toggleValidItemClasses();
             main.addEventListener('change', toggleValidItemClasses);
 
-            for (const i of valid)
-            {
-                UTILS.toggleClasses(true, ComplementaryClassInit, i);
-            }
             function toggleValidItemClasses()
             {
                 for (const i of valid)
@@ -861,8 +854,8 @@ async function Ready()
         //#endregion
 
 
-        const { dwn_fold_anim, dropdown_deployment_style, dwp_message } = cssData;
-        const subHiddenDDM = document.querySelector(`.${dwn_fold_anim}.${dropdown_deployment_style}`);
+        const { dropdown__hidden, dropdown_deployment_style, dwp_message } = cssData;
+        const subHiddenDDM = document.querySelector(`.${dropdown__hidden}.${dropdown_deployment_style}`);
         const subHiddenDDM_message = subHiddenDDM.querySelector(`.${dwp_message}`);
 
 
@@ -948,7 +941,7 @@ async function Ready()
             //#region local utils
             function isSubMenuHidden(bol)
             {
-                const hiddenClass = [`${cssData.dwn_unfold_anim}`]
+                const hiddenClass = [`${cssData.dropdown__hidden}`]
                 UTILS.toggleClasses(bol, hiddenClass, subHiddenDDM);
             }
             function isSubDDMpulsing(bol)
