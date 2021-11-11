@@ -284,8 +284,10 @@ span.dropdown-info {
   100% { background-color: var(--deployment-extreme-bg); }
 }
 
-/* SHOULD BE ADDED AND REMOVED THROUGH JAVASCRIPT */
-.dropdown--hidden {
+/* ************************************************************* */
+/* ****** SHOULD BE ADDED AND REMOVED THROUGH JAVASCRIPT ******* */
+/* ************************************************************* */
+.dropdown--hidden { /* deprecated */
   display: none !important;
 }
 .dropdown_not-allowed_input *{
@@ -342,4 +344,50 @@ div.settings-not-allowed > span.dropdown-info-message:hover{
 /* debugging */
 .force-flex{
   display: flex;
+}
+
+
+/* DATA main-bind & hidden ddm els */
+.dropdown-fold-animation{
+  max-height: 0;
+  transition: max-height .5s cubic-bezier(0.65, 0.05, 0.36, 1);
+  overflow: hidden;
+  animation: 1s cubic-bezier(0.4, 0, 1, 1) forwards fold;
+}
+.dropdown-unfold-animation{
+  max-height: 500px;
+  transition: max-height 1s cubic-bezier(0.65, 0.05, 0.36, 1);
+  animation: 1s cubic-bezier(0.4, 0, 1, 1) forwards unfold;
+}
+
+.yt-gif-style.dropdown-fold-animation{
+  margin: 0px;
+  transition: margin 1s cubic-bezier(0.4, 0, 1, 1);
+}
+.yt-gif-style.dropdown-unfold-animation{
+  margin: var(--m);
+  transition: margin 1s cubic-bezier(0.4, 0, 1, 1);
+}
+
+
+@keyframes unfold {
+  0%{
+    opacity: 0;
+    transform: perspective(250px) rotateX(-90deg);
+    }
+  100% {
+    opacity: 1;
+    transform: perspective(350px) rotateX(0deg);
+    }
+}
+/* is the same thing... how do you reverse it?*/
+@keyframes fold {
+  100%{
+    opacity: 0;
+    transform: perspective(250px) rotateX(-90deg);
+    }
+  0% {
+    opacity: 1;
+    transform: perspective(350px) rotateX(0deg);
+    }
 }
