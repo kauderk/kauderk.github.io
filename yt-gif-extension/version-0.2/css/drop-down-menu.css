@@ -43,6 +43,9 @@
 .dropdown :is([data-tooltip]):hover::after {
   --ddm-scale-tooltip: 1;
 }
+[data-tooltip]:hover + [data-tooltip]:hover::before{ /* avoid tooltip overlapping - label + input*/
+  --ddm-scale-tooltip: 0 !important;
+}
 /* broken - down arrow - for two or more lines F 
 :is(label.dropdown-item-description)::after {
   content: '';
