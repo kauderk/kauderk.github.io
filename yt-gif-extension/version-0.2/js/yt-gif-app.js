@@ -2402,14 +2402,15 @@ function isValid_Awaiting_check()
 function TryingBtn_VisualFeedback(bol, disabled = undefined)
 {
     const { try_to_load_on_intersection_beta } = UI.experience;
-    const clause = "Enabled? The lower the slider, the more tries, the more loadings...";
 
     return btn_VS(bol, try_to_load_on_intersection_beta, disabled, clause);
 }
 function AwaitingBtn_VisualFeedback(bol, disabled = undefined)
 {
     const { awaiting_for_mouseenter_to_initialize } = UI.experience;
+
     const clause = "Full stack Iframe Buffer has priority";
+    UTILS.toggleAttribute(bol, 'data-tooltip', awaiting_for_mouseenter_to_initialize, clause);
 
     return btn_VS(bol, awaiting_for_mouseenter_to_initialize, disabled, clause);
 }
@@ -2425,20 +2426,18 @@ function toggleBtn_VS(checked, VisualFeedback_cb = () => { })
         VisualFeedback_cb(false, false);
     }
 }
-function btn_VS(bol, awaiting_for_mouseenter_to_initialize, disabled, clause)
+function btn_VS(bol, exp_btn, disabled)
 {
     const { ditem_allow } = cssData;
 
-    UTILS.toggleClasses(bol, [ditem_allow], awaiting_for_mouseenter_to_initialize.parentNode);
-
-    UTILS.toggleAttribute(bol, 'data-tooltip', awaiting_for_mouseenter_to_initialize, clause);
+    UTILS.toggleClasses(bol, [ditem_allow], exp_btn.parentNode);
 
     if (typeof disabled !== 'undefined')
     {
-        awaiting_for_mouseenter_to_initialize.disabled = disabled; // spaghetti? Yes. Confusing. Kinda. But it works, as the btn names (semantics) suggest, maybe that's my problem.
+        exp_btn.disabled = disabled; // spaghetti? Yes. Confusing. Kinda. But it works, as the btn names (semantics) suggest, maybe that's my problem.
     }
 
-    return awaiting_for_mouseenter_to_initialize;
+    return exp_btn;
 }
 //#endregion
 
