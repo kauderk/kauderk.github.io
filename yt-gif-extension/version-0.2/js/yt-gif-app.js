@@ -40,6 +40,7 @@ let userActiveChoice_awaitingBtn = undefined;
 const YT_GIF_OBSERVERS_TEMP = {
     masterMutationObservers: [],
     masterIntersectionObservers: [],
+    masterIntersectionObservers_buffer: [],
     masterIframeBuffer: [],
     creationCounter: -1, // crucial, because the api won't reload iframes with the same id
     CleanMasterObservers: function ()
@@ -50,7 +51,10 @@ const YT_GIF_OBSERVERS_TEMP = {
         const insObjRes = cleanObserverArr(this.masterIntersectionObservers);
         this.masterIntersectionObservers = insObjRes.observer;
 
-        console.log(`${mutObjRes.counter} mutation and ${insObjRes.counter} intersection master observers cleaned`);
+        const bufObjRes = cleanObserverArr(this.masterIntersectionObservers_buffer);
+        this.masterIntersectionObservers_buffer = insObjRes.observer;
+
+        console.log(`${mutObjRes.counter} mutation, ${insObjRes.counter} intersection and ${bufObjRes.counter} iframe buffer master observers cleaned`);
 
         function cleanObserverArr(observer)
         {//https://www.codegrepper.com/code-examples/javascript/how+to+do+a+reverse+loop+in+javascript#:~:text=www.techiedelight.com-,how%20to%20reverse%20loop%20in%20javascript,-javascript%20by%20Dark
@@ -74,7 +78,7 @@ const YT_GIF_OBSERVERS_TEMP = {
         for (let i = wrappers.length - 1; i >= 0; i--)
         {
             const wrapper = document.querySelector(UTILS.getUniqueSelectorSmart(wrappers[i]));
-            CleanAndBrandNewWrapper(wrapper); //wrapperParent -> nest new span
+            CleanAndBrandNewWrapper(wrapper, attrInfo.creation, 'cleaning'); //wrapperParent -> nest new span
         }
     },
 }
@@ -120,7 +124,7 @@ const links = {
         }
     },
     html: {
-        dropDownMenu: URLFolderHTML('drop-down-menu.html'),
+        dropDownMenu: URLFolder('testing/html/drop-down-menu.html'),
         playerControls: URLFolderHTML('player-controls.html'),
         fetched: {
             playerControls: '',
@@ -188,6 +192,7 @@ const attrData = {
 const attrInfo = {
     videoUrl: 'data-video-url',
     target: 'data-target',
+    creation: 'data-creation',
 }
 /*-----------------------------------*/
 const ytGifAttr = {
@@ -382,7 +387,7 @@ async function Ready()
     const { timestamp_display_scroll_offset, end_loop_sound_volume, iframe_buffer_slider } = UI.range;
     const { rangeValue, loop_volume_displayed, iframe_buffer_label } = UI.label;
     const { awaiting_with_video_thumnail_as_bg } = UI.experience;
-    const { iframe_buffer_stack, awaiting_for_mouseenter_to_initialize } = UI.experience;
+    const { iframe_buffer_stack, awaiting_for_mouseenter_to_initialize, try_to_load_on_intersection_beta } = UI.experience;
     const { dwp_message, stt_allow } = cssData;
     const { navigate_btn } = cssData.id;
     //#endregion
@@ -399,7 +404,7 @@ async function Ready()
 
     navigateToSettingsPageInSidebar(navigate_btn, dwp_message, stt_allow);
 
-    IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_mouseenter_to_initialize, iframe_buffer_slider);
+    IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_mouseenter_to_initialize, iframe_buffer_slider, try_to_load_on_intersection_beta);
 
 
     // 4. run extension and events - set up
@@ -798,22 +803,34 @@ async function Ready()
             UTILS.toggleClasses(open, [stt_allow], settingsBtnWrapper);
         }
     }
-    function IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_mouseenter_to_initialize, iframe_buffer_slider)
+    function IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_mouseenter_to_initialize, iframe_buffer_slider, try_to_load_on_intersection_beta)
     {
         initialCheck_awaitngBtn = awaiting_for_mouseenter_to_initialize.checked;
+
+        Initial_synergy_btns();
+
         awaiting_for_mouseenter_to_initialize.addEventListener('change', function (e)
         {
-            if (e.currentTarget.parentNode.matches(":hover")) // isParentHover util
+            const { checked, parentNode } = e.currentTarget;
+            toggleBtn_VS(checked, TryingBtn_VisualFeedback);
+
+            if (parentNode.matches(":hover"))
             {
-                userActiveChoice_awaitingBtn = e.currentTarget.checked;
+                userActiveChoice_awaitingBtn = checked;
             }
         });
+        try_to_load_on_intersection_beta.addEventListener('change', (e) =>
+        {
+            const { checked } = e.currentTarget;
+            toggleBtn_VS(checked, AwaitingBtn_VisualFeedback);
+        });
+
 
         iframe_buffer_stack.addEventListener('change', function (e)
         {
             if (e.currentTarget.checked)
             {
-                PushNew_ShiftAllOlder_IframeBuffer();
+                ifStack_ShiftAllOlder_IframeBuffer();
             }
             else
             {
@@ -822,18 +839,22 @@ async function Ready()
             }
         });
 
-        iframe_buffer_slider.addEventListener('click', () => PushNew_ShiftAllOlder_IframeBuffer());
-        iframe_buffer_slider.addEventListener('wheel', function (e)
-        {
-            const min = parseInt(e.currentTarget.min, 10);
-            const max = parseInt(e.currentTarget.max, 10);
-            const value = e.currentTarget.value; //e.currentTarget = UpdateSliderOnDirection(e); two events shouldn't be doing the same thing
 
-            if (value >= min && value <= max)
+        iframe_buffer_slider.addEventListener('click', () => ifStack_ShiftAllOlder_IframeBuffer());
+        iframe_buffer_slider.addEventListener('wheel', () => ifStack_ShiftAllOlder_IframeBuffer());
+
+        function Initial_synergy_btns()
+        {
+            // one or the other bud, i dunno what to tell you
+            if (initialCheck_awaitngBtn)
             {
-                PushNew_ShiftAllOlder_IframeBuffer();
+                toggleBtn_VS(true, TryingBtn_VisualFeedback);
             }
-        });
+            else if (try_to_load_on_intersection_beta.checked)
+            {
+                toggleBtn_VS(true, AwaitingBtn_VisualFeedback);
+            }
+        }
     }
     //#endregion
 
@@ -1001,13 +1022,14 @@ async function Ready()
 
 
 
+
 function ObserveIframesAndDelployYTPlayers(targetClass)
 {
     // 1. set up all visible YT GIFs
     const visible = UTILS.inViewportElsHard(AvoidAllZoomChilds());
     for (const component of visible)
     {
-        onYouTubePlayerAPIReady(component, targetClass, 'first wave');
+        YTplayerReady_cb(component, 'first wave');
     }
 
     // 2. IntersectionObserver attached, to deploy when visible
@@ -1026,7 +1048,11 @@ function ObserveIframesAndDelployYTPlayers(targetClass)
 
     return observer
 
-    //#region observer utils
+
+    function YTplayerReady_cb(component, message)
+    {
+        onYouTubePlayerAPIReady(component, targetClass, component.getAttribute(attrInfo.creation), message);
+    }
     function ObserveIntersectToSetUpPlayer(iterator, message = 'YscrollObserver')
     {
         const yobs = new IntersectionObserver(Intersection_callback, { threshold: [0] });
@@ -1040,7 +1066,7 @@ function ObserveIframesAndDelployYTPlayers(targetClass)
             {
                 if (entry.isIntersecting)
                 {
-                    onYouTubePlayerAPIReady(iterator, targetClass, message);
+                    YTplayerReady_cb(iterator, message);
                     yobs.disconnect();
                     break;
                 }
@@ -1080,7 +1106,7 @@ function ObserveIframesAndDelployYTPlayers(targetClass)
             }
         }
     };
-    //#endregion
+
 
     //#region local utils
     function AvoidAllZoomChilds()
@@ -1098,9 +1124,10 @@ function ObserveIframesAndDelployYTPlayers(targetClass)
 
 
 
+
 /*↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓*/
 //
-async function onYouTubePlayerAPIReady(wrapper, targetClass, message = 'I dunno')
+async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, message = 'I dunno')
 {
     if (!wrapper) return;
 
@@ -1122,6 +1149,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, message = 'I dunno'
     wrapper.parentElement.classList.add(`${cssData.yt_gif_wrapper}-parent`);
     wrapper.className = `${cssData.yt_gif_wrapper} dont-focus-block`;
     wrapper.setAttribute(attrInfo.target, targetClass); //🤔
+    wrapper.setAttribute(attrInfo.creation, dataCreation); //🤔
     wrapper.innerHTML = '';
     wrapper.insertAdjacentHTML('afterbegin', links.html.fetched.playerControls);
     wrapper.querySelector('.yt-gif-player').id = newId;
@@ -1146,7 +1174,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, message = 'I dunno'
 
 
     // 5. 
-    if (UI.experience.awaiting_for_mouseenter_to_initialize.checked)
+    if (dataCreation == 'displaced-force-awaiting' || isValid_Awaiting_check())
     {
         return DeployYT_IFRAME_OnInteraction();
     }
@@ -1460,8 +1488,11 @@ async function onPlayerReady(event)
 
 
     // 8. Performance Mode - Iframe Buffer & Initalize on interaction - synergy
-    const parentCssPath = UTILS.getUniqueSelectorSmart(parent);
-    PushNew_ShiftAllOlder_IframeBuffer(parentCssPath); // push[len-1] -> shift[0] 
+    if (parent) // sometimes the parent is already gone - while loading iframes
+    {
+        const parentCssPath = UTILS.getUniqueSelectorSmart(parent);
+        PushNew_ShiftAllOlder_IframeBuffer(parentCssPath);
+    }
 
 
 
@@ -1474,7 +1505,6 @@ async function onPlayerReady(event)
 
     // 10. well well well - pause if user doesn't intents to watch
     HumanInteraction_AutopalyFreeze(); // this being the last one, does matter
-
 
 
 
@@ -1868,7 +1898,7 @@ async function onPlayerReady(event)
 
 
         observer.disconnect();
-        PushNew_ShiftAllOlder_IframeBuffer();
+        ifStack_ShiftAllOlder_IframeBuffer();
 
 
         // either save the target
@@ -2187,80 +2217,143 @@ function onStateChange(state)
 }
 
 
+
+
 //#region Performance Mode Utils
 function PushNew_ShiftAllOlder_IframeBuffer(parentCssPath)
 {
-    // 0.
+    if (parentCssPath)
+        window.YT_GIF_OBSERVERS.masterIframeBuffer = UTILS.pushSame(window.YT_GIF_OBSERVERS.masterIframeBuffer, parentCssPath);
+
+    ifStack_ShiftAllOlder_IframeBuffer(); // modifies and returns masterIframeBuffer
+}
+function ifStack_ShiftAllOlder_IframeBuffer()
+{
+    // work in pregress | by shifting/removing the first entry, you clean the most irrelevent YT GIF, and give space to new ones (to autoplay) when intersecting the website
     let arr = window.YT_GIF_OBSERVERS.masterIframeBuffer;
     const cap = parseInt(UI.range.iframe_buffer_slider.value, 10);
 
-
-    // 1. guard clauses
-    if (parentCssPath)
-        arr = UTILS.pushSame(arr, parentCssPath); // start with something to avoid an infinite loop or false positive... will see
-
     if (!UI.experience.iframe_buffer_stack.checked)
     {
-        return;
+        return arr;
     }
 
-
-    // 2. while...
-    const { shiftedArr, atLeastOne, lastOne } = FitIframeBuffer(arr, cap, parentCssPath);
-    arr = shiftedArr;
-
-
-    // 3. mix and match
-    if (atLeastOne || cap <= arr.length)
+    if (isValid_TryIntersection_EnabledCheck())
     {
-        AwaitingBtn_Dispatch_ActiveCheck(true);
-        AwaitingBtn_VisualFeedback(true);
+        // 2.
+        arr = FitBuffer_OffScreen(arr, cap, 'displaced');
     }
-    else if (!atLeastOne || cap > arr.length)
+    else
     {
-        smart_AwaitingBtn_Dispatch_ActiveCheck();
-        AwaitingBtn_VisualFeedback(false, false);
+        // 2. while...
+        const { shiftedArr, atLeastOne, lastOne } = FitBuffer(arr, cap, 'buffer');
+        arr = shiftedArr;
+        // 2.1 mix and match
+        if (atLeastOne || cap <= arr.length)
+        {
+            AwaitingBtn_Dispatch_ActiveCheck(true);
+            AwaitingBtn_VisualFeedback(true);
+        }
+        else if (!atLeastOne || cap > arr.length)
+        {
+            smart_AwaitingBtn_Dispatch_ActiveCheck();
+            AwaitingBtn_VisualFeedback(false, false);
+        }
     }
 
-
-    // 4. pass by value
-    window.YT_GIF_OBSERVERS.masterIframeBuffer = arr;
-
+    // 3. pass by value
+    return window.YT_GIF_OBSERVERS.masterIframeBuffer = arr;
 
 
-    function FitIframeBuffer(arr, cap)
+    function FitBuffer(arr, cap, creation)
     {
         let atLeastOne = false;
         let lastOne = null;
         let stop = arr.length + 0;
         let ini = 0; // most defenetly the very first one in the array
+
+        // 1. try to clean wrappers
         while (arr.length > cap)
         {
-            if (stop < 0) throw new Error('index out of bounds');
+            if (stop < 0)
+                throw new Error('index out of bounds');
 
             lastOne = arr[ini];
             const wrapper = document.querySelector(lastOne);
-            if (parentCssPath != lastOne)
+
+            // 2. if wrapper is not on screen, remove it
+            if (wrapper)
             {
-                if (wrapper)
-                    CleanAndBrandNewWrapper(wrapper);
-                arr.shift(lastOne);
-                atLeastOne = true;
+                const newCreation = UTILS.isElementVisible(wrapper) ? 'displaced-force-awaiting' : creation;
+                CleanAndBrandNewWrapper(wrapper, attrInfo.creation, newCreation);
             }
             else
             {
                 ini++;
             }
+
+            // 3. shift last one anyways
+            arr.shift(lastOne);
+            atLeastOne = true;
+
             stop--;
         }
 
-        arr = arr.filter(sel => document.querySelector(sel) != null); // remove any that are no longer in the DOM
         arr = [...new Set(arr)]; // remove duplicates
+        arr = arr.filter(sel => document.querySelector(sel) != null); // remove any that are no longer in the DOM
 
         return { shiftedArr: arr, atLeastOne, lastOne };
-
     }
+    function FitBuffer_OffScreen(arr, cap, creation)
+    {
+        // 0. work very much in progress....
+        const anyLoaded = document.querySelectorAll('.yt-gif-wrapper');
+        const options = { root: null, threshold: 0.1 }// set offset 0.1 means trigger if atleast 10% of element in viewport
+
+        if (anyLoaded.length < cap)
+            return arr;
+
+        // 1. loop through all loaded iframes to see if they are off screen and if so, remove them
+        for (let i = 0; i < anyLoaded.length; i++)
+        {
+            const observer = new window.IntersectionObserver(OffScreen_cb, options); // 1.1
+            observer.observe(anyLoaded[i]);
+            return arr;
+        }
+
+        return arr;
+
+
+        function OffScreen_cb([entry], observer)
+        {
+            if (entry.isIntersecting)
+                return arr;
+
+            // 1.1 not in viewport, remove it
+            const { shiftedArr } = FitBuffer(arr, cap, creation);
+            arr = shiftedArr;
+
+            observer.disconnect();
+
+            return window.YT_GIF_OBSERVERS.masterIframeBuffer = arr; // this can happen in the future...
+        }
+    }
+
 }
+function CleanAndBrandNewWrapper(wrapper_p, attr_name = attrInfo.creation, attr_value = '')
+{
+    const targetClass = wrapper_p.getAttribute(`${attrInfo.target}`);
+    const parentSel = UTILS.getUniqueSelectorSmart(wrapper_p.parentNode);
+
+    wrapper_p.parentNode.removeChild(wrapper_p);
+    const div = UTILS.div([targetClass]);
+    UTILS.toggleAttribute(true, attr_name, div, attr_value);
+    document.querySelector(parentSel).appendChild(div);
+    return div;
+}
+
+
+//#region visual feedback - checked - disabled - dispatch
 function smart_AwaitingBtn_Dispatch_ActiveCheck()
 {
     let validCheck = undefined;
@@ -2286,18 +2379,58 @@ function AwaitingBtn_Dispatch_ActiveCheck(bol)
     awaiting_for_mouseenter_to_initialize.disabled = bol;
     awaiting_for_mouseenter_to_initialize.checked = bol;
 
-    awaiting_for_mouseenter_to_initialize.dispatchEvent(new Event('change'));
-
     return awaiting_for_mouseenter_to_initialize;
+}
+/* *********************** */
+function isValid_TryIntersection_EnabledCheck()
+{
+    const { try_to_load_on_intersection_beta } = UI.experience;
+    return isValid_TryIntersection_check() && !try_to_load_on_intersection_beta.disabled;
+}
+function isValid_TryIntersection_check()
+{
+    const { try_to_load_on_intersection_beta } = UI.experience;
+    return try_to_load_on_intersection_beta.checked;// && !try_to_load_on_intersection_beta.disabled;
+}
+function isValid_Awaiting_check()
+{
+    const { awaiting_for_mouseenter_to_initialize } = UI.experience;
+    // kinda spaghetti, but they are pretty much entangled and only one of those can be true at a time
+    return awaiting_for_mouseenter_to_initialize.checked && !isValid_TryIntersection_check();
+}
+/* *********************** */
+function TryingBtn_VisualFeedback(bol, disabled = undefined)
+{
+    const { try_to_load_on_intersection_beta } = UI.experience;
+    const clause = "Enabled? The lower the slider, the more tries, the more loadings...";
+
+    return btn_VS(bol, try_to_load_on_intersection_beta, disabled, clause);
 }
 function AwaitingBtn_VisualFeedback(bol, disabled = undefined)
 {
     const { awaiting_for_mouseenter_to_initialize } = UI.experience;
+    const clause = "Full stack Iframe Buffer has priority";
+
+    return btn_VS(bol, awaiting_for_mouseenter_to_initialize, disabled, clause);
+}
+/* *********** */
+function toggleBtn_VS(checked, VisualFeedback_cb = () => { }) 
+{
+    if (checked)
+    {
+        VisualFeedback_cb(true, true);
+    }
+    else
+    {
+        VisualFeedback_cb(false, false);
+    }
+}
+function btn_VS(bol, awaiting_for_mouseenter_to_initialize, disabled, clause)
+{
     const { ditem_allow } = cssData;
 
     UTILS.toggleClasses(bol, [ditem_allow], awaiting_for_mouseenter_to_initialize.parentNode);
 
-    const clause = "Full stack Iframe Buffer has priority"
     UTILS.toggleAttribute(bol, 'data-tooltip', awaiting_for_mouseenter_to_initialize, clause);
 
     if (typeof disabled !== 'undefined')
@@ -2307,15 +2440,12 @@ function AwaitingBtn_VisualFeedback(bol, disabled = undefined)
 
     return awaiting_for_mouseenter_to_initialize;
 }
-function CleanAndBrandNewWrapper(wrapper_p)
-{
-    const targetClass = wrapper_p.getAttribute(`${attrInfo.target}`);
-    const parentSel = UTILS.getUniqueSelectorSmart(wrapper_p.parentNode);
-
-    wrapper_p.parentNode.removeChild(wrapper_p);
-    document.querySelector(parentSel).appendChild(UTILS.div([targetClass]));
-}
 //#endregion
+
+
+//#endregion
+
+
 
 
 /*
@@ -2419,6 +2549,10 @@ Bugs
 
     sometimes and specially after CleanLoadedWrappers
         they begin to play after loadingMarginOfError...
+            It's extremely rare, but it happens
+            Which means it's so hard to catch why and where it happens
+            Is very annoying
+
 
 Fixed
      videoParams ☑ ☑

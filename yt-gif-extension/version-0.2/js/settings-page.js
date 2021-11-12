@@ -58,6 +58,7 @@ window.YT_GIF_SETTINGS_PAGE = {
         awaiting_for_mouseenter_to_initialize: dom(),
         awaiting_with_video_thumnail_as_bg: dom('1'),
         iframe_buffer_stack: dom('1'),
+        try_to_load_on_intersection_beta: dom(),
     },
     fullscreenStyle: {
         baseKey: BaseSetting(chk),

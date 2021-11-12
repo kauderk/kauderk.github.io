@@ -387,7 +387,7 @@ async function Ready()
     const { timestamp_display_scroll_offset, end_loop_sound_volume, iframe_buffer_slider } = UI.range;
     const { rangeValue, loop_volume_displayed, iframe_buffer_label } = UI.label;
     const { awaiting_with_video_thumnail_as_bg } = UI.experience;
-    const { iframe_buffer_stack, awaiting_for_mouseenter_to_initialize, try_to_load_on_intersection } = UI.experience;
+    const { iframe_buffer_stack, awaiting_for_mouseenter_to_initialize, try_to_load_on_intersection_beta } = UI.experience;
     const { dwp_message, stt_allow } = cssData;
     const { navigate_btn } = cssData.id;
     //#endregion
@@ -404,7 +404,7 @@ async function Ready()
 
     navigateToSettingsPageInSidebar(navigate_btn, dwp_message, stt_allow);
 
-    IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_mouseenter_to_initialize, iframe_buffer_slider, try_to_load_on_intersection);
+    IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_mouseenter_to_initialize, iframe_buffer_slider, try_to_load_on_intersection_beta);
 
 
     // 4. run extension and events - set up
@@ -803,7 +803,7 @@ async function Ready()
             UTILS.toggleClasses(open, [stt_allow], settingsBtnWrapper);
         }
     }
-    function IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_mouseenter_to_initialize, iframe_buffer_slider, try_to_load_on_intersection)
+    function IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_mouseenter_to_initialize, iframe_buffer_slider, try_to_load_on_intersection_beta)
     {
         initialCheck_awaitngBtn = awaiting_for_mouseenter_to_initialize.checked;
         awaiting_for_mouseenter_to_initialize.addEventListener('change', function (e)
@@ -818,7 +818,7 @@ async function Ready()
         });
 
 
-        try_to_load_on_intersection.addEventListener('change', (e) =>
+        try_to_load_on_intersection_beta.addEventListener('change', (e) =>
         {
             if (e.currentTarget.checked)
             {
@@ -2401,10 +2401,10 @@ function AwaitingBtn_VisualFeedback(bol, disabled = undefined)
 }
 function TryingBtn_VisualFeedback(bol, disabled = undefined)
 {
-    const { try_to_load_on_intersection } = UI.experience;
+    const { try_to_load_on_intersection_beta } = UI.experience;
     const clause = ". . .";
 
-    return btn_VS(bol, try_to_load_on_intersection, disabled, clause);
+    return btn_VS(bol, try_to_load_on_intersection_beta, disabled, clause);
 }
 function btn_VS(bol, awaiting_for_mouseenter_to_initialize, disabled, clause)
 {
@@ -2435,7 +2435,7 @@ function CleanAndBrandNewWrapper(wrapper_p, attr_name = attrInfo.creation, attr_
 }
 function tryToLoadOnIntersection()
 {
-    return UI.experience.try_to_load_on_intersection.checked
+    return UI.experience.try_to_load_on_intersection_beta.checked
 }
 function creationTypesYTGIF(arr, cap, parentCssPath, parent)
 {
