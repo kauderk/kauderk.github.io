@@ -12,7 +12,7 @@
   --submenu-message-bg: rgb(48 108 159 / 24%);
 
   --submenu-styles-content-bg: #e3e5e7;
-  --submenu-styles-item-bg-h: #b8c0c8;
+  --submenu-styles-item-bg-h: #c5daef;
 
   --submenu-info-btn-bg: #e6e6e7;
   --submenu-info-btn-bg-h: rgb(87 184 144);
@@ -40,6 +40,6 @@
   --awaiting-player-pulse-anim-box-shadow-mid: rgba(204, 169, 44, 0);
   --awaiting-player-pulse-anim-box-shadow-end: rgba(204, 169, 44, 0);
 
-  --ddm-tooltip-c: #333;
-  --ddm-tooltip-bg: #989898;
+  --ddm-tooltip-c: #202b33;
+  --ddm-tooltip-bg: #b4c9db;
 }
