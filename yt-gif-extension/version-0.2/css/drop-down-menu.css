@@ -349,6 +349,12 @@ div.settings-not-allowed > span.dropdown-info-message:hover{
 
 
 /* testing yt gif tutorial - drop down menu */
+.dwn-update span.drodown_item-pulse-animation.dropdown-info-message {
+  --dropdown-pulse-anim-box-shadow-start: rgb(139 195 74 / 98%);
+  --dropdown-pulse-anim-box-shadow-mid: rgb(139 195 74 / 10%);
+  --dropdown-pulse-anim-box-shadow-end: rgb(139 195 74 / 0%);
+}
+
 span.dropdown-item.yt-gif-wrapper-parent {
   width: 100%;
   justify-content: center;
