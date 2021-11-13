@@ -124,7 +124,7 @@ const links = {
         }
     },
     html: {
-        dropDownMenu: URLFolder('testing/html/drop-down-menu.html'),
+        dropDownMenu: URLFolderHTML('drop-down-menu.html'),
         playerControls: URLFolderHTML('player-controls.html'),
         fetched: {
             playerControls: '',
