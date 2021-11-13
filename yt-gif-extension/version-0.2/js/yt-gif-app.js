@@ -2403,7 +2403,7 @@ function TryingBtn_VisualFeedback(bol, disabled = undefined)
 {
     const { try_to_load_on_intersection_beta } = UI.experience;
 
-    return btn_VS(bol, try_to_load_on_intersection_beta, disabled, clause);
+    return btn_VS(bol, try_to_load_on_intersection_beta, disabled);
 }
 function AwaitingBtn_VisualFeedback(bol, disabled = undefined)
 {
@@ -2412,7 +2412,7 @@ function AwaitingBtn_VisualFeedback(bol, disabled = undefined)
     const clause = "Full stack Iframe Buffer has priority";
     UTILS.toggleAttribute(bol, 'data-tooltip', awaiting_for_mouseenter_to_initialize, clause);
 
-    return btn_VS(bol, awaiting_for_mouseenter_to_initialize, disabled, clause);
+    return btn_VS(bol, awaiting_for_mouseenter_to_initialize, disabled);
 }
 /* *********** */
 function toggleBtn_VS(checked, VisualFeedback_cb = () => { }) 
