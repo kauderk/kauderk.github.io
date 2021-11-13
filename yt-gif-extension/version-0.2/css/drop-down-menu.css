@@ -346,3 +346,28 @@ div.settings-not-allowed > span.dropdown-info-message:hover{
 .force-flex{
   display: flex;
 }
+
+
+/* testing yt gif tutorial - drop down menu */
+span.dropdown-item.yt-gif-wrapper-parent {
+  width: 100%;
+  justify-content: center;
+  height: 180px;
+  padding: 0px 0px 10px 0px;
+}
+
+span.dropdown-item.yt-gif-wrapper-parent *{
+  --m: 0px !important;
+}
+
+.dwn-yt-gif-player-container span.dropdown-item{
+  max-width: none;
+}
+
+.dwn-yt-gif-player-container label.dropdown-item-description {
+  max-width: 40ch;
+}
+
+span.dropdown-item.yt-gif-wrapper-parent .yt-gif-wrapper.dont-focus-block {
+  width: auto;
+}
