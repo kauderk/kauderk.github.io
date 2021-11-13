@@ -359,6 +359,9 @@ span.dropdown-item.yt-gif-wrapper-parent {
 span.dropdown-item.yt-gif-wrapper-parent *{
   --m: 0px !important;
 }
+.dropdown a {
+  --m: 0;
+}
 
 .dwn-yt-gif-player-container span.dropdown-item{
   max-width: none;
