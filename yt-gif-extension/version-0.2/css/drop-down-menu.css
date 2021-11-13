@@ -230,7 +230,7 @@ span.dropdown-info-message {
 
 /*SHOW TEXT INFO DROP DOWN*/
 .dropdown-show-info {
-  padding: 15px;
+  padding: 15px 7px;
   --base-x-offset-content: -40%;
   --message-opacity: 0.3;
 }
