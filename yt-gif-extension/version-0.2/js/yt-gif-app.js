@@ -78,7 +78,7 @@ const YT_GIF_OBSERVERS_TEMP = {
         for (let i = wrappers.length - 1; i >= 0; i--)
         {
             const wrapper = document.querySelector(UTILS.getUniqueSelectorSmart(wrappers[i]));
-            CleanAndBrandNewWrapper(wrapper, attrInfo.creation, 'cleaning'); //wrapperParent -> nest new span
+            CleanAndBrandNewWrapper(wrapper, attrInfo.creation.name, attrInfo.creation.cleaning); //wrapperParent -> nest new span
         }
     },
 }
@@ -192,7 +192,13 @@ const attrData = {
 const attrInfo = {
     videoUrl: 'data-video-url',
     target: 'data-target',
-    creation: 'data-creation',
+    creation: {
+        name: 'data-creation',
+        forceAwaiting: 'force-awaiting',
+        cleaning: 'cleaning',
+        displaced: 'displaced',
+        buffer: 'buffer',
+    },
 }
 /*-----------------------------------*/
 const ytGifAttr = {
@@ -242,6 +248,9 @@ const rm_components = {
         description: '{{[[yt-gif]]}}',
         classToObserve: `rm-xparser-default-${cssData.yt_gif}`,
         BinaryDomUI: () => UI.deploymentStyle.deployment_style_yt_gif,
+    },
+    yt_gif_tut: {
+        classToObserve: `ddm-yt-gif-tutorial`, /* TESTING */
     },
     state: {
         currentKey: '',
@@ -420,6 +429,10 @@ async function Ready()
     rm_components.RunMasterObserverWithKey(initialKey);
 
     console.log('YT GIF extension activated');
+
+    const { classToObserve: tutClass } = rm_components.yt_gif_tut;
+    const tutEl = document.querySelector('.' + tutClass);
+    onYouTubePlayerAPIReady(tutEl, tutClass, attrInfo.creation.forceAwaiting, 'testing manual ty gif tutorial');
 
 
 
@@ -1051,7 +1064,7 @@ function ObserveIframesAndDelployYTPlayers(targetClass)
 
     function YTplayerReady_cb(component, message)
     {
-        onYouTubePlayerAPIReady(component, targetClass, component.getAttribute(attrInfo.creation), message);
+        onYouTubePlayerAPIReady(component, targetClass, component.getAttribute(attrInfo.creation.name), message);
     }
     function ObserveIntersectToSetUpPlayer(iterator, message = 'YscrollObserver')
     {
@@ -1123,12 +1136,46 @@ function ObserveIframesAndDelployYTPlayers(targetClass)
 }
 
 
+/*
+span.dropdown-item.yt-gif-wrapper-parent {
+    width: 100%;
+    justify-content: center;
+    height: 180px;
+    padding: 0px 0px 10px 0px;
+}
 
+span.dropdown-item.yt-gif-wrapper-parent *{
+    --m: 0px !important;
+}
+
+.dwn-yt-gif-player-container span.dropdown-item{
+    max-width: none;
+}
+
+.dwn-yt-gif-player-container label.dropdown-item-description {
+    max-width: 40ch;
+}
+
+span.dropdown-item.yt-gif-wrapper-parent .yt-gif-wrapper.dont-focus-block {
+    width: auto;
+}
+
+
+
+
+<span class="dropdown-item" data-uid="123456789">
+        <div class="rm-xparser-default-yt-gif" data-video-url="https://youtu.be/nlQtrSJiSWI?t=82&amp;end=98"></div>
+</span>
+
+const url = wrapper.getAttribute('data-video-url') || await InputBlockVideoParams(uid);
+
+*/
 
 /*↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓*/
 //
 async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, message = 'I dunno')
 {
+    if (message == 'testing manual ty gif tutorial') debugger;
     if (!wrapper) return;
 
     // 1. last 9 letter form the closest blockID
@@ -1149,7 +1196,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     wrapper.parentElement.classList.add(`${cssData.yt_gif_wrapper}-parent`);
     wrapper.className = `${cssData.yt_gif_wrapper} dont-focus-block`;
     wrapper.setAttribute(attrInfo.target, targetClass); //🤔
-    wrapper.setAttribute(attrInfo.creation, dataCreation); //🤔
+    wrapper.setAttribute(attrInfo.creation.name, dataCreation); //🤔
     wrapper.innerHTML = '';
     wrapper.insertAdjacentHTML('afterbegin', links.html.fetched.playerControls);
     wrapper.querySelector('.yt-gif-player').id = newId;
@@ -1157,7 +1204,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
     // 3. weird recursive function... guys...
-    const url = await InputBlockVideoParams(uid);
+    const url = wrapper.getAttribute('data-video-url') || await InputBlockVideoParams(uid);
     // 3.1
     allVideoParameters.set(newId, urlConfig(url));
     const configParams = allVideoParameters.get(newId);
@@ -1174,7 +1221,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
     // 5. 
-    if (dataCreation == 'displaced-force-awaiting' || isValid_Awaiting_check())
+    if (dataCreation == attrInfo.creation.forceAwaiting || isValid_Awaiting_check())
     {
         return DeployYT_IFRAME_OnInteraction();
     }
@@ -2232,6 +2279,8 @@ function ifStack_ShiftAllOlder_IframeBuffer()
     // work in pregress | by shifting/removing the first entry, you clean the most irrelevent YT GIF, and give space to new ones (to autoplay) when intersecting the website
     let arr = window.YT_GIF_OBSERVERS.masterIframeBuffer;
     const cap = parseInt(UI.range.iframe_buffer_slider.value, 10);
+    const { displaced, buffer } = attrInfo.creation;
+
 
     if (!UI.experience.iframe_buffer_stack.checked)
     {
@@ -2241,12 +2290,12 @@ function ifStack_ShiftAllOlder_IframeBuffer()
     if (isValid_TryIntersection_EnabledCheck())
     {
         // 2.
-        arr = FitBuffer_OffScreen(arr, cap, 'displaced');
+        arr = FitBuffer_OffScreen(arr, cap, displaced);
     }
     else
     {
         // 2. while...
-        const { shiftedArr, atLeastOne, lastOne } = FitBuffer(arr, cap, 'buffer');
+        const { shiftedArr, atLeastOne, lastOne } = FitBuffer(arr, cap, buffer);
         arr = shiftedArr;
         // 2.1 mix and match
         if (atLeastOne || cap <= arr.length)
@@ -2284,8 +2333,8 @@ function ifStack_ShiftAllOlder_IframeBuffer()
             // 2. if wrapper is not on screen, remove it
             if (wrapper)
             {
-                const newCreation = UTILS.isElementVisible(wrapper) ? 'displaced-force-awaiting' : creation;
-                CleanAndBrandNewWrapper(wrapper, attrInfo.creation, newCreation);
+                const newCreation = UTILS.isElementVisible(wrapper) ? attrInfo.creation.forceAwaiting : creation;
+                CleanAndBrandNewWrapper(wrapper, attrInfo.creation.name, newCreation);
             }
             else
             {
@@ -2340,7 +2389,7 @@ function ifStack_ShiftAllOlder_IframeBuffer()
     }
 
 }
-function CleanAndBrandNewWrapper(wrapper_p, attr_name = attrInfo.creation, attr_value = '')
+function CleanAndBrandNewWrapper(wrapper_p, attr_name = attrInfo.creation.name, attr_value = '')
 {
     const targetClass = wrapper_p.getAttribute(`${attrInfo.target}`);
     const parentSel = UTILS.getUniqueSelectorSmart(wrapper_p.parentNode);
