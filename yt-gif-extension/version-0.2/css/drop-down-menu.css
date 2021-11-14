@@ -392,3 +392,7 @@ span.dropdown-item.yt-gif-wrapper-parent .yt-gif-wrapper.dont-focus-block {
   outline: #006064 auto 1px;
   outline-offset: 2px;
 }
+.roam-main[style*="100%"] 
+.dropdown-show-info {
+  --base-x-offset-content: -75%;
+}
