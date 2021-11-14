@@ -388,3 +388,7 @@ span.dropdown-item.yt-gif-wrapper-parent .yt-gif-wrapper.dont-focus-block {
   border-radius: 8px;
   box-shadow: 0px 0px 0px 5px #3d4f58;
 }
+.dropdown-info-message:focus {
+  outline: #006064 auto 1px;
+  outline-offset: 2px;
+}
