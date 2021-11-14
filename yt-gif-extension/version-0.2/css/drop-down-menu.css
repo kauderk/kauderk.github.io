@@ -354,12 +354,15 @@ div.settings-not-allowed > span.dropdown-info-message:hover{
   --dropdown-pulse-anim-box-shadow-mid: rgb(139 195 74 / 10%);
   --dropdown-pulse-anim-box-shadow-end: rgb(139 195 74 / 0%);
 }
+.dropdown:hover > .dropdown-info-message.drodown_item-pulse-animation{
+  animation: none !important;
+}
 
 span.dropdown-item.yt-gif-wrapper-parent {
   width: 100%;
   justify-content: center;
   height: 180px;
-  padding: 0px 0px 10px 0px;
+  padding: 10px 0px;
 }
 
 span.dropdown-item.yt-gif-wrapper-parent *{
