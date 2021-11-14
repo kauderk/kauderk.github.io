@@ -383,3 +383,8 @@ span.dropdown-item.yt-gif-wrapper-parent *{
 span.dropdown-item.yt-gif-wrapper-parent .yt-gif-wrapper.dont-focus-block {
   width: auto;
 }
+
+.ddm-tut-awaiting-input{
+  border: 3px solid #3d4f58;
+  border-radius: 10px;
+}
