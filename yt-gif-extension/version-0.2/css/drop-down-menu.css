@@ -344,7 +344,7 @@ div.settings-not-allowed > span.dropdown-info-message:hover{
 
 /* debugging */
 .force-flex{
-  display: flex;
+  display: flex !important;
 }
 
 
