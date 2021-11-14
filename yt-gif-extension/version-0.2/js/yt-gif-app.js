@@ -180,6 +180,8 @@ const cssData = {
 
     p_controls: 'yt-gif-controls',
 
+    ddn_tut_awaiting: 'ddm-tut-awaiting-input',
+
     id: {
         navigate_btn: '#navigate-to-yt-gif-settings-page',
     }
@@ -192,6 +194,7 @@ const attrData = {
 const attrInfo = {
     videoUrl: 'data-video-url',
     target: 'data-target',
+    uid: 'data-uid',
     creation: {
         name: 'data-creation',
         forceAwaiting: 'force-awaiting',
@@ -328,7 +331,7 @@ Object.assign(rm_components.both, baseDeploymentObj_both());
 /*-----------------------------------*/
 
 
-
+// the 🤔 emoji indicates that the adition of "dropdown tutorials" is clashing with some function's structure... so far is minor, but it's a problem nonthless. And building sparate functions for them - doesn't seem to be a great idea either, because they're BIG BOIS.
 if (
     typeof (UTILS) !== 'undefined' &&
     typeof (RAP) != 'undefined' &&
@@ -416,6 +419,7 @@ async function Ready()
     IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_mouseenter_to_initialize, iframe_buffer_slider, try_to_load_on_intersection_beta);
 
 
+
     // 4. run extension and events - set up
     //#region relevant variables
     const { override_roam_video_component } = UI.defaultValues;
@@ -428,11 +432,14 @@ async function Ready()
     rm_components[initialKey].checkSubDeploymentStyle(true); // start with some value
     rm_components.RunMasterObserverWithKey(initialKey);
 
-    console.log('YT GIF extension activated');
 
-    const { classToObserve: tutClass } = rm_components.yt_gif_tut;
-    const tutEl = document.querySelector('.' + tutClass);
-    onYouTubePlayerAPIReady(tutEl, tutClass, attrInfo.creation.forceAwaiting, 'testing manual ty gif tutorial');
+
+    // 5. TESTING!
+    SettingUpTutorials();
+
+
+
+    console.log('YT GIF extension activated');
 
 
 
@@ -672,10 +679,11 @@ async function Ready()
     function GetMainYTGIFicon(ddm_icon)
     {
         // 
+        const mainMenu = document.querySelector('span.yt-gif-drop-down-menu-toolbar .dropdown');
         const mainDDM = document.querySelector('span.yt-gif-drop-down-menu-toolbar .dropdown > .dropdown-content');
         const icon = document.querySelector('.' + ddm_icon);
         spanNegativeTabIndex(icon);
-        return { icon, mainDDM };
+        return { icon, mainDDM, mainMenu };
     }
     function spanNegativeTabIndex(el)
     {
@@ -720,35 +728,27 @@ async function Ready()
     }
     function UpdateOnScroll_RTM(scroll, labelEl)
     {
-        // 📦
-        scroll.addEventListener('change', UpdateLabelWithEvent, true);
-        scroll.addEventListener('wheel', ValueOnWheel, true);
-        function ValueOnWheel(e)
-        {
-            e.currentTarget = UpdateSliderOnDirection(e);
+        UptLabel(scroll);
 
-            UpdateLabelWithEvent(e);
-        }
-        function UpdateLabelWithEvent(e)
+        // 📦
+        scroll.addEventListener('click', (e) => UptLabel(e.currentTarget), true);
+        scroll.addEventListener('wheel', (e) => UptLabel(SliderValue(e)), true);
+
+        function SliderValue(e)
         {
-            UptLabel(e.currentTarget);
-            // BIND TO SETTINGS PAGE
+            const elScroll = e.currentTarget;
+            const dir = Math.sign(e.deltaY) * -1;
+            const parsed = parseInt(elScroll.value, 10);
+            elScroll.value = Number(dir + parsed);
+            return elScroll;
         }
         function UptLabel(elScroll)
         {
             labelEl.innerHTML = elScroll.value; // don't worry about overflowing the counter, html range takes care of it
+            elScroll.dispatchEvent(new Event('change'));
         }
+    }
 
-        UptLabel(scroll);
-    }
-    function UpdateSliderOnDirection(e)
-    {
-        const elScroll = e.currentTarget;
-        const dir = Math.sign(e.deltaY) * -1;
-        const parsed = parseInt(elScroll.value, 10);
-        elScroll.value = Number(dir + parsed);
-        return elScroll;
-    }
     function TogglePlayerThumbnails_DDM_RTM(awaiting_with_video_thumnail_as_bg, awaitng_input_with_thumbnail)
     {
         // BIND TO SETTINGS PAGE
@@ -1023,6 +1023,129 @@ async function Ready()
     //#endregion
 
 
+    //#region 5. Setting up tutorials
+    function SettingUpTutorials()
+    {
+        const { icon, mainDDM, mainMenu } = GetMainYTGIFicon(ddm_icon);
+
+
+        const mainDDMdisplay = (d) => mainDDM.style.display = d;
+        const canCloseMenu = () => !mainDDM.classList.contains(ddm_focus) && !mainMenu.matches(':hover');
+        const tryToCloseMenu = () => canCloseMenu() ? mainDDMdisplay('none') : null;
+        const openMenu = () => mainDDMdisplay('flex');
+        const iconIsPulsing = (bol) => UTILS.toggleClasses(bol, [cssData.dwn_pulse_anim], icon);
+
+
+        // one pulse -  to show that there are updates
+        iconIsPulsing(true);
+        setTimeout(() => iconIsPulsing(false), 3000);
+
+
+        // if the user entered/initizlied/played the tutorial,
+        // the ddm won't be closed until it losses focus,
+        // conventionally clicking anything but the ddm/ddm-children
+        mainDDMdisplay('none');
+        mainMenu.addEventListener('mouseenter', () => openMenu());
+        mainMenu.addEventListener('mouseleave', () => tryToCloseMenu());
+        icon.addEventListener('blur', () => tryToCloseMenu());
+
+
+        let previousValue = mainDDM.style.display; // changes inside style_cb
+        const config = { attributes: true };
+        const observer = new MutationObserver(mainDDMstyle_cb); // when closed, clean tutorials -> wrappers
+        observer.observe(mainDDM, config);
+
+
+        const tutContArr = [document.querySelector("#yt-gif-tutorial-container--update")]; // trying to make it modular
+        for (const tutCont of tutContArr)
+        {
+            DDM_onlyOneTut(tutCont);
+        }
+
+
+        function DDM_onlyOneTut(updateCont)
+        {
+            const updateCont_content = updateCont.querySelector('.dropdown-content');
+            const updateTutParents = [updateCont_content, mainDDM];
+
+
+            const { classToObserve } = rm_components.yt_gif;
+            const { forceAwaiting } = attrInfo.creation;
+            let tutWrapperAwaiting = null;
+
+            updateCont.addEventListener('mouseenter', deployTutorialVideo);
+            icon.addEventListener('blur', () => toggleFocusOnDMMsparents(false));
+
+
+            async function deployTutorialVideo(e)
+            {
+                if (e.currentTarget.querySelector('.yt-gif-wrapper')) // video already deployed
+                    return;
+
+                const tutWrapper = e.currentTarget.querySelector('[data-target]');
+
+                tutWrapperAwaiting = await onYouTubePlayerAPIReady(tutWrapper, classToObserve, forceAwaiting, 'testing manual ty gif tutorial');
+
+                tutWrapperAwaiting.addEventListener('mouseenter', () => icon.dispatchEvent(new Event('click')));
+                tutWrapperAwaiting.addEventListener('mouseleave', () => toggleFocusOnDMMsparents(true));
+
+
+                tutWrapperAwaiting.addEventListener('mouseenter', (e) => toggle_VisualFeedback(e, false));
+                tutWrapperAwaiting.addEventListener('mouseleave', (e) => toggle_VisualFeedback(e, true));
+            }
+
+            function toggleFocusOnDMMsparents(toggle = true)
+            {
+                for (const el of updateTutParents)
+                {
+                    UTILS.toggleClasses(toggle, [ddm_focus], el);
+                }
+
+                if (toggle)
+                {
+                    icon.dispatchEvent(new Event('click'));
+                }
+            }
+
+            function toggle_VisualFeedback(e, bol)
+            {
+                UTILS.toggleClasses(bol, [cssData.ddn_tut_awaiting], e.currentTarget);
+            }
+        }
+        function mainDDMstyle_cb(mutationList)
+        {//https://stackoverflow.com/questions/37168158/javascript-jquery-how-to-trigger-an-event-when-display-none-is-removed#:~:text=11-,Here%20we%20go,-var%20blocker%20%20%3D%20document
+            // observers for computed styles... -it needs to be a thing... 🙃
+            mutationList.forEach(function (record)
+            {
+                if (record.attributeName !== 'style')
+                    return;
+
+                const currentValue = record.target.style.display;
+                const displayWas = (d) => previousValue === d && currentValue !== d;
+
+                if (currentValue !== previousValue)
+                {
+                    if (displayWas('flex'))
+                    {
+                        // sometimes you just want to see the world burn
+                        const cleanedWrappers = [...(mainDDM).querySelectorAll('iframe')]
+                            .map(el => el.closest('[data-target]'))
+                            .filter(el => el != null)
+                            .forEach(el =>
+                            {
+                                el.removeAttribute('class'); // target classes
+                                el = UTILS.RemoveAllChildren(el);
+                            });
+                    }
+
+                    previousValue = record.target.style.display;
+                }
+            });
+        }
+    }
+    //#endregion
+
+
     //#region local utils
     function DDM_Els()
     {
@@ -1136,50 +1259,21 @@ function ObserveIframesAndDelployYTPlayers(targetClass)
 }
 
 
-/*
-span.dropdown-item.yt-gif-wrapper-parent {
-    width: 100%;
-    justify-content: center;
-    height: 180px;
-    padding: 0px 0px 10px 0px;
-}
 
-span.dropdown-item.yt-gif-wrapper-parent *{
-    --m: 0px !important;
-}
-
-.dwn-yt-gif-player-container span.dropdown-item{
-    max-width: none;
-}
-
-.dwn-yt-gif-player-container label.dropdown-item-description {
-    max-width: 40ch;
-}
-
-span.dropdown-item.yt-gif-wrapper-parent .yt-gif-wrapper.dont-focus-block {
-    width: auto;
-}
-
-
-
-
-<span class="dropdown-item" data-uid="123456789">
-        <div class="rm-xparser-default-yt-gif" data-video-url="https://youtu.be/nlQtrSJiSWI?t=82&amp;end=98"></div>
-</span>
-
-const url = wrapper.getAttribute('data-video-url') || await InputBlockVideoParams(uid);
-
-*/
 
 /*↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓*/
 //
 async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, message = 'I dunno')
 {
-    if (message == 'testing manual ty gif tutorial') debugger;
+    if (message == 'testing manual ty gif tutorial')
+    {
+        console.log(message);
+        //debugger;
+    }
     if (!wrapper) return;
 
     // 1. last 9 letter form the closest blockID
-    const uid = wrapper.closest('span[data-uid]')?.getAttribute('data-uid') ||
+    const uid = wrapper.closest(`[${attrInfo.uid}]`)?.getAttribute(attrInfo.uid) ||
         UTILS.closestBlockID(wrapper)?.slice(-9) ||
         UTILS.closestBlockID(document.querySelector('.bp3-popover-open'))?.slice(-9);
 
@@ -1195,16 +1289,16 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     }
     wrapper.parentElement.classList.add(`${cssData.yt_gif_wrapper}-parent`);
     wrapper.className = `${cssData.yt_gif_wrapper} dont-focus-block`;
-    wrapper.setAttribute(attrInfo.target, targetClass); //🤔
-    wrapper.setAttribute(attrInfo.creation.name, dataCreation); //🤔
+    wrapper.setAttribute(attrInfo.target, targetClass);
+    wrapper.setAttribute(attrInfo.creation.name, dataCreation);
     wrapper.innerHTML = '';
     wrapper.insertAdjacentHTML('afterbegin', links.html.fetched.playerControls);
     wrapper.querySelector('.yt-gif-player').id = newId;
 
 
 
-    // 3. weird recursive function... guys...
-    const url = wrapper.getAttribute('data-video-url') || await InputBlockVideoParams(uid);
+    // 3.                                                   weird recursive function... guys...
+    const url = wrapper.getAttribute(attrInfo.videoUrl) || await InputBlockVideoParams(uid); //🤔
     // 3.1
     allVideoParameters.set(newId, urlConfig(url));
     const configParams = allVideoParameters.get(newId);
@@ -1214,7 +1308,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     // 4. to record a target's point of reference
     const record = JSON.parse(JSON.stringify(sesionIDs)); //Object.create(sesionIDs);
     sesionIDs.uid = uid;
-    const blockID = UTILS.closestBlockID(wrapper);
+    const blockID = closestYTGIFparentID(wrapper) //🤔
     if (blockID != null)
         recordedIDs.set(blockID, record);
 
@@ -1223,7 +1317,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     // 5. 
     if (dataCreation == attrInfo.creation.forceAwaiting || isValid_Awaiting_check())
     {
-        return DeployYT_IFRAME_OnInteraction();
+        return await DeployYT_IFRAME_OnInteraction();
     }
     else
     {
@@ -1348,12 +1442,13 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     }
 
 
+
     // 5.0
-    function DeployYT_IFRAME_OnInteraction()
+    async function DeployYT_IFRAME_OnInteraction()
     {
         const mainAnimation = setUpWrapperAwaitingAnimation();
         wrapper.addEventListener('mouseenter', CreateYTPlayer);
-
+        return wrapper;
         function CreateYTPlayer(e)
         {
             UTILS.toggleClasses(false, mainAnimation, wrapper);
@@ -1456,7 +1551,8 @@ async function onPlayerReady(event)
     const entryVolume = validVolumeURL();
     const tickOffset = 1000 / speed;
 
-    const blockID = UTILS.closestBlockID(iframe);
+    const blockID = closestYTGIFparentID(iframe); //🤔
+    const canBeCleanedByBuffer = UTILS.closestBlockID(iframe); //🤔
     const rocording = recordedIDs.get(blockID);
     // 🚧?
     if (rocording != null)
@@ -1535,7 +1631,7 @@ async function onPlayerReady(event)
 
 
     // 8. Performance Mode - Iframe Buffer & Initalize on interaction - synergy
-    if (parent) // sometimes the parent is already gone - while loading iframes
+    if (canBeCleanedByBuffer && parent) // sometimes the parent is already gone - while loading iframes
     {
         const parentCssPath = UTILS.getUniqueSelectorSmart(parent);
         PushNew_ShiftAllOlder_IframeBuffer(parentCssPath);
@@ -1945,7 +2041,11 @@ async function onPlayerReady(event)
 
 
         observer.disconnect();
-        ifStack_ShiftAllOlder_IframeBuffer();
+
+        if (canBeCleanedByBuffer)
+        {
+            ifStack_ShiftAllOlder_IframeBuffer();
+        }
 
 
         // either save the target
@@ -2276,16 +2376,18 @@ function PushNew_ShiftAllOlder_IframeBuffer(parentCssPath)
 }
 function ifStack_ShiftAllOlder_IframeBuffer()
 {
-    // work in pregress | by shifting/removing the first entry, you clean the most irrelevent YT GIF, and give space to new ones (to autoplay) when intersecting the website
+    if (!UI.experience.iframe_buffer_stack.checked)
+    {
+        return null;
+    }
+
+
+    // work in pregress | by shifting/removing the first entry, you clean the most irrelevent YT GIF, and give space to new ones (to load, thus autoplay on mouseenter) when intersecting the website
     let arr = window.YT_GIF_OBSERVERS.masterIframeBuffer;
     const cap = parseInt(UI.range.iframe_buffer_slider.value, 10);
     const { displaced, buffer } = attrInfo.creation;
 
 
-    if (!UI.experience.iframe_buffer_stack.checked)
-    {
-        return arr;
-    }
 
     if (isValid_TryIntersection_EnabledCheck())
     {
@@ -2491,6 +2593,11 @@ function btn_VS(bol, exp_btn, disabled)
 //#endregion
 
 
+function closestYTGIFparentID(el)
+{
+    // so lastBlockIDParameters... and previous values are stored
+    return UTILS.closestBlockID(el) || el.closest('.dwn-yt-gif-player-container')?.id;
+}
 //#endregion
 
 
