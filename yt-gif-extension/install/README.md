@@ -38,6 +38,13 @@ YT GIF EXTENSION v0.2.0 {{[[roam/js]]}}
         document.getElementsByTagName("head")[0].appendChild(extension);
       }
      ```
+ ﾠ
+ ﾠ
+ ﾠ
+ ﾠ
+ ﾠ
+ ﾠ
+ ﾠ
 # This is how it should look like
 ![Snag_ccd1029](https://user-images.githubusercontent.com/65237382/141852816-ecd6584d-9dc4-42a8-acb6-8d2bf1931ecc.png)
 
