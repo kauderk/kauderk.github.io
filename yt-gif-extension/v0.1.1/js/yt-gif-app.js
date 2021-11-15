@@ -10,7 +10,7 @@
 */
 const UI = JSON.parse(JSON.stringify(window.YTGIF));//JSON.parse(JSON.stringify(window.YT_GIF_SETTINGS_PAGE));
 const UTILS = window.kauderk.util;
-const RAP = window.kauderk.rap; // 🧼
+const RAP_K = window.kauderk.rap; // 🧼
 /*-----------------------------------*/
 /* user doesn't need to see this */
 UI.label = {
@@ -337,7 +337,7 @@ Object.assign(rm_components.both, baseDeploymentObj_both());
 // the 🤔 emoji indicates that the adition of "dropdown tutorials" is clashing with some function's structure... so far is minor, but it's a problem nonthless. And building sparate functions for them - doesn't seem to be a great idea either, because they're BIG BOIS.
 if (
     typeof (UTILS) !== 'undefined' &&
-    typeof (RAP) != 'undefined' &&
+    typeof (RAP_K) != 'undefined' &&
     typeof (YT) != 'undefined'
 )
 {
@@ -800,18 +800,18 @@ async function Ready()
         settingsBtn.addEventListener('click', async function (e)
         {
             // ⚠️⚠️⚠️ how do you communicate with the other scripts? Interfaces? Events? WindowEvents?
-            await RAP.setSideBarState(3);
-            await RAP.sleep(50); // an observer is the safest option though
+            await RAP_K.setSideBarState(3);
+            await RAP_K.sleep(50); // an observer is the safest option though
 
             if (!anySidebarInstance())
             {
                 UTILS.toggleClasses(true, [stt_allow], settingsBtnWrapper);
                 settingsBtn.setAttribute('data-tooltip', clause);
-                await RAP.openBlockInSidebar(TARGET_UID); // back end execution... should it be here...? //https://stackoverflow.com/questions/12097381/communication-between-scripts-three-methods#:~:text=All%20JS%20scripts%20are%20run%20in%20the%20global%20scope.%20When%20the%20files%20are%20downloaded%20to%20the%20client%2C%20they%20are%20parsed%20in%20the%20global%20scope
+                await RAP_K.openBlockInSidebar(TARGET_UID); // back end execution... should it be here...? //https://stackoverflow.com/questions/12097381/communication-between-scripts-three-methods#:~:text=All%20JS%20scripts%20are%20run%20in%20the%20global%20scope.%20When%20the%20files%20are%20downloaded%20to%20the%20client%2C%20they%20are%20parsed%20in%20the%20global%20scope
             }
 
             // firs settings page instance
-            await RAP.sleep(50);
+            await RAP_K.sleep(50);
             SttPages()?.[0]?.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
         });
 
@@ -1282,7 +1282,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     if (message == 'testing manual ty gif tutorial')
     {
         console.log(message);
-        debugger;
+        //debugger;
     }
     if (!wrapper) return;
 
@@ -1373,7 +1373,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         async function TryToFindURL(desiredUID)
         {
             // const info42 = await window.roam42.common.getBlockInfoByUID(desiredUID);
-            const info = await RAP.getBlockInfoByUID(desiredUID); //await window.roamAlphaAPI.q(`[:find (pull ?b [:block/string]):where [?b :block/uid "${desiredUID}"]]`);
+            const info = await RAP_K.getBlockInfoByUID(desiredUID); //await window.roamAlphaAPI.q(`[:find (pull ?b [:block/string]):where [?b :block/uid "${desiredUID}"]]`);
             const rawText = info[0][0].string;
             const urls = rawText.match(/(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(\S+)?[^ }]/);
             const innerUIDs = rawText.match(/(?<=\(\()([^(].*?[^)])(?=\)\))/gm);
