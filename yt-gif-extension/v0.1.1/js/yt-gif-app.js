@@ -1,5 +1,5 @@
-// restricting some features ⛔ -> YT_GIF_SETTINGS_PAGE
-// restoring/modifying some features 🧼
+// restricting features ⛔ -> YT_GIF_SETTINGS_PAGE
+// restoring/modifying features 🧼
 // version 38 - semi-refactored
 /**
  * @summary USER INPUTS
@@ -127,7 +127,7 @@ const links = {
         }
     },
     html: {
-        dropDownMenu: 'https://kauderk.github.io/yt-gif-extension/version-0.1-update/html/drop-down-menu.html',
+        dropDownMenu: 'https://kauderk.github.io/yt-gif-extension/v0.1.1/html/drop-down-menu.html',
         playerControls: URLFolderHTML('player-controls.html'),
         fetched: {
             playerControls: '',
