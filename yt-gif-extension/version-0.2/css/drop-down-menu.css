@@ -350,9 +350,10 @@ div.settings-not-allowed > span.dropdown-info-message:hover{
 
 /* testing yt gif tutorial - drop down menu */
 .dwn-update span.drodown_item-pulse-animation.dropdown-info-message {
-  --dropdown-pulse-anim-box-shadow-start: rgb(139 195 74 / 98%);
+  --dropdown-pulse-anim-box-shadow-start: var(--updt-pulse-anim-shadows);
   --dropdown-pulse-anim-box-shadow-mid: transparent;
   --dropdown-pulse-anim-box-shadow-end: transparent;
+  --message-opacity: .7;
 }
 .dropdown:hover > .dropdown-info-message.drodown_item-pulse-animation{
   animation: none !important;
@@ -395,4 +396,11 @@ span.dropdown-item.yt-gif-wrapper-parent .yt-gif-wrapper.dont-focus-block {
 .roam-main[style*="100%"] 
 .dropdown-show-info {
   --base-x-offset-content: -75%;
+}
+
+
+.ty-gif-icon:focus {
+  background-color: var(--drop-menu-btn-f) !important;
+  outline: var(--yt-gif-icon-focus-contour) auto 2px;
+  outline-offset: 2px;
 }
