@@ -1036,10 +1036,6 @@ async function Ready()
         const iconIsPulsing = (bol) => UTILS.toggleClasses(bol, [cssData.dwn_pulse_anim], icon);
 
 
-        // one pulse -  to show that there are updates
-        iconIsPulsing(true);
-        setTimeout(() => iconIsPulsing(false), 3000);
-
 
         // if the user entered/initizlied/played the tutorial,
         // the ddm won't be closed until it losses focus,
@@ -1057,9 +1053,18 @@ async function Ready()
 
 
         const tutContArr = [document.querySelector("#yt-gif-tutorial-container--update")].filter(el => el != null) // trying to make it modular
+        let atLeastOne = false;
         for (const tutCont of tutContArr)
         {
             DDM_onlyOneTut(tutCont);
+            atLeastOne = true;
+        }
+
+        if (atLeastOne)
+        {
+            // one pulse -  to show that there are updates
+            iconIsPulsing(true);
+            setTimeout(() => iconIsPulsing(false), 3000);
         }
 
 
