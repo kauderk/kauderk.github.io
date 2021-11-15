@@ -9,7 +9,7 @@
 */
 const UI = window.YTGIF;//JSON.parse(JSON.stringify(window.YT_GIF_SETTINGS_PAGE));
 const UTILS = window.kauderk.util;
-const RAP = window.kauderk.rap; // available in this version
+const RAP = window.kauderk.rap; // 🧼
 /*-----------------------------------*/
 /* user doesn't need to see this */
 UI.label = {
@@ -100,8 +100,8 @@ const videoParams = {
 
     speed: 1,
 
-    volume: UI.default.video_volume, // available in this version
-    updateVolume: UI.default.video_volume, // available in this version
+    volume: UI.default.video_volume, // 🧼
+    updateVolume: UI.default.video_volume, // 🧼
     volumeURLmapHistory: [],
 };
 videoParams.updateVolume = videoParams.volume;
@@ -371,7 +371,7 @@ async function Ready()
 
     // 1. set up looks
     //#region relevant variables
-    const { css_theme, player_span } = UI.default; // available in this version
+    const { css_theme, player_span } = UI.default; // 🧼
     const { themes, playerStyle, dropDownMenuStyle } = links.css;
     const { playerControls, dropDownMenu } = links.html;
     const { yt_gif } = cssData; // CssThemes_UCS
@@ -380,8 +380,9 @@ async function Ready()
     await smart_LoadCSS(dropDownMenuStyle, `${yt_gif}-dropDownMenuStyle`);
     await smart_LoadCSS(playerStyle, `${yt_gif}-playerStyle`);
 
-    await smart_CssThemes_UCS(css_theme.sessionValue, themes, yt_gif); // UCS - user customizations
-    await smart_CssPlayer_UCS(player_span.sessionValue);
+    // ⛔ -> sessionValues 
+    await smart_CssThemes_UCS(css_theme, themes, yt_gif); // UCS - user customizations
+    await smart_CssPlayer_UCS(player_span);
 
     links.html.fetched.playerControls = await PlayerHtml_UCS(playerControls);
 
@@ -391,7 +392,7 @@ async function Ready()
 
     // 2. assign direct values to the main object | UI - user inputs
     DDM_to_UI_variables(); // filtering baseKey & prompts and transforming them from objs to values or dom els - it is not generic and only serves for the first indent level (from parent to child keys)
-    // unavailable in this version
+    // ⛔
     //SaveSettingsOnChanges(); // the seetings page script is responsable for everything, this are just events
 
 
@@ -413,21 +414,22 @@ async function Ready()
 
     UpdateOnScroll_RTM(timestamp_display_scroll_offset, rangeValue);
     UpdateOnScroll_RTM(end_loop_sound_volume, loop_volume_displayed);
-    UpdateOnScroll_RTM(iframe_buffer_slider, iframe_buffer_label);
+    // ⛔
+    //UpdateOnScroll_RTM(iframe_buffer_slider, iframe_buffer_label);
 
     TogglePlayerThumbnails_DDM_RTM(awaiting_with_video_thumnail_as_bg, awaitng_input_with_thumbnail);
 
-    // unavailable in this version
+    // ⛔
     //navigateToSettingsPageInSidebar(navigate_btn, dwp_message, stt_allow);
 
-    // unavailable in this version
+    // ⛔
     //IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_mouseenter_to_initialize, iframe_buffer_slider, try_to_load_on_intersection_beta);
 
 
 
     // 4. run extension and events - set up
     //#region relevant variables
-    const { override_roam_video_component } = UI.defaultValues;
+    const { override_roam_video_component } = UI.default;
     //#endregion
 
     await MasterObserver_UCS_RTM(); // listening for changes | change the behaviour RTM // BIG BOI FUNCTION
@@ -528,18 +530,23 @@ async function Ready()
         for (const parentKey in UI)
         {
             const parentObj = UI[parentKey];
-            if (parentObj.baseKey?.inputType == 'prompt')
-            {
-                delete UI[parentKey];
-                continue;
-            }
+            // ⛔
+            // if (parentObj.baseKey?.inputType == 'prompt')
+            // {
+            //     delete UI[parentKey];
+            //     continue;
+            // }
 
             for (const childKey in parentObj)
             {
-                const child = parentObj[childKey];
-                const directObjPpts = (child?.baseKey) ? child.baseKey : child;
-                const sessionValue = directObjPpts.sessionValue;
-                const domEl = document.getElementById(childKey); // ❗❗❗
+                // ⛔
+                // const child = parentObj[childKey];
+                // const directObjPpts = (child?.baseKey) ? child.baseKey : child;
+                // const sessionValue = directObjPpts.sessionValue;
+                // const domEl = document.getElementById(childKey); // ❗❗❗
+
+                const sessionValue = UI[parentKey][childKey];
+                const domEl = document.getElementById(childKey);
 
                 if (domEl)
                 {
@@ -554,22 +561,24 @@ async function Ready()
                             parentObj[childKey].innerHTML = sessionValue;
                             break;
                         default:
+                            debugger;
                             const binaryInput = parentObj[childKey];
                             binaryInput.checked = UTILS.isTrue(sessionValue);
                             UTILS.linkClickPreviousElement(binaryInput);
                     }
                 }
-                else
-                {
-                    if (directObjPpts.hasOwnProperty('baseValue'))
-                    {
-                        parentObj[childKey] = sessionValue || directObjPpts.baseValue;
-                    }
-                    else if (childKey == 'baseKey' || directObjPpts.inputType == "prompt")
-                    {
-                        delete parentObj[childKey];
-                    }
-                }
+                // ⛔
+                // else
+                // {
+                //     if (directObjPpts.hasOwnProperty('baseValue'))
+                //     {
+                //         parentObj[childKey] = sessionValue || directObjPpts.baseValue;
+                //     }
+                //     else if (childKey == 'baseKey' || directObjPpts.inputType == "prompt")
+                //     {
+                //         delete parentObj[childKey];
+                //     }
+                // }
             }
         }
     }
@@ -1273,7 +1282,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     if (message == 'testing manual ty gif tutorial')
     {
         console.log(message);
-        //debugger;
+        debugger;
     }
     if (!wrapper) return;
 
@@ -1488,16 +1497,16 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     // last - customize the iframe api
     function playerConfig(configParams)
     {
-        return params = { // available in this version
+        return params = { // 🧼
             height: '100%',
             width: '100%',
-            videoId: map?.id,
+            videoId: configParams?.id,
             playerVars: {
                 autoplay: 1, 		// Auto-play the video on load
                 controls: 1, 		// Show pause/play buttons in player
                 mute: 1,
-                start: map?.start,
-                end: map?.end,
+                start: configParams?.start,
+                end: configParams?.end,
 
                 vq: 'hd1080',
                 version: 3,
@@ -1622,7 +1631,7 @@ async function onPlayerReady(event)
     RemovedObserver.observe(document.body, config);
 
 
-    // unavailable in this version
+    // ⛔
     // 8. Performance Mode - Iframe Buffer & Initalize on interaction - synergy
     // if (canBeCleanedByBuffer && parent) // sometimes the parent is already gone - while loading iframes
     // {
@@ -2035,7 +2044,7 @@ async function onPlayerReady(event)
 
         observer.disconnect();
 
-        // unavailable in this version
+        // ⛔
         // if (canBeCleanedByBuffer)
         // {
         //     ifStack_ShiftAllOlder_IframeBuffer();
@@ -2348,7 +2357,7 @@ function onStateChange(state)
     }
     function validSoundURL()
     {
-        const src = UI.default.end_loop_sound_src; // available in this version
+        const src = UI.default.end_loop_sound_src; // 🧼
         if (UTILS.isValidUrl(src))
         {
             return src
@@ -2541,7 +2550,7 @@ function isValid_Awaiting_check()
 {
     const { awaiting_for_mouseenter_to_initialize } = UI.experience;
     // kinda spaghetti, but they are pretty much entangled and only one of those can be true at a time
-    return awaiting_for_mouseenter_to_initialize.checked; // && !isValid_TryIntersection_check(); // unavailable in this version
+    return awaiting_for_mouseenter_to_initialize.checked; // && !isValid_TryIntersection_check(); // ⛔
 }
 /* *********************** */
 function TryingBtn_VisualFeedback(bol, disabled = undefined)
