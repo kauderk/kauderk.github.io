@@ -14,8 +14,8 @@
   --submenu-styles-content-bg: #e3e5e7;
   --submenu-styles-item-bg-h: #c5daef;
 
-  --submenu-info-btn-bg: #e6e6e7;
-  --submenu-info-btn-bg-h: rgb(87 184 144);
+  --submenu-info-btn-bg: #2e7d32;
+  --submenu-info-btn-bg-h: #4caf50;
 
   --submenu-info-item-bg-h: rgb(87 184 144 / 45%);
 
@@ -27,9 +27,9 @@
 
   --deployment-allright-mid-bg: #21aa81;
 
-  --submenu-message-bg-high: rgb(93 112 128 / 12%);
+  --submenu-message-bg-high: rgb(29 149 243 / 48%);
 
-  --dropdown-pulse-anim-box-shadow-start: rgba(204, 169, 44, 0.4);
+  --dropdown-pulse-anim-box-shadow-start: #00bcd4;
   --dropdown-pulse-anim-box-shadow-mid: rgba(204, 169, 44, 0);
   --dropdown-pulse-anim-box-shadow-end: rgba(204, 169, 44, 0);
 
@@ -42,4 +42,7 @@
 
   --ddm-tooltip-c: #202b33;
   --ddm-tooltip-bg: #b4c9db;
+
+  --tut-awaiting-input-contour: #0bb9a963;
+  --info-ms-focus-contour: #37b4c5;
 }

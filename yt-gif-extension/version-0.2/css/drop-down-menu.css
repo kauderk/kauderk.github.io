@@ -232,7 +232,7 @@ span.dropdown-info-message {
 .dropdown-show-info {
   padding: 15px 7px;
   --base-x-offset-content: -40%;
-  --message-opacity: 0.3;
+  --message-opacity: 0.5;
 }
 
 .dropdown-info-box .dropdown-item {
@@ -351,8 +351,8 @@ div.settings-not-allowed > span.dropdown-info-message:hover{
 /* testing yt gif tutorial - drop down menu */
 .dwn-update span.drodown_item-pulse-animation.dropdown-info-message {
   --dropdown-pulse-anim-box-shadow-start: rgb(139 195 74 / 98%);
-  --dropdown-pulse-anim-box-shadow-mid: rgb(139 195 74 / 10%);
-  --dropdown-pulse-anim-box-shadow-end: rgb(139 195 74 / 0%);
+  --dropdown-pulse-anim-box-shadow-mid: transparent;
+  --dropdown-pulse-anim-box-shadow-end: transparent;
 }
 .dropdown:hover > .dropdown-info-message.drodown_item-pulse-animation{
   animation: none !important;
@@ -386,10 +386,10 @@ span.dropdown-item.yt-gif-wrapper-parent .yt-gif-wrapper.dont-focus-block {
 
 .ddm-tut-awaiting-input{
   border-radius: 8px;
-  box-shadow: 0px 0px 0px 5px #3d4f58;
+  box-shadow: 0px 0px 0px 5px var(--tut-awaiting-input-contour);
 }
 .dropdown-info-message:focus {
-  outline: #006064 auto 1px;
+  outline: var(--info-ms-focus-contour) auto 1px;
   outline-offset: 2px;
 }
 .roam-main[style*="100%"] 

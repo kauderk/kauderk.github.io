@@ -42,4 +42,7 @@
 
   --ddm-tooltip-c: #989898;
   --ddm-tooltip-bg: #333;
+
+  --tut-awaiting-input-contour: #3d4f58;
+  --info-ms-focus-contour: #006064;
 }
