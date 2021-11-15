@@ -1,8 +1,6 @@
 # YT GIF an extension for Roam Research - **Legacy - v0.1.0**
 
-*Released to the public: 15th October 2021 in [twitter](https://twitter.com/kauDerk_/status/1448886800798343206) and other social media forums.
-The code is alright, though is kinda hard to read/follow in one pass.
-I'm leaving the script and it's resources here, if anyone ever wants to review them.*
+*Released to the public: 15th October 2021 on [Twitter](https://twitter.com/kauDerk_/status/1448886800798343206) and other social media forums. The code is alright, though it is kinda hard to read/follow in one pass. I'm leaving the script and it's resources here, if anyone ever wants to review them.*
 
 ## What does it do?
 Loops videos between the `start` and `end` YouTube URL parameters.
