@@ -47,6 +47,7 @@
   --info-ms-focus-contour: #006064;
 
   --updt-pulse-anim-shadows: rgb(139 195 74 / 98%);
+  --updt-pulse-anim-shadows-mid: transparent;
 
   --yt-gif-icon-focus-contour: rgba(19, 124, 189, 0.6);
 }

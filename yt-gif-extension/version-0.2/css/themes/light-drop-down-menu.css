@@ -46,7 +46,8 @@
   --tut-awaiting-input-contour: #0bb9a963;
   --info-ms-focus-contour: #37b4c5;
 
-  --updt-pulse-anim-shadows: rgb(139 195 74);
+  --updt-pulse-anim-shadows: rgb(97 255 103);
+  --updt-pulse-anim-shadows-mid: rgb(0 255 10 / 25%);
 
   --yt-gif-icon-focus-contour: #42a5f5;
 }

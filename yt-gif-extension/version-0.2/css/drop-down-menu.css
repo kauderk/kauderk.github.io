@@ -351,7 +351,7 @@ div.settings-not-allowed > span.dropdown-info-message:hover{
 /* testing yt gif tutorial - drop down menu */
 .dwn-update span.drodown_item-pulse-animation.dropdown-info-message {
   --dropdown-pulse-anim-box-shadow-start: var(--updt-pulse-anim-shadows);
-  --dropdown-pulse-anim-box-shadow-mid: transparent;
+  --dropdown-pulse-anim-box-shadow-mid:  var(--updt-pulse-anim-shadows-mid);
   --dropdown-pulse-anim-box-shadow-end: transparent;
   --message-opacity: .7;
 }
