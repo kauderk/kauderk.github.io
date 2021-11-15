@@ -1,21 +1,18 @@
-# **YT GIF an extension for Roam Research**
+# YT GIF an extension for Roam Research - **Legacy - v0.1.0**
 
-# What problems does it solve?
-Learning a new skill, practicing/mastering something or simply enjoying your favorite content. Things that you know you'll have to see over and over. Now you don't even need to click elements; hovering to play/hear videos is a game changer. You will feel spoiled. Basically, you'll save tons of time.
+*Released to the public: 15th October 2021 in [twitter](https://twitter.com/kauDerk_/status/1448886800798343206) and other social media forums.
+The code is alright, though is kinda hard to read/follow in one pass.
+I'm leaving the script and it's resources here, if anyone ever wants to review them.*
 
-# What does it do?
+## What does it do?
 Loops videos between the `start` and `end` YouTube URL parameters.
 `{{[[yt-gif]]: https://youtu.be/46A01oukux0?t=20&end=100 }}` Simple as that, create as many "**YouTube Gifs**" and begin to visualize some ideas.
 
 
-# Contact [![Twitter URL](https://img.shields.io/twitter/url?label=KauDerK_&style=social&url=https%3A%2F%2Ftwitter.com%2FkauDerk_)](https://twitter.com/kauDerk_)
-"I'm using it to practice a new language." "It's perfect for my classes." "I'll use it to take notes on movies." 
-Those are some of the things people have said. I'm curious, how are you using it?
-
-## [Installation](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install#installation)
+## [Installation](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/v0.1.0/install#installation)
 
 
-# Features
+## Features
 
 
 | **Permutations**               | **ON**                                                        | **OFF**                                                 |
@@ -64,15 +61,3 @@ Those are some of the things people have said. I'm curious, how are you using it
 |-----------------------------|------------------------------------------------------------------------------------------|
 | Time offset on scroll wheel | The amount the video will go back on forward when scrolling inside the timestamp display |
 
-
-# Examples
-
-
-
-##### `DISCALIMER` these styles && DARK CSS rules are not part of the demo
-
-![Snag_4d185b14](https://user-images.githubusercontent.com/65237382/135798255-c4a7f083-bd55-4043-9609-e08cdf8b8a43.png)
-![Snag_4d17ff58](https://user-images.githubusercontent.com/65237382/135798221-d9831d2e-7592-498a-a39a-6aeece868ec9.png)
-![Snag_4d1838c7](https://user-images.githubusercontent.com/65237382/135798239-d1ee9251-bc36-4c29-8cf8-a2f261e77dd1.png)
-![Snag_4d180b2f](https://user-images.githubusercontent.com/65237382/135798225-091e8f9c-0b08-42d5-999e-da2309e002d9.png)
-![Snag_4f85bcb0](https://user-images.githubusercontent.com/65237382/135890504-bc8c6724-70dd-4ee5-9154-b342988b9e64.png)

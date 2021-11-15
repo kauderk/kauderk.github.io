@@ -1,16 +1,12 @@
-# This is how it should look like
-![Snag_726f9e19](https://user-images.githubusercontent.com/65237382/136782227-2fa80c84-bf90-47c2-aa85-e07852c589e7.png)
+# Legacy - v0.1.0
 
-
-1. #### Watch [all the features in action and explained](https://www.youtube.com/watch?v=RW_vkyf0Uek&list=PLsUa74AKSzOrSLn0hYz6taAuQ_XfhPQIg&index=1)
-      - Or [skim through them in table form.](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension#features) 
-3. #### [YOU CAN CUSTOMIZE THE STYLES INSIDE YOUR GRAPH](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/css/themes#dark--light-modes)
-      - ![Snag_728825a4](https://user-images.githubusercontent.com/65237382/136785359-91e3fa14-d1fe-40df-98a7-79d4539109f1.png)![Snag_72882d55](https://user-images.githubusercontent.com/65237382/136785363-98206bb8-8ef7-4270-a60d-28ccc09c7875.png)   
-4. #### [HERE ARE SOME DEMOS AND USE CASES](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/DEMOS#my-use-cases)
+1. #### Watch [all the features in action and explained](https://www.youtube.com/watch?v=RW_vkyf0Uek&list=PLsUa74AKSzOrSLn0hYz6taAuQ_XfhPQIg&index=1) or [skim through them in table form.](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension#features) 
+3. #### [You can customize the styles inside your graph](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/css/themes#dark--light-modes)  
+4. #### [Here are some demos and use cases](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/DEMOS#my-use-cases)
 
 ---
 
-## [Features](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/README.md#features)
+## [Features](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/v0.1.0/README.md#features)
 
 
 # Installation
@@ -103,7 +99,7 @@ YT GIF EXTENSION {{[[roam/js]]}}
       if (!existing) 
       {
         var extension = document.createElement("script");
-        extension.src = "https://kauderk.github.io/yt-gif-extension/version-0.1/yt-gif-main.js";
+        extension.src = "https://kauderk.github.io/yt-gif-extension/v0.1.0/js/yt-gif-main.js";
         extension.id = "yt-gif-main";
         extension.async = true;
         extension.type = "text/javascript";
@@ -112,12 +108,12 @@ YT GIF EXTENSION {{[[roam/js]]}}
      ```
      
 # Update
-If you were redirected here, please update your YT GIF EXTENSION with code above. This is a temporary thing.
+The latest version is [v0.2.0](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install)
 
 # Bug Report
-
 Something broke, doesn't work, strange/opposite behaviour or the extension does not run no matter what.
 
 - Submit your issue [![Issue URL](https://img.shields.io/badge/GitHub-issue-yellow)](https://github.com/kauderk/kauderk.github.io/issues)
-- Contact me on [![Twitter URL](https://img.shields.io/twitter/url?label=KauDerK_&style=social&url=https%3A%2F%2Ftwitter.com%2FkauDerk_)](https://twitter.com/kauDerk_)
+- Try to contact me on [![Twitter URL](https://img.shields.io/twitter/url?label=KauDerK_&style=social&url=https%3A%2F%2Ftwitter.com%2FkauDerk_)](https://twitter.com/kauDerk_)
+    - I might not reply or be able to solve your problems... since this is an usuported version.
 ﾠ

@@ -57,7 +57,7 @@ const sesionIDs = {
 /*-----------------------------------*/
 function URLFolder(f)
 {
-    return `https://kauderk.github.io/yt-gif-extension/version-0.1/${f}`
+    return `https://kauderk.github.io/yt-gif-extension/v0.1.0/${f}`
 };
 function URLFolderCSS(f)
 {
