@@ -63,7 +63,7 @@
 
 /*well the big boi ddm, the big one*/
 span.yt-gif-drop-down-menu-toolbar .bp3-popover-target > .dropdown {
-  z-index: 1000;
+  z-index: 1001; /* lol */
 }
 
 /*YT GIF ICON - on the topbar*/
