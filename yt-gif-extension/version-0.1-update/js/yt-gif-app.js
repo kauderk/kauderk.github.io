@@ -100,8 +100,8 @@ const videoParams = {
 
     speed: 1,
 
-    volume: window.YT_GIF_DIRECT_SETTINGS.get('player_volume').sessionValue,
-    updateVolume: 30, // 'this' will be set afterwards
+    volume: UI.default.video_volume, // available in this version
+    updateVolume: UI.default.video_volume, // available in this version
     volumeURLmapHistory: [],
 };
 videoParams.updateVolume = videoParams.volume;
@@ -371,7 +371,7 @@ async function Ready()
 
     // 1. set up looks
     //#region relevant variables
-    const { css_theme, player_span } = Object.fromEntries(window.YT_GIF_DIRECT_SETTINGS);;
+    const { css_theme, player_span } = UI.default; // available in this version
     const { themes, playerStyle, dropDownMenuStyle } = links.css;
     const { playerControls, dropDownMenu } = links.html;
     const { yt_gif } = cssData; // CssThemes_UCS
@@ -1488,42 +1488,30 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     // last - customize the iframe api
     function playerConfig(configParams)
     {
-        // in progress
-        const { player_interface_language, player_captions_language, player_captions_on_load } = Object.fromEntries(window.YT_GIF_DIRECT_SETTINGS); // https://stackoverflow.com/questions/49569682/destructuring-a-map#:~:text=let%20%7B%20b%2C%20d%20%7D%20%3D%20Object.fromEntries(m)
-
-        const playerVars = {
-            autoplay: 1, 		// Auto-play the video on load
-            controls: 1, 		// Show pause/play buttons in player
-            mute: 1,
-            start: configParams?.start,
-            end: configParams?.end,
-
-            hl: configParams?.hl || player_interface_language.sessionValue,           // Display interface language   // https://developers.google.com/youtube/player_parameters#:~:text=Sets%20the%20player%27s%20interface%20language.%20The%20parameter%20value%20is%20an%20ISO%20639-1%20two-letter%20language%20code%20or%20a%20fully%20specified%20locale.%20For%20example%2C%20fr%20and%20fr-ca%20are%20both%20valid%20values.%20Other%20language%20input%20codes%2C%20such%20as%20IETF%20language%20tags%20(BCP%2047)%20might%20also%20be%20handled%20properly.
-            cc_lang_pref: configParams?.cc || player_captions_language.sessionValue, 	// Display closed captions      // https://developers.google.com/youtube/player_parameters#:~:text=This%20parameter%20specifies%20the%20default%20language%20that%20the%20player%20will%20use%20to%20display%20captions.%20Set%20the%20parameter%27s%20value%20to%20an%20ISO%20639-1%20two-letter%20language%20code.
-
-            cc_load_policy: (UTILS.isTrue(player_captions_on_load.sessionValue)) ? 1 : 3,  // Hide closed captions - broken feature by design
-            iv_load_policy: 3,  // Hide the Video Annotations
-
-            vq: 'hd1080',
-
-            autohide: 1, 		// Hide video controls when playing
-            showinfo: 0, 		// Hide the video title
-            modestbranding: 1,  // Hide the Youtube Logo
-
-            fs: 1,              // Hide the full screen button
-            rel: 0,
-
-            version: 3,
-            feature: 'oembed',
-            enablejsapi: 1,
-            origin: 'https://roamresearch.com',
-        };
-
-        return params = {
+        return params = { // available in this version
             height: '100%',
             width: '100%',
-            videoId: configParams?.id,
-            playerVars: playerVars,
+            videoId: map?.id,
+            playerVars: {
+                autoplay: 1, 		// Auto-play the video on load
+                controls: 1, 		// Show pause/play buttons in player
+                mute: 1,
+                start: map?.start,
+                end: map?.end,
+
+                vq: 'hd1080',
+                version: 3,
+                feature: 'oembed',
+                autohide: 1, 		// Hide video controls when playing
+                showinfo: 0, 		// Hide the video title
+                modestbranding: 1,  // Hide the Youtube Logo
+                fs: 1,              // Hide the full screen button
+                rel: 0,
+                cc_load_policy: 3,  // Hide closed captions
+                iv_load_policy: 3,  // Hide the Video Annotations
+                enablejsapi: 1,
+                origin: 'https://roamresearch.com',
+            },
             events: {
                 'onReady': onPlayerReady,
                 'onStateChange': onStateChange
@@ -2360,7 +2348,7 @@ function onStateChange(state)
     }
     function validSoundURL()
     {
-        const src = window.YT_GIF_DIRECT_SETTINGS.get('end_loop_sound_src').sessionValue;
+        const src = UI.default.end_loop_sound_src; // available in this version
         if (UTILS.isValidUrl(src))
         {
             return src
