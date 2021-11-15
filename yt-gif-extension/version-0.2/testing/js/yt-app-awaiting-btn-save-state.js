@@ -110,7 +110,7 @@ const sesionIDs = {
     uid: '---------'
 }
 /*-----------------------------------*/
-const URLFolder = (f) => `https://kauderk.github.io/yt-gif-extension/version-0.2/${f}`;
+const URLFolder = (f) => `https://kauderk.github.io/yt-gif-extension/v0.2.0/${f}`;
 const URLFolderCSS = (f) => URLFolder(`css/${f}`);
 const URLFolderHTML = (f) => URLFolder(`html/${f}`);
 const URLFolderJS = (f) => URLFolder(`js/${f}`);

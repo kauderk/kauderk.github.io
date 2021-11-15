@@ -71,7 +71,7 @@ async function createXload(src)
         return script;
         function URLFolderJS(f)
         {
-            return `https://kauderk.github.io/yt-gif-extension/version-0.2/js/${f}`
+            return `https://kauderk.github.io/yt-gif-extension/v0.2.0/js/${f}`
         };
     }
     async function loadScript(script)
