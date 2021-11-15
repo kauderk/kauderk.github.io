@@ -1,4 +1,5 @@
-// restricting some features -> YT_GIF_SETTINGS_PAGE
+// restricting some features ⛔ -> YT_GIF_SETTINGS_PAGE
+// restoring/modifying some features 🧼
 // version 38 - semi-refactored
 /**
  * @summary USER INPUTS
@@ -7,7 +8,7 @@
  * It's property types will change.
  * - nested object >>> sesionValue
 */
-const UI = window.YTGIF;//JSON.parse(JSON.stringify(window.YT_GIF_SETTINGS_PAGE));
+const UI = JSON.parse(JSON.stringify(window.YTGIF));//JSON.parse(JSON.stringify(window.YT_GIF_SETTINGS_PAGE));
 const UTILS = window.kauderk.util;
 const RAP = window.kauderk.rap; // 🧼
 /*-----------------------------------*/
@@ -561,7 +562,6 @@ async function Ready()
                             parentObj[childKey].innerHTML = sessionValue;
                             break;
                         default:
-                            debugger;
                             const binaryInput = parentObj[childKey];
                             binaryInput.checked = UTILS.isTrue(sessionValue);
                             UTILS.linkClickPreviousElement(binaryInput);
@@ -1497,6 +1497,9 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     // last - customize the iframe api
     function playerConfig(configParams)
     {
+        // ⛔ in progress
+        // const { player_interface_language, player_captions_language, player_captions_on_load } = Object.fromEntries(window.YT_GIF_DIRECT_SETTINGS); // https://stackoverflow.com/questions/49569682/destructuring-a-map#:~:text=let%20%7B%20b%2C%20d%20%7D%20%3D%20Object.fromEntries(m)
+
         return params = { // 🧼
             height: '100%',
             width: '100%',
@@ -1585,11 +1588,23 @@ async function onPlayerReady(event)
 
 
     // 1. previous parameters if available
-    const { previousTimestamp, previousVolume } = UI; // still inner objects
+    // ⛔ const { previousTimestamp, previousVolume } = UI; // still inner objects
     if (lastBlockIDParameters.has(blockID))
     {
         // 🚧? because, this object/functionalities are only relevant when it's iframe destroyed ≡ or when the script goes full cricle... Hmmmm?
         const sesion = lastBlockIDParameters.get(blockID);
+        // 🧼
+        const previousTimestamp = {
+            strict_start_timestamp: UI.previous.strict_start_timestamp,
+            start_timestamp: UI.previous.start_timestamp,
+            fixed_start_timestam: UI.previous.fixed_start_timestamp
+        }
+        // 🧼
+        const previousVolume = {
+            strict_start_volume: UI.previous.strict_start_volume,
+            start_volume: UI.previous.start_volume,
+            fixed_start_volum: UI.previous.fixed_start_volume
+        }
         RunWithPrevious_TimestampStyle(sesion, previousTimestamp);
         RunWithPrevious_VolumeStyle(sesion, previousVolume);
     }
@@ -2369,7 +2384,7 @@ function onStateChange(state)
 
 
 
-//#region Performance Mode Utils
+//#region ⛔ ⛔ ⛔ Performance Mode Utils
 function PushNew_ShiftAllOlder_IframeBuffer(parentCssPath)
 {
     if (parentCssPath)
@@ -2506,7 +2521,6 @@ function CleanAndBrandNewWrapper(wrapper_p, attr_name = attrInfo.creation.name, 
     return div;
 }
 
-
 //#region visual feedback - checked - disabled - dispatch
 function smart_AwaitingBtn_Dispatch_ActiveCheck()
 {
@@ -2550,7 +2564,7 @@ function isValid_Awaiting_check()
 {
     const { awaiting_for_mouseenter_to_initialize } = UI.experience;
     // kinda spaghetti, but they are pretty much entangled and only one of those can be true at a time
-    return awaiting_for_mouseenter_to_initialize.checked; // && !isValid_TryIntersection_check(); // ⛔
+    return awaiting_for_mouseenter_to_initialize.checked; // ⛔ && !isValid_TryIntersection_check(); 
 }
 /* *********************** */
 function TryingBtn_VisualFeedback(bol, disabled = undefined)
@@ -2595,15 +2609,14 @@ function btn_VS(bol, exp_btn, disabled)
 }
 //#endregion
 
+//#endregion
+
 
 function closestYTGIFparentID(el)
 {
     // so lastBlockIDParameters... and previous values are stored
     return UTILS.closestBlockID(el) || el.closest('.dwn-yt-gif-player-container')?.id;
 }
-//#endregion
-
-
 
 
 /*
