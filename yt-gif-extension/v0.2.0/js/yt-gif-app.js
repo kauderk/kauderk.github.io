@@ -1056,7 +1056,7 @@ async function Ready()
         observer.observe(mainDDM, config);
 
 
-        const tutContArr = [document.querySelector("#yt-gif-tutorial-container--update")]; // trying to make it modular
+        const tutContArr = [document.querySelector("#yt-gif-tutorial-container--update")].filter(el => el != null) // trying to make it modular
         for (const tutCont of tutContArr)
         {
             DDM_onlyOneTut(tutCont);
