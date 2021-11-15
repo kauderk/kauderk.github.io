@@ -1,5 +1,9 @@
 ## [Features](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/README.md#features)
+ﾠ
+ﾠ
 
+ﾠ
+ﾠ
 
 # Installation
 
