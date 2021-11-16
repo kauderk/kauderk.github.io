@@ -1049,10 +1049,13 @@ async function Ready()
         const openMenu = () => mainDDMdisplay('flex');
         const iconIsPulsing = (bol) => UTILS.toggleClasses(bol, [cssData.dwn_pulse_anim], icon);
 
-
-        // one pulse -  to show that there are updates
-        iconIsPulsing(true);
-        setTimeout(() => iconIsPulsing(false), 3000);
+        debugger;
+        // one pulse per day -  to show that there are updates
+        if (UTILS.hasOneDayPassed_localStorage('yt_gif_icon_update_available'))
+        {
+            iconIsPulsing(true);
+            setTimeout(() => iconIsPulsing(false), 3000);
+        }
 
 
         // if the user entered/initizlied/played the tutorial,

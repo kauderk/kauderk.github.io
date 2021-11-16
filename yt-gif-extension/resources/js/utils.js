@@ -2,6 +2,20 @@ var kauderk = window.kauderk || {};
 
 kauderk.util = ((util) =>
 {
+    util.hasOneDayPassed_localStorage = (itemKey) =>
+    {// https://stackoverflow.com/questions/11741979/run-code-once-a-day#:~:text=Using%20localStorage%20is%20the%20best%20way%20to%20go%20when%20you%20don%27t%20have%20a%20server%2C%20since%20the%20javascript%20code%20might%20restarted%20(by%20closing%20the%20tab%20and%20re%2Dopening)%2C%20therefore%20loosing%20the%20previous%20state.
+        // get today's date. eg: "7/37/2007"
+        let date = new Date().toLocaleDateString();
+
+        // if there's a date in localstorage and it's equal to the above: 
+        // inferring a day has yet to pass since both dates are equal.
+        if (localStorage[itemKey] == date)
+            return false;
+
+        // this portion of logic occurs when a day has passed
+        localStorage[itemKey] = date;
+        return true;
+    }
     util.div = (classList = []) => util.elm(classList, 'div');
     util.span = (classList = []) => util.elm(classList, 'span');
     util.elm = (classList = [], nodeType) =>
