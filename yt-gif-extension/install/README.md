@@ -41,7 +41,7 @@ YT GIF EXTENSION v0.2.0 {{[[roam/js]]}}
      ```
 
 # This is how it should look like
-![Snag_e3da140](https://user-images.githubusercontent.com/65237382/141891697-fac9d3fa-6641-4fad-9835-43c5c8872629.png)
+![Snag_e41c464](https://user-images.githubusercontent.com/65237382/141892053-ef42814f-8fbb-4717-92f9-0348b8b0750b.png)
 
 ## Extra
 1. #### Watch [all the features in action and explained](https://www.youtube.com/watch?v=RW_vkyf0Uek&list=PLsUa74AKSzOrSLn0hYz6taAuQ_XfhPQIg&index=1)
