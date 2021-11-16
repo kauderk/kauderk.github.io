@@ -256,7 +256,7 @@ const rm_components = {
         BinaryDomUI: () => UI.deploymentStyle.deployment_style_yt_gif,
     },
     yt_gif_tut: {
-        classToObserve: `ddm-yt-gif-tutorial`, /* TESTING */
+        classToObserve: 'yt-gif-ddm-tutorial', /* TESTING */
     },
     state: {
         currentKey: '',
@@ -1087,7 +1087,7 @@ async function Ready()
             const updateTutParents = [updateCont_content, mainDDM];
 
 
-            const { classToObserve } = rm_components.yt_gif;
+            const { classToObserve } = rm_components.yt_gif_tut;
             const { forceAwaiting } = attrInfo.creation;
             let tutWrapperAwaiting = null;
 
