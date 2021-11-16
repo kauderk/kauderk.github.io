@@ -1037,7 +1037,6 @@ async function Ready()
         const iconIsPulsing = (bol) => UTILS.toggleClasses(bol, [cssData.dwn_pulse_anim], icon);
 
 
-
         // if the user entered/initizlied/played the tutorial,
         // the ddm won't be closed until it losses focus,
         // conventionally clicking anything but the ddm/ddm-children
@@ -1061,9 +1060,9 @@ async function Ready()
             atLeastOne = true;
         }
 
-        if (atLeastOne)
+        if (atLeastOne && UTILS.hasOneDayPassed_localStorage('yt_gif_icon_update_available'))
         {
-            // one pulse -  to show that there are updates
+            // one pulse per day -  to show that there are updates
             iconIsPulsing(true);
             setTimeout(() => iconIsPulsing(false), 3000);
         }

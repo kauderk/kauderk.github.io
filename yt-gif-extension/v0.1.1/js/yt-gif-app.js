@@ -1049,14 +1049,6 @@ async function Ready()
         const openMenu = () => mainDDMdisplay('flex');
         const iconIsPulsing = (bol) => UTILS.toggleClasses(bol, [cssData.dwn_pulse_anim], icon);
 
-        debugger;
-        // one pulse per day -  to show that there are updates
-        if (UTILS.hasOneDayPassed_localStorage('yt_gif_icon_update_available'))
-        {
-            iconIsPulsing(true);
-            setTimeout(() => iconIsPulsing(false), 3000);
-        }
-
 
         // if the user entered/initizlied/played the tutorial,
         // the ddm won't be closed until it losses focus,
@@ -1073,10 +1065,19 @@ async function Ready()
         observer.observe(mainDDM, config);
 
 
-        const tutContArr = [document.querySelector("#yt-gif-tutorial-container--update")]; // trying to make it modular
+        const tutContArr = [document.querySelector("#yt-gif-tutorial-container--update")].filter(el => el != null) // trying to make it modular
+        let atLeastOne = false;
         for (const tutCont of tutContArr)
         {
             DDM_onlyOneTut(tutCont);
+            atLeastOne = true;
+        }
+
+        if (atLeastOne && UTILS.hasOneDayPassed_localStorage('yt_gif_icon_update_available'))
+        {
+            // one pulse per day -  to show that there are updates
+            iconIsPulsing(true);
+            setTimeout(() => iconIsPulsing(false), 3000);
         }
 
 
