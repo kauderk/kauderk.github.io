@@ -254,7 +254,7 @@ const rm_components = {
         BinaryDomUI: () => UI.deploymentStyle.deployment_style_yt_gif,
     },
     yt_gif_tut: {
-        classToObserve: `ddm-yt-gif-tutorial`, /* TESTING */
+        classToObserve: 'yt-gif-ddm-tutorial', /* TESTING */
     },
     state: {
         currentKey: '',
@@ -1074,7 +1074,7 @@ async function Ready()
             const updateTutParents = [updateCont_content, mainDDM];
 
 
-            const { classToObserve } = rm_components.yt_gif;
+            const { classToObserve } = rm_components.yt_gif_tut;
             const { forceAwaiting } = attrInfo.creation;
             let tutWrapperAwaiting = null;
 
@@ -2508,7 +2508,6 @@ function CleanAndBrandNewWrapper(wrapper_p, attr_name = attrInfo.creation.name, 
     return div;
 }
 
-
 //#region visual feedback - checked - disabled - dispatch
 function smart_AwaitingBtn_Dispatch_ActiveCheck()
 {
@@ -2597,15 +2596,14 @@ function btn_VS(bol, exp_btn, disabled)
 }
 //#endregion
 
+//#endregion
+
 
 function closestYTGIFparentID(el)
 {
     // so lastBlockIDParameters... and previous values are stored
     return UTILS.closestBlockID(el) || el.closest('.dwn-yt-gif-player-container')?.id;
 }
-//#endregion
-
-
 
 
 /*
