@@ -1504,30 +1504,37 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         // ⛔ in progress
         // const { player_interface_language, player_captions_language, player_captions_on_load } = Object.fromEntries(window.YT_GIF_DIRECT_SETTINGS); // https://stackoverflow.com/questions/49569682/destructuring-a-map#:~:text=let%20%7B%20b%2C%20d%20%7D%20%3D%20Object.fromEntries(m)
 
-        return params = { // 🧼
+        const playerVars = {
+            autoplay: 1, 		// Auto-play the video on load
+            controls: 1, 		// Show pause/play buttons in player
+            mute: 1,
+            start: configParams?.start,
+            end: configParams?.end,
+
+
+            cc_load_policy: 3,  // Hide closed captions - broken feature by design
+            iv_load_policy: 3,  // Hide the Video Annotations
+
+            vq: 'hd1080',
+
+            autohide: 1, 		// Hide video controls when playing
+            showinfo: 0, 		// Hide the video title
+            modestbranding: 1,  // Hide the Youtube Logo
+
+            fs: 1,              // Hide the full screen button
+            rel: 0,
+
+            version: 3,
+            feature: 'oembed',
+            enablejsapi: 1,
+            origin: 'https://roamresearch.com',
+        };
+
+        return params = {
             height: '100%',
             width: '100%',
             videoId: configParams?.id,
-            playerVars: {
-                autoplay: 1, 		// Auto-play the video on load
-                controls: 1, 		// Show pause/play buttons in player
-                mute: 1,
-                start: configParams?.start,
-                end: configParams?.end,
-
-                vq: 'hd1080',
-                version: 3,
-                feature: 'oembed',
-                autohide: 1, 		// Hide video controls when playing
-                showinfo: 0, 		// Hide the video title
-                modestbranding: 1,  // Hide the Youtube Logo
-                fs: 1,              // Hide the full screen button
-                rel: 0,
-                cc_load_policy: 3,  // Hide closed captions
-                iv_load_policy: 3,  // Hide the Video Annotations
-                enablejsapi: 1,
-                origin: 'https://roamresearch.com',
-            },
+            playerVars: playerVars,
             events: {
                 'onReady': onPlayerReady,
                 'onStateChange': onStateChange
