@@ -110,31 +110,32 @@ const sesionIDs = {
     uid: '---------'
 }
 /*-----------------------------------*/
-const URLFolder = (f) => `https://kauderk.github.io/yt-gif-extension/v0.2.0/${f}`;
-const URLFolderCSS = (f) => URLFolder(`css/${f}`);
-const URLFolderHTML = (f) => URLFolder(`html/${f}`);
-const URLFolderJS = (f) => URLFolder(`js/${f}`);
+const urlFolder = (f) => `https://kauderk.github.io/yt-gif-extension/resources/${f}`;
+const self_urlFolder = (f) => `https://kauderk.github.io/yt-gif-extension/v0.2.0/${f}`;
+const urlFolder_css = (f) => urlFolder(`css/${f}`);
+const urlFolder_html = (f) => urlFolder(`html/${f}`);
+const urlFolder_js = (f) => urlFolder(`js/${f}`);
 const links = {
     css: {
-        dropDownMenuStyle: URLFolderCSS('drop-down-menu.css'),
-        playerStyle: URLFolderCSS('player.css'),
+        dropDownMenuStyle: urlFolder_css('drop-down-menu.css'),
+        playerStyle: urlFolder_css('player.css'),
         themes: {
-            dark_dropDownMenu: URLFolderCSS('themes/dark-drop-down-menu.css'),
-            light_dropDownMenu: URLFolderCSS('themes/light-drop-down-menu.css'),
+            dark_dropDownMenu: urlFolder_css('themes/dark-drop-down-menu.css'),
+            light_dropDownMenu: urlFolder_css('themes/light-drop-down-menu.css'),
         }
     },
     html: {
-        dropDownMenu: URLFolderHTML('drop-down-menu.html'),
-        playerControls: URLFolderHTML('player-controls.html'),
+        dropDownMenu: self_urlFolder('html/drop-down-menu.html'),
+        playerControls: urlFolder_html('player-controls.html'),
         fetched: {
             playerControls: '',
         },
     },
     js: {
-        main: URLFolderJS('yt-gif-main.js'),
-        utils: URLFolderJS('utils.js'),
-        roamAlphaApi: URLFolderJS('utils-roam-alpha-api.js'),
-        settingsPage: URLFolderJS('settings-page.js'),
+        utils: urlFolder_js('utils.js'),
+        roamAlphaApi: urlFolder_js('utils-roam-alpha-api.js'),
+        settingsPage: self_urlFolder('js/settings-page.js'),
+        main: self_urlFolder('js/yt-gif-main.js'),
     },
     help: {
         github_isuues: `https://github.com/kauderk/kauderk.github.io/issues`,

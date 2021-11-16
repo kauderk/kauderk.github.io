@@ -3,7 +3,7 @@
 {
     await LoadExternalResources();
     await window.YT_GIF_SETTINGS_PAGE_INIT();
-    await createXload('yt-gif-app.js');
+    await createXload('https://kauderk.github.io/yt-gif-extension/v0.2.0/js/yt-gif-app.js');
 })();
 
 async function LoadExternalResources()
@@ -21,11 +21,10 @@ async function LoadExternalResources()
     {
         await loadYT_IFRAME_API();
 
-        await createXload('utils.js');
+        await createXload('https://kauderk.github.io/yt-gif-extension/resources/js/utils.js');
+        await createXload('https://kauderk.github.io/yt-gif-extension/resources/js/utils-roam-alpha-api.js');
 
-        await createXload('utils-roam-alpha-api.js');
-
-        await createXload('settings-page.js');
+        await createXload('https://kauderk.github.io/yt-gif-extension/v0.2.0/js/settings-page.js');
 
         return null;
     }
@@ -63,16 +62,12 @@ async function createXload(src)
     function createScript({ src, id })
     {
         const script = document.createElement("script");
-        script.src = URLFolderJS(src) + "?" + new Date().getTime();
+        script.src = src + "?" + new Date().getTime();
         script.id = id;
         script.async = false;
         script.type = "text/javascript";
         document.getElementsByTagName('head')[0].appendChild(script);
         return script;
-        function URLFolderJS(f)
-        {
-            return `https://kauderk.github.io/yt-gif-extension/v0.2.0/js/${f}`
-        };
     }
     async function loadScript(script)
     {
