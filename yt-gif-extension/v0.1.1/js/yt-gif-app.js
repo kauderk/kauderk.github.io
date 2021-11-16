@@ -114,7 +114,7 @@ const sesionIDs = {
 }
 /*-----------------------------------*/
 const urlFolder = (f) => `https://kauderk.github.io/yt-gif-extension/resources/${f}`;
-const self_urlFolder = (f) => `https://kauderk.github.io/yt-gif-extension/v0.1.0/${f}`;
+const self_urlFolder = (f) => `https://kauderk.github.io/yt-gif-extension/v0.1.1/${f}`;
 const urlFolder_css = (f) => urlFolder(`css/${f}`);
 const urlFolder_html = (f) => urlFolder(`html/${f}`);
 const urlFolder_js = (f) => urlFolder(`js/${f}`);
