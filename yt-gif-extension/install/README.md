@@ -50,7 +50,7 @@ YT GIF EXTENSION v0.2.0 {{[[roam/js]]}}
 ## Extra
 1. #### Watch [all the features in action and explained](https://www.youtube.com/watch?v=RW_vkyf0Uek&list=PLsUa74AKSzOrSLn0hYz6taAuQ_XfhPQIg&index=1)
       - Or [skim through them in table form.](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension#features) 
-3. #### [YOU CAN CUSTOMIZE THE STYLES INSIDE YOUR GRAPH](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/css/themes#dark--light-modes)
+3. #### [YOU CAN CUSTOMIZE THE STYLES INSIDE YOUR GRAPH](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/resources/css/themes)
       - ![Snag_ccb5385](https://user-images.githubusercontent.com/65237382/141852554-6689103e-1489-4cc2-a03b-b460b5f4427d.png)
 ![Snag_ccb5d2a](https://user-images.githubusercontent.com/65237382/141852562-2efd0f96-921a-44e3-99a9-c9a201789753.png) 
 4. #### [HERE ARE SOME DEMOS AND USE CASES](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/DEMOS#my-use-cases)
