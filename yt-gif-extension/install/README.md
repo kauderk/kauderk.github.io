@@ -1,3 +1,5 @@
+# YT GIF Extension v0.2.0
+
 ## [Features](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/README.md#features)
 
 # Installation
@@ -5,6 +7,8 @@
   - The brand new installation might take some time.
   - Uninstall/disable previous versions, else untested code will be overwritten.
   - ![YT GIF Extension v0 2 0 cleaner c2](https://user-images.githubusercontent.com/65237382/141890136-27b41d51-ff22-430d-aa21-94b3162fe406.gif)
+  - If you are reading this, it is because I haven't announced v0.2.0 yet. But go ahead, install it, and tell how you plan on using it.
+    - [v0.1.0](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/v0.1.0) - [announced](https://twitter.com/kauDerk_/status/1448886800798343206?s=20) on [Twitter](https://twitter.com/fbgallet/status/1449490195968110592?s=20) and many other social media platforms, is a somewhat stable version, but v0.2.0 comes with more quality of life features and has potential for scalability and maintainability.
 
 ---
 
