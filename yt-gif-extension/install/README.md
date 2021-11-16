@@ -1,11 +1,12 @@
 ## [Features](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/README.md#features)
-ﾠ
-ﾠ
-
-ﾠ
-ﾠ
 
 # Installation
+#### Keep in mind
+  - The brand new installation might take some time.
+  - Uninstall/disable previous versions, else untested code will be overwritten.
+  - ![YT GIF Extension v0 2 0 cleaner c2](https://user-images.githubusercontent.com/65237382/141890136-27b41d51-ff22-430d-aa21-94b3162fe406.gif)
+
+---
 
 ```javascript
 YT GIF EXTENSION v0.2.0 {{[[roam/js]]}}
@@ -39,22 +40,8 @@ YT GIF EXTENSION v0.2.0 {{[[roam/js]]}}
       }
      ```
 
-ﾠ
-ﾠ
-
-ﾠ
-ﾠ
-
-
- ﾠ
- ﾠ
- ﾠ
- ﾠ
- ﾠ
- ﾠ
- ﾠ
 # This is how it should look like
-![Snag_ccd1029](https://user-images.githubusercontent.com/65237382/141852816-ecd6584d-9dc4-42a8-acb6-8d2bf1931ecc.png)
+![Snag_e3da140](https://user-images.githubusercontent.com/65237382/141891697-fac9d3fa-6641-4fad-9835-43c5c8872629.png)
 
 ## Extra
 1. #### Watch [all the features in action and explained](https://www.youtube.com/watch?v=RW_vkyf0Uek&list=PLsUa74AKSzOrSLn0hYz6taAuQ_XfhPQIg&index=1)
