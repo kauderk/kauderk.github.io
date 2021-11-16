@@ -2618,6 +2618,16 @@ I want to add ☐ ☑
         and inplement the changes, when the user the user enter the real edit block mode
             🙋
 
+    replace with awaiting for input/thumbnails
+        when the frame gets lost while scrolling
+        offer a margin of error / slider / how far away
+            though the same functionallity can be achieved
+            using the buffer, if you set it to 1 max
+
+    the ability to let only one frame to keep playing with sound
+        while exiting the frame
+        the usage of two InAndOutKeys will do the trick
+
 
 added
     visible_clips_start_to_play_unmuted synergy with fullscreenStyle ☑ ☑
@@ -2710,6 +2720,9 @@ Bugs
             It's extremely rare, but it happens
             Which means it's so hard to catch why and where it happens
             Is very annoying
+
+    the weird recursive func doesn't work on block refereces - uids ((0UN_kefSF))
+        plus the persistent timestamp doen't work as expected
 
 
 Fixed
