@@ -2,6 +2,11 @@ var kauderk = window.kauderk || {};
 
 kauderk.util = ((util) =>
 {
+    util.includesAtlest = (arr, string, defaultString) =>
+    {
+        const match = arr.filter(s => string.includes(s));
+        return (match.length > 0) ? match[0] : defaultString; // filter first match or default
+    }
     util.hasOneDayPassed_localStorage = (itemKey) =>
     {// https://stackoverflow.com/questions/11741979/run-code-once-a-day#:~:text=Using%20localStorage%20is%20the%20best%20way%20to%20go%20when%20you%20don%27t%20have%20a%20server%2C%20since%20the%20javascript%20code%20might%20restarted%20(by%20closing%20the%20tab%20and%20re%2Dopening)%2C%20therefore%20loosing%20the%20previous%20state.
         // get today's date. eg: "7/37/2007"
