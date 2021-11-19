@@ -1,98 +1,46 @@
+await InputBlockVideoParams('A2ZKodXwg');
+await InputBlockVideoParams('jmFbeY934');
+await InputBlockVideoParams('Xq0KBPFrW');
+
 async function InputBlockVideoParams(tempUID)
 {
-    let accValFor = new Map();
-    let accValFunc = new Map();
-    let funcCnt = 0;
-    let innerFor = 0;
     let indentFunc = 0;
-    //debugger;
-    const { objRes, parentObj, accStr } = await TryToFindURL_Rec(tempUID)
+    const endObj = await TryToFindURL_Rec(tempUID)
+    console.log('\n'.repeat(6)); // debugging
 
-    console.log(accValFor.entries(), accValFunc.entries());
-
-    printUrlsMap(accValFor);
-    printUrlsMap(accValFunc);
-
-    // print urls accValFor
-    function printUrlsMap(obj)
-    {
-        for (let [key, value] of obj.entries())
-        {
-            printUrls(value);
-        }
-    }
-
-    console.log(accStr);
-
-    function printUrls(obj)
-    {
-        for (const url of obj.urls)
-        {
-            console.log(`${'\t'.repeat(obj.indent)}${obj.uid} : ${url} : ${obj.urls.indexOf(url)}`);
-        }
-    }
-
-    async function TryToFindURL_Rec(uid, parentObj, accStr = '')
+    async function TryToFindURL_Rec(uid, parentObj)
     {
         const objRes = await TryToFindURL(uid);
+
+        let tone = 'black'
+        if (parentObj?.innerAliasesUids?.includes(uid) && (!!objRes.urls?.[0])) // yt gif alias
+            tone = 'purple'
+        else if (objRes?.innerAliasesUids.length > 0) // has aliases
+            tone = 'blue'
+        else if (objRes.components.length > 0) // yt gif component
+            tone = 'green'
+
+        console.log("%c" + cleanIndentedBlock(), `color:${tone}`);
+
 
         if (objRes.innerUIDs?.length > 0)
         {
             indentFunc += 1;
-            for (const i of objRes.innerUIDs.reverse())
+            for (const i of objRes.innerUIDs)
             {
-                const { objRes: innerObjRes, parentObj, accStr: innerAccStr } = await TryToFindURL_Rec(i, objRes, accStr);
-
-                const isAlias = parentObj.innerAliasesUids?.includes(i);
-                const ytGifAlias = isAlias && (!!innerObjRes.urls?.[0]);
-                const debuggingLog = `
-                    parent: <${uid}>
-                    self: ${i}
-                    inners: ${innerObjRes.innerUIDs?.join(' ') || 'Fuids'}
-                    alias?: ${isAlias}
-                    yt-gif-alias?: ${isAlias && (!!innerObjRes.urls?.[0])}
-                    ${Number(++innerFor)} ->                    `;
-
-                accStr = printPasses(innerAccStr, indentFunc, debuggingLog + innerObjRes.rawText);
-
-                innerObjRes.indent = indentFunc;
-                accValFor.set(`${debuggingLog} ${innerObjRes.rawText}`, innerObjRes);
-
-                const obj = innerObjRes;
-                console.log(`${'\t'.repeat(obj.indent)}${obj.uid}`);
-                printUrls(obj);
+                const { objRes: objResIn, parentObj } = await TryToFindURL_Rec(i, objRes);
             }
             indentFunc -= 1;
         }
-        else
+
+        return { uid, objRes, parentObj };
+
+        function cleanIndentedBlock()
         {
-            if (!parentObj)
-            {
-                const debuggingLog = `
-                    self: <${uid}>
-                    inners: ${objRes.innerUIDs?.join(' ') || 'Fuids'}
-                    ${Number(++funcCnt)} ->                     `;
-                accStr = printPasses(accStr, indentFunc, debuggingLog + objRes.rawText);
-
-                objRes.indent = indentFunc;
-                accValFunc.set(`${debuggingLog} ${objRes.rawText}`, objRes);
-
-                const obj = objRes;
-                console.log(`${'\t'.repeat(obj.indent)}${obj.uid}`);
-                printUrls(obj);
-            }
-        }
-
-        return { uid, objRes, parentObj, accStr };
-
-        function printPasses(accStr, indent, rawText)
-        {
-            accStr = accStr || 'EMPTY!';
-
-            const tab = '\t'.repeat(indent);
-
-            accStr = accStr + '\n'.repeat(6) + tab + rawText;
-            return accStr;
+            const tab = '\t'.repeat(indentFunc);
+            const cleanLineBrakes = objRes.rawText.replace(/(\n)/gm, ". ");
+            const indentedBlock = tab + cleanLineBrakes.replace(/.{70}/g, '$&\n' + tab);
+            return indentedBlock;
         }
     }
 
@@ -100,9 +48,7 @@ async function InputBlockVideoParams(tempUID)
     async function TryToFindURL(desiredUID)
     {
         const info = await kauderk.rap.getBlockInfoByUID(desiredUID);
-        if (!info[0]) debugger;
         const rawText = info[0][0]?.string || "F";
-        if (rawText == "F") debugger;
 
         // {{[[component]]: xxxyoutube-urlxxx }}
         const components = [...rawText.matchAll(/{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)/gm)].map(x => x = x[0]) || [];
