@@ -193,7 +193,10 @@ const attrData = {
     iframe_buffer: 'iframe_buffer', // ok "_" and "-" is causing confusion... fix this later
 }
 const attrInfo = {
-    videoUrl: 'data-video-url',
+    url: {
+        path: 'data-video-url',
+        index: 'data-video-index',
+    },
     target: 'data-target',
     uid: 'data-uid',
     creation: {
@@ -1277,61 +1280,58 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     }
     if (!wrapper) return;
 
+
+
     // 1. last 9 letter form the closest blockID
-    const uid = wrapper.closest(`[${attrInfo.uid}]`)?.getAttribute(attrInfo.uid) ||
-        UTILS.closestBlockID(wrapper)?.slice(-9) ||
+    const uid = UTILS.closestBlockID(wrapper)?.slice(-9) ||
+        wrapper.closest(`[${attrInfo.uid}]`)?.getAttribute(attrInfo.uid) || //🤔
         UTILS.closestBlockID(document.querySelector('.bp3-popover-open'))?.slice(-9);
 
     if (!uid) return; // don't add up false positives
     const newId = iframeIDprfx + Number(++window.YT_GIF_OBSERVERS.creationCounter);
 
-    // read first instance rm-block__input's components, because on every observer call, on each function pass they get replaced by iframe wrappers
-    // because there could be more than one yt-gif component in one block
-    if (!mainUidBlocks.has(uid)) // 🤔
-    {
-        mainUidBlocks.set(uid, [...document.querySelector('#' + closestYTGIFparentID(wrapper)).querySelectorAll('.rm-xparser-default-yt-gif')]);
-    }
-    const urlIndex = mainUidBlocks.get(uid).indexOf(wrapper);
+
+
+    // 2. extract data and store them in maps
+    const urlIndex = getValidUrlIndex_mainUidBlocksMap();
+    const url = wrapper.getAttribute(attrInfo.url.path) || //🤔
+        await InputBlockVideoParams(uid, urlIndex);
+
+    // 2.1 OnPlayerReady video params point of reference
+    allVideoParameters.set(newId, urlConfig(url));
+    const configParams = allVideoParameters.get(newId);
+
+    // 2.2 target's point of reference
+    const record = JSON.parse(JSON.stringify(sesionIDs));
+    sesionIDs.uid = uid;
+    const blockID = getProperYTGIFParentID(wrapper, wrapper) //🤔
+    if (blockID != null)
+        recordedIDs.set(blockID, record);
 
 
 
-    // 2. the div that the YTiframe will replace
+    // 4. the div that the YTiframe will replace
     if (wrapper.tagName != 'DIV')
-    {
         wrapper = UTILS.ChangeElementType(wrapper, 'div');
-    }
     wrapper.parentElement.classList.add(`${cssData.yt_gif_wrapper}-parent`);
     wrapper.className = `${cssData.yt_gif_wrapper} dont-focus-block`;
     wrapper.setAttribute(attrInfo.target, targetClass);
     wrapper.setAttribute(attrInfo.creation.name, dataCreation);
-    //wrapper.setAttribute(attrInfo.uid, uid); // 🤔
+    wrapper.setAttribute(attrInfo.url.path, url);
+    wrapper.setAttribute(attrInfo.url.index, urlIndex || 0);
     wrapper.innerHTML = '';
     wrapper.insertAdjacentHTML('afterbegin', links.html.fetched.playerControls);
     wrapper.querySelector('.yt-gif-player').id = newId;
 
 
 
-    // 2.                                                   weird recursive function... guys...
-    const url = wrapper.getAttribute(attrInfo.videoUrl) || await InputBlockVideoParams(uid, urlIndex); //🤔
-    // 2.1
-    allVideoParameters.set(newId, urlConfig(url));
-    const configParams = allVideoParameters.get(newId);
-
-
-
-    // 4. to record a target's point of reference
-    const record = JSON.parse(JSON.stringify(sesionIDs)); //Object.create(sesionIDs);
-    sesionIDs.uid = uid;
-    const blockID = closestYTGIFparentID(wrapper) //🤔
-    if (blockID != null)
-        recordedIDs.set(blockID, record);
-
-
+    // 3. delete block's mainUidBlocksMap entry when removed form DOM
     const options = {
         el: wrapper,
-        OnRemmovedFromDom_cb: (observer) => { mainUidBlocks.delete(uid); },
+        OnRemmovedFromDom_cb: (o) => mainUidBlocks.delete(uid),
     }
     RemoevedElement(options); // not elegant but works
+
 
 
     // 5. 
@@ -1345,117 +1345,156 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     }
 
 
-    function MutationRemoval_cb(mutationsList, observer)
+
+    // 2. extract data
+    function getValidUrlIndex_mainUidBlocksMap()
     {
-        mutationsList.forEach(function (mutation)
+        // read first instance of rm-block__input's components, because on every observer call AND on each function pass - they get replaced by iframe wrappers
+        // because there could be more than one yt-gif component in one block
+        if (!mainUidBlocks.has(uid)) // 🤔
         {
-            const nodes = Array.from(mutation.removedNodes);
-            const directMatch = nodes.indexOf(wrapper) > -1
-            const parentMatch = nodes.some(parentEl => parentEl.contains(wrapper));
-
-            if (directMatch)
-            {
-                observer.disconnect();
-                console.log(`node ${wrapper} was directly removed!`);
-            }
-            else if (parentMatch)
-            {
-                OnRemmovedFromDom_cb(observer);
-                observer.disconnect();
-            }
-        });
-    };
-
-    function OnRemmovedFromDom_cb(observer)
-    {
-        //mainUidBlocks.get(uid).splice(urlIndex, 1);
-        mainUidBlocks.delete(uid);
+            mainUidBlocks.set(uid, [...document.querySelector('#' + closestYTGIFparentID(wrapper)).querySelectorAll('.rm-xparser-default-yt-gif')]);
+        }
+        const urlIndex = mainUidBlocks.get(uid).indexOf(wrapper);
+        return urlIndex;
     }
 
     // 3. get relevant url
-    async function InputBlockVideoParamsFFF(tempUID)
-    {
-        const [finalURL, innerUIDs] = await TryToFindURL(tempUID);
-        //
-        const aliasText = document.querySelector('.bp3-popover-open .rm-alias--block')?.textContent;
-        // lucky guy, this block contains a valid url
-        if (finalURL && aliasText == null) return finalURL;
-
-        // try on the same block
-        for (const i of innerUIDs)
-        {
-            const [pURL, uids] = await TryToFindURL(i);
-            if (pURL) return pURL;
-        }
-
-        // ok so... the recursive youtube class didn't quite register... don't look at me.
-
-        for (const i of innerUIDs)
-        {
-            const [pURL, nestedUIDs, pAliases] = await TryToFindURL(i);
-
-            for (const j of nestedUIDs)
-            {
-                const [pNestedURL] = await TryToFindURL(j);
-                if (pNestedURL && pAliases && pAliases[j] === aliasText)
-                    return pNestedURL;
-            }
-        }
-
-        async function TryToFindURL(desiredUID)
-        {
-            // const info42 = await window.roam42.common.getBlockInfoByUID(desiredUID);
-            const info = await RAP.getBlockInfoByUID(desiredUID); //await window.roamAlphaAPI.q(`[:find (pull ?b [:block/string]):where [?b :block/uid "${desiredUID}"]]`);
-            const rawText = info[0][0].string;
-            const urls = rawText.match(/(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(\S+)?[^ }]/);
-            const innerUIDs = rawText.match(/(?<=\(\()([^(].*?[^)])(?=\)\))/gm);
-            const aliases = rawText.match(/(?<=\[)(.*?)(?=\]\(\(\()/gm);
-            //if url exist as Array return first index    //         //
-            return [Array.isArray(urls) ? urls[0] : null, innerUIDs, aliases];
-        }
-    }
-
-
     async function InputBlockVideoParams(tempUID, indexOfComponent)
     {
         let indentFunc = 0;
-        const recObjRes = await TryToFindURL_Rec(tempUID);
-        //debugger;
-        return recObjRes.objRes.urls[indexOfComponent];
+        let componentsInOrderMap = new Map();
 
-        async function TryToFindURL_Rec(uid, parentObj, accStr = '')
+        const orderObj = {
+            order: -1,
+            incrementIf: function (condition) { return condition ? Number(++this.order) : 'ﾠ' }
+        };
+        const results = {
+            'component alias': {
+                tone: 'purple',
+            },
+            'has any aliases': {
+                tone: 'blue'
+            },
+            'component': {
+                tone: 'green',
+            },
+            'any': {
+                condition: () => true,
+                tone: 'black',
+            },
+            'any component': {
+            },
+        }
+
+        // filter result keys that include 'component' word and assign it a orderObj
+        Object.keys(results).filter(key => key.includes('component'))
+            .forEach(key => Object.assign(results[key], orderObj));
+
+
+        const FirstObj = await TryToFindURL_Rec(tempUID);
+        console.log(componentsInOrderMap);
+        console.log('\n'.repeat(6)); // debugging
+
+        // loop through componentsInOrderMap keys
+        for (let [key, value] of componentsInOrderMap.entries())
+        {
+            const deconstructKey = key.split(' ');
+            if (deconstructKey[4] == indexOfComponent)
+            {
+                return value;
+            }
+        }
+        debugger;
+
+
+
+
+        async function TryToFindURL_Rec(uid, parentObj)
         {
             const objRes = await TryToFindURL(uid);
 
-            if (objRes.innerUIDs?.length > 0)
+            results['component alias'].condition = () => parentObj?.innerAliasesUids?.includes(uid) && (!!objRes.urls?.[0]);
+            results['has any aliases'].condition = () => objRes?.innerAliasesUids.length > 0;
+            results['component'].condition = () => objRes.components.length > 0;
+            const key = Object.keys(results).find(x => results[x].condition());
+
+
+            console.log("%c" + cleanIndentedBlock(), `color:${results[key].tone}`);
+
+
+            for (const i of objRes.urlsWithUids)
             {
-                indentFunc += 1;
-                for (const i of objRes.innerUIDs.reverse())
+                if (objRes.urls.includes(i)) // either component or component alias // set in the order in which roam renders them
                 {
-                    const { objRes: innerObjRes, parentObj, accStr: innerAccStr } = await TryToFindURL_Rec(i, objRes, accStr);
-                    const isAlias = parentObj.innerAliasesUids.includes(i);
+                    componentsInOrderMap.set(assertUniqueKey_while(uid), i || 'no component url');
                 }
-                indentFunc -= 1;
+
+                if (objRes.innerUIDs.includes(i))
+                {
+                    indentFunc += 1;
+                    const awaitingObj = await TryToFindURL_Rec(i, objRes);
+                    indentFunc -= 1;
+                }
             }
 
-            return { uid, objRes, parentObj, accStr };
+            return { uid, objRes, parentObj };
+
+            function assertUniqueKey_while(uid)
+            {
+                // the order in which the components are rendered within the block
+                const keyAnyComponetInOrder = results['any component'].incrementIf(kauderk.util.includesAtlest(['component', 'component alias'], key, null));
+                const keyInComponentOrder = results['component'].incrementIf(key === 'component');
+                const keyInAliasComponentOrder = results['component alias'].incrementIf(key === 'component alias');
+
+                const baseKey = [indentFunc, uid, keyAnyComponetInOrder, keyInComponentOrder, keyInAliasComponentOrder, key];
+
+                let similarCount = 0; // keep track of similarities
+                const preKey = () => [similarCount, ...baseKey].join(' ') + 'ﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠ';
+                let uniqueKey = preKey();
+
+                while (componentsInOrderMap.has(uniqueKey))
+                {
+                    similarCount += 1; // try to make it unique
+                    uniqueKey = preKey();
+                }
+
+                return uniqueKey;
+            }
+
+            function cleanIndentedBlock()
+            {
+                const tab = '\t'.repeat(indentFunc);
+                const cleanLineBrakes = objRes.rawText.replace(/(\n)/gm, ". ");
+                const indentedBlock = tab + cleanLineBrakes.replace(/.{70}/g, '$&\n' + tab);
+                return indentedBlock;
+            }
         }
 
 
         async function TryToFindURL(desiredUID)
         {
             const info = await kauderk.rap.getBlockInfoByUID(desiredUID);
-            if (!info[0]) debugger;
             const rawText = info[0][0]?.string || "F";
-            if (rawText == "F") debugger;
 
             // {{[[component]]: xxxyoutube-urlxxx }}
             const components = [...rawText.matchAll(/{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)/gm)].map(x => x = x[0]) || [];
             // (((xxxuidxxx))) || ((xxxuidxxx))
-            const innerUIDs = rawText.match(/(?<=\(\()([^(].*?[^)])(?=\)\))/gm);
+            const innerUIDs = rawText.match(/(?<=\(\()([^(].*?[^)])(?=\)\))/gm) || [];
             // [xxxanything goesxxx](((xxxuidxxx)))
             const aliasesPlusUids = [...rawText.matchAll(/\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm)];
-            const innerAliasesUids = [...aliasesPlusUids].map(x => x = x[2]);
+
+            // aliases alone
+            const innerAliasesUids = [...aliasesPlusUids].map(x => x = x[2]) || []; // [xxnopexxx]('((xxxyesxxx))')
+
+            // block references alone
+            const blockReferencesAlone = innerUIDs?.filter(x => !innerAliasesUids.includes(x));
+
+            // componets with block references exlude aliases // set in the order in which roam renders them
+            const urlsWithUids = [...[...rawText.matchAll(/{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)|(?<=\(\()([^(].*?[^)])(?=\)\))/gm)]
+                .map(x => x = x[0])]
+                .map(x => components.includes(x) ? x = x.match(/(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(.*?(?=\s|\}|\]|\)))/)?.[0] : x);
+
 
             let urls = [];
             for (const i of components)
@@ -1464,12 +1503,9 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 urls = kauderk.util.pushSame(urls, i.match(/(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(.*?(?=\s|\}|\]|\)))/)?.[0]);
             }
 
-            return { components, urls, innerUIDs, aliasesPlusUids, innerAliasesUids, rawText, info };
+            return { uid: desiredUID, components, urls, innerUIDs, urlsWithUids, aliasesPlusUids, innerAliasesUids, blockReferencesAlone, rawText, info };
         };
     }
-
-
-
     // 3.1 extract params
     function urlConfig(url)
     {
@@ -1543,8 +1579,6 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         return false;
     }
 
-
-
     // 5.0
     async function DeployYT_IFRAME_OnInteraction()
     {
@@ -1565,7 +1599,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             const awaitingAnimationThumbnail = [...awaitingAnimation, awaitng_input_with_thumbnail];
 
             let mainAnimation = awaitingAnimationThumbnail;
-            wrapper.setAttribute(attrInfo.videoUrl, url);
+            //wrapper.setAttribute(attrInfo.videoUrl, url);
 
             if (UI.experience.awaiting_with_video_thumnail_as_bg.checked)
             {
@@ -1582,7 +1616,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     }
 
 
-    // last - customize the iframe api
+    // last - customize the iframe - api
     function playerConfig(configParams)
     {
         // in progress
@@ -1654,7 +1688,7 @@ async function onPlayerReady(event)
     const entryVolume = validVolumeURL();
     const tickOffset = 1000 / speed;
 
-    const blockID = closestYTGIFparentID(iframe); //🤔
+    const blockID = getProperYTGIFParentID(iframe, parent); //🤔
     const canBeCleanedByBuffer = UTILS.closestBlockID(iframe); //🤔
     const rocording = recordedIDs.get(blockID);
     // 🚧?
@@ -2726,8 +2760,18 @@ function btn_VS(bol, exp_btn, disabled)
 
 function closestYTGIFparentID(el)
 {
+    return (UTILS.closestBlockID(el) || el.closest('.dwn-yt-gif-player-container')?.id)
+}
+function getProperYTGIFParentID(el, wrapper)
+{
+    const url = wrapper.getAttribute(attrInfo.url.path);
+    const urlIndex = wrapper.getAttribute(attrInfo.url.index);
+    const urlSufix = '_' + [url, urlIndex].join('_');
+
     // so lastBlockIDParameters... and previous values are stored
-    return UTILS.closestBlockID(el) || el.closest('.dwn-yt-gif-player-container')?.id;
+    const id = closestYTGIFparentID(el) + urlSufix;
+    console.log(id);
+    return id;
 }
 
 

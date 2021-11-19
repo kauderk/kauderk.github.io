@@ -5,11 +5,12 @@ await InputBlockVideoParams('Xq0KBPFrW');
 await InputBlockVideoParams('5NzOtM4Rv');
 await InputBlockVideoParams('_58aMsOfr');
 await InputBlockVideoParams('TGfJr35iO');
+await InputBlockVideoParams('m4JcmUA4t');
 
-async function InputBlockVideoParams(tempUID)
+async function InputBlockVideoParams(tempUID, indexOfComponent)
 {
     let indentFunc = 0;
-    let componentsInOrder = new Map();
+    let componentsInOrderMap = new Map();
 
     const orderObj = {
         order: -1,
@@ -31,8 +32,6 @@ async function InputBlockVideoParams(tempUID)
         },
         'any component': {
         },
-        'smart component': {
-        }
     }
 
     // filter result keys that include 'component' word and assign it a orderObj
@@ -40,9 +39,21 @@ async function InputBlockVideoParams(tempUID)
         .forEach(key => Object.assign(results[key], orderObj));
 
 
-    const endObj = await TryToFindURL_Rec(tempUID);
-    console.log(componentsInOrder);
+    const FirstObj = await TryToFindURL_Rec(tempUID);
+    console.log(componentsInOrderMap);
     console.log('\n'.repeat(6)); // debugging
+
+    // loop through componentsInOrderMap keys
+    for (let [key, value] of componentsInOrderMap.entries())
+    {
+        const deconstructKey = key.split(' ');
+        if (deconstructKey[4] == indexOfComponent)
+        {
+            return value;
+        }
+    }
+
+
 
 
     async function TryToFindURL_Rec(uid, parentObj)
@@ -56,38 +67,22 @@ async function InputBlockVideoParams(tempUID)
 
 
         console.log("%c" + cleanIndentedBlock(), `color:${results[key].tone}`);
-        // for (const i of objRes.urls) // you want the order...
-        // {
-        //     //if (!objRes.innerUIDs)
-        //     componentsInOrder.set(assertUniqueKey_while(uid), i || 'no component url');
-        // }
 
 
-        for (const i of objRes.componentsWithUids)
+        for (const i of objRes.urlsWithUids)
         {
-            if (objRes.components.includes(i))
+            if (objRes.urls.includes(i)) // either component or component alias // set in the order in which roam renders them
             {
-                componentsInOrder.set(assertUniqueKey_while(uid), i || 'no component url');
+                componentsInOrderMap.set(assertUniqueKey_while(uid), i || 'no component url');
             }
 
             if (objRes.innerUIDs.includes(i))
             {
                 indentFunc += 1;
-                //for (const i of objRes.componentsWithUids) // ...in which roam...
-                //{
                 const awaitingObj = await TryToFindURL_Rec(i, objRes);
-                //}
                 indentFunc -= 1;
             }
         }
-
-        // for (const i of objRes.urls) // ...renders them...
-        // {
-        //     if (objRes.innerUIDs?.length > 0)
-        //         componentsInOrder.set(assertUniqueKey_while(uid), i || 'no component url');
-        // }
-
-
 
         return { uid, objRes, parentObj };
 
@@ -104,7 +99,7 @@ async function InputBlockVideoParams(tempUID)
             const preKey = () => [similarCount, ...baseKey].join(' ') + 'ﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠ';
             let uniqueKey = preKey();
 
-            while (componentsInOrder.has(uniqueKey))
+            while (componentsInOrderMap.has(uniqueKey))
             {
                 similarCount += 1; // try to make it unique
                 uniqueKey = preKey();
@@ -135,15 +130,16 @@ async function InputBlockVideoParams(tempUID)
         // [xxxanything goesxxx](((xxxuidxxx)))
         const aliasesPlusUids = [...rawText.matchAll(/\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm)];
 
-        // aliases olone
+        // aliases alone
         const innerAliasesUids = [...aliasesPlusUids].map(x => x = x[2]) || []; // [xxnopexxx]('((xxxyesxxx))')
 
         // block references alone
         const blockReferencesAlone = innerUIDs?.filter(x => !innerAliasesUids.includes(x));
 
-        // componets with block references exlude aliases
-        //const componentsWithUids = [...[...rawText.matchAll(/{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)|(?<=\(\()([^(].*?[^)])(?=\)\))/gm)].map(x => x = x[0])].filter(x => !innerAliasesUids.includes(x));
-        const componentsWithUids = [...[...rawText.matchAll(/{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)|(?<=\(\()([^(].*?[^)])(?=\)\))/gm)].map(x => x = x[0])];
+        // componets with block references exlude aliases // set in the order in which roam renders them
+        const urlsWithUids = [...[...rawText.matchAll(/{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)|(?<=\(\()([^(].*?[^)])(?=\)\))/gm)]
+            .map(x => x = x[0])]
+            .map(x => components.includes(x) ? x = x.match(/(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(.*?(?=\s|\}|\]|\)))/)?.[0] : x);
 
 
         let urls = [];
@@ -153,6 +149,6 @@ async function InputBlockVideoParams(tempUID)
             urls = kauderk.util.pushSame(urls, i.match(/(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(.*?(?=\s|\}|\]|\)))/)?.[0]);
         }
 
-        return { uid: desiredUID, components, urls, innerUIDs, componentsWithUids, aliasesPlusUids, innerAliasesUids, blockReferencesAlone, rawText, info };
+        return { uid: desiredUID, components, urls, innerUIDs, urlsWithUids, aliasesPlusUids, innerAliasesUids, blockReferencesAlone, rawText, info };
     };
 }
