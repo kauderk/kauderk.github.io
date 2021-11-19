@@ -2,39 +2,42 @@ await InputBlockVideoParams('_58aMsOfr');
 await InputBlockVideoParams('A2ZKodXwg');
 await InputBlockVideoParams('jmFbeY934');
 await InputBlockVideoParams('Xq0KBPFrW');
+await InputBlockVideoParams('5NzOtM4Rv');
+await InputBlockVideoParams('_58aMsOfr');
+await InputBlockVideoParams('TGfJr35iO');
 
 async function InputBlockVideoParams(tempUID)
 {
     let indentFunc = 0;
-    let blockinOrder = -1;
-    let componentInOrder = -1;
-    let aliasComponentInOrder = -1;
     let componentsInOrder = new Map();
-    const incrementIf = function (condition) { return condition ? Number(++this.order) : -1 };
 
-    const results = { /* [all].condition: () => { }, inOrder: -1 */
+    const orderObj = {
+        order: -1,
+        incrementIf: function (condition) { return condition ? Number(++this.order) : 'ﾠ' }
+    };
+    const results = {
         'component alias': {
             tone: 'purple',
-            order: -1,
-            incrementIf: incrementIf,
         },
         'has any aliases': {
             tone: 'blue'
         },
         'component': {
             tone: 'green',
-            order: -1,
-            incrementIf: incrementIf,
         },
         'any': {
             condition: () => true,
             tone: 'black',
         },
         'any component': {
-            order: -1,
-            incrementIf: incrementIf,
+        },
+        'smart component': {
         }
     }
+
+    // filter result keys that include 'component' word and assign it a orderObj
+    Object.keys(results).filter(key => key.includes('component'))
+        .forEach(key => Object.assign(results[key], orderObj));
 
 
     const endObj = await TryToFindURL_Rec(tempUID);
@@ -53,51 +56,61 @@ async function InputBlockVideoParams(tempUID)
 
 
         console.log("%c" + cleanIndentedBlock(), `color:${results[key].tone}`);
-        componentsInOrder.set(assertUniqueKey_while(uid), objRes.urls.join(' ') || 'no component url');
+        // for (const i of objRes.urls) // you want the order...
+        // {
+        //     //if (!objRes.innerUIDs)
+        //     componentsInOrder.set(assertUniqueKey_while(uid), i || 'no component url');
+        // }
 
 
-        if (objRes.innerUIDs?.length > 0)
+        for (const i of objRes.componentsWithUids)
         {
-            indentFunc += 1;
-            for (const i of objRes.innerUIDs)
+            if (objRes.components.includes(i))
             {
-                const awaitingObj = await TryToFindURL_Rec(i, objRes);
+                componentsInOrder.set(assertUniqueKey_while(uid), i || 'no component url');
             }
-            indentFunc -= 1;
+
+            if (objRes.innerUIDs.includes(i))
+            {
+                indentFunc += 1;
+                //for (const i of objRes.componentsWithUids) // ...in which roam...
+                //{
+                const awaitingObj = await TryToFindURL_Rec(i, objRes);
+                //}
+                indentFunc -= 1;
+            }
         }
+
+        // for (const i of objRes.urls) // ...renders them...
+        // {
+        //     if (objRes.innerUIDs?.length > 0)
+        //         componentsInOrder.set(assertUniqueKey_while(uid), i || 'no component url');
+        // }
+
+
 
         return { uid, objRes, parentObj };
 
         function assertUniqueKey_while(uid)
         {
-            let similarCompoentCnt = 1;
-            // const inOrder = kauderk.util.includesAtlest(['component', 'component alias'], key, null);
-            // if (inOrder) blockinOrder += 1;
-            // const keyInOrder = (inOrder) ? blockinOrder : -1;
-
-            // if (key === 'component') componentInOrder += 1;
-            // const keyInComponentOrder = (key === 'component') ? componentInOrder : -1;
-
-            // if (key === 'component alias') aliasComponentInOrder += 1;
-            // const keyInAliasComponentOrder = (key === 'component alias') ? aliasComponentInOrder : -1;
-
-            // the urls will merge with the map.key.urls, the order will build on each other, thus that's roam's output
-
+            // the order in which the components are rendered within the block
             const keyAnyComponetInOrder = results['any component'].incrementIf(kauderk.util.includesAtlest(['component', 'component alias'], key, null));
             const keyInComponentOrder = results['component'].incrementIf(key === 'component');
             const keyInAliasComponentOrder = results['component alias'].incrementIf(key === 'component alias');
 
-            let baseKey = [indentFunc, uid, key, keyAnyComponetInOrder, keyInComponentOrder, keyInAliasComponentOrder];
-            //let baseKey = [indentFunc, uid, key, keyInOrder, keyInComponentOrder, keyInAliasComponentOrder];
-            let assertUniqueKey = [similarCompoentCnt, ...baseKey].join(' ') + 'ﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠ';
+            const baseKey = [indentFunc, uid, keyAnyComponetInOrder, keyInComponentOrder, keyInAliasComponentOrder, key];
 
+            let similarCount = 0; // keep track of similarities
+            const preKey = () => [similarCount, ...baseKey].join(' ') + 'ﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠ';
+            let uniqueKey = preKey();
 
-            while (componentsInOrder.has(assertUniqueKey))
+            while (componentsInOrder.has(uniqueKey))
             {
-                similarCompoentCnt += 1; // make it unique
-                assertUniqueKey = [similarCompoentCnt, ...baseKey].join(' ') + 'ﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠ';
+                similarCount += 1; // try to make it unique
+                uniqueKey = preKey();
             }
-            return assertUniqueKey;
+
+            return uniqueKey;
         }
 
         function cleanIndentedBlock()
@@ -118,15 +131,19 @@ async function InputBlockVideoParams(tempUID)
         // {{[[component]]: xxxyoutube-urlxxx }}
         const components = [...rawText.matchAll(/{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)/gm)].map(x => x = x[0]) || [];
         // (((xxxuidxxx))) || ((xxxuidxxx))
-        const innerUIDs = rawText.match(/(?<=\(\()([^(].*?[^)])(?=\)\))/gm);
+        const innerUIDs = rawText.match(/(?<=\(\()([^(].*?[^)])(?=\)\))/gm) || [];
         // [xxxanything goesxxx](((xxxuidxxx)))
         const aliasesPlusUids = [...rawText.matchAll(/\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm)];
 
-        // has something else
+        // aliases olone
         const innerAliasesUids = [...aliasesPlusUids].map(x => x = x[2]) || []; // [xxnopexxx]('((xxxyesxxx))')
 
         // block references alone
         const blockReferencesAlone = innerUIDs?.filter(x => !innerAliasesUids.includes(x));
+
+        // componets with block references exlude aliases
+        //const componentsWithUids = [...[...rawText.matchAll(/{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)|(?<=\(\()([^(].*?[^)])(?=\)\))/gm)].map(x => x = x[0])].filter(x => !innerAliasesUids.includes(x));
+        const componentsWithUids = [...[...rawText.matchAll(/{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)|(?<=\(\()([^(].*?[^)])(?=\)\))/gm)].map(x => x = x[0])];
 
 
         let urls = [];
@@ -136,6 +153,6 @@ async function InputBlockVideoParams(tempUID)
             urls = kauderk.util.pushSame(urls, i.match(/(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(.*?(?=\s|\}|\]|\)))/)?.[0]);
         }
 
-        return { uid: desiredUID, components, urls, innerUIDs, aliasesPlusUids, innerAliasesUids, blockReferencesAlone, rawText, info };
+        return { uid: desiredUID, components, urls, innerUIDs, componentsWithUids, aliasesPlusUids, innerAliasesUids, blockReferencesAlone, rawText, info };
     };
 }
