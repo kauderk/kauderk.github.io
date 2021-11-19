@@ -1304,7 +1304,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     // 2.2 target's point of reference
     const record = JSON.parse(JSON.stringify(sesionIDs));
     sesionIDs.uid = uid;
-    const blockID = getProperYTGIFParentID(wrapper, wrapper) //🤔
+    const blockID = closestYTGIFparentID(wrapper) + properBlockIDSufix(url, urlIndex) //🤔
     if (blockID != null)
         recordedIDs.set(blockID, record);
 
@@ -1330,7 +1330,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         el: wrapper,
         OnRemmovedFromDom_cb: (o) => mainUidBlocks.delete(uid),
     }
-    RemoevedElement(options); // not elegant but works
+    ObserveRemovedEl(options); // Expensive? think so. Elegant? no, but works
 
 
 
@@ -1732,7 +1732,7 @@ async function onPlayerReady(event)
 
 
     // 2. play style | pause style
-    ToggleElsStylesEventListeners(true);
+    ToggleStyles_EventListeners(true);
 
 
 
@@ -1761,9 +1761,15 @@ async function onPlayerReady(event)
 
 
     // 7. clean data and ready 'previous' paramaters for next sesion with IframeRemmovedFromDom_callback
-    const config = { subtree: true, childList: true };
-    const RemovedObserver = new MutationObserver(IframeMutationRemoval_callback); // will fire IframeRemmovedFromDom_callback... the acutal logic
-    RemovedObserver.observe(document.body, config);
+    // const config = { subtree: true, childList: true };
+    // const RemovedObserver = new MutationObserver(IframeMutationRemoval_callback); // will fire IframeRemmovedFromDom_callback... the acutal logic
+    // RemovedObserver.observe(document.body, config);
+
+    const options = {
+        el: iframe,
+        OnRemmovedFromDom_cb: IframeRemmovedFromDom_callback,
+    }
+    ObserveRemovedEl(options); // Expensive? think so. Elegant? no, but works
 
 
 
@@ -1842,7 +1848,7 @@ async function onPlayerReady(event)
 
 
     //#region 2. play/mute styles
-    function ToggleElsStylesEventListeners(bol = false)
+    function ToggleStyles_EventListeners(bol = false)
     {
         // hmmmm... Mainly because of CleanLoadedWrappers... UI is window.YT_GIF_OBSERVERS.UI | timestamps persist this way
         for (const p in UI.playStyle)
@@ -2149,7 +2155,7 @@ async function onPlayerReady(event)
     {
         // expensive for sure 🙋
         UTILS.RemoveElsEventListeners(withEventListeners);
-        ToggleElsStylesEventListeners(false);
+        ToggleStyles_EventListeners(false);
 
 
 
@@ -2501,11 +2507,12 @@ function onStateChange(state)
 }
 
 
-function RemoevedElement(options)
+function ObserveRemovedEl(options)
 {
     const config = { subtree: true, childList: true };
     const RemovedObserver = new MutationObserver(MutationRemoval_cb); // will fire OnRemmovedFromDom... the acutal logic
     RemovedObserver.observe(document.body, config);
+    return RemovedObserver;
 
     function MutationRemoval_cb(mutationsList, observer)
     {
@@ -2766,15 +2773,17 @@ function getProperYTGIFParentID(el, wrapper)
 {
     const url = wrapper.getAttribute(attrInfo.url.path);
     const urlIndex = wrapper.getAttribute(attrInfo.url.index);
-    const urlSufix = '_' + [url, urlIndex].join('_');
+    const urlSufix = properBlockIDSufix(url, urlIndex);
 
     // so lastBlockIDParameters... and previous values are stored
     const id = closestYTGIFparentID(el) + urlSufix;
     console.log(id);
     return id;
 }
-
-
+function properBlockIDSufix(url, urlIndex)
+{
+    return '_' + [url, urlIndex].join('_');
+}
 /*
 
 user requested ☐ ☑
