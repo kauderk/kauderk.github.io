@@ -334,6 +334,64 @@ rm_components.both = {
 Object.assign(rm_components.both, baseDeploymentObj_both());
 /*-----------------------------------*/
 let mainUidBlocks = new Map();
+function tempUidResult()
+{
+    return {
+        uid: null,
+        componentEls: new Map(),
+    }
+}
+function urlIndexFromBlockID(el)
+{
+    if (this.targetCssClass == 'a.rm-alias.rm-alias--block')
+    {
+        debugger;
+        el = document.querySelector('.bp3-popover-open')
+    }
+
+    if (!this.componentEls.has(this.uid)) // 🤔
+        this.componentEls.set(this.uid, [...document.querySelector('#' + closestYTGIFparentID(el)).querySelectorAll(this.targetCssClass)]);
+    return this.componentEls.get(this.uid).indexOf(el);
+}
+const uidResults = { /* last 9 letters form the closest blockID */
+    'block-id': {
+        indexToCheck: 4,
+        targetCssClass: '.rm-xparser-default-yt-gif',
+        condition: function (el) { return this.uid = UTILS.closestBlockID(el)?.slice(-9) },
+        urlIndex: function (el)
+        {
+            if (!this.componentEls.has(this.uid)) // 🤔
+                this.componentEls.set(this.uid, [...document.querySelector('#' + closestYTGIFparentID(el)).querySelectorAll(this.targetCssClass)]);
+            return this.componentEls.get(this.uid).indexOf(el);
+        },
+    },
+    // 'data-uid': {
+    //     indexToCheck: 4,
+    //     condition: function (el) { return this.uid = el.closest(`[${attrInfo.uid}]`)?.getAttribute(attrInfo.uid) },
+    //     targetCssClass: '',
+    //     urlIndex: function (el)
+    //     {
+    //         if (!this.componentEls.has(this.uid)) // 🤔
+    //             this.componentEls.set(this.uid, [...document.querySelector('#' + closestYTGIFparentID(el)).querySelectorAll(this.targetCssClass)]);
+    //         return this.componentEls.get(this.uid).indexOf(el);
+    //     }
+    // },
+    'popover': {
+        indexToCheck: 5,
+        targetCssClass: 'a.rm-alias.rm-alias--block',
+        popoverBlockID: function () { return UTILS.closestBlockID(document.querySelector('.bp3-popover-open')) },
+        condition: function () { return this.uid = this.popoverBlockID()?.slice(-9) },
+        urlIndex: function (el)
+        {
+            if (!this.componentEls.has(this.uid)) // 🤔
+                this.componentEls.set(this.uid, [...document.querySelector('#' + this.popoverBlockID()).querySelectorAll(this.targetCssClass)]);
+            //debugger;
+            return this.componentEls.get(this.uid).indexOf(document.querySelector('#' + this.popoverBlockID()).querySelector('span[aria-haspopup="true"] > a.rm-alias.rm-alias--block'));
+        },
+    },
+}
+Object.values(uidResults).map(v => Object.assign(v, tempUidResult()));
+/*-----------------------------------*/
 
 // the 🤔 emoji indicates that the adition of "dropdown tutorials" is clashing with some function's structure... so far is minor, but it's a problem nonthless. And building sparate functions for them - doesn't seem to be a great idea either, because they're BIG BOIS.
 if (
@@ -1278,14 +1336,13 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         console.log(message);
         //debugger;
     }
-    if (!wrapper) return;
+    if (!wrapper || !wrapper.parentNode) return;
 
 
 
-    // 1. last 9 letter form the closest blockID
-    const uid = UTILS.closestBlockID(wrapper)?.slice(-9) ||
-        wrapper.closest(`[${attrInfo.uid}]`)?.getAttribute(attrInfo.uid) || //🤔
-        UTILS.closestBlockID(document.querySelector('.bp3-popover-open'))?.slice(-9);
+    const key = Object.keys(uidResults).find(x => uidResults[x].condition(wrapper));
+    if (!key) debugger;
+    const uid = uidResults[key].uid;
 
     if (!uid) return; // don't add up false positives
     const newId = iframeIDprfx + Number(++window.YT_GIF_OBSERVERS.creationCounter);
@@ -1293,9 +1350,12 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
     // 2. extract data and store them in maps
-    const urlIndex = getValidUrlIndex_mainUidBlocksMap();
+    const preUrlIndex = uidResults[key].urlIndex(wrapper);
+    const urlIndex = preUrlIndex > -1 ? preUrlIndex : 0;
+    if (preUrlIndex == -1) console.count('urlIndex == -1 ', wrapper);
+
     const url = wrapper.getAttribute(attrInfo.url.path) || //🤔
-        await InputBlockVideoParams(uid, urlIndex);
+        await InputBlockVideoParams(uid, urlIndex, uidResults[key].indexToCheck);
 
     // 2.1 OnPlayerReady video params point of reference
     allVideoParameters.set(newId, urlConfig(url));
@@ -1327,10 +1387,10 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
     // 3. delete block's mainUidBlocksMap entry when removed form DOM
     const options = {
-        el: wrapper,
-        OnRemmovedFromDom_cb: (o) => mainUidBlocks.delete(uid),
+        el: document.querySelector(closestYTGIFparentID(wrapper)),
+        OnRemmovedFromDom_cb: (o) => uidResults[key].componentEls.delete(uid),
     }
-    ObserveRemovedEl(options); // Expensive? think so. Elegant? no, but works
+    ObserveRemovedEl(options); // not elegant but works
 
 
 
@@ -1346,21 +1406,8 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
 
-    // 2. extract data
-    function getValidUrlIndex_mainUidBlocksMap()
-    {
-        // read first instance of rm-block__input's components, because on every observer call AND on each function pass - they get replaced by iframe wrappers
-        // because there could be more than one yt-gif component in one block
-        if (!mainUidBlocks.has(uid)) // 🤔
-        {
-            mainUidBlocks.set(uid, [...document.querySelector('#' + closestYTGIFparentID(wrapper)).querySelectorAll('.rm-xparser-default-yt-gif')]);
-        }
-        const urlIndex = mainUidBlocks.get(uid).indexOf(wrapper);
-        return urlIndex;
-    }
-
     // 3. get relevant url
-    async function InputBlockVideoParams(tempUID, indexOfComponent)
+    async function InputBlockVideoParams(tempUID, indexOfComponent, indexToCheck)
     {
         let indentFunc = 0;
         let componentsInOrderMap = new Map();
@@ -1393,14 +1440,14 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
         const FirstObj = await TryToFindURL_Rec(tempUID);
-        console.log(componentsInOrderMap);
-        console.log('\n'.repeat(6)); // debugging
+        //console.log(componentsInOrderMap);
+        //console.log('\n'.repeat(6)); // debugging
 
         // loop through componentsInOrderMap keys
         for (let [key, value] of componentsInOrderMap.entries())
         {
             const deconstructKey = key.split(' ');
-            if (deconstructKey[4] == indexOfComponent)
+            if (deconstructKey[indexToCheck] == indexOfComponent)
             {
                 return value;
             }
@@ -1420,7 +1467,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             const key = Object.keys(results).find(x => results[x].condition());
 
 
-            console.log("%c" + cleanIndentedBlock(), `color:${results[key].tone}`);
+            //console.log("%c" + cleanIndentedBlock(), `color:${results[key].tone}`);
 
 
             for (const i of objRes.urlsWithUids)
@@ -1725,6 +1772,7 @@ async function onPlayerReady(event)
     {
         // 🚧? because, this object/functionalities are only relevant when it's iframe destroyed ≡ or when the script goes full cricle... Hmmmm?
         const sesion = lastBlockIDParameters.get(blockID);
+        console.log(sesion);
         RunWithPrevious_TimestampStyle(sesion, previousTimestamp);
         RunWithPrevious_VolumeStyle(sesion, previousVolume);
     }
@@ -2162,6 +2210,8 @@ async function onPlayerReady(event)
 
         //🚧 UpdateNextSesionValues
         const media = JSON.parse(JSON.stringify(videoParams));
+        media.src = getWrapperUrlSufix(parent);
+        media.id = map.id;
         media.updateTime = isBounded(tick()) ? tick() : start;
         media.updateVolume = isValidVolNumber(t.__proto__.newVol) ? t.__proto__.newVol : validUpdateVolume();
         if (media.timeURLmapHistory.length == 0) // kinda spaguetti, but it's super necesary - This will not ignore the first block editing - stack change
@@ -2771,14 +2821,15 @@ function closestYTGIFparentID(el)
 }
 function getProperYTGIFParentID(el, wrapper)
 {
+    // so lastBlockIDParameters... and previous values are stored
+    return closestYTGIFparentID(el) + getWrapperUrlSufix(wrapper);
+}
+function getWrapperUrlSufix(wrapper)
+{
     const url = wrapper.getAttribute(attrInfo.url.path);
     const urlIndex = wrapper.getAttribute(attrInfo.url.index);
     const urlSufix = properBlockIDSufix(url, urlIndex);
-
-    // so lastBlockIDParameters... and previous values are stored
-    const id = closestYTGIFparentID(el) + urlSufix;
-    console.log(id);
-    return id;
+    return urlSufix;
 }
 function properBlockIDSufix(url, urlIndex)
 {
