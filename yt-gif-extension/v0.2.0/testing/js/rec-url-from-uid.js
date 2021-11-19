@@ -10,17 +10,31 @@ async function InputBlockVideoParams(tempUID)
 
     console.log(accValFor.entries(), accValFunc.entries());
 
+    printUrlsMap(accValFor);
+    printUrlsMap(accValFunc);
+
+    // print urls accValFor
+    function printUrlsMap(obj)
+    {
+        for (let [key, value] of obj.entries())
+        {
+            printUrls(value);
+        }
+    }
+
     console.log(accStr);
+
+    function printUrls(obj)
+    {
+        for (const url of obj.urls)
+        {
+            console.log(`${'\t'.repeat(obj.indent)}${obj.uid} : ${url} : ${obj.urls.indexOf(url)}`);
+        }
+    }
 
     async function TryToFindURL_Rec(uid, parentObj, accStr = '')
     {
         const objRes = await TryToFindURL(uid);
-        const debuggingLog = `self: <${uid}> | inners: ${objRes.innerUIDs?.join(' ') || 'Fuids'} | ${Number(++funcCnt)} -> `;
-
-        accValFunc.set(`${debuggingLog} ${objRes.rawText}`, objRes);
-
-        objRes.innerAliasesUids = [...objRes.aliasesPlusUids].map(x => x = x[2]);
-
 
         if (objRes.innerUIDs?.length > 0)
         {
@@ -29,19 +43,44 @@ async function InputBlockVideoParams(tempUID)
             {
                 const { objRes: innerObjRes, parentObj, accStr: innerAccStr } = await TryToFindURL_Rec(i, objRes, accStr);
 
-                const isAlias = parentObj.innerAliasesUids.includes(i);
-                const debuggingLog = `parent: <${uid}> | self: ${i} | inners: ${innerObjRes.innerUIDs?.join(' ') || 'Fuids'} | alias?: ${isAlias} | yt-gif-alias?: ${isAlias && (!!innerObjRes.urls?.[0])} | ${Number(++innerFor)} -> `;
+                const isAlias = parentObj.innerAliasesUids?.includes(i);
+                const ytGifAlias = isAlias && (!!innerObjRes.urls?.[0]);
+                const debuggingLog = `
+                    parent: <${uid}>
+                    self: ${i}
+                    inners: ${innerObjRes.innerUIDs?.join(' ') || 'Fuids'}
+                    alias?: ${isAlias}
+                    yt-gif-alias?: ${isAlias && (!!innerObjRes.urls?.[0])}
+                    ${Number(++innerFor)} ->                    `;
 
                 accStr = printPasses(innerAccStr, indentFunc, debuggingLog + innerObjRes.rawText);
 
+                innerObjRes.indent = indentFunc;
                 accValFor.set(`${debuggingLog} ${innerObjRes.rawText}`, innerObjRes);
+
+                const obj = innerObjRes;
+                console.log(`${'\t'.repeat(obj.indent)}${obj.uid}`);
+                printUrls(obj);
             }
             indentFunc -= 1;
         }
         else
         {
             if (!parentObj)
+            {
+                const debuggingLog = `
+                    self: <${uid}>
+                    inners: ${objRes.innerUIDs?.join(' ') || 'Fuids'}
+                    ${Number(++funcCnt)} ->                     `;
                 accStr = printPasses(accStr, indentFunc, debuggingLog + objRes.rawText);
+
+                objRes.indent = indentFunc;
+                accValFunc.set(`${debuggingLog} ${objRes.rawText}`, objRes);
+
+                const obj = objRes;
+                console.log(`${'\t'.repeat(obj.indent)}${obj.uid}`);
+                printUrls(obj);
+            }
         }
 
         return { uid, objRes, parentObj, accStr };
@@ -72,13 +111,20 @@ async function InputBlockVideoParams(tempUID)
         // [xxxanything goesxxx](((xxxuidxxx)))
         const aliasesPlusUids = [...rawText.matchAll(/\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm)];
 
+        // has something else
+        const innerAliasesUids = [...aliasesPlusUids].map(x => x = x[2]) || []; // [xxnopexxx]('((xxxyesxxx))')
+
+        // block references alone
+        const blockReferencesAlone = innerUIDs?.filter(x => !innerAliasesUids.includes(x));
+
+
         let urls = [];
         for (const i of components)
         {
             // xxxyoutube-urlxxx
-            urls = kauderk.util.pushSame(urls, i.match(/(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(.*?(?=\s))/)?.[0]);
+            urls = kauderk.util.pushSame(urls, i.match(/(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(.*?(?=\s|\}|\]|\)))/)?.[0]);
         }
 
-        return { components, urls, innerUIDs, aliasesPlusUids, rawText, info };
+        return { uid: desiredUID, components, urls, innerUIDs, aliasesPlusUids, innerAliasesUids, blockReferencesAlone, rawText, info };
     };
 }
