@@ -1283,19 +1283,13 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
     // 1. search and get urlIndex and uid
-    const { uid, urlIndex, indexToCheck } = await tempUidResultsObj(wrapper);
+    const { uid, urlIndex, url } = await tempUidResultsObj(wrapper);
 
     // 1.1 don't add up false positives
     if (!uid || urlIndex < 0) { console.warn(`Couldn't find any yt-gif components within the block ((${uid}))`); return }
     const newId = iframeIDprfx + Number(++window.YT_GIF_OBSERVERS.creationCounter);
 
 
-
-    // 2. extract data and store them in maps
-    const url = /*wrapper.getAttribute(attrInfo.url.path) || */
-        await InputBlockVideoParams(uid, urlIndex, indexToCheck);
-    // const blockRefObj = await InputBlockVideoParams(uid, urlIndex, indexToCheck);
-    // const url = null;
 
     // 2.1 OnPlayerReady video params point of reference
     allVideoParameters.set(newId, urlConfig(url));
@@ -1318,7 +1312,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     wrapper.setAttribute(attrInfo.target, targetClass);
     wrapper.setAttribute(attrInfo.creation.name, dataCreation);
     wrapper.setAttribute(attrInfo.url.path, url);
-    wrapper.setAttribute(attrInfo.url.index, urlIndex || 0);
+    wrapper.setAttribute(attrInfo.url.index, urlIndex);
     wrapper.innerHTML = '';
     wrapper.insertAdjacentHTML('afterbegin', links.html.fetched.playerControls);
     wrapper.querySelector('.yt-gif-player').id = newId;
@@ -1340,49 +1334,92 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     // 1. uidResultsObj
     async function tempUidResultsObj(el)
     {
-        const baseTargetCssClasses = ['.rm-xparser-default-yt-gif', '.yt-gif-wrapper', 'a.rm-alias.rm-alias--block']; //'a.rm-alias.rm-alias--block'
+        const grandParentBlock = function () { return closestYTGIFparent(el) };
+        const grandParentPopOver = function () { return document.querySelector("div.bp3-popover-content > .rm-alias-tooltip__content") };
+        const getUrlMap = async (o) => { return await InputBlockVideoParams(o.uid) };
+
 
         const uidResults = { /* a class makes the most sense here, but they're so similar, yet so different, and it only happens once at the time I hope... */
             'block-id': {
-                indexToCheck: 3,
-
                 uid: null,
                 condition: function () { return this.uid = this.grandParentBlock(el)?.id?.slice(-9) },
 
-                targetSelector: [...baseTargetCssClasses].join(', '),
-                grandParentBlock: function () { return closestYTGIFparent(el) },
+                targetSelector: ['.rm-xparser-default-yt-gif', '.yt-gif-wrapper', 'a.rm-alias.rm-alias--block'].join(', '),
+                grandParentBlock,
                 urlComponents: function () { return [...this.grandParentBlock(el).querySelectorAll(this.targetSelector)] },
+
+                urlIndex: function () { return this.urlComponents().indexOf(el) },
             },
             'popover': {
-                indexToCheck: 3,
-
                 uid: null,
                 condition: function () { return this.uid = this.grandParentBlock()?.id?.slice(-9) },
 
-                targetSelector: [...baseTargetCssClasses].join(', '),
+                targetSelector: ['a.rm-alias.rm-alias--block'].join(', '),
                 grandParentBlock: function () { return closestYTGIFparent(document.querySelector('.bp3-popover-open')) },
-                grandParentPopOver: function () { return document.querySelector("div.bp3-popover-content > .rm-alias-tooltip__content") },
-                urlComponents: function () { return [...this.grandParentPopOver().querySelectorAll(this.targetSelector)] },
+                grandParentPopOver,
+                urlComponents: function () { return [...this.grandParentBlock().querySelectorAll(this.targetSelector)] },
+
+                urlIndex: function () { return this.urlComponents().indexOf(document.querySelector('.bp3-popover-target.bp3-popover-open > a.rm-alias.rm-alias--block')) },
             },
         }
+
+
+        function extractUrl_FromKey(map, valueAtIndex, indexToCheck)
+        {
+            let val = null;
+            for (let [key, value] of map.entries())
+            {
+                const deconstructKey = key.split(' ');
+                if (deconstructKey[indexToCheck] == valueAtIndex)
+                {
+                    val = value;
+                }
+            }
+            if (!val) debugger;
+            return val;
+        }
+        function extractUID_FromKey(map, valueAtIndex, indexToCheck)
+        {
+            let val = null;
+            for (let [key, value] of map.entries())
+            {
+                const deconstructKey = key.split(' ');
+                if (deconstructKey[indexToCheck] == valueAtIndex)
+                {
+                    val = deconstructKey[2];
+                }
+            }
+            if (!val) debugger;
+            return val;
+        }
+
+
         const key = Object.keys(uidResults).find(x => uidResults[x].condition());
+
+
         const resObj = {
             uid: uidResults[key].uid,
-            urlComponents: uidResults[key].urlComponents(),
-            urlIndex: uidResults[key].urlComponents().indexOf(el),
-            indexToCheck: uidResults[key].indexToCheck,
+            urlIndex: uidResults[key].urlIndex(),
+            url: null,
         }
-        if (key == 'popover')
+
+
+        if (key == 'popover')  
         {
-            debugger;
-            resObj.uid = await InputBlockVideoParams(resObj.uid, resObj.urlIndex, 2);
-            console.log(resObj.uid);
+            // debugger;
+            // resObj.uid = extractUID_FromKey(await getUrlMap(resObj), resObj.urlIndex, 5);// needs it's own UID
+
+            // uidResults['block-id'].grandParentBlock = grandParentPopOver; // once there
+            // resObj.urlIndex = uidResults['block-id'].urlIndex(); // it also needs it's own urlIndex
         }
+
+        resObj.url = extractUrl_FromKey(await getUrlMap(resObj), resObj.urlIndex, 3);
+
         return resObj;
     }
 
     // 3. get relevant url
-    async function InputBlockVideoParams(tempUID, indexOfComponent, indexToCheck)
+    async function InputBlockVideoParams(tempUID)
     {
         let indentFunc = 0;
         let componentsInOrderMap = new Map();
@@ -1418,15 +1455,8 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         console.log(componentsInOrderMap);
         console.log('\n'.repeat(6)); // debugging
 
-        // loop through componentsInOrderMap keys
-        for (let [key, value] of componentsInOrderMap.entries())
-        {
-            const deconstructKey = key.split(' ');
-            if (deconstructKey[indexToCheck] == indexOfComponent)
-            {
-                return value;
-            }
-        }
+
+        return componentsInOrderMap;
         debugger;
 
 
