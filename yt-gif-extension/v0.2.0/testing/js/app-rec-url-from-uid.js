@@ -334,6 +334,9 @@ rm_components.both = {
 Object.assign(rm_components.both, baseDeploymentObj_both());
 /*-----------------------------------*/
 
+/*-----------------------------------*/
+
+
 
 
 // the 🤔 emoji indicates that the adition of "dropdown tutorials" is clashing with some function's structure... so far is minor, but it's a problem nonthless. And building sparate functions for them - doesn't seem to be a great idea either, because they're BIG BOIS.
@@ -349,6 +352,7 @@ else
 {
     console.warn(`The YT GIF Extension won't be installed, major scripts are missing... submit your issue here: ${links.help.github_isuues}`);
 }
+
 
 
 
@@ -1336,15 +1340,14 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     {
         const grandParentBlock = function () { return closestYTGIFparent(el) };
         const grandParentPopOver = function () { return document.querySelector("div.bp3-popover-content > .rm-alias-tooltip__content") };
-        const getUrlMap = async (o) => { return await InputBlockVideoParams(o.uid) };
 
 
         const uidResults = { /* a class makes the most sense here, but they're so similar, yet so different, and it only happens once at the time I hope... */
-            'block-id': {
+            'base-block': {
                 uid: null,
                 condition: function () { return this.uid = this.grandParentBlock(el)?.id?.slice(-9) },
 
-                targetSelector: ['.rm-xparser-default-yt-gif', '.yt-gif-wrapper', 'a.rm-alias.rm-alias--block'].join(', '),
+                targetSelector: ['.rm-xparser-default-yt-gif', '.yt-gif-wrapper', 'a.rm-alias.rm-alias--block'].join(),
                 grandParentBlock,
                 urlComponents: function () { return [...this.grandParentBlock(el).querySelectorAll(this.targetSelector)] },
 
@@ -1354,7 +1357,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 uid: null,
                 condition: function () { return this.uid = this.grandParentBlock()?.id?.slice(-9) },
 
-                targetSelector: ['a.rm-alias.rm-alias--block'].join(', '),
+                targetSelector: ['a.rm-alias.rm-alias--block'].join(),
                 grandParentBlock: function () { return closestYTGIFparent(document.querySelector('.bp3-popover-open')) },
                 grandParentPopOver,
                 urlComponents: function () { return [...this.grandParentBlock().querySelectorAll(this.targetSelector)] },
@@ -1362,6 +1365,27 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 urlIndex: function () { return this.urlComponents().indexOf(document.querySelector('.bp3-popover-target.bp3-popover-open > a.rm-alias.rm-alias--block')) },
             },
         }
+
+
+        const key = Object.keys(uidResults).find(x => uidResults[x].condition());
+        const resObj = {
+            uid: uidResults[key].uid,
+            urlIndex: uidResults[key].urlIndex(),
+            url: null,
+        }
+
+
+        if (key == 'popover')  
+        {
+            resObj.uid = extractUID_FromKey(await getUrlMap(resObj.uid), resObj.urlIndex, 5); // needs it's own UID
+
+            uidResults['base-block'].grandParentBlock = grandParentPopOver; // once there (abstract enough to borrow functionalities)
+            resObj.urlIndex = uidResults['base-block'].urlIndex(); // it also needs it's own urlIndex
+        }
+
+
+        resObj.url = extractUrl_FromKey(await getUrlMap(resObj.uid), resObj.urlIndex, 3);
+        return resObj;
 
 
         function extractUrl_FromKey(map, valueAtIndex, indexToCheck)
@@ -1392,188 +1416,162 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             if (!val) debugger;
             return val;
         }
-
-
-        const key = Object.keys(uidResults).find(x => uidResults[x].condition());
-
-
-        const resObj = {
-            uid: uidResults[key].uid,
-            urlIndex: uidResults[key].urlIndex(),
-            url: null,
-        }
-
-
-        if (key == 'popover')  
+        async function getUrlMap(tempUID)
         {
-            // debugger;
-            resObj.uid = extractUID_FromKey(await getUrlMap(resObj), resObj.urlIndex, 5);// needs it's own UID
+            let indentFunc = 0;
+            let componentsInOrderMap = new Map();
 
-            uidResults['block-id'].grandParentBlock = grandParentPopOver; // once there
-            resObj.urlIndex = uidResults['block-id'].urlIndex(); // it also needs it's own urlIndex
+
+            const orderObj = {
+                order: -1,
+                incrementIf: function (condition) { return condition ? Number(++this.order) : 'ﾠ' }
+            };
+            const results = { /* the order does matter */
+                'component alias': {
+                    tone: 'purple',
+                },
+                'component': {
+                    tone: 'green',
+                },
+                'has any aliases': {
+                    tone: 'blue'
+                },
+                'any': {
+                    condition: () => true,
+                    tone: 'black',
+                },
+                'any component': {},
+            }
+
+
+            // filter result keys that include 'component' word and assign it a orderObj
+            Object.keys(results).filter(key => key.includes('component'))
+                .forEach(key => Object.assign(results[key], orderObj));
+
+
+            const FirstObj = await TryToFindURL_Rec(tempUID);
+            //console.log(componentsInOrderMap);
+            //console.log('\n'.repeat(6));
+
+
+            return componentsInOrderMap;
+
+
+            async function TryToFindURL_Rec(uid, parentObj)
+            {
+                const objRes = await TryToFindURL(uid);
+
+                results['component alias'].condition = () => parentObj?.innerAliasesUids?.includes(uid) && (!!objRes.urls?.[0]);
+                results['has any aliases'].condition = () => objRes?.innerAliasesUids.length > 0;
+                results['component'].condition = () => objRes.components.length > 0;
+                const key = Object.keys(results).find(x => results[x].condition());
+
+
+                console.log("%c" + cleanIndentedBlock(), `color:${results[key].tone}`);
+
+
+                for (const i of objRes.urlsWithUids)
+                {
+                    if (objRes.urls.includes(i)) // either component or component alias // set in the order in which roam renders them
+                    {
+                        componentsInOrderMap.set(assertUniqueKey_while(uid), i || 'no component url');
+                    }
+
+                    if (objRes.innerUIDs.includes(i))
+                    {
+                        indentFunc += 1;
+                        const awaitingObj = await TryToFindURL_Rec(i, objRes);
+                        indentFunc -= 1;
+                    }
+                }
+
+                return { uid, objRes, parentObj };
+
+                function assertUniqueKey_while(uid)
+                {
+                    // the order in which the components are rendered within the block
+                    const keyAnyComponetInOrder = results['any component'].incrementIf(kauderk.util.includesAtlest(['component', 'component alias'], key, null));
+                    const keyInComponentOrder = results['component'].incrementIf(key === 'component');
+                    const keyInAliasComponentOrder = results['component alias'].incrementIf(key === 'component alias');
+
+                    const baseKey = [indentFunc, uid, keyAnyComponetInOrder, keyInComponentOrder, keyInAliasComponentOrder, key];
+
+                    let similarCount = 0; // keep track of similarities
+                    const preKey = () => [similarCount, ...baseKey].join(' ') + 'ﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠ';
+                    let uniqueKey = preKey();
+
+                    while (componentsInOrderMap.has(uniqueKey))
+                    {
+                        similarCount += 1; // try to make it unique
+                        uniqueKey = preKey();
+                    }
+
+                    return uniqueKey;
+                }
+
+                function cleanIndentedBlock()
+                {
+                    const tab = '\t'.repeat(indentFunc);
+                    const cleanLineBrakes = objRes.string.replace(/(\n)/gm, ". ");
+                    const indentedBlock = tab + cleanLineBrakes.replace(/.{70}/g, '$&\n' + tab);
+                    return indentedBlock;
+                }
+            }
+
+
+            async function TryToFindURL(desiredUID)
+            {
+                const info = await kauderk.rap.getBlockInfoByUID(desiredUID);
+                const rawText = info[0][0]?.string || "F";
+
+                const urlRgx = /(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(.*?(?=\s|\}|\]|\)))/;
+                const string = rawText.replace(/(`.*?`)/g, 'used_to_be_an_inline_code_block');
+
+                // {{[[component]]: xxxyoutube-urlxxx }}
+                const components = [...string.matchAll(/{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)/gm)].map(x => x = x[0]) || [];
+                // (((xxxuidxxx))) || ((xxxuidxxx))
+                const innerUIDs = string.match(/(?<=\(\()([^(].*?[^)])(?=\)\))/gm) || [];
+                // [xxxanything goesxxx](((xxxuidxxx)))
+                const aliasesPlusUids = [...string.matchAll(/\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm)];
+
+                // componets with block references exlude aliases // set in the order in which roam renders them
+                const urlsWithUids = [...[...string.matchAll(/{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)|(?<=\(\()([^(].*?[^)])(?=\)\))/gm)]
+                    .map(x => x = x[0])]
+                    .map(x => components.includes(x) ? x = x.match(urlRgx)?.[0] : x);
+                // aliases alone
+                const innerAliasesUids = [...aliasesPlusUids].map(x => x = x[2]) || []; // [xxnopexxx]('((xxxyesxxx))')
+
+                // block references alone
+                const blockReferencesAlone = innerUIDs?.filter(x => !innerAliasesUids.includes(x));
+
+
+
+                let urls = [];
+                for (const i of components)
+                {
+                    // xxxyoutube-urlxxx
+                    urls = kauderk.util.pushSame(urls, i.match(urlRgx)?.[0]);
+                }
+
+                const resObj = { uid: desiredUID, components, urls, innerUIDs, urlsWithUids, aliasesPlusUids, innerAliasesUids, blockReferencesAlone, string, info };
+
+                // // filter out CodeBlocks from resObj values
+                // console.log(CodeBlocks);
+                // for (const inlineCode of CodeBlocks.reverse())
+                // {
+                //     for (const key in resObj)
+                //     {
+                //         if (resObj[key] instanceof Array)
+                //             resObj[key] = resObj[key].filter(val => !inlineCode.includes(val));
+                //     }
+                //     CodeBlocks.splice(CodeBlocks.indexOf(inlineCode), 1);
+                // }
+                return resObj;
+            };
         }
-
-        resObj.url = extractUrl_FromKey(await getUrlMap(resObj), resObj.urlIndex, 3);
-
-        return resObj;
     }
 
-    // 3. get relevant url
-    async function InputBlockVideoParams(tempUID)
-    {
-        let indentFunc = 0;
-        let componentsInOrderMap = new Map();
 
-        const orderObj = {
-            order: -1,
-            incrementIf: function (condition) { return condition ? Number(++this.order) : 'ﾠ' }
-        };
-        const results = {
-            'component alias': {
-                tone: 'purple',
-            },
-            'has any aliases': {
-                tone: 'blue'
-            },
-            'component': {
-                tone: 'green',
-            },
-            'any': {
-                condition: () => true,
-                tone: 'black',
-            },
-            'any component': {
-            },
-        }
-
-        // filter result keys that include 'component' word and assign it a orderObj
-        Object.keys(results).filter(key => key.includes('component'))
-            .forEach(key => Object.assign(results[key], orderObj));
-
-
-        const FirstObj = await TryToFindURL_Rec(tempUID);
-        console.log(componentsInOrderMap);
-        console.log('\n'.repeat(6)); // debugging
-
-
-        return componentsInOrderMap;
-        debugger;
-
-
-
-
-        async function TryToFindURL_Rec(uid, parentObj)
-        {
-            const objRes = await TryToFindURL(uid);
-
-            results['component alias'].condition = () => parentObj?.innerAliasesUids?.includes(uid) && (!!objRes.urls?.[0]);
-            results['has any aliases'].condition = () => objRes?.innerAliasesUids.length > 0;
-            results['component'].condition = () => objRes.components.length > 0;
-            const key = Object.keys(results).find(x => results[x].condition());
-
-
-            console.log("%c" + cleanIndentedBlock(), `color:${results[key].tone}`);
-
-
-            for (const i of objRes.urlsWithUids)
-            {
-                if (objRes.urls.includes(i)) // either component or component alias // set in the order in which roam renders them
-                {
-                    componentsInOrderMap.set(assertUniqueKey_while(uid), i || 'no component url');
-                }
-
-                if (objRes.innerUIDs.includes(i))
-                {
-                    indentFunc += 1;
-                    const awaitingObj = await TryToFindURL_Rec(i, objRes);
-                    indentFunc -= 1;
-                }
-            }
-
-            return { uid, objRes, parentObj };
-
-            function assertUniqueKey_while(uid)
-            {
-                // the order in which the components are rendered within the block
-                const keyAnyComponetInOrder = results['any component'].incrementIf(kauderk.util.includesAtlest(['component', 'component alias'], key, null));
-                const keyInComponentOrder = results['component'].incrementIf(key === 'component');
-                const keyInAliasComponentOrder = results['component alias'].incrementIf(key === 'component alias');
-
-                const baseKey = [indentFunc, uid, keyAnyComponetInOrder, keyInComponentOrder, keyInAliasComponentOrder, key];
-
-                let similarCount = 0; // keep track of similarities
-                const preKey = () => [similarCount, ...baseKey].join(' ') + 'ﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠ';
-                let uniqueKey = preKey();
-
-                while (componentsInOrderMap.has(uniqueKey))
-                {
-                    similarCount += 1; // try to make it unique
-                    uniqueKey = preKey();
-                }
-
-                return uniqueKey;
-            }
-
-            function cleanIndentedBlock()
-            {
-                const tab = '\t'.repeat(indentFunc);
-                const cleanLineBrakes = objRes.string.replace(/(\n)/gm, ". ");
-                const indentedBlock = tab + cleanLineBrakes.replace(/.{70}/g, '$&\n' + tab);
-                return indentedBlock;
-            }
-        }
-
-
-        async function TryToFindURL(desiredUID)
-        {
-            const info = await kauderk.rap.getBlockInfoByUID(desiredUID);
-            const rawText = info[0][0]?.string || "F";
-
-            const urlRgx = /(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(.*?(?=\s|\}|\]|\)))/;
-            const string = rawText.replace(/(`.*?`)/g, 'used_to_be_an_inline_code_block');
-
-            // {{[[component]]: xxxyoutube-urlxxx }}
-            const components = [...string.matchAll(/{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)/gm)].map(x => x = x[0]) || [];
-            // (((xxxuidxxx))) || ((xxxuidxxx))
-            const innerUIDs = string.match(/(?<=\(\()([^(].*?[^)])(?=\)\))/gm) || [];
-            // [xxxanything goesxxx](((xxxuidxxx)))
-            const aliasesPlusUids = [...string.matchAll(/\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm)];
-
-            // componets with block references exlude aliases // set in the order in which roam renders them
-            const urlsWithUids = [...[...string.matchAll(/{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)|(?<=\(\()([^(].*?[^)])(?=\)\))/gm)]
-                .map(x => x = x[0])]
-                .map(x => components.includes(x) ? x = x.match(urlRgx)?.[0] : x);
-            // aliases alone
-            const innerAliasesUids = [...aliasesPlusUids].map(x => x = x[2]) || []; // [xxnopexxx]('((xxxyesxxx))')
-
-            // block references alone
-            const blockReferencesAlone = innerUIDs?.filter(x => !innerAliasesUids.includes(x));
-
-
-
-            let urls = [];
-            for (const i of components)
-            {
-                // xxxyoutube-urlxxx
-                urls = kauderk.util.pushSame(urls, i.match(urlRgx)?.[0]);
-            }
-
-            const resObj = { uid: desiredUID, components, urls, innerUIDs, urlsWithUids, aliasesPlusUids, innerAliasesUids, blockReferencesAlone, string, info };
-
-            // // filter out CodeBlocks from resObj values
-            // console.log(CodeBlocks);
-            // for (const inlineCode of CodeBlocks.reverse())
-            // {
-            //     for (const key in resObj)
-            //     {
-            //         if (resObj[key] instanceof Array)
-            //             resObj[key] = resObj[key].filter(val => !inlineCode.includes(val));
-            //     }
-            //     CodeBlocks.splice(CodeBlocks.indexOf(inlineCode), 1);
-            // }
-            return resObj;
-        };
-    }
     // 3.1 extract params
     function urlConfig(url)
     {
