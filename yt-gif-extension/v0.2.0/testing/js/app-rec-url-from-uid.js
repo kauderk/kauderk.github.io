@@ -333,65 +333,8 @@ rm_components.both = {
 }
 Object.assign(rm_components.both, baseDeploymentObj_both());
 /*-----------------------------------*/
-let mainUidBlocks = new Map();
-function tempUidResult()
-{
-    return {
-        uid: null,
-        componentEls: new Map(),
-    }
-}
-function urlIndexFromBlockID(el)
-{
-    if (this.targetCssClass == 'a.rm-alias.rm-alias--block')
-    {
-        debugger;
-        el = document.querySelector('.bp3-popover-open')
-    }
 
-    if (!this.componentEls.has(this.uid)) // 🤔
-        this.componentEls.set(this.uid, [...document.querySelector('#' + closestYTGIFparentID(el)).querySelectorAll(this.targetCssClass)]);
-    return this.componentEls.get(this.uid).indexOf(el);
-}
-const uidResults = { /* last 9 letters form the closest blockID */
-    'block-id': {
-        indexToCheck: 4,
-        targetCssClass: '.rm-xparser-default-yt-gif',
-        condition: function (el) { return this.uid = UTILS.closestBlockID(el)?.slice(-9) },
-        urlIndex: function (el)
-        {
-            if (!this.componentEls.has(this.uid)) // 🤔
-                this.componentEls.set(this.uid, [...document.querySelector('#' + closestYTGIFparentID(el)).querySelectorAll(this.targetCssClass)]);
-            return this.componentEls.get(this.uid).indexOf(el);
-        },
-    },
-    // 'data-uid': {
-    //     indexToCheck: 4,
-    //     condition: function (el) { return this.uid = el.closest(`[${attrInfo.uid}]`)?.getAttribute(attrInfo.uid) },
-    //     targetCssClass: '',
-    //     urlIndex: function (el)
-    //     {
-    //         if (!this.componentEls.has(this.uid)) // 🤔
-    //             this.componentEls.set(this.uid, [...document.querySelector('#' + closestYTGIFparentID(el)).querySelectorAll(this.targetCssClass)]);
-    //         return this.componentEls.get(this.uid).indexOf(el);
-    //     }
-    // },
-    'popover': {
-        indexToCheck: 5,
-        targetCssClass: 'a.rm-alias.rm-alias--block',
-        popoverBlockID: function () { return UTILS.closestBlockID(document.querySelector('.bp3-popover-open')) },
-        condition: function () { return this.uid = this.popoverBlockID()?.slice(-9) },
-        urlIndex: function (el)
-        {
-            if (!this.componentEls.has(this.uid)) // 🤔
-                this.componentEls.set(this.uid, [...document.querySelector('#' + this.popoverBlockID()).querySelectorAll(this.targetCssClass)]);
-            //debugger;
-            return this.componentEls.get(this.uid).indexOf(document.querySelector('#' + this.popoverBlockID()).querySelector('span[aria-haspopup="true"] > a.rm-alias.rm-alias--block'));
-        },
-    },
-}
-Object.values(uidResults).map(v => Object.assign(v, tempUidResult()));
-/*-----------------------------------*/
+
 
 // the 🤔 emoji indicates that the adition of "dropdown tutorials" is clashing with some function's structure... so far is minor, but it's a problem nonthless. And building sparate functions for them - doesn't seem to be a great idea either, because they're BIG BOIS.
 if (
@@ -1339,23 +1282,20 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     if (!wrapper || !wrapper.parentNode) return;
 
 
+    // 1. search and get urlIndex and uid
+    const { uid, urlIndex, indexToCheck } = await tempUidResultsObj(wrapper);
 
-    const key = Object.keys(uidResults).find(x => uidResults[x].condition(wrapper));
-    if (!key) debugger;
-    const uid = uidResults[key].uid;
-
-    if (!uid) return; // don't add up false positives
+    // 1.1 don't add up false positives
+    if (!uid || urlIndex < 0) { console.warn(`Couldn't find any yt-gif components within the block ((${uid}))`); return }
     const newId = iframeIDprfx + Number(++window.YT_GIF_OBSERVERS.creationCounter);
 
 
 
     // 2. extract data and store them in maps
-    const preUrlIndex = uidResults[key].urlIndex(wrapper);
-    const urlIndex = preUrlIndex > -1 ? preUrlIndex : 0;
-    if (preUrlIndex == -1) console.count('urlIndex == -1 ', wrapper);
-
-    const url = wrapper.getAttribute(attrInfo.url.path) || //🤔
-        await InputBlockVideoParams(uid, urlIndex, uidResults[key].indexToCheck);
+    const url = /*wrapper.getAttribute(attrInfo.url.path) || */
+        await InputBlockVideoParams(uid, urlIndex, indexToCheck);
+    // const blockRefObj = await InputBlockVideoParams(uid, urlIndex, indexToCheck);
+    // const url = null;
 
     // 2.1 OnPlayerReady video params point of reference
     allVideoParameters.set(newId, urlConfig(url));
@@ -1364,7 +1304,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     // 2.2 target's point of reference
     const record = JSON.parse(JSON.stringify(sesionIDs));
     sesionIDs.uid = uid;
-    const blockID = closestYTGIFparentID(wrapper) + properBlockIDSufix(url, urlIndex) //🤔
+    const blockID = closestYTGIFparentID(wrapper) + properBlockIDSufix(url, urlIndex)
     if (blockID != null)
         recordedIDs.set(blockID, record);
 
@@ -1385,15 +1325,6 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
 
-    // 3. delete block's mainUidBlocksMap entry when removed form DOM
-    const options = {
-        el: document.querySelector(closestYTGIFparentID(wrapper)),
-        OnRemmovedFromDom_cb: (o) => uidResults[key].componentEls.delete(uid),
-    }
-    ObserveRemovedEl(options); // not elegant but works
-
-
-
     // 5. 
     if (dataCreation == attrInfo.creation.forceAwaiting || isValid_Awaiting_check())
     {
@@ -1405,6 +1336,50 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     }
 
 
+
+    // 1. uidResultsObj
+    async function tempUidResultsObj(el)
+    {
+        const baseTargetCssClasses = ['.rm-xparser-default-yt-gif', '.yt-gif-wrapper', 'a.rm-alias.rm-alias--block']; //'a.rm-alias.rm-alias--block'
+
+        const uidResults = { /* a class makes the most sense here, but they're so similar, yet so different, and it only happens once at the time I hope... */
+            'block-id': {
+                indexToCheck: 3,
+
+                uid: null,
+                condition: function () { return this.uid = this.grandParentBlock(el)?.id?.slice(-9) },
+
+                targetSelector: [...baseTargetCssClasses].join(', '),
+                grandParentBlock: function () { return closestYTGIFparent(el) },
+                urlComponents: function () { return [...this.grandParentBlock(el).querySelectorAll(this.targetSelector)] },
+            },
+            'popover': {
+                indexToCheck: 3,
+
+                uid: null,
+                condition: function () { return this.uid = this.grandParentBlock()?.id?.slice(-9) },
+
+                targetSelector: [...baseTargetCssClasses].join(', '),
+                grandParentBlock: function () { return closestYTGIFparent(document.querySelector('.bp3-popover-open')) },
+                grandParentPopOver: function () { return document.querySelector("div.bp3-popover-content > .rm-alias-tooltip__content") },
+                urlComponents: function () { return [...this.grandParentPopOver().querySelectorAll(this.targetSelector)] },
+            },
+        }
+        const key = Object.keys(uidResults).find(x => uidResults[x].condition());
+        const resObj = {
+            uid: uidResults[key].uid,
+            urlComponents: uidResults[key].urlComponents(),
+            urlIndex: uidResults[key].urlComponents().indexOf(el),
+            indexToCheck: uidResults[key].indexToCheck,
+        }
+        if (key == 'popover')
+        {
+            debugger;
+            resObj.uid = await InputBlockVideoParams(resObj.uid, resObj.urlIndex, 2);
+            console.log(resObj.uid);
+        }
+        return resObj;
+    }
 
     // 3. get relevant url
     async function InputBlockVideoParams(tempUID, indexOfComponent, indexToCheck)
@@ -1440,8 +1415,8 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
         const FirstObj = await TryToFindURL_Rec(tempUID);
-        //console.log(componentsInOrderMap);
-        //console.log('\n'.repeat(6)); // debugging
+        console.log(componentsInOrderMap);
+        console.log('\n'.repeat(6)); // debugging
 
         // loop through componentsInOrderMap keys
         for (let [key, value] of componentsInOrderMap.entries())
@@ -1467,7 +1442,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             const key = Object.keys(results).find(x => results[x].condition());
 
 
-            //console.log("%c" + cleanIndentedBlock(), `color:${results[key].tone}`);
+            console.log("%c" + cleanIndentedBlock(), `color:${results[key].tone}`);
 
 
             for (const i of objRes.urlsWithUids)
@@ -1622,7 +1597,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         }
 
         if (success) { return media; }
-        else { alert('No valid media id detected'); }
+        else { alert('No valid youtube url detected for yt-gifs'); }
         return false;
     }
 
@@ -2815,9 +2790,14 @@ function btn_VS(bol, exp_btn, disabled)
 //#endregion
 
 
+function closestYTGIFparent(el)
+{
+    if (!el) debugger;
+    return el?.closest('.rm-block__input') || el.closest('.dwn-yt-gif-player-container')  //🤔
+}
 function closestYTGIFparentID(el)
 {
-    return (UTILS.closestBlockID(el) || el.closest('.dwn-yt-gif-player-container')?.id)
+    return (UTILS.closestBlockID(el) || el.closest('.dwn-yt-gif-player-container')?.id)  //🤔
 }
 function getProperYTGIFParentID(el, wrapper)
 {
