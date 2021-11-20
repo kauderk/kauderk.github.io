@@ -1407,10 +1407,10 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         if (key == 'popover')  
         {
             // debugger;
-            // resObj.uid = extractUID_FromKey(await getUrlMap(resObj), resObj.urlIndex, 5);// needs it's own UID
+            resObj.uid = extractUID_FromKey(await getUrlMap(resObj), resObj.urlIndex, 5);// needs it's own UID
 
-            // uidResults['block-id'].grandParentBlock = grandParentPopOver; // once there
-            // resObj.urlIndex = uidResults['block-id'].urlIndex(); // it also needs it's own urlIndex
+            uidResults['block-id'].grandParentBlock = grandParentPopOver; // once there
+            resObj.urlIndex = uidResults['block-id'].urlIndex(); // it also needs it's own urlIndex
         }
 
         resObj.url = extractUrl_FromKey(await getUrlMap(resObj), resObj.urlIndex, 3);
@@ -1517,7 +1517,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             function cleanIndentedBlock()
             {
                 const tab = '\t'.repeat(indentFunc);
-                const cleanLineBrakes = objRes.rawText.replace(/(\n)/gm, ". ");
+                const cleanLineBrakes = objRes.string.replace(/(\n)/gm, ". ");
                 const indentedBlock = tab + cleanLineBrakes.replace(/.{70}/g, '$&\n' + tab);
                 return indentedBlock;
             }
@@ -1529,33 +1529,49 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             const info = await kauderk.rap.getBlockInfoByUID(desiredUID);
             const rawText = info[0][0]?.string || "F";
 
-            // {{[[component]]: xxxyoutube-urlxxx }}
-            const components = [...rawText.matchAll(/{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)/gm)].map(x => x = x[0]) || [];
-            // (((xxxuidxxx))) || ((xxxuidxxx))
-            const innerUIDs = rawText.match(/(?<=\(\()([^(].*?[^)])(?=\)\))/gm) || [];
-            // [xxxanything goesxxx](((xxxuidxxx)))
-            const aliasesPlusUids = [...rawText.matchAll(/\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm)];
+            const urlRgx = /(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(.*?(?=\s|\}|\]|\)))/;
+            const string = rawText.replace(/(`.*?`)/g, 'used_to_be_an_inline_code_block');
 
+            // {{[[component]]: xxxyoutube-urlxxx }}
+            const components = [...string.matchAll(/{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)/gm)].map(x => x = x[0]) || [];
+            // (((xxxuidxxx))) || ((xxxuidxxx))
+            const innerUIDs = string.match(/(?<=\(\()([^(].*?[^)])(?=\)\))/gm) || [];
+            // [xxxanything goesxxx](((xxxuidxxx)))
+            const aliasesPlusUids = [...string.matchAll(/\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm)];
+
+            // componets with block references exlude aliases // set in the order in which roam renders them
+            const urlsWithUids = [...[...string.matchAll(/{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)|(?<=\(\()([^(].*?[^)])(?=\)\))/gm)]
+                .map(x => x = x[0])]
+                .map(x => components.includes(x) ? x = x.match(urlRgx)?.[0] : x);
             // aliases alone
             const innerAliasesUids = [...aliasesPlusUids].map(x => x = x[2]) || []; // [xxnopexxx]('((xxxyesxxx))')
 
             // block references alone
             const blockReferencesAlone = innerUIDs?.filter(x => !innerAliasesUids.includes(x));
 
-            // componets with block references exlude aliases // set in the order in which roam renders them
-            const urlsWithUids = [...[...rawText.matchAll(/{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)|(?<=\(\()([^(].*?[^)])(?=\)\))/gm)]
-                .map(x => x = x[0])]
-                .map(x => components.includes(x) ? x = x.match(/(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(.*?(?=\s|\}|\]|\)))/)?.[0] : x);
 
 
             let urls = [];
             for (const i of components)
             {
                 // xxxyoutube-urlxxx
-                urls = kauderk.util.pushSame(urls, i.match(/(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(.*?(?=\s|\}|\]|\)))/)?.[0]);
+                urls = kauderk.util.pushSame(urls, i.match(urlRgx)?.[0]);
             }
 
-            return { uid: desiredUID, components, urls, innerUIDs, urlsWithUids, aliasesPlusUids, innerAliasesUids, blockReferencesAlone, rawText, info };
+            const resObj = { uid: desiredUID, components, urls, innerUIDs, urlsWithUids, aliasesPlusUids, innerAliasesUids, blockReferencesAlone, string, info };
+
+            // // filter out CodeBlocks from resObj values
+            // console.log(CodeBlocks);
+            // for (const inlineCode of CodeBlocks.reverse())
+            // {
+            //     for (const key in resObj)
+            //     {
+            //         if (resObj[key] instanceof Array)
+            //             resObj[key] = resObj[key].filter(val => !inlineCode.includes(val));
+            //     }
+            //     CodeBlocks.splice(CodeBlocks.indexOf(inlineCode), 1);
+            // }
+            return resObj;
         };
     }
     // 3.1 extract params
