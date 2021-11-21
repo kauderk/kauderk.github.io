@@ -109,6 +109,7 @@ const sesionIDs = {
     target: null,
     uid: '---------'
 }
+const UIDtoURLInstancesMapMap = new Map(); // since it store recursive maps, once per instance it's enough
 /*-----------------------------------*/
 const urlFolder = (f) => `https://kauderk.github.io/yt-gif-extension/resources/${f}`;
 const self_urlFolder = (f) => `https://kauderk.github.io/yt-gif-extension/v0.2.0/${f}`;
@@ -334,7 +335,6 @@ rm_components.both = {
 Object.assign(rm_components.both, baseDeploymentObj_both());
 /*-----------------------------------*/
 
-/*-----------------------------------*/
 
 
 
@@ -1286,11 +1286,16 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     if (!wrapper || !wrapper.parentNode) return;
 
 
+
     // 1. search and get urlIndex and uid
-    const { uid, urlIndex, url } = await tempUidResultsObj(wrapper);
+    const { uid, url, urlIndex } = await tempUidResultsObj(wrapper);
 
     // 1.1 don't add up false positives
-    if (!uid || urlIndex < 0) { console.warn(`Couldn't find any yt-gif components within the block ((${uid}))`); return }
+    if (!uid || !url || urlIndex < 0)
+    {
+        UIDtoURLInstancesMapMap.delete(uid);
+        console.warn(`Couldn't find a yt-gif component within the block ((${uid}))`); return
+    }
     const newId = iframeIDprfx + Number(++window.YT_GIF_OBSERVERS.creationCounter);
 
 
@@ -1323,7 +1328,16 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
 
-    // 5. 
+    // 5. clean url map when removed from DOM
+    const options = {
+        el: closestYTGIFparent(wrapper)?.querySelector('span'),
+        OnRemmovedFromDom_cb: () => UIDtoURLInstancesMapMap.delete(uid),
+    }
+    ObserveRemovedEl_Smart(options); // Expensive? think so. Elegant? no, but works
+
+
+
+    // 6. 
     if (dataCreation == attrInfo.creation.forceAwaiting || isValid_Awaiting_check())
     {
         return await DeployYT_IFRAME_OnInteraction();
@@ -1368,6 +1382,8 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
         const key = Object.keys(uidResults).find(x => uidResults[x].condition());
+        if (!uidResults[key].uid) return { uid: null }; // sometimes it's already gone while loading iframes
+
         const resObj = {
             uid: uidResults[key].uid,
             urlIndex: uidResults[key].urlIndex(),
@@ -1377,17 +1393,24 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
         if (key == 'popover')  
         {
-            resObj.uid = extractUID_FromKey(await getUrlMap(resObj.uid), resObj.urlIndex, 5); // needs it's own UID
+            resObj.uid = extractUID_FromKey(await getUrlMap_smart(resObj.uid), resObj.urlIndex, 5); // needs it's own UID
 
             uidResults['base-block'].grandParentBlock = grandParentPopOver; // once there (abstract enough to borrow functionalities)
             resObj.urlIndex = uidResults['base-block'].urlIndex(); // it also needs it's own urlIndex
         }
 
 
-        resObj.url = extractUrl_FromKey(await getUrlMap(resObj.uid), resObj.urlIndex, 3);
+        resObj.url = extractUrl_FromKey(await getUrlMap_smart(resObj.uid), resObj.urlIndex, 3);
+        //resObj.uid = uidResults[key].uid;
         return resObj;
 
 
+        async function getUrlMap_smart(uid)
+        {
+            if (!UIDtoURLInstancesMapMap.has(uid))
+                UIDtoURLInstancesMapMap.set(uid, await getUrlMap(uid)); // a map inside a map 🤯
+            return UIDtoURLInstancesMapMap.get(uid);
+        }
         function extractUrl_FromKey(map, valueAtIndex, indexToCheck)
         {
             let val = null;
@@ -1399,7 +1422,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                     val = value;
                 }
             }
-            if (!val) debugger;
+            //if (!val) debugger;
             return val;
         }
         function extractUID_FromKey(map, valueAtIndex, indexToCheck)
@@ -1413,14 +1436,14 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                     val = deconstructKey[2];
                 }
             }
-            if (!val) debugger;
+            //if (!val) debugger;
             return val;
         }
         async function getUrlMap(tempUID)
         {
             let indentFunc = 0;
             let componentsInOrderMap = new Map();
-
+            let keepTrackOfUids = [];
 
             const orderObj = {
                 order: -1,
@@ -1450,6 +1473,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
             const FirstObj = await TryToFindURL_Rec(tempUID);
+            //console.count('componentsInOrderMap')
             //console.log(componentsInOrderMap);
             //console.log('\n'.repeat(6));
 
@@ -1467,7 +1491,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 const key = Object.keys(results).find(x => results[x].condition());
 
 
-                console.log("%c" + cleanIndentedBlock(), `color:${results[key].tone}`);
+                //console.log("%c" + cleanIndentedBlock(), `color:${results[key].tone}`);
 
 
                 for (const i of objRes.urlsWithUids)
@@ -1480,7 +1504,18 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                     if (objRes.innerUIDs.includes(i))
                     {
                         indentFunc += 1;
-                        const awaitingObj = await TryToFindURL_Rec(i, objRes);
+
+                        if (keepTrackOfUids.includes(i) || i == tempUID)
+                        {
+                            //console.count(`Avoid reading recursive block ${i}`);
+                            //debugger;
+                            break;
+                        }
+                        else
+                        {
+                            keepTrackOfUids.push(i);
+                            const awaitingObj = await TryToFindURL_Rec(i, objRes);
+                        }
                         indentFunc -= 1;
                     }
                 }
@@ -1490,7 +1525,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 function assertUniqueKey_while(uid)
                 {
                     // the order in which the components are rendered within the block
-                    const keyAnyComponetInOrder = results['any component'].incrementIf(kauderk.util.includesAtlest(['component', 'component alias'], key, null));
+                    const keyAnyComponetInOrder = results['any component'].incrementIf(UTILS.includesAtlest(['component', 'component alias'], key, null));
                     const keyInComponentOrder = results['component'].incrementIf(key === 'component');
                     const keyInAliasComponentOrder = results['component alias'].incrementIf(key === 'component alias');
 
@@ -1521,7 +1556,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
             async function TryToFindURL(desiredUID)
             {
-                const info = await kauderk.rap.getBlockInfoByUID(desiredUID);
+                const info = await RAP.getBlockInfoByUID(desiredUID);
                 const rawText = info[0][0]?.string || "F";
 
                 const urlRgx = /(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(.*?(?=\s|\}|\]|\)))/;
@@ -1550,27 +1585,13 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 for (const i of components)
                 {
                     // xxxyoutube-urlxxx
-                    urls = kauderk.util.pushSame(urls, i.match(urlRgx)?.[0]);
+                    urls = UTILS.pushSame(urls, i.match(urlRgx)?.[0]);
                 }
 
-                const resObj = { uid: desiredUID, components, urls, innerUIDs, urlsWithUids, aliasesPlusUids, innerAliasesUids, blockReferencesAlone, string, info };
-
-                // // filter out CodeBlocks from resObj values
-                // console.log(CodeBlocks);
-                // for (const inlineCode of CodeBlocks.reverse())
-                // {
-                //     for (const key in resObj)
-                //     {
-                //         if (resObj[key] instanceof Array)
-                //             resObj[key] = resObj[key].filter(val => !inlineCode.includes(val));
-                //     }
-                //     CodeBlocks.splice(CodeBlocks.indexOf(inlineCode), 1);
-                // }
-                return resObj;
+                return { uid: desiredUID, components, urls, innerUIDs, urlsWithUids, aliasesPlusUids, innerAliasesUids, blockReferencesAlone, string, info };
             };
         }
     }
-
 
     // 3.1 extract params
     function urlConfig(url)
@@ -1828,15 +1849,11 @@ async function onPlayerReady(event)
 
 
     // 7. clean data and ready 'previous' paramaters for next sesion with IframeRemmovedFromDom_callback
-    // const config = { subtree: true, childList: true };
-    // const RemovedObserver = new MutationObserver(IframeMutationRemoval_callback); // will fire IframeRemmovedFromDom_callback... the acutal logic
-    // RemovedObserver.observe(document.body, config);
-
     const options = {
         el: iframe,
         OnRemmovedFromDom_cb: IframeRemmovedFromDom_callback,
     }
-    ObserveRemovedEl(options); // Expensive? think so. Elegant? no, but works
+    ObserveRemovedEl_Smart(options); // Expensive? think so. Elegant? no, but works
 
 
 
@@ -2199,25 +2216,6 @@ async function onPlayerReady(event)
 
 
     //#region 7. on destroyed - clean up and ready next session
-    function IframeMutationRemoval_callback(mutationsList, observer)
-    {
-        mutationsList.forEach(function (mutation)
-        {
-            const nodes = Array.from(mutation.removedNodes);
-            const directMatch = nodes.indexOf(iframe) > -1
-            const parentMatch = nodes.some(parentEl => parentEl.contains(iframe));
-
-            if (directMatch)
-            {
-                observer.disconnect();
-                console.log(`node ${iframe} was directly removed!`);
-            }
-            else if (parentMatch)
-            {
-                IframeRemmovedFromDom_callback(observer);
-            }
-        });
-    };
     function IframeRemmovedFromDom_callback(observer)
     {
         // expensive for sure 🙋
@@ -2250,9 +2248,6 @@ async function onPlayerReady(event)
         recordedIDs.delete(blockID);
         allVideoParameters.delete(key);
         t.__proto__.enter = () => { };
-
-
-        observer.disconnect();
 
         if (canBeCleanedByBuffer)
         {
@@ -2576,8 +2571,12 @@ function onStateChange(state)
 }
 
 
-function ObserveRemovedEl(options)
+function ObserveRemovedEl_Smart(options)
 {
+    if (!options.el)
+    {
+        return null;
+    }
     const config = { subtree: true, childList: true };
     const RemovedObserver = new MutationObserver(MutationRemoval_cb); // will fire OnRemmovedFromDom... the acutal logic
     RemovedObserver.observe(document.body, config);
