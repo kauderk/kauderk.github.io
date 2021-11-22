@@ -1295,7 +1295,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     {
         UIDtoURLInstancesMapMap.delete(uid);
         console.warn(`Couldn't find a yt-gif component within the block ((${uid}))`);
-        debugger; return;
+        return;
     }
     const newId = iframeIDprfx + Number(++window.YT_GIF_OBSERVERS.creationCounter);
 
@@ -1375,7 +1375,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 grandParentBlock: function () { return closestYTGIFparent(document.querySelector('.bp3-popover-open')) },//grandParentPopOver,
             },
             'ddm-tutorial': { //🤔 
-                uid: 'irrelevant', url: null, el,
+                uid: 'irrelevant-uid', url: null, el,
                 condition: function () { return this.url = this.el.getAttribute(attrInfo.url.path) },
                 targetSelector: ['[data-video-url]'].join(),
                 grandParentBlock: function () { return this.el.closest('.dwn-yt-gif-player-container') },
@@ -1401,19 +1401,17 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
         if (key == 'popover')  
         {
-            if (!resObj.uid)
+            resObj.uid = extractUID_FromKey(await getUrlMap_smart(uidResults[key].uid), resObj.urlIndex, 5); // needs it's own UID
+
+            if (!resObj.uid) // since 'keepTrackOfUids' within getUrlMap() filters duplicate UIDs
             {
-                debugger;
-                console.trace('fuck!');
-                return {};
+                console.warn('YT GIF - looking for previous nested alias...')
+                while (resObj.urlIndex-- > 0) // up here I lost the urlIndex, so I need to go back -1 till I find a UID
+                    resObj.uid = extractUID_FromKey(await getUrlMap_smart(uidResults[key].uid), resObj.urlIndex, 5); // it's bad... but I don't know how to fix it
             }
-            resObj.uid = extractUID_FromKey(await getUrlMap_smart(resObj.uid), resObj.urlIndex, 5); // needs it's own UID
-            if (!resObj.uid)
-            {
-                debugger;
-                console.trace('fuck!');
-                return {};
-            }
+
+            if (!resObj.uid) return {};
+
             uidResults['base-block'].grandParentBlock = grandParentPopOver; // once there (abstract enough to borrow functionalities)
             resObj.urlIndex = uidResults['base-block'].urlIndex(); // it also needs it's own urlIndex
         }
@@ -1430,9 +1428,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 if (!uid) throw new Error('uid is null');
                 if (!UIDtoURLInstancesMapMap.has(uid))
                     UIDtoURLInstancesMapMap.set(uid, await getUrlMap(uid)); // a map inside a map 🤯
-                const map = UIDtoURLInstancesMapMap.get(uid);
-                console.log('getUrlMap_smart', uid, map);
-                return map;
+                return UIDtoURLInstancesMapMap.get(uid);
             } catch (error)
             {
                 console.log(error);
@@ -1459,7 +1455,6 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             for (let [key, value] of map.entries())
             {
                 const deconstructKey = key.split(' ');
-                console.log(...deconstructKey, deconstructKey[indexToCheck]);
                 if (deconstructKey[indexToCheck] == valueAtIndex)
                 {
                     val = deconstructKey[2];
@@ -1496,7 +1491,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             }
 
 
-            // filter result keys that include 'component' word and assign it a orderObj
+            // filter result keys that include 'component' word and assign them an orderObj
             Object.keys(results).filter(key => key.includes('component'))
                 .forEach(key => Object.assign(results[key], orderObj));
 
@@ -1538,7 +1533,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                         {
                             //console.count(`Avoid reading recursive block ${i}`);
                             //debugger;
-                            break;
+                            continue;
                         }
                         else
                         {
