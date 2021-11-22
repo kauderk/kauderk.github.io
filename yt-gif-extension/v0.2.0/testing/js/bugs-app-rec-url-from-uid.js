@@ -1294,7 +1294,8 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     if (!url || urlIndex < 0 || !uid)
     {
         UIDtoURLInstancesMapMap.delete(uid);
-        console.warn(`Couldn't find a yt-gif component within the block ((${uid}))`); return
+        console.warn(`Couldn't find a yt-gif component within the block ((${uid}))`);
+        debugger; return;
     }
     const newId = iframeIDprfx + Number(++window.YT_GIF_OBSERVERS.creationCounter);
 
@@ -1354,37 +1355,33 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     {
         const grandParentBlock = function () { return closestYTGIFparent(el) };
         const grandParentPopOver = function () { return document.querySelector("div.bp3-popover-content > .rm-alias-tooltip__content") };
+        const tempUrlObj = {
+            urlComponents: function () { return [...this.grandParentBlock().querySelectorAll(this.targetSelector)] },
+            urlIndex: function () { return this.urlComponents().indexOf(this.el) },
+        }
 
 
         const uidResults = { /* a class makes the most sense here, but they're so similar, yet so different, and it only happens once at the time I hope... */
             'base-block': {
-                uid: null, url: null,
-                condition: function () { return this.uid = this.grandParentBlock(el)?.id?.slice(-9) },
+                uid: null, url: null, el,
+                condition: function () { return this.uid = this.grandParentBlock(this.el)?.id?.slice(-9) },
                 targetSelector: ['.rm-xparser-default-yt-gif', '.yt-gif-wrapper', 'a.rm-alias.rm-alias--block'].join(),
                 grandParentBlock,
-                urlComponents: function () { return [...this.grandParentBlock(el).querySelectorAll(this.targetSelector)] },
-                urlIndex: function () { return this.urlComponents().indexOf(el) },
             },
             'popover': {
-                uid: null, url: null,
+                uid: null, url: null, el: document.querySelector('.bp3-popover-target.bp3-popover-open > a.rm-alias.rm-alias--block'),
                 condition: function () { return this.uid = this.grandParentBlock()?.id?.slice(-9) },
                 targetSelector: ['a.rm-alias.rm-alias--block'].join(),
                 grandParentBlock: function () { return closestYTGIFparent(document.querySelector('.bp3-popover-open')) },//grandParentPopOver,
-                urlComponents: function () { return [...this.grandParentBlock().querySelectorAll(this.targetSelector)] },
-                urlIndex: function () { return this.urlComponents().indexOf(document.querySelector('.bp3-popover-target.bp3-popover-open > a.rm-alias.rm-alias--block')) },
             },
             'ddm-tutorial': { //🤔 
-                uid: 'irrelevant', url: null,
-                condition: function () { return this.url = el.getAttribute(attrInfo.url.path) },
-                //[...el.closest('.dwn-yt-gif-player-container').querySelectorAll('[data-video-url]')].indexOf(el);
+                uid: 'irrelevant', url: null, el,
+                condition: function () { return this.url = this.el.getAttribute(attrInfo.url.path) },
                 targetSelector: ['[data-video-url]'].join(),
-                grandParentBlock: function () { return el.closest('.dwn-yt-gif-player-container') },
-                urlComponents: function () { return [...this.grandParentBlock().querySelectorAll(this.targetSelector)] },
-                urlIndex: function () { return this.urlComponents().indexOf(el) },
+                grandParentBlock: function () { return this.el.closest('.dwn-yt-gif-player-container') },
             },
         }
-
-
+        Object.keys(uidResults).forEach(key => Object.assign(uidResults[key], tempUrlObj));
         const key = Object.keys(uidResults).find(x => uidResults[x].condition());
         if (!key) return {};
 
@@ -1404,7 +1401,19 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
         if (key == 'popover')  
         {
+            if (!resObj.uid)
+            {
+                debugger;
+                console.trace('fuck!');
+                return {};
+            }
             resObj.uid = extractUID_FromKey(await getUrlMap_smart(resObj.uid), resObj.urlIndex, 5); // needs it's own UID
+            if (!resObj.uid)
+            {
+                debugger;
+                console.trace('fuck!');
+                return {};
+            }
             uidResults['base-block'].grandParentBlock = grandParentPopOver; // once there (abstract enough to borrow functionalities)
             resObj.urlIndex = uidResults['base-block'].urlIndex(); // it also needs it's own urlIndex
         }
@@ -1416,9 +1425,19 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
         async function getUrlMap_smart(uid)
         {
-            if (!UIDtoURLInstancesMapMap.has(uid))
-                UIDtoURLInstancesMapMap.set(uid, await getUrlMap(uid)); // a map inside a map 🤯
-            return UIDtoURLInstancesMapMap.get(uid);
+            try
+            {
+                if (!uid) throw new Error('uid is null');
+                if (!UIDtoURLInstancesMapMap.has(uid))
+                    UIDtoURLInstancesMapMap.set(uid, await getUrlMap(uid)); // a map inside a map 🤯
+                const map = UIDtoURLInstancesMapMap.get(uid);
+                console.log('getUrlMap_smart', uid, map);
+                return map;
+            } catch (error)
+            {
+                console.log(error);
+                return new Map();
+            }
         }
         function extractUrl_FromKey(map, valueAtIndex, indexToCheck)
         {
@@ -1440,6 +1459,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             for (let [key, value] of map.entries())
             {
                 const deconstructKey = key.split(' ');
+                console.log(...deconstructKey, deconstructKey[indexToCheck]);
                 if (deconstructKey[indexToCheck] == valueAtIndex)
                 {
                     val = deconstructKey[2];
