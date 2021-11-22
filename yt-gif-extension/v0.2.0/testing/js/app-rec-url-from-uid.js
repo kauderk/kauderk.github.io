@@ -1288,13 +1288,13 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
     // 1. search and get urlIndex and uid
-    const { url, urlIndex, uid } = await tempUidResultsObj(wrapper);
+    const { url, urlIndex, uid, grandParentBlock } = await tempUidResultsObj(wrapper);
 
     // 1.1 don't add up false positives
     if (!url || urlIndex < 0 || !uid)
     {
         UIDtoURLInstancesMapMap.delete(uid);
-        console.warn(`Couldn't find ${urlIndex}th yt-gif component within the block ((${uid}))`);
+        console.warn(`YT GIF - Couldn't find ${urlIndex}th yt-gif component within the block ((${uid}))`);
         return;
     }
     const newId = iframeIDprfx + Number(++window.YT_GIF_OBSERVERS.creationCounter);
@@ -1331,7 +1331,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
     // 5. clean url map when removed from DOM
     const options = {
-        el: closestYTGIFparent(wrapper)?.querySelector('span'),
+        el: grandParentBlock?.querySelector('span'),
         OnRemmovedFromDom_cb: () => UIDtoURLInstancesMapMap.delete(uid),
     }
     ObserveRemovedEl_Smart(options); // Expensive? think so. Elegant? no, but works
@@ -1366,7 +1366,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             'base-block': {
                 uid: null, url: null, el,
                 condition: uidFromGrandParent,
-                targetSelector: ['.rm-xparser-default-yt-gif', '.yt-gif-wrapper', 'a.rm-alias.rm-alias--block'].join(),
+                targetSelector: ['.rm-xparser-default-yt-gif', '.yt-gif-wrapper'/*, 'a.rm-alias.rm-alias--block' */].join(),
                 grandParentBlock,
             },
             'popover': {
@@ -1391,6 +1391,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             uid: uidResults[key].uid,
             urlIndex: uidResults[key].urlIndex(),
             url: uidResults[key].url,
+            grandParentBlock: uidResults[key].grandParentBlock(),
         }
 
 
@@ -1399,22 +1400,38 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             return resObj;
         }
 
-        //let checUrlOnIndex = 4;
+
         if (key == 'popover')  
         {
-            resObj.uid = null; // is it's parent's // needs it's own UID
-            // seems to work only when there are more than aliases in the block
-            console.warn('YT GIF - looking for previous nested alias...')
-            do
-            {
-                resObj.uid = extractUID_FromKey(await getUrlMap_smart(uidResults[key].uid), resObj.urlIndex, 5); // it's bad... but I don't know how to fix it
-                //if (resObj.uid) break;
-            } while (resObj.urlIndex-- > 0);
+            let map = await getUrlMap_smart(uidResults[key].uid);
+            console.log(resObj.uid);
+            console.log(map);
+            resObj.uid = extractUID_FromKey(map, resObj.urlIndex, 5); // is it's parent's // needs it's own UID
 
-            //uidResults['base-block'].targetSelector = ['.rm-xparser-default-yt-gif', '.yt-gif-wrapper'].join();
+            console.log('\n'.repeat(1));
+
+            const info = await RAP.getBlockInfoByUID(resObj.uid);
+            const rawText = info[0][0]?.string || "F";
+            map = await getUrlMap_smart(uidResults[key].uid);
+            console.log(resObj.uid);
+            console.log(map);
+            console.log(rawText);
+
+            console.log('\n'.repeat(4));
+            // // if (!resObj.uid)
+            // // {
+            // //     debugger;
+            // //     return {};
+            // // }
+            // console.warn(`YT GIF - within ((${uidResults[key].uid})) -> ${resObj.urlIndex}th alias, looking for previous nested alias...`)
+            // do
+            // {
+            //     resObj.uid = extractUID_FromKey(await getUrlMap_smart(uidResults[key].uid), resObj.urlIndex, 5); // it's bad... but I don't know how to fix it
+            //     if (resObj.uid) break
+            // } while (resObj.urlIndex-- > 0);
+
             uidResults['base-block'].grandParentBlock = grandParentPopOver; // once there (abstract enough to borrow functionalities)
             resObj.urlIndex = uidResults['base-block'].urlIndex(); // it also needs it's own urlIndex
-            //checUrlOnIndex = 3;
         }
 
 
@@ -1447,7 +1464,6 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                     val = value;
                 }
             }
-            //if (!val) debugger;
             return val;
         }
         function extractUID_FromKey(map, valueAtIndex, indexToCheck)
@@ -1461,7 +1477,6 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                     val = deconstructKey[2];
                 }
             }
-            //if (!val) debugger;
             return val;
         }
         async function getUrlMap(tempUID)
@@ -1504,6 +1519,16 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             console.log('\n'.repeat(6));
 
 
+            // filter results keys that include some keepTrackOfUids
+            // let uidsWithUrls = [...componentsInOrderMap.keys()].filter(key => keepTrackOfUids.some(x => key.includes(x)))
+            // const counts = {};
+            // keepTrackOfUids.forEach(x => counts[x] = (counts[x] || 0) + 1);
+
+            // // counts prperties filter out if their values are less than 2
+            // const countsFiltered = Object.keys(counts).filter(key => counts[key] > 1);
+
+            // console.log({ string: FirstObj.objRes.string, componentsInOrderMap, uidsWithUrls, counts, countsFiltered, keepTrackOfUids });
+
             return componentsInOrderMap;
 
 
@@ -1517,36 +1542,40 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 const key = Object.keys(results).find(x => results[x].condition());
 
 
-                console.log("%c" + cleanIndentedBlock(), `color:${results[key].tone}`);
+                //console.log("%c" + cleanIndentedBlock(), `color:${results[key].tone}`);
 
 
                 for (const i of objRes.urlsWithUids)
                 {
                     if (objRes.urls.includes(i)) // either component or component alias // set in the order in which roam renders them
                     {
-                        componentsInOrderMap.set(assertUniqueKey_while(uid, componentsInOrderMap), i || 'no component url');
+                        //if (uid == '0qV8_pWLL') debugger;
+
+                        const { uniqueKey, indent, resultKey } = assertUniqueKey_while(uid, indentFunc, key);
+                        keepTrackOfUidsMap.set(uid, { key: uniqueKey, url: i, indent, resultKey, uid });
+                        componentsInOrderMap.set(uniqueKey, i);
                     }
 
                     if (objRes.innerUIDs.includes(i))
                     {
-                        indentFunc += 1;
 
+                        indentFunc += 1;
                         if (keepTrackOfUids.includes(i) || i == tempUID)
                         {
-                            // if (objRes.innerAliasesUids.includes(i) && i != tempUID)
-                            // {
-                            //     if (parentObj)
-                            //     {
-                            //         console.log('is innerAliasesUids', i);
-                            //         const awaitingObj = await TryToFindURL_Rec(i, parentObj);
-                            //     }
-                            // }
-                            //console.count(`Avoid reading recursive block ${i}`);
-                            //debugger;
+                            keepTrackOfUids.push(i);
+                            const { url, indent, resultKey, uid } = keepTrackOfUidsMap?.get(i) || {};
+                            if (url)
+                            {
+                                //if (i == '0qV8_pWLL') debugger;
+                                //const awaitingObj = await TryToFindURL_Rec(i, objRes);
+                                componentsInOrderMap.set(assertUniqueKey_while(uid, indent, resultKey).uniqueKey, url);
+                            }
                             continue;
                         }
                         else
                         {
+                            //if (i == '0qV8_pWLL') debugger;
+
                             keepTrackOfUids.push(i);
                             const awaitingObj = await TryToFindURL_Rec(i, objRes);
                         }
@@ -1556,26 +1585,29 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
                 return { uid, objRes, parentObj };
 
-                function assertUniqueKey_while(uid, map)
+                function assertUniqueKey_while(uid, indent, resultKey)
                 {
                     // the order in which the components are rendered within the block
-                    const keyAnyComponetInOrder = results['any component'].incrementIf(UTILS.includesAtlest(['component', 'component alias'], key, null));
-                    const keyInComponentOrder = results['component'].incrementIf(key === 'component');
-                    const keyInAliasComponentOrder = results['component alias'].incrementIf(key === 'component alias');
+                    const keyAnyComponetInOrder = results['any component'].incrementIf(UTILS.includesAtlest(['component', 'component alias'], resultKey, null));
+                    const keyInComponentOrder = results['component'].incrementIf(resultKey === 'component');
+                    const keyInAliasComponentOrder = results['component alias'].incrementIf(resultKey === 'component alias');
 
-                    const baseKey = [indentFunc, uid, keyAnyComponetInOrder, keyInComponentOrder, keyInAliasComponentOrder, key];
+                    const baseKey = [indent, uid, keyAnyComponetInOrder, keyInComponentOrder, keyInAliasComponentOrder, resultKey];
 
                     let similarCount = 0; // keep track of similarities
                     const preKey = () => [similarCount, ...baseKey].join(' ') + 'ﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠ';
                     let uniqueKey = preKey();
 
-                    while (map.has(uniqueKey))
+
+                    while (componentsInOrderMap.has(uniqueKey))
                     {
+                        debugger;
                         similarCount += 1; // try to make it unique
                         uniqueKey = preKey();
                     }
+                    similarCount = 0;
 
-                    return uniqueKey;
+                    return { uniqueKey, original: preKey(), indent, resultKey };
                 }
 
                 function cleanIndentedBlock()
