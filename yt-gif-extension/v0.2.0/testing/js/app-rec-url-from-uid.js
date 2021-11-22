@@ -1353,8 +1353,9 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     // 1. uidResultsObj
     async function tempUidResultsObj(el)
     {
-        const grandParentBlock = function () { return closestYTGIFparent(el) };
+        const grandParentBlock = function () { return closestYTGIFparent(this.el) };
         const grandParentPopOver = function () { return document.querySelector("div.bp3-popover-content > .rm-alias-tooltip__content") };
+        const uidFromGrandParent = function () { return this.uid = this.grandParentBlock()?.id?.slice(-9) };
         const tempUrlObj = {
             urlComponents: function () { return [...this.grandParentBlock().querySelectorAll(this.targetSelector)] },
             urlIndex: function () { return this.urlComponents().indexOf(this.el) },
@@ -1364,13 +1365,13 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         const uidResults = { /* a class makes the most sense here, but they're so similar, yet so different, and it only happens once at the time I hope... */
             'base-block': {
                 uid: null, url: null, el,
-                condition: function () { return this.uid = this.grandParentBlock(this.el)?.id?.slice(-9) },
+                condition: uidFromGrandParent,
                 targetSelector: ['.rm-xparser-default-yt-gif', '.yt-gif-wrapper', 'a.rm-alias.rm-alias--block'].join(),
                 grandParentBlock,
             },
             'popover': {
                 uid: null, url: null, el: document.querySelector('.bp3-popover-target.bp3-popover-open > a.rm-alias.rm-alias--block'),
-                condition: function () { return this.uid = this.grandParentBlock()?.id?.slice(-9) },
+                condition: uidFromGrandParent,
                 targetSelector: ['a.rm-alias.rm-alias--block'].join(),
                 grandParentBlock: function () { return closestYTGIFparent(document.querySelector('.bp3-popover-open')) },//grandParentPopOver,
             },
@@ -1409,8 +1410,6 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 while (resObj.urlIndex-- > 0) // up here I lost the urlIndex, so I need to go back -1 till I find a UID
                     resObj.uid = extractUID_FromKey(await getUrlMap_smart(uidResults[key].uid), resObj.urlIndex, 5); // it's bad... but I don't know how to fix it
             }
-
-            if (!resObj.uid) return {};
 
             uidResults['base-block'].grandParentBlock = grandParentPopOver; // once there (abstract enough to borrow functionalities)
             resObj.urlIndex = uidResults['base-block'].urlIndex(); // it also needs it's own urlIndex
@@ -1500,7 +1499,6 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             //console.count('componentsInOrderMap')
             //console.log(componentsInOrderMap);
             //console.log('\n'.repeat(6));
-
 
             return componentsInOrderMap;
 
