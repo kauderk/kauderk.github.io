@@ -1762,12 +1762,15 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 async function onPlayerReady(event)
 {
     const t = event.target;
-    const iframe = document.querySelector('#' + t.h.id) || t.getIframe();
-    const parent = iframe.closest('.' + cssData.yt_gif_wrapper) || iframe.parentElement;
-
     const key = t.h.id;
+
+    const getParent = (i) => i.closest('.' + cssData.yt_gif_wrapper) || i.parentElement; //🤔
+    const getBlockID = (iframe) => getProperYTGIFParentID(iframe, getParent(iframe)); //🤔
+
+    const iframe = document.getElementById(key) || t.getIframe();
+    const parent = getParent(iframe);
+
     const map = allVideoParameters.get(key); //videoParams
-    const url = map?.src;
     const start = map?.start || 0;
     const end = map?.end || t.getDuration();
     const clipSpan = end - start;
@@ -1775,7 +1778,7 @@ async function onPlayerReady(event)
     const entryVolume = validVolumeURL();
     const tickOffset = 1000 / speed;
 
-    const blockID = getProperYTGIFParentID(iframe, parent); //🤔
+    const blockID = getBlockID(iframe);
     const canBeCleanedByBuffer = UTILS.closestBlockID(iframe); //🤔
     const rocording = recordedIDs.get(blockID);
     // 🚧?
@@ -1812,7 +1815,6 @@ async function onPlayerReady(event)
     {
         // 🚧? because, this object/functionalities are only relevant when it's iframe destroyed ≡ or when the script goes full cricle... Hmmmm?
         const sesion = lastBlockIDParameters.get(blockID);
-        console.log(sesion);
         RunWithPrevious_TimestampStyle(sesion, previousTimestamp);
         RunWithPrevious_VolumeStyle(sesion, previousVolume);
     }
@@ -1975,7 +1977,7 @@ async function onPlayerReady(event)
     {
         if (!UTILS.isElementVisible(iframe)) return; //mute all VISIBLE Players, this will be called on all visible iframes
 
-        if (UI.playStyle.strict_mute_everything_except_current.checked || UI.playStyle.muted_on_any_mouse_interaction.checked)
+        if (UI.muteStyle.strict_mute_everything_except_current.checked || UI.muteStyle.muted_on_any_mouse_interaction.checked)
         {
             isSoundingFine(false);
         }
@@ -1998,7 +2000,7 @@ async function onPlayerReady(event)
             {
                 if (anyValidInAndOutKey(e))
                 {
-                    MuteEveryPlayer();
+                    MuteEveryPlayer_Visibly();
                 }
             }
             if (UI.playStyle.strict_play_current_on_mouse_over.checked)
@@ -2030,13 +2032,12 @@ async function onPlayerReady(event)
             {
                 //ﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠ// playing
                 togglePlay(!AnyPlayOnHover() && (t.getPlayerState() === 1));
-
                 isSoundingFine(false);
             }
         }
     }
     /* ************************************************* */
-    function MuteEveryPlayer()
+    function MuteEveryPlayer_Visibly()
     {
         function muteWithBlock(id, el)
         {
@@ -2068,16 +2069,15 @@ async function onPlayerReady(event)
     function LoopTroughVisibleYTGIFs(config = { styleQuery, others_callback: () => { }, self_callback: () => { } })
     {
         const ytGifs = UTILS.inViewportElsHard(UTILS.allIframeStyle(config?.styleQuery));
-        for (const i of ytGifs)
+        for (const i of ytGifs) // loop through all the iframes within the viewport, not just an instance
         {
-            const blockID = UTILS.closestBlockID(i);
             if (i != iframe)
             {
-                config?.others_callback(blockID, i);
+                config?.others_callback(getBlockID(i), i);
             }
-            else if (config.BlockID_self_callback)
+            else if (config.self_callback)
             {
-                config?.self_callback(blockID, i);
+                config?.self_callback(getBlockID(i), i);
             }
         }
     }
@@ -2335,11 +2335,16 @@ async function onPlayerReady(event)
                     }
                     else if (UTILS.isElementVisible(iframe) && !t.__proto__.globalHumanInteraction)
                     {
-                        togglePlay(UI.playStyle.visible_clips_start_to_play_unmuted.checked); // pause
+                        togglePlay(UI.playStyle.visible_clips_start_to_play_unmuted.checked); // pause?
                     }
                     else if (!isParentHover())
                     {
                         togglePlay(false); // pause
+                    }
+
+                    if (!isParentHover() && (t.getPlayerState() === 1)) // if mouse is outside parent and video is playing
+                    {
+                        togglePlay(false); // FREEZE!!!
                     }
 
                     clearInterval(OneFrame);
