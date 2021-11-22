@@ -1366,7 +1366,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             'base-block': {
                 uid: null, url: null, el,
                 condition: uidFromGrandParent,
-                targetSelector: ['.rm-xparser-default-yt-gif', '.yt-gif-wrapper'].join(),
+                targetSelector: ['.rm-xparser-default-yt-gif', '.yt-gif-wrapper', 'a.rm-alias.rm-alias--block'].join(),
                 grandParentBlock,
             },
             'popover': {
@@ -1399,25 +1399,22 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             return resObj;
         }
 
-
+        //let checUrlOnIndex = 4;
         if (key == 'popover')  
         {
-            //resObj.uid = null; // is it's parent's // needs it's own UID
-            // resObj.uid = extractUID_FromKey(await getUrlMap_smart(uidResults[key].uid), resObj.urlIndex, 5); 
-
-            // if (!resObj.uid) // since 'keepTrackOfUids' within getUrlMap() filters duplicate UIDs
-            // {
+            resObj.uid = null; // is it's parent's // needs it's own UID
             // seems to work only when there are more than aliases in the block
             console.warn('YT GIF - looking for previous nested alias...')
-            while (resObj.urlIndex-- > 0) // up here I lost the urlIndex, so I need to go back -1 till I find a UID
+            do
             {
                 resObj.uid = extractUID_FromKey(await getUrlMap_smart(uidResults[key].uid), resObj.urlIndex, 5); // it's bad... but I don't know how to fix it
-                if (resObj.uid) break;
-            }
-            // }
-            //uidResults['base-block'].targetSelector = ['.rm-xparser-default-yt-gif', '.yt-gif-wrapper', 'a.rm-alias.rm-alias--block'].join();
+                //if (resObj.uid) break;
+            } while (resObj.urlIndex-- > 0);
+
+            //uidResults['base-block'].targetSelector = ['.rm-xparser-default-yt-gif', '.yt-gif-wrapper'].join();
             uidResults['base-block'].grandParentBlock = grandParentPopOver; // once there (abstract enough to borrow functionalities)
             resObj.urlIndex = uidResults['base-block'].urlIndex(); // it also needs it's own urlIndex
+            //checUrlOnIndex = 3;
         }
 
 
@@ -1536,14 +1533,14 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
                         if (keepTrackOfUids.includes(i) || i == tempUID)
                         {
-                            if (objRes.innerAliasesUids.includes(i) && i != tempUID)
-                            {
-                                if (parentObj)
-                                {
-                                    console.log('is innerAliasesUids', i);
-                                    const awaitingObj = await TryToFindURL_Rec(i, parentObj);
-                                }
-                            }
+                            // if (objRes.innerAliasesUids.includes(i) && i != tempUID)
+                            // {
+                            //     if (parentObj)
+                            //     {
+                            //         console.log('is innerAliasesUids', i);
+                            //         const awaitingObj = await TryToFindURL_Rec(i, parentObj);
+                            //     }
+                            // }
                             //console.count(`Avoid reading recursive block ${i}`);
                             //debugger;
                             continue;
