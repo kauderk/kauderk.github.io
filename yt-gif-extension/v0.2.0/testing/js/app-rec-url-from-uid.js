@@ -1294,7 +1294,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     if (!url || urlIndex < 0 || !uid)
     {
         UIDtoURLInstancesMapMap.delete(uid);
-        console.warn(`Couldn't find a yt-gif component within the block ((${uid}))`);
+        console.warn(`Couldn't find ${urlIndex}th yt-gif component within the block ((${uid}))`);
         return;
     }
     const newId = iframeIDprfx + Number(++window.YT_GIF_OBSERVERS.creationCounter);
@@ -1366,7 +1366,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             'base-block': {
                 uid: null, url: null, el,
                 condition: uidFromGrandParent,
-                targetSelector: ['.rm-xparser-default-yt-gif', '.yt-gif-wrapper', 'a.rm-alias.rm-alias--block'].join(),
+                targetSelector: ['.rm-xparser-default-yt-gif', '.yt-gif-wrapper'].join(),
                 grandParentBlock,
             },
             'popover': {
@@ -1402,21 +1402,26 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
         if (key == 'popover')  
         {
-            resObj.uid = extractUID_FromKey(await getUrlMap_smart(uidResults[key].uid), resObj.urlIndex, 5); // needs it's own UID
+            //resObj.uid = null; // is it's parent's // needs it's own UID
+            // resObj.uid = extractUID_FromKey(await getUrlMap_smart(uidResults[key].uid), resObj.urlIndex, 5); 
 
-            if (!resObj.uid) // since 'keepTrackOfUids' within getUrlMap() filters duplicate UIDs
+            // if (!resObj.uid) // since 'keepTrackOfUids' within getUrlMap() filters duplicate UIDs
+            // {
+            // seems to work only when there are more than aliases in the block
+            console.warn('YT GIF - looking for previous nested alias...')
+            while (resObj.urlIndex-- > 0) // up here I lost the urlIndex, so I need to go back -1 till I find a UID
             {
-                console.warn('YT GIF - looking for previous nested alias...')
-                while (resObj.urlIndex-- > 0) // up here I lost the urlIndex, so I need to go back -1 till I find a UID
-                    resObj.uid = extractUID_FromKey(await getUrlMap_smart(uidResults[key].uid), resObj.urlIndex, 5); // it's bad... but I don't know how to fix it
+                resObj.uid = extractUID_FromKey(await getUrlMap_smart(uidResults[key].uid), resObj.urlIndex, 5); // it's bad... but I don't know how to fix it
+                if (resObj.uid) break;
             }
-
+            // }
+            //uidResults['base-block'].targetSelector = ['.rm-xparser-default-yt-gif', '.yt-gif-wrapper', 'a.rm-alias.rm-alias--block'].join();
             uidResults['base-block'].grandParentBlock = grandParentPopOver; // once there (abstract enough to borrow functionalities)
             resObj.urlIndex = uidResults['base-block'].urlIndex(); // it also needs it's own urlIndex
         }
 
 
-        resObj.url = extractUrl_FromKey(await getUrlMap_smart(resObj.uid), resObj.urlIndex, 3);
+        resObj.url = extractUrl_FromKey(await getUrlMap_smart(resObj.uid), resObj.urlIndex, 4);
         return resObj;
 
 
@@ -1467,6 +1472,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             let indentFunc = 0;
             let componentsInOrderMap = new Map();
             let keepTrackOfUids = [];
+            let keepTrackOfUidsMap = new Map();
 
             const orderObj = {
                 order: -1,
@@ -1496,9 +1502,10 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
             const FirstObj = await TryToFindURL_Rec(tempUID);
-            //console.count('componentsInOrderMap')
-            //console.log(componentsInOrderMap);
-            //console.log('\n'.repeat(6));
+            console.count('componentsInOrderMap')
+            console.log(componentsInOrderMap);
+            console.log('\n'.repeat(6));
+
 
             return componentsInOrderMap;
 
@@ -1513,14 +1520,14 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 const key = Object.keys(results).find(x => results[x].condition());
 
 
-                //console.log("%c" + cleanIndentedBlock(), `color:${results[key].tone}`);
+                console.log("%c" + cleanIndentedBlock(), `color:${results[key].tone}`);
 
 
                 for (const i of objRes.urlsWithUids)
                 {
                     if (objRes.urls.includes(i)) // either component or component alias // set in the order in which roam renders them
                     {
-                        componentsInOrderMap.set(assertUniqueKey_while(uid), i || 'no component url');
+                        componentsInOrderMap.set(assertUniqueKey_while(uid, componentsInOrderMap), i || 'no component url');
                     }
 
                     if (objRes.innerUIDs.includes(i))
@@ -1529,6 +1536,14 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
                         if (keepTrackOfUids.includes(i) || i == tempUID)
                         {
+                            if (objRes.innerAliasesUids.includes(i) && i != tempUID)
+                            {
+                                if (parentObj)
+                                {
+                                    console.log('is innerAliasesUids', i);
+                                    const awaitingObj = await TryToFindURL_Rec(i, parentObj);
+                                }
+                            }
                             //console.count(`Avoid reading recursive block ${i}`);
                             //debugger;
                             continue;
@@ -1544,7 +1559,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
                 return { uid, objRes, parentObj };
 
-                function assertUniqueKey_while(uid)
+                function assertUniqueKey_while(uid, map)
                 {
                     // the order in which the components are rendered within the block
                     const keyAnyComponetInOrder = results['any component'].incrementIf(UTILS.includesAtlest(['component', 'component alias'], key, null));
@@ -1557,7 +1572,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                     const preKey = () => [similarCount, ...baseKey].join(' ') + 'ﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠ';
                     let uniqueKey = preKey();
 
-                    while (componentsInOrderMap.has(uniqueKey))
+                    while (map.has(uniqueKey))
                     {
                         similarCount += 1; // try to make it unique
                         uniqueKey = preKey();
@@ -1591,14 +1606,14 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 // [xxxanything goesxxx](((xxxuidxxx)))
                 const aliasesPlusUids = [...string.matchAll(/\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm)];
 
-                // componets with block references exlude aliases // set in the order in which roam renders them
+                // componets with uids // set in the order in which roam renders them
                 const urlsWithUids = [...[...string.matchAll(/{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)|(?<=\(\()([^(].*?[^)])(?=\)\))/gm)]
                     .map(x => x = x[0])]
                     .map(x => components.includes(x) ? x = x.match(urlRgx)?.[0] : x);
-                // aliases alone
+                // uid aliases alone
                 const innerAliasesUids = [...aliasesPlusUids].map(x => x = x[2]) || []; // [xxnopexxx]('((xxxyesxxx))')
 
-                // block references alone
+                // uid block references alone
                 const blockReferencesAlone = innerUIDs?.filter(x => !innerAliasesUids.includes(x));
 
 
