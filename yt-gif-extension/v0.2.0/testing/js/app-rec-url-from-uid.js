@@ -1366,7 +1366,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             'base-block': {
                 uid: null, url: null, el,
                 condition: uidFromGrandParent,
-                targetSelector: ['.rm-xparser-default-yt-gif', '.yt-gif-wrapper'/*, 'a.rm-alias.rm-alias--block' */].join(),
+                targetSelector: ['.rm-xparser-default-yt-gif', '.yt-gif-wrapper', 'a.rm-alias.rm-alias--block'].join(),
                 grandParentBlock,
             },
             'popover': {
@@ -1728,7 +1728,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         }
 
         if (success) { return media; }
-        else { alert('No valid youtube url detected for yt-gifs'); }
+        else { console.log(newId + '    No valid youtube url detected for yt-gifs'); }
         return false;
     }
 
