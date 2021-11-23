@@ -1,4 +1,5 @@
 await getUrlMap('0qV8_pWLL');
+await getUrlMap('qdIfrsS6i');
 
 async function getUrlMap(tempUID)
 {
@@ -47,7 +48,7 @@ async function getUrlMap(tempUID)
         console.log("%c" + cleanIndentedBlock(), `color:${results[hasKey]?.tone || 'black'}`);
 
 
-        for (const i of objRes.urlsWithUids)
+        for (const i of objRes.urlsWithUids) // looping through RENDERED urls (components) and uids (references)
         {
             results['is component'].condition = () => objRes?.urls.includes(i);
             results['is alias'].condition = () => objRes?.innerAliasesUids.includes(i);
@@ -55,14 +56,11 @@ async function getUrlMap(tempUID)
             const isKey = Object.keys(results).filter(x => x.includes('is')).find(x => results[x].condition());
 
 
-            if (isKey == 'is component'
-                && parentObj?.isKey != 'is alias'
-                && parentObj?.hasKey != 'has any aliases'
-                && parentObj?.hasKey != 'has components aliases')
-            {
-                componentsInOrderMap.set(assertUniqueKey_while(uid, indentFunc, isKey).uniqueKey, i);
-            }
-            else if (isKey == 'is alias' && i != tempUID)
+            if (isKey == 'is component' // it contains the url
+                && !parentObj?.isKey?.includes('alias') // but adding nested ones
+                && !parentObj?.hasKey?.includes('alias') // is irrelant
+
+                || (isKey == 'is alias' && i != tempUID)) // though for each 'parent block' a point of referece for it's aliases is alright
             {
                 componentsInOrderMap.set(assertUniqueKey_while(uid, indentFunc, isKey).uniqueKey, i);
             }
@@ -71,42 +69,29 @@ async function getUrlMap(tempUID)
             {
                 if (keepTrackOfUids.includes(i) || i == tempUID)
                 {
-                    if (i == 'dFyB2BOEj') debugger;
                     keepTrackOfUids.push(i);
+                    if (isKey == 'is block referece') // it is rendered, so execute it's rec func
+                        await ExecuteIndented_Rec(isKey, i);
 
-                    // if (isKey == 'is component'
-                    //     && parentObj?.isKey != 'is alias'
-                    //     && parentObj?.hasKey != 'has any aliases'
-                    //     && parentObj?.hasKey != 'has components aliases')
-                    // {
-                    //     componentsInOrderMap.set(assertUniqueKey_while(uid, indentFunc, isKey).uniqueKey, i);
-                    // }
-                    // else 
-                    if (isKey == 'is alias' && i != tempUID && parentObj?.isKey != 'is block referece')
-                    {
-                        componentsInOrderMap.set(assertUniqueKey_while(uid, indentFunc, isKey).uniqueKey, i);
-                    }
-                    else if (isKey == 'is block referece')
-                    {
-                        console.count('is block referece');
-                        objRes.isKey = isKey;
-                        const awaitingObj = await TryToFindURL_Rec(i, objRes);
-                        //componentsInOrderMap.set(assertUniqueKey_while(uid, indentFunc, isKey).uniqueKey, i);
-                    }
                     continue;
                 }
                 else
                 {
-                    indentFunc += 1;
                     keepTrackOfUids.push(i);
-                    objRes.isKey = isKey;
-                    const awaitingObj = await TryToFindURL_Rec(i, objRes);
-                    indentFunc -= 1;
+                    await ExecuteIndented_Rec(isKey, i);
                 }
             }
         }
 
         return { uid, objRes, parentObj };
+
+        async function ExecuteIndented_Rec(isKey, i)
+        {
+            indentFunc += 1;
+            objRes.isKey = isKey;
+            const awaitingObj = await TryToFindURL_Rec(i, objRes);
+            indentFunc -= 1;
+        }
 
         function assertUniqueKey_while(uid, indent, resultKey)
         {
