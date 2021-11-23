@@ -1,5 +1,8 @@
-await getUrlMap('0qV8_pWLL');
-await getUrlMap('qdIfrsS6i');
+
+for (const i of ['qdIfrsS6i', '0qV8_pWLL'])
+{
+    console.log(await getUrlMap(i));
+}
 
 async function getUrlMap(tempUID)
 {
@@ -53,16 +56,18 @@ async function getUrlMap(tempUID)
             results['is component'].condition = () => objRes?.urls.includes(i);
             results['is alias'].condition = () => objRes?.innerAliasesUids.includes(i);
             results['is block referece'].condition = () => objRes?.blockReferencesAlone.includes(i);
+
             const isKey = Object.keys(results).filter(x => x.includes('is')).find(x => results[x].condition());
+            const parentKeysArentAlias = !parentObj?.isKey?.includes('alias') && !parentObj?.hasKey?.includes('alias');
+            const AtLeast = (arr) => arr.find(w => w === isKey);
 
 
-            if (isKey == 'is component' // it contains the url
-                && !parentObj?.isKey?.includes('alias') // but adding nested ones
-                && !parentObj?.hasKey?.includes('alias') // is irrelant
-
-                || (isKey == 'is alias' && i != tempUID)) // though for each 'parent block' a point of referece for it's aliases is alright
+            if (parentKeysArentAlias && i != tempUID)
             {
-                componentsInOrderMap.set(assertUniqueKey_while(uid, indentFunc, isKey).uniqueKey, i);
+                if (AtLeast(['is component', 'is alias']))
+                {
+                    componentsInOrderMap.set(assertUniqueKey_while(uid, indentFunc, isKey, hasKey), i);
+                }
             }
 
             if (objRes.innerUIDs.includes(i))
@@ -70,9 +75,13 @@ async function getUrlMap(tempUID)
                 if (keepTrackOfUids.includes(i) || i == tempUID)
                 {
                     keepTrackOfUids.push(i);
-                    if (isKey == 'is block referece') // it is rendered, so execute it's rec func
-                        await ExecuteIndented_Rec(isKey, i);
-
+                    if (parentKeysArentAlias)
+                    {
+                        if (isKey == 'is block referece')// it is rendered, so execute it's rec func
+                        {
+                            await ExecuteIndented_Rec(isKey, i);
+                        }
+                    }
                     continue;
                 }
                 else
@@ -85,6 +94,13 @@ async function getUrlMap(tempUID)
 
         return { uid, objRes, parentObj };
 
+        function ParentKeysInclude(word)
+        {
+            return parentObj?.isKey?.includes(word) && parentObj?.hasKey?.includes(word)
+        }
+
+
+
         async function ExecuteIndented_Rec(isKey, i)
         {
             indentFunc += 1;
@@ -93,17 +109,18 @@ async function getUrlMap(tempUID)
             indentFunc -= 1;
         }
 
-        function assertUniqueKey_while(uid, indent, resultKey)
+        function assertUniqueKey_while(uid, indent, isKey, hasKey)
         {
             // the order in which the components are rendered within the block
-            const keyAnyComponetInOrder = results['has any components'].incrementIf(UTILS.includesAtlest(['has components', 'has components aliases'], resultKey, null));
-            const keyInComponentOrder = results['has components'].incrementIf(resultKey === 'has components');
-            const keyInAliasComponentOrder = results['has components aliases'].incrementIf(resultKey === 'has components aliases');
-            const keyIsAlias = results['is alias'].incrementIf(resultKey === 'is alias');
-            const keyIsComponent = results['is component'].incrementIf(resultKey === 'is component');
-            const keyIsBlockRef = results['is block referece'].incrementIf(resultKey === 'is block referece');
+            const keyAnyComponetInOrder = results['has any components'].incrementIf(UTILS.includesAtlest(['has components', 'has components aliases'], hasKey, null));
+            const keyInComponentOrder = results['has components'].incrementIf(hasKey === 'has components');
+            const keyInAliasComponentOrder = results['has components aliases'].incrementIf(hasKey === 'has components aliases');
 
-            const baseKey = [indent, uid, keyAnyComponetInOrder, keyInComponentOrder, keyInAliasComponentOrder, resultKey, keyIsAlias, keyIsComponent];
+            const keyIsAlias = results['is alias'].incrementIf(isKey === 'is alias');
+            const keyIsComponent = results['is component'].incrementIf(isKey === 'is component');
+            const keyIsBlockRef = results['is block referece'].incrementIf(isKey === 'is block referece');
+
+            const baseKey = [indent, uid, hasKey, keyAnyComponetInOrder, keyInComponentOrder, keyInAliasComponentOrder, isKey, keyIsAlias, keyIsComponent, keyIsBlockRef];
 
             let similarCount = 0; // keep track of similarities
             const preKey = () => [similarCount, ...baseKey].join(' ') + 'ﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠ';
@@ -118,7 +135,8 @@ async function getUrlMap(tempUID)
             }
             similarCount = 0;
 
-            return { uniqueKey, original: preKey(), indent, resultKey };
+            //return { uniqueKey, original: preKey(), isKey, hasKey };
+            return uniqueKey
         }
 
         function cleanIndentedBlock()
