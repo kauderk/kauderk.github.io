@@ -1,5 +1,6 @@
 
-for (const i of ['qdIfrsS6i', '0qV8_pWLL'])
+for (const i of ['qdIfrsS6i', '0qV8_pWLL', 'MnNcF56pU'].reverse())
+//for (const i of ['MnNcF56pU'])
 {
     console.log(await getUrlMap(i));
 }
@@ -48,7 +49,7 @@ async function getUrlMap(tempUID)
 
 
 
-        console.log("%c" + cleanIndentedBlock(), `color:${results[hasKey]?.tone || 'black'}`);
+        //console.log("%c" + cleanIndentedBlock(), `color:${results[hasKey]?.tone || 'black'}`);
 
 
         for (const i of objRes.urlsWithUids) // looping through RENDERED urls (components) and uids (references)
@@ -57,48 +58,49 @@ async function getUrlMap(tempUID)
             results['is alias'].condition = () => objRes?.innerAliasesUids.includes(i);
             results['is block referece'].condition = () => objRes?.blockReferencesAlone.includes(i);
 
+
             const isKey = Object.keys(results).filter(x => x.includes('is')).find(x => results[x].condition());
             const parentKeysArentAlias = !parentObj?.isKey?.includes('alias') && !parentObj?.hasKey?.includes('alias');
             const AtLeast = (arr) => arr.find(w => w === isKey);
 
 
-            if (parentKeysArentAlias && i != tempUID)
+            if ((parentKeysArentAlias && i != tempUID) || AtLeast(['is component']))
             {
-                if (AtLeast(['is component', 'is alias']))
+                if (AtLeast(['is alias', 'is component']))
                 {
                     componentsInOrderMap.set(assertUniqueKey_while(uid, indentFunc, isKey, hasKey), i);
                 }
             }
 
-            if (objRes.innerUIDs.includes(i))
+
+            if (isKey == 'is block referece')// it is rendered, so execute it's rec func
             {
-                if (keepTrackOfUids.includes(i) || i == tempUID)
-                {
-                    keepTrackOfUids.push(i);
-                    if (parentKeysArentAlias)
-                    {
-                        if (isKey == 'is block referece')// it is rendered, so execute it's rec func
-                        {
-                            await ExecuteIndented_Rec(isKey, i);
-                        }
-                    }
-                    continue;
-                }
-                else
-                {
-                    keepTrackOfUids.push(i);
-                    await ExecuteIndented_Rec(isKey, i);
-                }
+                await ExecuteIndented_Rec(isKey, i);
             }
+            // IF YOU WANT TO GO TROUGH ALL THE UIDS, USE THIS ONLY
+            // if (objRes.innerUIDs.includes(i))
+            // {
+            //     if (keepTrackOfUids.includes(i) || i == tempUID)
+            //     {
+            //         keepTrackOfUids.push(i);
+            //         if (parentKeysArentAlias)
+            //         {
+            //             if (isKey == 'is block referece')// it is rendered, so execute it's rec func
+            //             {
+            //                 await ExecuteIndented_Rec(isKey, i);
+            //             }
+            //         }
+            //         else
+            //         {
+            //             keepTrackOfUids.push(i);
+            //             await ExecuteIndented_Rec(isKey, i);
+            //         }
+            //         continue;
+            //     }
+            // }
         }
 
         return { uid, objRes, parentObj };
-
-        function ParentKeysInclude(word)
-        {
-            return parentObj?.isKey?.includes(word) && parentObj?.hasKey?.includes(word)
-        }
-
 
 
         async function ExecuteIndented_Rec(isKey, i)
@@ -120,10 +122,10 @@ async function getUrlMap(tempUID)
             const keyIsComponent = results['is component'].incrementIf(isKey === 'is component');
             const keyIsBlockRef = results['is block referece'].incrementIf(isKey === 'is block referece');
 
-            const baseKey = [indent, uid, hasKey, keyAnyComponetInOrder, keyInComponentOrder, keyInAliasComponentOrder, isKey, keyIsAlias, keyIsComponent, keyIsBlockRef];
+            const baseKey = [indent, uid, hasKey, keyAnyComponetInOrder, keyInComponentOrder, keyInAliasComponentOrder, isKey, keyIsBlockRef, keyIsComponent, keyIsAlias];
 
             let similarCount = 0; // keep track of similarities
-            const preKey = () => [similarCount, ...baseKey].join(' ') + 'ﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠ';
+            const preKey = () => [similarCount, ...baseKey, 'ﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠ'].join(' - ');
             let uniqueKey = preKey();
 
 
