@@ -112,7 +112,7 @@ const sesionIDs = {
 const UIDtoURLInstancesMapMap = new Map(); // since it store recursive maps, once per instance it's enough
 /*-----------------------------------*/
 const urlFolder = (f) => `https://kauderk.github.io/yt-gif-extension/resources/${f}`;
-const self_urlFolder = (f) => `https://kauderk.github.io/yt-gif-extension/v0.1.1/${f}`;
+const self_urlFolder = (f) => `https://kauderk.github.io/yt-gif-extension/v0.2.0/${f}`;
 const urlFolder_css = (f) => urlFolder(`css/${f}`);
 const urlFolder_html = (f) => urlFolder(`html/${f}`);
 const urlFolder_js = (f) => urlFolder(`js/${f}`);
@@ -1673,7 +1673,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         }
 
         if (success) { return media; }
-        else { console.log(newId + '    No valid youtube url detected for yt-gifs'); }
+        else { console.log(`${newId}    Invalid youtube url detected for yt-gifs ${((uid))}`); }
         return false;
     }
 
