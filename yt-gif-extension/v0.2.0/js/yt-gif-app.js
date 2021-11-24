@@ -1673,7 +1673,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         }
 
         if (success) { return media; }
-        else { console.log(`${newId}    Invalid youtube url detected for yt-gifs ${((uid))}`); }
+        else { console.warn(`${newId}    Invalid youtube url detected for yt-gifs ${((uid))}`); }
         return false;
     }
 
@@ -1697,7 +1697,6 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             const awaitingAnimationThumbnail = [...awaitingAnimation, awaitng_input_with_thumbnail];
 
             let mainAnimation = awaitingAnimationThumbnail;
-            //wrapper.setAttribute(attrInfo.videoUrl, url);
 
             if (UI.experience.awaiting_with_video_thumnail_as_bg.checked)
             {
