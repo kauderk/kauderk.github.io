@@ -2,6 +2,38 @@ var kauderk = window.kauderk || {};
 
 kauderk.util = ((util) =>
 {
+    util.ObserveRemovedEl_Smart = (options) =>
+    {
+        if (!options.el)
+        {
+            return null;
+        }
+        const config = { subtree: true, childList: true };
+        const RemovedObserver = new MutationObserver(MutationRemoval_cb); // will fire OnRemmovedFromDom... the acutal logic
+        RemovedObserver.observe(document.body, config);
+        return RemovedObserver;
+
+        function MutationRemoval_cb(mutationsList, observer)
+        {
+            mutationsList.forEach(function (mutation)
+            {
+                const nodes = Array.from(mutation.removedNodes);
+                const directMatch = nodes.indexOf(options.el) > -1
+                const parentMatch = nodes.some(parentEl => parentEl.contains(options.el));
+
+                if (directMatch)
+                {
+                    observer.disconnect();
+                    console.log(`node ${options.el} was directly removed!`);
+                }
+                else if (parentMatch)
+                {
+                    options.OnRemmovedFromDom_cb(observer);
+                    observer.disconnect();
+                }
+            });
+        };
+    }
     util.includesAtlest = (arr, string, defaultString) =>
     {
         const match = arr.filter(s => string.includes(s));
