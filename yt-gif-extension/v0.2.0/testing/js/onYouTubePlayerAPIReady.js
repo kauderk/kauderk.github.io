@@ -64,7 +64,10 @@ async function getUrlMap(tempUID)
             const AtLeast = (arr) => arr.find(w => w === isKey);
 
 
-            if ((parentKeysArentAlias && i != tempUID) || AtLeast(['is component']))
+            if (
+                (parentKeysArentAlias && i != tempUID) // unrendered -> pass
+                || AtLeast(['is component']) // urls (components) -> go
+            )
             {
                 if (AtLeast(['is alias', 'is component']))
                 {
