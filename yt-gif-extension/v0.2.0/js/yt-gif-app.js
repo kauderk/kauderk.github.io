@@ -1292,7 +1292,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     if (!url || accUrlIndex < 0 || !uid)
     {
         UIDtoURLInstancesMapMap.delete(uid);
-        console.warn(`YT GIF - Couldn't find ${accUrlIndex}th yt-gif component within the block ((${uid}))`);
+        console.log(`YT GIF - Couldn't find ${accUrlIndex}th yt-gif component within the block ((${uid}))`);
         return;
     }
     const newId = iframeIDprfx + Number(++window.YT_GIF_OBSERVERS.creationCounter);
