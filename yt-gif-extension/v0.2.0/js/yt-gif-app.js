@@ -1355,7 +1355,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         const grandParentBlock = function () { return closestBlockID(this.el) };
         const grandParentPopOver = function () { return document.querySelector("div.bp3-popover-content > .rm-alias-tooltip__content") };
         const uidFromGrandParent = function () { return this.uid = this.grandParentBlock()?.id?.slice(-9) };
-        const targetSelector = ['.rm-xparser-default-yt-gif', '.yt-gif-wrapper', 'a.rm-alias.rm-alias--block'].join();
+        const targetSelector = [[...rm_components.both.classesToObserve].map(x => '.' + x), '.yt-gif-wrapper', 'a.rm-alias.rm-alias--block'].join();
         const tempUrlObj = {
             urlComponents: function () { return [...this.grandParentBlock().querySelectorAll(this.targetSelector)] },
             getUrlIndex: function () { return this.urlComponents().indexOf(this.el) },
