@@ -126,7 +126,7 @@ const links = {
         }
     },
     html: {
-        dropDownMenu: self_urlFolder('html/drop-down-menu.html'),
+        dropDownMenu: 'https://kauderk.github.io/yt-gif-extension/v0.2.0/testing/html/drop-down-menu.html',//self_urlFolder('html/drop-down-menu.html'),
         playerControls: urlFolder_html('player-controls.html'),
         fetched: {
             playerControls: '',
@@ -135,7 +135,7 @@ const links = {
     js: {
         utils: urlFolder_js('utils.js'),
         roamAlphaApi: urlFolder_js('utils-roam-alpha-api.js'),
-        settingsPage: self_urlFolder('js/settings-page.js'),
+        settingsPage: 'https://kauderk.github.io/yt-gif-extension/v0.2.0/testing/js/settings-page-slash-menu.js',//self_urlFolder('js/settings-page.js'),
         main: self_urlFolder('js/yt-gif-main.js'),
     },
     help: {
