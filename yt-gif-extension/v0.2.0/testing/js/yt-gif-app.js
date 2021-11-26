@@ -42,6 +42,8 @@ const YT_GIF_OBSERVERS_TEMP = {
     masterIntersectionObservers: [],
     masterIntersectionObservers_buffer: [],
     masterIframeBuffer: [],
+    slashMenuObserver: null,
+    timestampEmulationButtonsObserver: null,
     creationCounter: -1, // crucial, because the api won't reload iframes with the same id
     CleanMasterObservers: function ()
     {
@@ -112,7 +114,7 @@ const sesionIDs = {
 const UIDtoURLInstancesMapMap = new Map(); // since it store recursive maps, once per instance it's enough
 /*-----------------------------------*/
 const urlFolder = (f) => `https://kauderk.github.io/yt-gif-extension/resources/${f}`;
-const self_urlFolder = (f) => `https://kauderk.github.io/yt-gif-extension/v0.2.0/${f}`;
+const self_urlFolder = (f) => `https://kauderk.github.io/yt-gif-extension/v0.2.0/testing/${f}`;
 const urlFolder_css = (f) => urlFolder(`css/${f}`);
 const urlFolder_html = (f) => urlFolder(`html/${f}`);
 const urlFolder_js = (f) => urlFolder(`js/${f}`);
@@ -444,6 +446,10 @@ async function Ready()
     // 5. TESTING!
     SettingUpTutorials();
 
+
+
+    // 6. simulate slash menu
+    simulateSlashMenu(UI.display.simulate_slash_menu_beta);
 
 
     console.log('YT GIF extension activated');
@@ -1153,6 +1159,499 @@ async function Ready()
                 }
             });
         }
+    }
+    //#endregion
+
+
+    //#region 6. simulate slash menu
+    async function simulateSlashMenu(simulate_slash_menu)
+    {
+        const addedTargetClass = 'bp3-text-overflow-ellipsis';
+        const emulationClass = 'slash-menu-emulation';
+        const startTarget = 'rm-xparser-default-start';
+        const endTarget = 'rm-xparser-default-end';
+        let cloneSubResuslt = null;
+
+        const targetNode = document.body;
+        const config = { childList: true, subtree: true };
+
+
+        window.YT_GIF_OBSERVERS.slashMenuObserver?.disconnect();
+        const observer = new MutationObserver(slashMenuMutation_cb);
+        observer.observe(targetNode, config);
+        window.YT_GIF_OBSERVERS.slashMenuObserver = observer;
+
+        window.YT_GIF_OBSERVERS.timestampEmulationButtonsObserver?.disconnect();
+        const obs = new MutationObserver(TimestampBtnsMutation_cb);
+        obs.observe(targetNode, config);
+        window.YT_GIF_OBSERVERS.timestampEmulationButtonsObserver = obs;
+
+
+        simulate_slash_menu.addEventListener('change', simluationHandler);
+        function simluationHandler(e)
+        {
+            if (e.currentTarget.checked)
+            {
+                observer.observer(targetNode, config);
+                obs.observer(targetNode, config);
+                document.addEventListener('keyup', registerKey);
+            }
+            else
+            {
+                observer.disconnect();
+                obs.disconnect();
+                document.removeEventListener('keyup', registerKey);
+            }
+        }
+
+
+        document.body.removeEventListener('keyup', registerKey);
+        document.body.addEventListener('keyup', registerKey);
+        async function registerKey(e)
+        {
+            const openInputBlock = document.querySelector(".rm-block__input--active.rm-block-text");
+            if (!openInputBlock /*|| !simulate_slash_menu.checked */) return;
+
+            const uid = openInputBlock.id?.slice(-9);
+
+            if (e['ctrlKey'] && e['altKey']) 
+            {
+                let pageRefSufx = null;
+                if (e.key == 's') // Ctrl + Alt + s
+                {
+                    pageRefSufx = 'start'
+                }
+                else if (e.key == 'd') // Ctrl + Alt + d
+                {
+                    pageRefSufx = 'end'
+                }
+
+                if (pageRefSufx && uid)
+                {
+                    const { secHMS, foundBlock, targetBlock } = await getAtLeastLastComponentInHerarchy(uid);
+                    if (!foundBlock) { debugger; return; }
+                    //                                               {{[[yt-gif/start|end]]: 00:00:00}}
+                    const updateString = targetBlock.string.concat(` {{[[yt-gif/${pageRefSufx}]]: ${secHMS}}}`);
+                    debugger;
+                    await kauderk.rap.updateBlock(targetBlock.uid, updateString);
+                }
+            }
+            async function getAtLeastLastComponentInHerarchy(tempUID)
+            {
+                const res = await kauderk.rap.getBlockParentUids(tempUID);
+                const original = await kauderk.rap.getBlockInfoByUID(tempUID);
+
+                const blockStrings = res.map(arr => arr[0]);
+                for (const { string, uid } of blockStrings.reverse())
+                {
+                    // {{[[component]]: xxxyoutube-urlxxx }}
+                    const lastComponent = [...string.matchAll(/{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)/gm)].map(x => x = x[0]).pop();
+                    if (lastComponent)
+                    {
+                        const openBlock = document.querySelector(`[id*=${uid}]`);
+
+                        const lastWrapper = [...openBlock.querySelectorAll('.yt-gif-wrapper')].pop();
+                        const videoUrl = lastWrapper.getAttribute(attrInfo.url.path);
+                        const videoIndex = lastWrapper.getAttribute(attrInfo.url.index);
+
+                        const blockID = openBlock.id + properBlockIDSufix(videoUrl, videoIndex);
+
+                        if (!blockID.includes('undefined') && !blockID.includes('null'))
+                        {
+                            const target = recordedIDs.get(blockID)?.target;
+
+                            return {
+                                secHMS: convertHMS(target?.getCurrentTime()),
+                                foundBlock: {
+                                    string,
+                                    uid
+                                },
+                                targetBlock: {
+                                    string: original[0][0].string,
+                                    uid: tempUID,
+                                },
+                            };
+                        }
+                        debugger;
+                        return {};
+                    }
+                }
+                return {};
+
+                function convertHMS(value)
+                {
+                    const sec = parseInt(value, 10); // convert value to number if it's string
+                    let hours = Math.floor(sec / 3600); // get hours
+                    let minutes = Math.floor((sec - (hours * 3600)) / 60); // get minutes
+                    let seconds = sec - (hours * 3600) - (minutes * 60); //  get seconds
+                    // add 0 if value < 10; Example: 2 => 02
+                    if (hours < 10) { hours = "0" + hours; }
+                    if (minutes < 10) { minutes = "0" + minutes; }
+                    if (seconds < 10) { seconds = "0" + seconds; }
+                    return hours + ':' + minutes + ':' + seconds; // Return is HH : MM : SS
+                }
+            }
+        }
+
+        const ComponentMapCongif = {
+            targetStrings: '',
+            componentsRgx: /{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)/gm,
+            targetStringsWithUidsRgx: /{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)|(?<=\(\()([^(].*?[^)])(?=\)\))/gm,
+            targetStringRgx: /(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(.*?(?=\s|\}|\]|\)))/,
+        }
+
+        async function TimestampBtnsMutation_cb(mutationsList)
+        {
+            const found = [];
+            for (const { addedNodes } of mutationsList)
+            {
+                for (const node of addedNodes)
+                {
+                    if (!node.tagName) continue; // not an element
+
+                    if (node.classList.contains(startTarget) || node.classList.contains(endTarget))
+                    {
+                        found.push(node);
+                    }
+                    else if (node.firstElementChild)
+                    {
+                        found.push(...node.getElementsByClassName(startTarget));
+                        found.push(...node.getElementsByClassName(endTarget));
+                    }
+                }
+            }
+
+            let uid = null;
+            let string = null;
+            let siblings = [];
+            let ValidStartEndTimestamps = [];
+
+            const foundInDom = found.filter(node => document.body.contains(node));
+            for (const node of foundInDom)
+            {
+                const block = node?.closest('.rm-block__input'); // closestYTGIFparentID
+                const tempUID = block?.id?.slice(-9);
+
+                if (tempUID && uid != tempUID)
+                {
+                    siblings = [...block.querySelectorAll([endTarget, startTarget].map(x => '.' + x).join(', '))];
+
+                    uid = tempUID;
+                    const res = await kauderk.rap.getBlockInfoByUID(tempUID);
+                    //                                 clean up
+                    string = res[0][0].string.replace(/(`.*?`)/g, 'used_to_be_an_inline_code_block');
+
+                    //                                                      {{[[yt-gif/start|end]]|: xxxxxxxxxxxx }}
+                    const ValidStartEndComponentsStrings = [...string.matchAll(/{{(\[\[)?(yt-gif\/(start|end))(\]\]|):?(.*?)(\}\}|\{\{)/gm)].map(x => x = x[5]);
+                    ValidStartEndTimestamps = ValidStartEndComponentsStrings.map(x =>
+                    {
+                        // two digit numbers -> xx:?xx:?xx | xx xxx... 
+                        const res = [...x.matchAll(/((\d{1,2}):)?((\d{1,2}):)((\d{1,2}))|((?<=\s)\d+(?=\s|\}))/gm)].find(x => x[0]);
+                        return {
+                            match: res[0],
+                            h: res[3],
+                            m: res[5],
+                            s: res[7],
+                            secondsOnly: res[8],
+                        }
+                    });
+                }
+                if (ValidStartEndTimestamps.length == 0)
+                {
+                    console.log('invalid timestamps');
+                    continue;
+                }
+
+                let targetNode = siblings.find(x => x === node);
+                const targetIndex = siblings.indexOf(node);
+
+                targetNode.attributes.forEach(attr => targetNode.removeAttribute(attr.name));
+                targetNode = UTILS.ChangeElementType(targetNode, 'a');
+                targetNode.className = 'rm-video-timestamp dont-focus-block';
+                targetNode.innerHTML = ValidStartEndTimestamps[targetIndex].match;
+            }
+        }
+
+
+        async function getComponentMap(tempUID)
+        {
+            let indentFunc = 0;
+            let componentsInOrderMap = new Map();
+
+
+            const orderObj = {
+                order: -1,
+                incrementIf: function (condition) { return condition ? Number(++this.order) : 'ﾠ' },
+                condition: (x) => false,
+            };
+            const results = { /* the order does matter */
+                'has components aliases': { tone: '#37d5d6' },
+                'has components': { tone: '#36096d' },
+                'has any aliases': { tone: '#734ae8' },
+                'has any components': { tone: '#21d190' },
+
+                'is component': { tone: '#20bf55' },
+                'is alias': { tone: '#bfe299' },
+                'is block referece': { tone: 'green' },
+            };
+            Object.keys(results).forEach(key => Object.assign(results[key], orderObj));
+
+
+            const FirstObj = await TryToFindURL_Rec(tempUID);
+            return componentsInOrderMap;
+
+
+            async function TryToFindURL_Rec(uid, parentObj)
+            {
+                const objRes = await TryToFindTargetString(uid);
+
+
+                results['has components aliases'].condition = () => parentObj?.innerAliasesUids?.includes(uid) && (!!objRes.urls?.[0]);
+                results['has any aliases'].condition = () => objRes?.innerAliasesUids.length > 0;
+                results['has components'].condition = () => objRes.components.length > 0;
+                const hasKey = Object.keys(results).filter(x => x.includes('has')).find(x => results[x].condition());
+                objRes.hasKey = hasKey;
+
+
+                console.log("%c" + cleanIndentedBlock(), `color:${results[hasKey]?.tone || 'black'}`);
+
+
+                for (const i of objRes.targetStringsWithUids) // looping through RENDERED targetStrings (components) and uids (references)
+                {
+                    results['is component'].condition = () => objRes?.targetStrings.includes(i);
+                    results['is alias'].condition = () => objRes?.innerAliasesUids.includes(i);
+                    results['is block referece'].condition = () => objRes?.blockReferencesAlone.includes(i);
+
+
+                    const isKey = Object.keys(results).filter(x => x.includes('is')).find(x => results[x].condition());
+                    const parentKeysArentAlias = !parentObj?.isKey?.includes('alias') && !parentObj?.hasKey?.includes('alias');
+                    const AtLeast = (arr) => arr.find(w => w === isKey);
+
+
+                    if (
+                        (parentKeysArentAlias && i != tempUID) // unrendered -> pass
+                        || AtLeast(['is component']) // targetStrings (components) -> go
+                    )
+                    {
+                        if (AtLeast(['is alias', 'is component']))
+                        {
+                            componentsInOrderMap.set(assertUniqueKey_while(uid, indentFunc, isKey, hasKey), i);
+                        }
+                    }
+
+
+                    if (isKey == 'is block referece')// it is rendered, so execute it's rec func
+                    {
+                        await ExecuteIndented_Rec(isKey, i);
+                    }
+                }
+
+                return { uid, objRes, parentObj };
+
+
+                async function ExecuteIndented_Rec(isKey, i)
+                {
+                    indentFunc += 1;
+                    objRes.isKey = isKey;
+                    const awaitingObj = await TryToFindURL_Rec(i, objRes);
+                    indentFunc -= 1;
+                }
+
+                function assertUniqueKey_while(uid, indent, isKey, hasKey)
+                {
+                    // the order in which the components are rendered within the block
+                    const keyAnyComponetInOrder = results['has any components'].incrementIf(UTILS.includesAtlest(['has components', 'has components aliases'], hasKey, null));
+                    const keyInComponentOrder = results['has components'].incrementIf(hasKey === 'has components');
+                    const keyInAliasComponentOrder = results['has components aliases'].incrementIf(hasKey === 'has components aliases');
+
+                    const keyIsAlias = results['is alias'].incrementIf(isKey === 'is alias');
+                    const keyIsComponent = results['is component'].incrementIf(isKey === 'is component');
+                    const keyIsBlockRef = results['is block referece'].incrementIf(isKey === 'is block referece');
+
+                    const baseKey = [indent, uid, hasKey, keyAnyComponetInOrder, keyInComponentOrder, keyInAliasComponentOrder, isKey, keyIsBlockRef, keyIsComponent, keyIsAlias];
+
+                    let similarCount = 0; // keep track of similarities
+                    const preKey = () => [similarCount, ...baseKey].join('  ');
+                    let uniqueKey = preKey();
+
+
+                    while (componentsInOrderMap.has(uniqueKey))
+                    {
+                        debugger;
+                        similarCount += 1; // try to make it unique
+                        uniqueKey = preKey();
+                    }
+                    similarCount = 0;
+
+                    //return { uniqueKey, original: preKey(), isKey, hasKey };
+                    return uniqueKey
+                }
+
+                function cleanIndentedBlock()
+                {
+                    const tab = '\t'.repeat(indentFunc);
+                    const cleanLineBrakes = objRes.string.replace(/(\n)/gm, ". ");
+                    const indentedBlock = tab + cleanLineBrakes.replace(/.{70}/g, '$&\n' + tab);
+                    return indentedBlock;
+                }
+            }
+
+
+            async function TryToFindTargetString(desiredUID)
+            {
+                const info = await RAP.getBlockInfoByUID(desiredUID);
+                const rawText = info[0][0]?.string || "F";
+
+                const { targetStringRgx, componentsRgx, targetStringsWithUidsRgx } = ComponentMapCongif;
+                const string = rawText.replace(/(`.*?`)/g, 'used_to_be_an_inline_code_block');
+
+                // {{[[component]]: xxxyoutube-urlxxx }}
+                const components = [...string.matchAll(componentsRgx)].map(x => x = x[0]) || [];
+                // (((xxxuidxxx))) || ((xxxuidxxx))
+                const innerUIDs = string.match(/(?<=\(\()([^(].*?[^)])(?=\)\))/gm) || [];
+                // [xxxanything goesxxx](((xxxuidxxx)))
+                const aliasesPlusUids = [...string.matchAll(/\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm)];
+
+                // componets with uids // set in the order in which roam renders them
+                const targetStringsWithUids = [...[...string.matchAll(targetStringsWithUidsRgx)]
+                    .map(x => x = x[0])]
+                    .map(x => components.includes(x) ? x = x.match(targetStringRgx)?.[0] : x);
+                // uid aliases alone
+                const innerAliasesUids = [...aliasesPlusUids].map(x => x = x[2]) || []; // [xxnopexxx]('((xxxyesxxx))')
+
+                // uid block references alone
+                const blockReferencesAlone = innerUIDs?.filter(x => !innerAliasesUids.includes(x));
+
+
+
+                let targetStrings = [];
+                for (const i of components)
+                {
+                    // {{page: -> xxxxxx <- }}
+                    targetStrings = UTILS.pushSame(targetStrings, i.match(targetStringRgx)?.[0]);
+                }
+
+                return { uid: desiredUID, components, targetStrings, innerUIDs, targetStringsWithUids, aliasesPlusUids, innerAliasesUids, blockReferencesAlone, string, info };
+            };
+        }
+
+        function slashMenuMutation_cb(mutationsList, observer)
+        {
+            const found = [];
+            const removed = [];
+
+            for (const { addedNodes, removedNodes } of mutationsList)
+            {
+                for (const node of addedNodes)
+                {
+                    if (!node.tagName) continue; // not an element
+
+                    if (node.classList.contains(addedTargetClass) && !node.classList.contains(emulationClass))
+                    {
+                        found.push(node);
+                    }
+                    else if (node.firstElementChild)
+                    {
+                        found.push(...node.getElementsByClassName(addedTargetClass));
+                    }
+                }
+
+                for (const node of removedNodes)
+                {
+                    if (!node.tagName) continue; // not an element
+
+                    if (node.classList.contains(addedTargetClass) && !node.classList.contains(emulationClass))
+                    {
+                        removed.push(node);
+                    }
+                    else if (node.firstElementChild)
+                    {
+                        removed.push(...node.getElementsByClassName(addedTargetClass));
+                    }
+                }
+            }
+
+            if (removed.length == 0 && found.length == 0) return;
+
+            const timeNode = (node) => node.innerHTML.includes('Time');
+            const YTtimeNode = (node) => node.innerHTML.includes('YT GIF');
+            const validTimeNode = (node) => timeNode(node) && !YTtimeNode(node);
+
+            const dontUnfocusBlocks = [...document.querySelectorAll('body > div.rm-autocomplete__results.bp3-elevation-3 > .dont-unfocus-block .bp3-text-overflow-ellipsis')];
+            const emulations = [...document.querySelectorAll(`body > div.rm-autocomplete__results.bp3-elevation-3 > [class*="${emulationClass}"]`)];
+            const LastTimeNode = dontUnfocusBlocks.reverse().find(node => validTimeNode(node));
+            const AnyTimeNodeExist = dontUnfocusBlocks.filter(node => validTimeNode(node)).length != 0;
+
+
+            for (const node of found)
+            {
+                const clone = node?.parentNode?.cloneNode(true);
+                if (clone?.querySelector('.bp3-text-overflow-ellipsis')?.innerHTML &&
+                    clone?.querySelector('.rm-icon-key-prompt')?.innerHTML &&
+                    clone?.querySelector('.bp3-icon')?.className)
+                {
+                    cloneSubResuslt = clone;
+                }
+
+
+                const emulations = [...document.querySelectorAll(`body > div.rm-autocomplete__results.bp3-elevation-3 > [class*="${emulationClass}"]`)];
+
+
+                if (validTimeNode(node))
+                {
+                    const parent = node.parentNode;
+
+                    if (cloneSubResuslt && emulations.length == 0)
+                    {
+                        const start = createSlashMenuEmulation_video({
+                            cloneFrom: cloneSubResuslt,
+                            emulationSufix: '-start',
+                            prompt: 'YT GIF Timestamp - start',
+                            shortutPrompt: 'Ctrl + Alt + s',
+                        });
+                        parent.parentNode.insertBefore(start, parent);
+
+
+                        const end = createSlashMenuEmulation_video({
+                            cloneFrom: cloneSubResuslt,
+                            emulationSufix: '-end',
+                            prompt: 'YT GIF Timestamp - end',
+                            shortutPrompt: 'Ctrl + Alt + d',
+                        });
+                        parent.parentNode.insertBefore(end, parent);
+                    }
+
+                    if (LastTimeNode)
+                    {
+                        const parent = LastTimeNode.parentNode;
+                        emulations.forEach(el => parent.parentNode.insertBefore(el, parent));
+                    }
+                }
+            }
+
+
+            for (const node of removed)
+            {
+                if (timeNode(node) && !AnyTimeNodeExist)
+                {
+                    emulations.forEach(x => x.remove());
+                    return;
+                }
+            }
+
+            function createSlashMenuEmulation_video({ cloneFrom, emulationSufix, prompt, shortutPrompt, iconSufix })
+            {
+                iconSufix = iconSufix || 'video';
+                const el = cloneFrom.cloneNode(true);
+
+                el.classList.add(emulationClass + emulationSufix);
+                el.querySelector('.bp3-text-overflow-ellipsis').innerHTML = prompt;
+                el.querySelector('.rm-icon-key-prompt').innerHTML = shortutPrompt;
+                el.querySelector('.bp3-icon').className = `bp3-icon bp3-icon-${iconSufix}`;
+                return el;
+            }
+        };
+
     }
     //#endregion
 
