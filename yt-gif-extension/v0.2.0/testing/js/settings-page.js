@@ -161,7 +161,6 @@ window.YT_GIF_SETTINGS_PAGE.Workflow.baseKey.string = `The ${Object.keys(window.
 // this looks like a bad idea...
 window.YT_GIF_DIRECT_SETTINGS = null;
 window.YT_GIF_SETTINGS_PAGE_INIT = async () => await init();
-init();
 
 
 async function init()
