@@ -419,6 +419,9 @@ span.dropdown-item.yt-gif-wrapper-parent .yt-gif-wrapper.dont-focus-block {
 .yt-timestamp-success{
   --pulse-c: 0, 255, 0;
 }
+.yt-timestamp-opening{
+  --pulse-c: 0, 0, 255;
+}
 
 @keyframes pulseText{
   0%{
