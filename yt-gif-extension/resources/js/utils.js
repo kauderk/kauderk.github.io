@@ -11,6 +11,15 @@ kauderk.util = ((util) =>
                 'cancelable': true
             });
     }
+    util.simHoverOut = () =>
+    {
+        return new MouseEvent('mouseleave',
+            {
+                'view': window,
+                'bubbles': true,
+                'cancelable': true
+            });
+    }
     util.ObserveRemovedEl_Smart = (options) =>
     {
         if (!options.el)
