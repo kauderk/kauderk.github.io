@@ -336,6 +336,7 @@ rm_components.both = {
 }
 Object.assign(rm_components.both, baseDeploymentObj_both());
 /*-----------------------------------*/
+let keyUpBodyEventHandler = function () { };
 
 
 
@@ -448,8 +449,9 @@ async function Ready()
 
 
 
-    // 6. simulate slash menu
+    // 6. simulate slash menu & timestamps
     simulateSlashMenu(UI.display.simulate_slash_menu_beta);
+    listenForKeyboardShortcuts();
 
 
     console.log('YT GIF extension activated');
@@ -806,7 +808,7 @@ async function Ready()
             {
                 UTILS.toggleClasses(true, [stt_allow], settingsBtnWrapper);
                 settingsBtn.setAttribute('data-tooltip', clause);
-                await RAP.openBlockInSidebar(TARGET_UID); // back end execution... should it be here...? //https://stackoverflow.com/questions/12097381/communication-between-scripts-three-methods#:~:text=All%20JS%20scripts%20are%20run%20in%20the%20global%20scope.%20When%20the%20files%20are%20downloaded%20to%20the%20client%2C%20they%20are%20parsed%20in%20the%20global%20scope
+                await RAP.openBlockInSidebar(TARGET_UID); // backend execution... should it be here...? //https://stackoverflow.com/questions/12097381/communication-between-scripts-three-methods#:~:text=All%20JS%20scripts%20are%20run%20in%20the%20global%20scope.%20When%20the%20files%20are%20downloaded%20to%20the%20client%2C%20they%20are%20parsed%20in%20the%20global%20scope
             }
 
             // firs settings page instance
@@ -1172,45 +1174,74 @@ async function Ready()
         const endTarget = 'rm-xparser-default-end';
         let cloneSubResuslt = null;
 
+
+        const StartEnd_Config = {
+            componentsRgx: /{{(\[\[)?(yt-gif\/(start|end))(\]\]|):?(.*?)(\}\}|\{\{)/gm,
+            componentsWithUidsRgx: /{{(\[\[)?(yt-gif\/(start|end))(\]\]|):?(.*?)(\}\}|\{\{)|(?<=\(\()([^(].*?[^)])(?=\)\))/gm, // variables?
+            targetStringRgx: /((\d{1,2}):)?((\d{1,2}):)((\d{1,2}))|((?<=\s)\d+(?=\s|\}))/,
+        }
+        const YTGIF_Config = {
+            componentsRgx: /{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)/gm,
+            componentsWithUidsRgx: /{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)|(?<=\(\()([^(].*?[^)])(?=\)\))/gm, // variables?
+            targetStringRgx: /(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(.*?(?=\s|\}|\]|\)))/,
+        }
+
+
         const targetNode = document.body;
         const config = { childList: true, subtree: true };
 
 
         window.YT_GIF_OBSERVERS.slashMenuObserver?.disconnect();
-        const observer = new MutationObserver(slashMenuMutation_cb);
-        observer.observe(targetNode, config);
-        window.YT_GIF_OBSERVERS.slashMenuObserver = observer;
+        const slashObs = new MutationObserver(slashMenuMutation_cb);
+        window.YT_GIF_OBSERVERS.slashMenuObserver = slashObs;
 
         window.YT_GIF_OBSERVERS.timestampEmulationButtonsObserver?.disconnect();
-        const obs = new MutationObserver(TimestampBtnsMutation_cb);
-        obs.observe(targetNode, config);
-        window.YT_GIF_OBSERVERS.timestampEmulationButtonsObserver = obs;
+        const timeObs = new MutationObserver(TimestampBtnsMutation_cb);
+        window.YT_GIF_OBSERVERS.timestampEmulationButtonsObserver = timeObs;
 
 
+        targetNode.removeEventListener('keyup', keyUpBodyEventHandler);
+        targetNode.removeEventListener('keyup', registerKey);
+        keyUpBodyEventHandler = registerKey;
+
+
+        if (simulate_slash_menu.checked)
+        {
+            const found = [];
+            found.push(...targetNode.getElementsByClassName(startTarget));
+            found.push(...targetNode.getElementsByClassName(endTarget));
+            cleanAndSetUp_TimestampEnulation(found);
+
+            RunSimulation();
+        }
         simulate_slash_menu.addEventListener('change', simluationHandler);
         function simluationHandler(e)
         {
             if (e.currentTarget.checked)
-            {
-                observer.observer(targetNode, config);
-                obs.observer(targetNode, config);
-                document.addEventListener('keyup', registerKey);
-            }
+                RunSimulation();
             else
-            {
-                observer.disconnect();
-                obs.disconnect();
-                document.removeEventListener('keyup', registerKey);
-            }
+                StopSimulation();
+        }
+        function RunSimulation()
+        {
+            slashObs.observe(targetNode, config);
+            timeObs.observe(targetNode, config);
+            document.addEventListener('keyup', registerKey);
+        }
+        function StopSimulation()
+        {
+            slashObs.disconnect();
+            timeObs.disconnect();
+            document.removeEventListener('keyup', registerKey);
         }
 
 
-        document.body.removeEventListener('keyup', registerKey);
-        document.body.addEventListener('keyup', registerKey);
+
+
         async function registerKey(e)
         {
             const openInputBlock = document.querySelector(".rm-block__input--active.rm-block-text");
-            if (!openInputBlock /*|| !simulate_slash_menu.checked */) return;
+            if (!openInputBlock) return;
 
             const uid = openInputBlock.id?.slice(-9);
 
@@ -1228,81 +1259,97 @@ async function Ready()
 
                 if (pageRefSufx && uid)
                 {
-                    const { secHMS, foundBlock, targetBlock } = await getAtLeastLastComponentInHerarchy(uid);
+                    const { secHMS, foundBlock, targetBlock } = await getLastComponentInHerarchy(uid);
                     if (!foundBlock) { debugger; return; }
-                    //                                               {{[[yt-gif/start|end]]: 00:00:00}}
-                    const updateString = targetBlock.string.concat(` {{[[yt-gif/${pageRefSufx}]]: ${secHMS}}}`);
-                    debugger;
+
+                    const { start, end } = targetBlock; // bulky and clunky... because there only two options
+                    const boundaries = (pageRefSufx == 'start') ? start : end;
+                    const targetSecHMS = secHMS.includes('NaN') ? boundaries : secHMS;
+
+                    const updateString = targetBlock.string.concat(` {{[[yt-gif/${pageRefSufx}]]: ${targetSecHMS}}}`);
                     await kauderk.rap.updateBlock(targetBlock.uid, updateString);
                 }
             }
-            async function getAtLeastLastComponentInHerarchy(tempUID)
-            {
-                const res = await kauderk.rap.getBlockParentUids(tempUID);
-                const original = await kauderk.rap.getBlockInfoByUID(tempUID);
+        }
+        async function getLastComponentInHerarchy(tempUID)
+        {
+            const res = await kauderk.rap.getBlockParentUids(tempUID);
+            const original = await kauderk.rap.getBlockInfoByUID(tempUID);
 
-                const blockStrings = res.map(arr => arr[0]);
-                for (const { string, uid } of blockStrings.reverse())
-                {
-                    // {{[[component]]: xxxyoutube-urlxxx }}
-                    const lastComponent = [...string.matchAll(/{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)/gm)].map(x => x = x[0]).pop();
-                    if (lastComponent)
+            const baseObj = {
+                blockID: null, start: 0, end: 0, secHMS: 000, crrTime: null,
+            }
+            const iframeMaps = {
+                targets: {
+                    condition: function (sufix)
                     {
-                        const openBlock = document.querySelector(`[id*=${uid}]`);
+                        this.blockID = [...recordedIDs.keys()].find(k => k?.endsWith(sufix));
+                        return this.crrTime = recordedIDs.get(this.blockID)?.target?.getCurrentTime() || false;
+                    },
+                },
+                lastParams: {
+                    condition: function (sufix)
+                    {
+                        this.blockID = [...lastBlockIDParameters.keys()].find(k => k?.endsWith(sufix));
+                        return this.crrTime = lastBlockIDParameters.get(this.blockID)?.updateTime || false;
+                    },
+                },
+            }
+            Object.keys(iframeMaps).forEach(key => Object.assign(iframeMaps[key], baseObj));
 
-                        const lastWrapper = [...openBlock.querySelectorAll('.yt-gif-wrapper')].pop();
-                        const videoUrl = lastWrapper.getAttribute(attrInfo.url.path);
-                        const videoIndex = lastWrapper.getAttribute(attrInfo.url.index);
+            const blockStrings = res.map(arr => arr[0]);
+            for (const { string, uid } of blockStrings.reverse())
+            {
+                const componentMap = await getComponentMap(uid, YTGIF_Config);
+                const reverseValues = [...componentMap.values()].reverse();
 
-                        const blockID = openBlock.id + properBlockIDSufix(videoUrl, videoIndex);
+                const lastUrl = reverseValues.find(v => v?.includes('https'));
+                if (!lastUrl) continue;
 
-                        if (!blockID.includes('undefined') && !blockID.includes('null'))
-                        {
-                            const target = recordedIDs.get(blockID)?.target;
+                const lastUrlIndex = reverseValues.indexOf(lastUrl);
+                const possibleBlockIDSufix = uid + properBlockIDSufix(lastUrl, lastUrlIndex);
 
-                            return {
-                                secHMS: convertHMS(target?.getCurrentTime()),
-                                foundBlock: {
-                                    string,
-                                    uid
-                                },
-                                targetBlock: {
-                                    string: original[0][0].string,
-                                    uid: tempUID,
-                                },
-                            };
-                        }
-                        debugger;
-                        return {};
-                    }
-                }
-                return {};
+                const key = Object.keys(iframeMaps).find(x => iframeMaps[x].condition(possibleBlockIDSufix));
 
-                function convertHMS(value)
-                {
-                    const sec = parseInt(value, 10); // convert value to number if it's string
-                    let hours = Math.floor(sec / 3600); // get hours
-                    let minutes = Math.floor((sec - (hours * 3600)) / 60); // get minutes
-                    let seconds = sec - (hours * 3600) - (minutes * 60); //  get seconds
-                    // add 0 if value < 10; Example: 2 => 02
-                    if (hours < 10) { hours = "0" + hours; }
-                    if (minutes < 10) { minutes = "0" + minutes; }
-                    if (seconds < 10) { seconds = "0" + seconds; }
-                    return hours + ':' + minutes + ':' + seconds; // Return is HH : MM : SS
-                }
+                return {
+                    secHMS: iframeMaps[key]?.crrTime,
+                    foundBlock: {
+                        string,
+                        uid,
+                        blockID: iframeMaps[key]?.blockID,
+                        possibleBlockIDSufix,
+                    },
+                    targetBlock: {
+                        string: original[0][0].string,
+                        uid: tempUID,
+                        start: convertHMS(lastUrl.match(/(t=|start=)(?:(\d+))/)?.[2] || 0),
+                        end: convertHMS(lastUrl.match(/(end=)(?:(\d+))/)?.[2] || 0),
+                    },
+                };
+            }
+            return {};
+
+            function convertHMS(value)
+            {
+                const sec = parseInt(value, 10); // convert value to number if it's string
+                let hours = Math.floor(sec / 3600); // get hours
+                let minutes = Math.floor((sec - (hours * 3600)) / 60); // get minutes
+                let seconds = sec - (hours * 3600) - (minutes * 60); //  get seconds
+                // add 0 if value < 10; Example: 2 => 02
+                if (hours < 10) { hours = "0" + hours; }
+                if (minutes < 10) { minutes = "0" + minutes; }
+                if (seconds < 10) { seconds = "0" + seconds; }
+                return hours + ':' + minutes + ':' + seconds; // Return is HH : MM : SS
             }
         }
 
-        const ComponentMapCongif = {
-            targetStrings: '',
-            componentsRgx: /{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)/gm,
-            targetStringsWithUidsRgx: /{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)|(?<=\(\()([^(].*?[^)])(?=\)\))/gm,
-            targetStringRgx: /(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(.*?(?=\s|\}|\]|\)))/,
-        }
+
+
 
         async function TimestampBtnsMutation_cb(mutationsList)
         {
             const found = [];
+
             for (const { addedNodes } of mutationsList)
             {
                 for (const node of addedNodes)
@@ -1321,10 +1368,14 @@ async function Ready()
                 }
             }
 
+            await cleanAndSetUp_TimestampEnulation(found);
+        }
+        async function cleanAndSetUp_TimestampEnulation(found)
+        {
             let uid = null;
-            let string = null;
             let siblings = [];
-            let ValidStartEndTimestamps = [];
+            let startEndComponentMap = null;
+            const componentMapMap = new Map();
 
             const foundInDom = found.filter(node => document.body.contains(node));
             for (const node of foundInDom)
@@ -1335,31 +1386,8 @@ async function Ready()
                 if (tempUID && uid != tempUID)
                 {
                     siblings = [...block.querySelectorAll([endTarget, startTarget].map(x => '.' + x).join(', '))];
-
                     uid = tempUID;
-                    const res = await kauderk.rap.getBlockInfoByUID(tempUID);
-                    //                                 clean up
-                    string = res[0][0].string.replace(/(`.*?`)/g, 'used_to_be_an_inline_code_block');
-
-                    //                                                      {{[[yt-gif/start|end]]|: xxxxxxxxxxxx }}
-                    const ValidStartEndComponentsStrings = [...string.matchAll(/{{(\[\[)?(yt-gif\/(start|end))(\]\]|):?(.*?)(\}\}|\{\{)/gm)].map(x => x = x[5]);
-                    ValidStartEndTimestamps = ValidStartEndComponentsStrings.map(x =>
-                    {
-                        // two digit numbers -> xx:?xx:?xx | xx xxx... 
-                        const res = [...x.matchAll(/((\d{1,2}):)?((\d{1,2}):)((\d{1,2}))|((?<=\s)\d+(?=\s|\}))/gm)].find(x => x[0]);
-                        return {
-                            match: res[0],
-                            h: res[3],
-                            m: res[5],
-                            s: res[7],
-                            secondsOnly: res[8],
-                        }
-                    });
-                }
-                if (ValidStartEndTimestamps.length == 0)
-                {
-                    console.log('invalid timestamps');
-                    continue;
+                    startEndComponentMap = await getComponentMap_smart(tempUID, StartEnd_Config, componentMapMap, getComponentMap);
                 }
 
                 let targetNode = siblings.find(x => x === node);
@@ -1367,16 +1395,123 @@ async function Ready()
 
                 targetNode.attributes.forEach(attr => targetNode.removeAttribute(attr.name));
                 targetNode = UTILS.ChangeElementType(targetNode, 'a');
+                targetNode.setAttribute('yt-gif-timestamp-enulation', ''); // color: #308d9f;
+
                 targetNode.className = 'rm-video-timestamp dont-focus-block';
-                targetNode.innerHTML = ValidStartEndTimestamps[targetIndex].match;
+                targetNode.innerHTML = extractFromMap_AtIndex(startEndComponentMap, targetIndex);
+                targetNode.addEventListener('mousedown', async (e) => await PlayPauseOnClicks(e, uid));
             }
         }
 
 
-        async function getComponentMap(tempUID)
+
+        async function PlayPauseOnClicks(e, uid)
+        {
+            const { secHMS, foundBlock, targetBlock } = await getLastComponentInHerarchy(uid);
+            const { uid: f_uid, blockID: mapblockID } = foundBlock;
+            const { currentTarget: tEl, button, which } = e;
+            const baseAnim = ['yt-timestamp-pulse-text-anim'];
+            const greenAnim = [...baseAnim, 'yt-timestamp-success'];
+            const redAnim = [...baseAnim, 'yt-timestamp-warn'];
+            const blueAnim = [...baseAnim, 'yt-timestamp-opening'];
+
+            //                                                      remove duplicates on allAnim
+            const allAnim = [...greenAnim, ...redAnim, ...blueAnim].filter((v, i, a) => a.indexOf(v) === i);
+            const pulse = (anim) =>
+            {
+                UTILS.toggleClasses(false, allAnim, tEl);
+                UTILS.toggleClasses(true, anim, tEl);
+                setTimeout(() => UTILS.toggleClasses(false, anim, tEl), 500);
+            }
+
+            const blockExist = document.querySelector(`[id$="${f_uid}"]`);
+
+            // root -> roam-article || rm-sidebar-outline
+            const OpenBlocks = (root) => [...document.querySelectorAll(`.${root} [id$="${f_uid}"] .yt-gif-wrapper`)];
+            const lastOpenBlock = (r) => [...OpenBlocks(r)]?.reverse()?.pop();
+            const playLastBlock_SimHover = (r) =>
+            {
+                lastOpenBlock(r)?.setAttribute('play-right-away', true);
+                lastOpenBlock(r)?.dispatchEvent(UTILS.simHover()); // hover -> videoIsPlayingWithSound
+            }
+            const pauseLastBlock_SimHoverOut = (r) =>
+            {
+                lastOpenBlock(r)?.setAttribute('play-right-away', false);
+                lastOpenBlock(r)?.dispatchEvent(UTILS.simHoverOut()); // hover out -> videoIsPlayingWithSound(false)
+            }
+
+            const click = which == 1; //button == 0; // https://pretagteam.com/question/why-does-middleclick-not-trigger-click-in-several-cases
+            const mdlclick = which == 2; //button == 1;
+            const rghtclick = which == 3; //button == 2;
+
+            // disable context menu
+            tEl.addEventListener("contextmenu", e => e.preventDefault()); //https://codinhood.com/nano/dom/disable-context-menu-right-click-javascript
+
+            if (!blockExist) // fail
+            {
+                if (click)
+                    pulse(redAnim);
+                playLastBlock_SimHover('roam-article');
+                return;
+            };
+
+
+            if (click || rghtclick) // success
+            {
+                pulse(greenAnim);
+                const r = 'roam-article';
+                if (click)
+                    playLastBlock_SimHover(r);
+                if (rghtclick)
+                    pauseLastBlock_SimHoverOut(r);
+                return;
+            }
+
+
+            if (!mdlclick) return; // opening?
+
+            await RAP.setSideBarState(3);
+            await RAP.sleep(50);
+
+            pulse(blueAnim);
+            let r = 'rm-sidebar-outline';
+            if (OpenBlocks(r).length == 0) // no block instance on sidebar | anySidebarInstance
+            {
+                await RAP.openBlockInSidebar(f_uid);
+            }
+
+            await RAP.sleep(50);
+            lastOpenBlock(r)?.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
+            await RAP.sleep(50);
+            playLastBlock_SimHover(r);
+        }
+        function extractFromMap_AtIndex(map, valueAtIndex)
+        {
+            if (!map) debugger;
+            let val = [...map.values()][valueAtIndex];
+            if (!val) debugger;
+            return val;
+        }
+        async function getComponentMap_smart(uid, config, map, getComponentMap_cb)
+        {
+            // since it store recursive maps, once per instance it's enough
+            try
+            {
+                if (!uid) throw new Error('uid is null');
+                if (!map.has(uid))
+                    map.set(uid, await getComponentMap_cb(uid, config)); // a map inside a map 🤯
+                return map.get(uid);
+            } catch (error)
+            {
+                console.log(error);
+                return null;
+            }
+        }
+        async function getComponentMap(tempUID, config)
         {
             let indentFunc = 0;
             let componentsInOrderMap = new Map();
+            const { targetStringRgx, componentsRgx, componentsWithUidsRgx } = config;
 
 
             const orderObj = {
@@ -1413,7 +1548,7 @@ async function Ready()
                 objRes.hasKey = hasKey;
 
 
-                console.log("%c" + cleanIndentedBlock(), `color:${results[hasKey]?.tone || 'black'}`);
+                //console.log("%c" + cleanIndentedBlock(), `color:${results[hasKey]?.tone || 'black'}`);
 
 
                 for (const i of objRes.targetStringsWithUids) // looping through RENDERED targetStrings (components) and uids (references)
@@ -1460,15 +1595,15 @@ async function Ready()
                 function assertUniqueKey_while(uid, indent, isKey, hasKey)
                 {
                     // the order in which the components are rendered within the block
-                    const keyAnyComponetInOrder = results['has any components'].incrementIf(UTILS.includesAtlest(['has components', 'has components aliases'], hasKey, null));
-                    const keyInComponentOrder = results['has components'].incrementIf(hasKey === 'has components');
-                    const keyInAliasComponentOrder = results['has components aliases'].incrementIf(hasKey === 'has components aliases');
+                    const keyhasAnyComponet = results['has any components'].incrementIf(UTILS.includesAtlest(['has components', 'has components aliases'], hasKey, null));
+                    const keyHasComponents = results['has components'].incrementIf(hasKey === 'has components');
+                    const keyHasAliasComponents = results['has components aliases'].incrementIf(hasKey === 'has components aliases');
 
                     const keyIsAlias = results['is alias'].incrementIf(isKey === 'is alias');
                     const keyIsComponent = results['is component'].incrementIf(isKey === 'is component');
                     const keyIsBlockRef = results['is block referece'].incrementIf(isKey === 'is block referece');
 
-                    const baseKey = [indent, uid, hasKey, keyAnyComponetInOrder, keyInComponentOrder, keyInAliasComponentOrder, isKey, keyIsBlockRef, keyIsComponent, keyIsAlias];
+                    const baseKey = [indent, uid, hasKey, keyhasAnyComponet, keyHasComponents, keyHasAliasComponents, isKey, keyIsBlockRef, keyIsComponent, keyIsAlias];
 
                     let similarCount = 0; // keep track of similarities
                     const preKey = () => [similarCount, ...baseKey].join('  ');
@@ -1502,10 +1637,9 @@ async function Ready()
                 const info = await RAP.getBlockInfoByUID(desiredUID);
                 const rawText = info[0][0]?.string || "F";
 
-                const { targetStringRgx, componentsRgx, targetStringsWithUidsRgx } = ComponentMapCongif;
                 const string = rawText.replace(/(`.*?`)/g, 'used_to_be_an_inline_code_block');
 
-                // {{[[component]]: xxxyoutube-urlxxx }}
+                // {{[[page]]: x... xxxxxx xxx... }}
                 const components = [...string.matchAll(componentsRgx)].map(x => x = x[0]) || [];
                 // (((xxxuidxxx))) || ((xxxuidxxx))
                 const innerUIDs = string.match(/(?<=\(\()([^(].*?[^)])(?=\)\))/gm) || [];
@@ -1513,7 +1647,7 @@ async function Ready()
                 const aliasesPlusUids = [...string.matchAll(/\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm)];
 
                 // componets with uids // set in the order in which roam renders them
-                const targetStringsWithUids = [...[...string.matchAll(targetStringsWithUidsRgx)]
+                const targetStringsWithUids = [...[...string.matchAll(componentsWithUidsRgx)]
                     .map(x => x = x[0])]
                     .map(x => components.includes(x) ? x = x.match(targetStringRgx)?.[0] : x);
                 // uid aliases alone
@@ -1534,6 +1668,8 @@ async function Ready()
                 return { uid: desiredUID, components, targetStrings, innerUIDs, targetStringsWithUids, aliasesPlusUids, innerAliasesUids, blockReferencesAlone, string, info };
             };
         }
+
+
 
         function slashMenuMutation_cb(mutationsList, observer)
         {
@@ -2385,7 +2521,12 @@ async function onPlayerReady(event)
 
 
     // 10. well well well - pause if user doesn't intents to watch
-    HumanInteraction_AutopalyFreeze(); // this being the last one, does matter
+    if (!parent.hasAttribute('play-right-away'))
+        HumanInteraction_AutopalyFreeze(); // this being the last one, does matter
+    else 
+    {
+        videoIsPlayingWithSound();
+    }
 
 
 
