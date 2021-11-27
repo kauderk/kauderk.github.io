@@ -406,7 +406,7 @@ span.dropdown-item.yt-gif-wrapper-parent .yt-gif-wrapper.dont-focus-block {
 }
 
 /* timestamp emulation */
-.rm-video-timestamp[yt-gif-timestamp-enulation]{
+.rm-video-timestamp[yt-gif-timestamp-emulation]{
   color: #308d9f;
 }
 
