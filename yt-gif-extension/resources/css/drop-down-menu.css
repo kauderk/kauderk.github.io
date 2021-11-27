@@ -404,3 +404,30 @@ span.dropdown-item.yt-gif-wrapper-parent .yt-gif-wrapper.dont-focus-block {
   outline: var(--yt-gif-icon-focus-contour) auto 2px;
   outline-offset: 2px;
 }
+
+/* timestamp emulation */
+.rm-video-timestamp[yt-gif-timestamp-enulation]{
+  color: #308d9f;
+}
+
+.yt-timestamp-pulse-text-anim{
+  animation: pulseText .5s 1;
+}
+.yt-timestamp-warn{
+  --pulse-c: 255, 0, 0;
+}
+.yt-timestamp-success{
+  --pulse-c: 0, 255, 0;
+}
+
+@keyframes pulseText{
+  0%{
+      text-shadow: 0px 0px 0px rgb(var(--pulse-c) , 70%)
+  }
+  70%{
+      text-shadow: 0px 0px 0px rgb(var(--pulse-c) , 100%);
+  }
+  100%{
+      text-shadow: 0px 0px 0px rgb(var(--pulse-c)  70%);
+  }
+}
