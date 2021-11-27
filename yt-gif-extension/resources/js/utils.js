@@ -2,6 +2,15 @@ var kauderk = window.kauderk || {};
 
 kauderk.util = ((util) =>
 {
+    util.simHover = () =>
+    {
+        return new MouseEvent('mouseenter',
+            {
+                'view': window,
+                'bubbles': true,
+                'cancelable': true
+            });
+    }
     util.ObserveRemovedEl_Smart = (options) =>
     {
         if (!options.el)
