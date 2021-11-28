@@ -43,7 +43,8 @@ const YT_GIF_OBSERVERS_TEMP = {
     masterIntersectionObservers_buffer: [],
     masterIframeBuffer: [],
     slashMenuObserver: null,
-    timestampEmulationButtonsObserver: null,
+    timestampObserver: null,
+    keyupEventHanlder: () => { },
     creationCounter: -1, // crucial, because the api won't reload iframes with the same id
     CleanMasterObservers: function ()
     {
@@ -336,7 +337,6 @@ rm_components.both = {
 }
 Object.assign(rm_components.both, baseDeploymentObj_both());
 /*-----------------------------------*/
-let keyUpBodyEventHandler = function () { };
 
 
 
@@ -399,7 +399,7 @@ async function Ready()
 
     // 2. assign direct values to the main object | UI - user inputs
     DDM_to_UI_variables(); // filtering baseKey & prompts and transforming them from objs to values or dom els - it is not generic and only serves for the first indent level (from parent to child keys)
-    SaveSettingsOnChanges(); // the seetings page script is responsable for everything, this are just events
+    SaveSettingsOnChanges(); // the seetings page script is responsable for everything, these are just events
 
 
 
@@ -449,9 +449,64 @@ async function Ready()
 
 
 
-    // 6. simulate slash menu & timestamps
-    simulateSlashMenu(UI.display.simulate_slash_menu_beta);
-    listenForKeyboardShortcuts();
+    // 6. Emulate -> slash menu, timestamps + shortcuts
+    //#region relevant variables
+    const slashObj = {
+        targetClass: 'bp3-text-overflow-ellipsis',
+        emulationClass: 'slash-menu-emulation',
+        clone: null,
+    }
+    const componentClass = (page) => `bp3-button bp3-small dont-focus-block rm-xparser-default-${page}`;
+    const timestampObj = {
+        roamClassName: 'rm-video-timestamp dont-focus-block',
+        start: {
+            content: 'start',
+            targetClass: 'rm-xparser-default-start',
+            buttonClass: componentClass('start'),
+        },
+        end: {
+            content: 'end',
+            targetClass: 'rm-xparser-default-end',
+            buttonClass: componentClass('end'),
+        },
+        attr: {
+            emulation: 'yt-gif-timestamp-emulation',
+            timestamp: 'timestamp', // start or end
+        },
+        timestamp: {
+            buttonClass: componentClass('timestamp'),
+        },
+    };
+
+    const StartEnd_Config = {
+        componentsRgx: /{{(\[\[)?(yt-gif\/(start|end))(\]\]|):?(.*?)(\}\}|\{\{)/gm,
+        componentsWithUidsRgx: /{{(\[\[)?(yt-gif\/(start|end))(\]\]|):?(.*?)(\}\}|\{\{)|(?<=\(\()([^(].*?[^)])(?=\)\))/gm, // variables?
+        targetStringRgx: /((\d{1,2}):)?((\d{1,2}):)((\d{1,2}))|((?<=\s)\d+(?=\s|\}))/,
+    }
+    const YTGIF_Config = {
+        componentsRgx: /{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)/gm,
+        componentsWithUidsRgx: /{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)|(?<=\(\()([^(].*?[^)])(?=\)\))/gm, // variables?
+        targetStringRgx: /(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(.*?(?=\s|\}|\]|\)))/,
+    }
+
+    const { simulate_slash_menu_beta } = UI.display;
+
+    let { slashMenuObserver, timestampObserver, keyupEventHanlder } = window.YT_GIF_OBSERVERS;
+    slashMenuObserver?.disconnect();
+    timestampObserver?.disconnect();
+    const targetNode = document.body;
+    const config = { childList: true, subtree: true };
+    //#endregion
+
+    slashMenuObserver = new MutationObserver(slashMenuMutation_cb);
+    timestampObserver = new MutationObserver(TimestampBtnsMutation_cb);
+
+    // 6.1 cleanAndSetUp_TimestampEmulation -> PlayPauseOnClicks
+    // 6.2 run slashMenuObserver & timestampObserver
+    // 6.3 registerKeyCombinations (keyupEventHanlder)
+    //      6.3.1 addBlockTimestamps
+    toggleEmulation(simulate_slash_menu_beta.checked);
+    simulate_slash_menu_beta.addEventListener('change', e => toggleEmulation(e.target.checked));
 
 
     console.log('YT GIF extension activated');
@@ -813,7 +868,7 @@ async function Ready()
 
             // firs settings page instance
             await RAP.sleep(50);
-            SttPages()?.[0]?.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
+            SttPages()?.[0]?.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
         });
 
         settingsBtn.addEventListener('mouseenter', ToogleSettingBtnVisualFeedback);
@@ -1165,629 +1220,676 @@ async function Ready()
     //#endregion
 
 
-    //#region 6. simulate slash menu
-    async function simulateSlashMenu(simulate_slash_menu)
+    //#region 6. Emulate slash menu & timestamps
+    function toggleEmulation(bol)
     {
-        const addedTargetClass = 'bp3-text-overflow-ellipsis';
-        const emulationClass = 'slash-menu-emulation';
-        const startTarget = 'rm-xparser-default-start';
-        const endTarget = 'rm-xparser-default-end';
-        let cloneSubResuslt = null;
+        if (bol)
+            RunEmulation();
+        else
+            StopEmulation();
+    }
+    function RunEmulation()
+    {
+        const found = [];
+        found.push(...targetNode.getElementsByClassName(timestampObj.start.targetClass));
+        found.push(...targetNode.getElementsByClassName(timestampObj.end.targetClass));
+        cleanAndSetUp_TimestampEmulation(found);
 
-
-        const StartEnd_Config = {
-            componentsRgx: /{{(\[\[)?(yt-gif\/(start|end))(\]\]|):?(.*?)(\}\}|\{\{)/gm,
-            componentsWithUidsRgx: /{{(\[\[)?(yt-gif\/(start|end))(\]\]|):?(.*?)(\}\}|\{\{)|(?<=\(\()([^(].*?[^)])(?=\)\))/gm, // variables?
-            targetStringRgx: /((\d{1,2}):)?((\d{1,2}):)((\d{1,2}))|((?<=\s)\d+(?=\s|\}))/,
-        }
-        const YTGIF_Config = {
-            componentsRgx: /{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)/gm,
-            componentsWithUidsRgx: /{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)|(?<=\(\()([^(].*?[^)])(?=\)\))/gm, // variables?
-            targetStringRgx: /(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(.*?(?=\s|\}|\]|\)))/,
-        }
-
-
-        const targetNode = document.body;
-        const config = { childList: true, subtree: true };
-
-
-        window.YT_GIF_OBSERVERS.slashMenuObserver?.disconnect();
-        const slashObs = new MutationObserver(slashMenuMutation_cb);
-        window.YT_GIF_OBSERVERS.slashMenuObserver = slashObs;
-
-        window.YT_GIF_OBSERVERS.timestampEmulationButtonsObserver?.disconnect();
-        const timeObs = new MutationObserver(TimestampBtnsMutation_cb);
-        window.YT_GIF_OBSERVERS.timestampEmulationButtonsObserver = timeObs;
-
-
-        targetNode.removeEventListener('keyup', keyUpBodyEventHandler);
-        targetNode.removeEventListener('keyup', registerKey);
-        keyUpBodyEventHandler = registerKey;
-
-
-        if (simulate_slash_menu.checked)
+        slashMenuObserver.observe(targetNode, config);
+        timestampObserver.observe(targetNode, config);
+        document.removeEventListener('keyup', keyupEventHanlder);
+        keyupEventHanlder = registerKeyCombinations;
+        document.addEventListener('keyup', keyupEventHanlder);
+    }
+    function StopEmulation()
+    {
+        const found = [...targetNode.querySelectorAll(`[${timestampObj.attr.emulation}]`)];
+        for (let i of found)
         {
-            const found = [];
-            found.push(...targetNode.getElementsByClassName(startTarget));
-            found.push(...targetNode.getElementsByClassName(endTarget));
-            cleanAndSetUp_TimestampEnulation(found);
-
-            RunSimulation();
+            const key = i.getAttribute(timestampObj.attr.timestamp) || 'timestamp';
+            i.innerHTML = key;
+            i = UTILS.ChangeElementType(i, 'button');
+            i.className = timestampObj[key].buttonClass;
         }
-        simulate_slash_menu.addEventListener('change', simluationHandler);
-        function simluationHandler(e)
+
+        slashMenuObserver.disconnect();
+        timestampObserver.disconnect();
+        document.removeEventListener('keyup', keyupEventHanlder);
+    }
+
+
+    // 6.1 on valid dom nodes get last component and add timestamp + click events
+    async function cleanAndSetUp_TimestampEmulation(found)
+    {
+        let uid = null;
+        let siblings = [];
+        let startEndComponentMap = null;
+        const componentMapMap = new Map();
+
+        const foundInDom = found.filter(node => document.body.contains(node));
+        const successEmulation = new Map(); // block -> buttons
+        for (const node of foundInDom)
         {
-            if (e.currentTarget.checked)
-                RunSimulation();
+            const block = node?.closest('.rm-block__input'); // closestYTGIFparentID
+            const tempUID = block?.id?.slice(-9);
+            let targetNode = siblings.find(x => x === node); // 🤓
+
+            if (tempUID && uid != tempUID || !targetNode)
+            {
+                siblings = [...block.querySelectorAll([timestampObj.end.targetClass, timestampObj.start.targetClass].map(x => '.' + x).join(', '))];
+                uid = tempUID;
+                startEndComponentMap = await getComponentMap_smart(tempUID, StartEnd_Config, componentMapMap, getComponentMap);
+            }
+
+            targetNode = siblings.find(x => x === node); // 🤓
+            const targetIndex = siblings.indexOf(node);
+            if (!targetNode || !targetNode?.parentNode) continue;
+
+            if (successEmulation.has(block))
+                successEmulation.set(block, UTILS.pushSame(successEmulation.get(block), targetNode));
             else
-                StopSimulation();
+                successEmulation.set(block, [targetNode]);
+
+            // find timestampObj key is included in targetNode classlist
+            const key = Object.keys(timestampObj).find(key => targetNode.classList.contains(timestampObj[key]?.targetClass));
+
+            targetNode.attributes.forEach(attr => targetNode.removeAttribute(attr.name));
+            targetNode = UTILS.ChangeElementType(targetNode, 'a');
+            targetNode.setAttribute(timestampObj.attr.timestamp, key);
+            targetNode.setAttribute(timestampObj.attr.emulation, ''); // color: #308d9f;
+
+            targetNode.className = timestampObj.roamClassName;
+            targetNode.innerHTML = extractFromMap_AtIndex(startEndComponentMap, targetIndex);
+            targetNode.addEventListener('mousedown', async (e) => await PlayPauseOnClicks(e, uid));
         }
-        function RunSimulation()
+    }
+    // 6.1.1
+    async function PlayPauseOnClicks(e, uid)
+    {
+        const { currentTarget: tEl, which } = e;
+
+        if (tEl.hasAttribute('awaiting')) return;
+        tEl.setAttribute('awaiting', true);
+
+        const { uid: f_uid } = await getLastComponentInHerarchy(uid)?.foundBlock;
+
+        const baseAnim = ['yt-timestamp-pulse-text-anim'];
+        const greenAnim = [...baseAnim, 'yt-timestamp-success'];
+        const redAnim = [...baseAnim, 'yt-timestamp-warn'];
+        const blueAnim = [...baseAnim, 'yt-timestamp-opening'];
+        const allAnim = [...greenAnim, ...redAnim, ...blueAnim].filter((v, i, a) => a.indexOf(v) === i); // remove duplicates on allAnim
+        const pulse = (anim) =>
         {
-            slashObs.observe(targetNode, config);
-            timeObs.observe(targetNode, config);
-            document.addEventListener('keyup', registerKey);
+            UTILS.toggleClasses(false, allAnim, tEl);
+            UTILS.toggleClasses(true, anim, tEl);
+            setTimeout(() => UTILS.toggleClasses(false, anim, tEl), 500);
         }
-        function StopSimulation()
+
+        const click = which == 1;
+        const mdlclick = which == 2;
+        const rghtclick = which == 3;
+
+
+
+        const barObj = {
+            condition: function () { return tEl.closest(`.${this.root}`) },
+        }
+        const PagesObj = {
+            main: {
+                root: 'roam-article',
+                crossRoot: 'rm-sidebar-outline',
+            },
+            side: {
+                root: 'rm-sidebar-outline',
+                crossRoot: 'roam-article',
+            },
+            pageRef: {
+                root: 'rm-reference-main',
+                crossRoot: 'rm-sidebar-outline',
+            },
+        };
+
+        Object.keys(PagesObj).forEach(key => Object.assign(PagesObj[key], barObj));
+        const key = Object.keys(PagesObj).find(x => PagesObj[x].condition());
+        const { root, crossRoot } = PagesObj[key];
+        const blockExist = document.querySelector(`.${root} [id$="${f_uid}"]`);
+
+
+
+        // root -> roam-article || rm-sidebar-outline
+        const TargetBlocks = (root) => [...document.querySelectorAll(`.${root} [id$="${f_uid}"] .yt-gif-wrapper`)];
+        const lastWrapperOnTargetBlock = (r) => [...TargetBlocks(r)]?.reverse()?.pop();
+        // disable context menu
+        tEl.addEventListener("contextmenu", e => e.preventDefault()); //https://codinhood.com/nano/dom/disable-context-menu-right-click-javascript
+
+
+
+
+        if (!blockExist) // fail
         {
-            slashObs.disconnect();
-            timeObs.disconnect();
-            document.removeEventListener('keyup', registerKey);
+            if (click || rghtclick)
+                pulse(redAnim);
+            else if (mdlclick)
+                return await openingOnCrossRoot();
+
+            await playLastBlockOnly_SimHover(root);
+            return NoLongerAwaiting();
         }
 
 
-
-
-        async function registerKey(e)
+        if (click || rghtclick) // success
         {
-            const openInputBlock = document.querySelector(".rm-block__input--active.rm-block-text");
-            if (!openInputBlock) return;
-
-            const uid = openInputBlock.id?.slice(-9);
-
-            if (e['ctrlKey'] && e['altKey']) 
-            {
-                let pageRefSufx = null;
-                if (e.key == 's') // Ctrl + Alt + s
-                {
-                    pageRefSufx = 'start'
-                }
-                else if (e.key == 'd') // Ctrl + Alt + d
-                {
-                    pageRefSufx = 'end'
-                }
-
-                if (pageRefSufx && uid)
-                {
-                    const { secHMS, foundBlock, targetBlock } = await getLastComponentInHerarchy(uid);
-                    if (!foundBlock) { debugger; return; }
-
-                    const { start, end } = targetBlock; // bulky and clunky... because there only two options
-                    const boundaries = (pageRefSufx == 'start') ? start : end;
-                    const targetSecHMS = secHMS.includes('NaN') ? boundaries : secHMS;
-
-                    const updateString = targetBlock.string.concat(` {{[[yt-gif/${pageRefSufx}]]: ${targetSecHMS}}}`);
-                    await kauderk.rap.updateBlock(targetBlock.uid, updateString);
-                }
-            }
+            pulse(greenAnim);
+            if (click)
+                await playLastBlockOnly_SimHover(root);
+            if (rghtclick)
+                pauseLastBlock_SimHoverOut(root);
+            return NoLongerAwaiting();
         }
-        async function getLastComponentInHerarchy(tempUID)
+
+
+        if (mdlclick) // opening?
         {
-            const res = await kauderk.rap.getBlockParentUids(tempUID);
-            const original = await kauderk.rap.getBlockInfoByUID(tempUID);
-
-            const baseObj = {
-                blockID: null, start: 0, end: 0, secHMS: 000, crrTime: null,
-            }
-            const iframeMaps = {
-                targets: {
-                    condition: function (sufix)
-                    {
-                        this.blockID = [...recordedIDs.keys()].find(k => k?.endsWith(sufix));
-                        return this.crrTime = recordedIDs.get(this.blockID)?.target?.getCurrentTime() || false;
-                    },
-                },
-                lastParams: {
-                    condition: function (sufix)
-                    {
-                        this.blockID = [...lastBlockIDParameters.keys()].find(k => k?.endsWith(sufix));
-                        return this.crrTime = lastBlockIDParameters.get(this.blockID)?.updateTime || false;
-                    },
-                },
-            }
-            Object.keys(iframeMaps).forEach(key => Object.assign(iframeMaps[key], baseObj));
-
-            const blockStrings = res.map(arr => arr[0]);
-            for (const { string, uid } of blockStrings.reverse())
-            {
-                const componentMap = await getComponentMap(uid, YTGIF_Config);
-                const reverseValues = [...componentMap.values()].reverse();
-
-                const lastUrl = reverseValues.find(v => v?.includes('https'));
-                if (!lastUrl) continue;
-
-                const lastUrlIndex = reverseValues.indexOf(lastUrl);
-                const possibleBlockIDSufix = uid + properBlockIDSufix(lastUrl, lastUrlIndex);
-
-                const key = Object.keys(iframeMaps).find(x => iframeMaps[x].condition(possibleBlockIDSufix));
-
-                return {
-                    secHMS: iframeMaps[key]?.crrTime,
-                    foundBlock: {
-                        string,
-                        uid,
-                        blockID: iframeMaps[key]?.blockID,
-                        possibleBlockIDSufix,
-                    },
-                    targetBlock: {
-                        string: original[0][0].string,
-                        uid: tempUID,
-                        start: convertHMS(lastUrl.match(/(t=|start=)(?:(\d+))/)?.[2] || 0),
-                        end: convertHMS(lastUrl.match(/(end=)(?:(\d+))/)?.[2] || 0),
-                    },
-                };
-            }
-            return {};
-
-            function convertHMS(value)
-            {
-                const sec = parseInt(value, 10); // convert value to number if it's string
-                let hours = Math.floor(sec / 3600); // get hours
-                let minutes = Math.floor((sec - (hours * 3600)) / 60); // get minutes
-                let seconds = sec - (hours * 3600) - (minutes * 60); //  get seconds
-                // add 0 if value < 10; Example: 2 => 02
-                if (hours < 10) { hours = "0" + hours; }
-                if (minutes < 10) { minutes = "0" + minutes; }
-                if (seconds < 10) { seconds = "0" + seconds; }
-                return hours + ':' + minutes + ':' + seconds; // Return is HH : MM : SS
-            }
+            return await openingOnCrossRoot();
         }
 
 
 
 
-        async function TimestampBtnsMutation_cb(mutationsList)
+        async function openingOnCrossRoot()
         {
-            const found = [];
-
-            for (const { addedNodes } of mutationsList)
-            {
-                for (const node of addedNodes)
-                {
-                    if (!node.tagName) continue; // not an element
-
-                    if (node.classList.contains(startTarget) || node.classList.contains(endTarget))
-                    {
-                        found.push(node);
-                    }
-                    else if (node.firstElementChild)
-                    {
-                        found.push(...node.getElementsByClassName(startTarget));
-                        found.push(...node.getElementsByClassName(endTarget));
-                    }
-                }
-            }
-
-            await cleanAndSetUp_TimestampEnulation(found);
-        }
-        async function cleanAndSetUp_TimestampEnulation(found)
-        {
-            let uid = null;
-            let siblings = [];
-            let startEndComponentMap = null;
-            const componentMapMap = new Map();
-
-            const foundInDom = found.filter(node => document.body.contains(node));
-            for (const node of foundInDom)
-            {
-                const block = node?.closest('.rm-block__input'); // closestYTGIFparentID
-                const tempUID = block?.id?.slice(-9);
-
-                if (tempUID && uid != tempUID)
-                {
-                    siblings = [...block.querySelectorAll([endTarget, startTarget].map(x => '.' + x).join(', '))];
-                    uid = tempUID;
-                    startEndComponentMap = await getComponentMap_smart(tempUID, StartEnd_Config, componentMapMap, getComponentMap);
-                }
-
-                let targetNode = siblings.find(x => x === node);
-                const targetIndex = siblings.indexOf(node);
-
-                targetNode.attributes.forEach(attr => targetNode.removeAttribute(attr.name));
-                targetNode = UTILS.ChangeElementType(targetNode, 'a');
-                targetNode.setAttribute('yt-gif-timestamp-enulation', ''); // color: #308d9f;
-
-                targetNode.className = 'rm-video-timestamp dont-focus-block';
-                targetNode.innerHTML = extractFromMap_AtIndex(startEndComponentMap, targetIndex);
-                targetNode.addEventListener('mousedown', async (e) => await PlayPauseOnClicks(e, uid));
-            }
-        }
-
-
-
-        async function PlayPauseOnClicks(e, uid)
-        {
-            const { secHMS, foundBlock, targetBlock } = await getLastComponentInHerarchy(uid);
-            const { uid: f_uid, blockID: mapblockID } = foundBlock;
-            const { currentTarget: tEl, button, which } = e;
-            const baseAnim = ['yt-timestamp-pulse-text-anim'];
-            const greenAnim = [...baseAnim, 'yt-timestamp-success'];
-            const redAnim = [...baseAnim, 'yt-timestamp-warn'];
-            const blueAnim = [...baseAnim, 'yt-timestamp-opening'];
-
-            //                                                      remove duplicates on allAnim
-            const allAnim = [...greenAnim, ...redAnim, ...blueAnim].filter((v, i, a) => a.indexOf(v) === i);
-            const pulse = (anim) =>
-            {
-                UTILS.toggleClasses(false, allAnim, tEl);
-                UTILS.toggleClasses(true, anim, tEl);
-                setTimeout(() => UTILS.toggleClasses(false, anim, tEl), 500);
-            }
-
-            const blockExist = document.querySelector(`[id$="${f_uid}"]`);
-
-            // root -> roam-article || rm-sidebar-outline
-            const OpenBlocks = (root) => [...document.querySelectorAll(`.${root} [id$="${f_uid}"] .yt-gif-wrapper`)];
-            const lastOpenBlock = (r) => [...OpenBlocks(r)]?.reverse()?.pop();
-            const playLastBlock_SimHover = (r) =>
-            {
-                lastOpenBlock(r)?.setAttribute('play-right-away', true);
-                lastOpenBlock(r)?.dispatchEvent(UTILS.simHover()); // hover -> videoIsPlayingWithSound
-            }
-            const pauseLastBlock_SimHoverOut = (r) =>
-            {
-                lastOpenBlock(r)?.setAttribute('play-right-away', false);
-                lastOpenBlock(r)?.dispatchEvent(UTILS.simHoverOut()); // hover out -> videoIsPlayingWithSound(false)
-            }
-
-            const click = which == 1; //button == 0; // https://pretagteam.com/question/why-does-middleclick-not-trigger-click-in-several-cases
-            const mdlclick = which == 2; //button == 1;
-            const rghtclick = which == 3; //button == 2;
-
-            // disable context menu
-            tEl.addEventListener("contextmenu", e => e.preventDefault()); //https://codinhood.com/nano/dom/disable-context-menu-right-click-javascript
-
-            if (!blockExist) // fail
-            {
-                if (click)
-                    pulse(redAnim);
-                playLastBlock_SimHover('roam-article');
-                return;
-            };
-
-
-            if (click || rghtclick) // success
-            {
-                pulse(greenAnim);
-                const r = 'roam-article';
-                if (click)
-                    playLastBlock_SimHover(r);
-                if (rghtclick)
-                    pauseLastBlock_SimHoverOut(r);
-                return;
-            }
-
-
-            if (!mdlclick) return; // opening?
-
             await RAP.setSideBarState(3);
             await RAP.sleep(50);
 
             pulse(blueAnim);
-            let r = 'rm-sidebar-outline';
-            if (OpenBlocks(r).length == 0) // no block instance on sidebar | anySidebarInstance
+            if (TargetBlocks(crossRoot).length == 0) // 0 instances on crossRoot
             {
-                await RAP.openBlockInSidebar(f_uid);
+                await RAP.navigateToUiOrCreate(f_uid, (root == PagesObj.main.root), 'block');
             }
 
             await RAP.sleep(50);
-            lastOpenBlock(r)?.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
+            lastWrapperOnTargetBlock(crossRoot)?.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
             await RAP.sleep(50);
-            playLastBlock_SimHover(r);
+            await playLastBlockOnly_SimHover(crossRoot);
+            return NoLongerAwaiting();
         }
-        function extractFromMap_AtIndex(map, valueAtIndex)
+
+        async function playLastBlockOnly_SimHover(r)
         {
-            if (!map) debugger;
-            let val = [...map.values()][valueAtIndex];
-            if (!val) debugger;
-            return val;
-        }
-        async function getComponentMap_smart(uid, config, map, getComponentMap_cb)
-        {
-            // since it store recursive maps, once per instance it's enough
-            try
+            const targetWrapper = lastWrapperOnTargetBlock(r);
+
+
+            // pause everthing but this
+            UTILS.inViewportElsHard([...document.querySelectorAll('.yt-gif-wrapper')]).forEach(wrapper =>
             {
-                if (!uid) throw new Error('uid is null');
-                if (!map.has(uid))
-                    map.set(uid, await getComponentMap_cb(uid, config)); // a map inside a map 🤯
-                return map.get(uid);
-            } catch (error)
+                if (wrapper != targetWrapper)
+                    wrapper?.dispatchEvent(UTILS.simHoverOut());
+            });
+            // hover this -> videoIsPlayingWithSound
+            targetWrapper?.dispatchEvent(UTILS.simHover());
+
+
+            const targetBlockID = [...recordedIDs.keys()].find(k => k?.startsWith(closestYTGIFparentID(targetWrapper)));;
+            const record = recordedIDs.get(targetBlockID);
+            const validTimestamp = tEl.innerHTML.match(StartEnd_Config.targetStringRgx)?.[0];
+            const secondsOnly = UTILS.HMSToSecondsOnly(validTimestamp);
+            if (!validTimestamp || typeof secondsOnly !== 'number') { debugger; return; }
+
+
+
+            targetWrapper?.setAttribute('play-right-away', true);
+            targetWrapper?.setAttribute('seekTo', secondsOnly);
+
+
+
+            if (record?.seekToUpdatedTime)
             {
-                console.log(error);
-                return null;
+                record.seekToUpdatedTime(secondsOnly);
+            }
+            else if (record?.target)
+            {
+                record.target.seekTo(secondsOnly);
             }
         }
-        async function getComponentMap(tempUID, config)
+        async function pauseLastBlock_SimHoverOut(r)
         {
-            let indentFunc = 0;
-            let componentsInOrderMap = new Map();
-            const { targetStringRgx, componentsRgx, componentsWithUidsRgx } = config;
+            lastWrapperOnTargetBlock(r)?.setAttribute('play-right-away', false);
+            lastWrapperOnTargetBlock(r)?.dispatchEvent(UTILS.simHoverOut()); // hover out -> videoIsPlayingWithSound(false)
+        }
+        function NoLongerAwaiting()
+        {
+            tEl.removeAttribute('awaiting');
+        }
+    }
 
 
-            const orderObj = {
-                order: -1,
-                incrementIf: function (condition) { return condition ? Number(++this.order) : 'ﾠ' },
-                condition: (x) => false,
-            };
-            const results = { /* the order does matter */
-                'has components aliases': { tone: '#37d5d6' },
-                'has components': { tone: '#36096d' },
-                'has any aliases': { tone: '#734ae8' },
-                'has any components': { tone: '#21d190' },
-
-                'is component': { tone: '#20bf55' },
-                'is alias': { tone: '#bfe299' },
-                'is block referece': { tone: 'green' },
-            };
-            Object.keys(results).forEach(key => Object.assign(results[key], orderObj));
-
-
-            const FirstObj = await TryToFindURL_Rec(tempUID);
-            return componentsInOrderMap;
-
-
-            async function TryToFindURL_Rec(uid, parentObj)
+    // 6.3
+    async function registerKeyCombinations(e)
+    {
+        if (e['ctrlKey'] && e['altKey']) 
+        {
+            let pageRefSufx = null;
+            if (e.key == 's') // Ctrl + Alt + s
             {
-                const objRes = await TryToFindTargetString(uid);
-
-
-                results['has components aliases'].condition = () => parentObj?.innerAliasesUids?.includes(uid) && (!!objRes.urls?.[0]);
-                results['has any aliases'].condition = () => objRes?.innerAliasesUids.length > 0;
-                results['has components'].condition = () => objRes.components.length > 0;
-                const hasKey = Object.keys(results).filter(x => x.includes('has')).find(x => results[x].condition());
-                objRes.hasKey = hasKey;
-
-
-                //console.log("%c" + cleanIndentedBlock(), `color:${results[hasKey]?.tone || 'black'}`);
-
-
-                for (const i of objRes.targetStringsWithUids) // looping through RENDERED targetStrings (components) and uids (references)
-                {
-                    results['is component'].condition = () => objRes?.targetStrings.includes(i);
-                    results['is alias'].condition = () => objRes?.innerAliasesUids.includes(i);
-                    results['is block referece'].condition = () => objRes?.blockReferencesAlone.includes(i);
-
-
-                    const isKey = Object.keys(results).filter(x => x.includes('is')).find(x => results[x].condition());
-                    const parentKeysArentAlias = !parentObj?.isKey?.includes('alias') && !parentObj?.hasKey?.includes('alias');
-                    const AtLeast = (arr) => arr.find(w => w === isKey);
-
-
-                    if (
-                        (parentKeysArentAlias && i != tempUID) // unrendered -> pass
-                        || AtLeast(['is component']) // targetStrings (components) -> go
-                    )
-                    {
-                        if (AtLeast(['is alias', 'is component']))
-                        {
-                            componentsInOrderMap.set(assertUniqueKey_while(uid, indentFunc, isKey, hasKey), i);
-                        }
-                    }
-
-
-                    if (isKey == 'is block referece')// it is rendered, so execute it's rec func
-                    {
-                        await ExecuteIndented_Rec(isKey, i);
-                    }
-                }
-
-                return { uid, objRes, parentObj };
-
-
-                async function ExecuteIndented_Rec(isKey, i)
-                {
-                    indentFunc += 1;
-                    objRes.isKey = isKey;
-                    const awaitingObj = await TryToFindURL_Rec(i, objRes);
-                    indentFunc -= 1;
-                }
-
-                function assertUniqueKey_while(uid, indent, isKey, hasKey)
-                {
-                    // the order in which the components are rendered within the block
-                    const keyhasAnyComponet = results['has any components'].incrementIf(UTILS.includesAtlest(['has components', 'has components aliases'], hasKey, null));
-                    const keyHasComponents = results['has components'].incrementIf(hasKey === 'has components');
-                    const keyHasAliasComponents = results['has components aliases'].incrementIf(hasKey === 'has components aliases');
-
-                    const keyIsAlias = results['is alias'].incrementIf(isKey === 'is alias');
-                    const keyIsComponent = results['is component'].incrementIf(isKey === 'is component');
-                    const keyIsBlockRef = results['is block referece'].incrementIf(isKey === 'is block referece');
-
-                    const baseKey = [indent, uid, hasKey, keyhasAnyComponet, keyHasComponents, keyHasAliasComponents, isKey, keyIsBlockRef, keyIsComponent, keyIsAlias];
-
-                    let similarCount = 0; // keep track of similarities
-                    const preKey = () => [similarCount, ...baseKey].join('  ');
-                    let uniqueKey = preKey();
-
-
-                    while (componentsInOrderMap.has(uniqueKey))
-                    {
-                        debugger;
-                        similarCount += 1; // try to make it unique
-                        uniqueKey = preKey();
-                    }
-                    similarCount = 0;
-
-                    //return { uniqueKey, original: preKey(), isKey, hasKey };
-                    return uniqueKey
-                }
-
-                function cleanIndentedBlock()
-                {
-                    const tab = '\t'.repeat(indentFunc);
-                    const cleanLineBrakes = objRes.string.replace(/(\n)/gm, ". ");
-                    const indentedBlock = tab + cleanLineBrakes.replace(/.{70}/g, '$&\n' + tab);
-                    return indentedBlock;
-                }
+                pageRefSufx = 'start'
             }
-
-
-            async function TryToFindTargetString(desiredUID)
+            else if (e.key == 'd') // Ctrl + Alt + d
             {
-                const info = await RAP.getBlockInfoByUID(desiredUID);
-                const rawText = info[0][0]?.string || "F";
+                pageRefSufx = 'end'
+            }
+            await addBlockTimestamp_smart(pageRefSufx);
+        }
+    }
+    // 6.3.1
+    async function addBlockTimestamps(pageRefSufx, uid)
+    {
+        const { secHMS, foundBlock, targetBlock } = await getLastComponentInHerarchy(uid);
+        if (!foundBlock) { debugger; return; }
 
-                const string = rawText.replace(/(`.*?`)/g, 'used_to_be_an_inline_code_block');
+        const { start, end } = targetBlock; // bulky and clunky... because there only two options
+        const boundaries = (pageRefSufx == 'start') ? start : end;
+        const targetSecHMS = secHMS.includes('NaN') ? boundaries : secHMS;
 
-                // {{[[page]]: x... xxxxxx xxx... }}
-                const components = [...string.matchAll(componentsRgx)].map(x => x = x[0]) || [];
-                // (((xxxuidxxx))) || ((xxxuidxxx))
-                const innerUIDs = string.match(/(?<=\(\()([^(].*?[^)])(?=\)\))/gm) || [];
-                // [xxxanything goesxxx](((xxxuidxxx)))
-                const aliasesPlusUids = [...string.matchAll(/\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm)];
-
-                // componets with uids // set in the order in which roam renders them
-                const targetStringsWithUids = [...[...string.matchAll(componentsWithUidsRgx)]
-                    .map(x => x = x[0])]
-                    .map(x => components.includes(x) ? x = x.match(targetStringRgx)?.[0] : x);
-                // uid aliases alone
-                const innerAliasesUids = [...aliasesPlusUids].map(x => x = x[2]) || []; // [xxnopexxx]('((xxxyesxxx))')
-
-                // uid block references alone
-                const blockReferencesAlone = innerUIDs?.filter(x => !innerAliasesUids.includes(x));
+        const updateString = targetBlock.string.concat(` {{[[yt-gif/${pageRefSufx}]]: ${targetSecHMS}}}`);
+        await kauderk.rap.updateBlock(targetBlock.uid, updateString);
+    }
+    async function addBlockTimestamp_smart(pageRefSufx)
+    {
+        const openInputBlock = document.querySelector(".rm-block__input--active.rm-block-text");
+        const uid = openInputBlock?.id?.slice(-9);
+        if (!pageRefSufx || !uid || !openInputBlock)
+            return;
+        await addBlockTimestamps(pageRefSufx, uid);
+    }
 
 
+    // backend/frontend communication - XXX_Config ={}
+    async function getLastComponentInHerarchy(tempUID)
+    {
+        const res = await kauderk.rap.getBlockParentUids(tempUID);
+        const original = await kauderk.rap.getBlockInfoByUID(tempUID);
 
-                let targetStrings = [];
-                for (const i of components)
+        const baseObj = {
+            blockID: null, start: 0, end: 0, secHMS: 000, crrTime: null,
+        }
+        const iframeMaps = {
+            targets: {
+                condition: function (sufix)
                 {
-                    // {{page: -> xxxxxx <- }}
-                    targetStrings = UTILS.pushSame(targetStrings, i.match(targetStringRgx)?.[0]);
-                }
+                    this.blockID = [...recordedIDs.keys()].find(k => k?.endsWith(sufix));
+                    return this.crrTime = recordedIDs.get(this.blockID)?.target?.getCurrentTime() || false;
+                },
+            },
+            lastParams: {
+                condition: function (sufix)
+                {
+                    this.blockID = [...lastBlockIDParameters.keys()].find(k => k?.endsWith(sufix));
+                    return this.crrTime = lastBlockIDParameters.get(this.blockID)?.updateTime || false;
+                },
+            },
+        }
+        Object.keys(iframeMaps).forEach(key => Object.assign(iframeMaps[key], baseObj));
 
-                return { uid: desiredUID, components, targetStrings, innerUIDs, targetStringsWithUids, aliasesPlusUids, innerAliasesUids, blockReferencesAlone, string, info };
+        const blockStrings = res.map(arr => arr[0]);
+        for (const { string, uid } of blockStrings.reverse())
+        {
+            const componentMap = await getComponentMap(uid, YTGIF_Config);
+            const reverseValues = [...componentMap.values()].reverse();
+
+            const lastUrl = reverseValues.find(v => v?.includes('https'));
+            if (!lastUrl) continue;
+
+            const lastUrlIndex = reverseValues.indexOf(lastUrl);
+            const possibleBlockIDSufix = uid + properBlockIDSufix(lastUrl, lastUrlIndex);
+
+            const key = Object.keys(iframeMaps).find(x => iframeMaps[x].condition(possibleBlockIDSufix));
+
+            return {
+                secHMS: UTILS.convertHMS(iframeMaps[key]?.crrTime),
+                secondsOnly: iframeMaps[key]?.crrTime,
+                foundBlock: {
+                    string,
+                    uid,
+                    blockID: iframeMaps[key]?.blockID,
+                    possibleBlockIDSufix,
+                },
+                targetBlock: {
+                    string: original[0][0].string,
+                    uid: tempUID,
+                    start: UTILS.convertHMS(lastUrl.match(/(t=|start=)(?:(\d+))/)?.[2] || 0),
+                    end: UTILS.convertHMS(lastUrl.match(/(end=)(?:(\d+))/)?.[2] || 0),
+                },
             };
         }
-
-
-
-        function slashMenuMutation_cb(mutationsList, observer)
+        return {};
+    }
+    function extractFromMap_AtIndex(map, valueAtIndex)
+    {
+        if (!map) debugger;
+        let val = [...map.values()][valueAtIndex];
+        if (!val) debugger;
+        return val;
+    }
+    async function getComponentMap_smart(uid, config, map, getComponentMap_cb)
+    {
+        // since it store recursive maps, once per instance it's enough
+        try
         {
-            const found = [];
-            const removed = [];
-
-            for (const { addedNodes, removedNodes } of mutationsList)
-            {
-                for (const node of addedNodes)
-                {
-                    if (!node.tagName) continue; // not an element
-
-                    if (node.classList.contains(addedTargetClass) && !node.classList.contains(emulationClass))
-                    {
-                        found.push(node);
-                    }
-                    else if (node.firstElementChild)
-                    {
-                        found.push(...node.getElementsByClassName(addedTargetClass));
-                    }
-                }
-
-                for (const node of removedNodes)
-                {
-                    if (!node.tagName) continue; // not an element
-
-                    if (node.classList.contains(addedTargetClass) && !node.classList.contains(emulationClass))
-                    {
-                        removed.push(node);
-                    }
-                    else if (node.firstElementChild)
-                    {
-                        removed.push(...node.getElementsByClassName(addedTargetClass));
-                    }
-                }
-            }
-
-            if (removed.length == 0 && found.length == 0) return;
-
-            const timeNode = (node) => node.innerHTML.includes('Time');
-            const YTtimeNode = (node) => node.innerHTML.includes('YT GIF');
-            const validTimeNode = (node) => timeNode(node) && !YTtimeNode(node);
-
-            const dontUnfocusBlocks = [...document.querySelectorAll('body > div.rm-autocomplete__results.bp3-elevation-3 > .dont-unfocus-block .bp3-text-overflow-ellipsis')];
-            const emulations = [...document.querySelectorAll(`body > div.rm-autocomplete__results.bp3-elevation-3 > [class*="${emulationClass}"]`)];
-            const LastTimeNode = dontUnfocusBlocks.reverse().find(node => validTimeNode(node));
-            const AnyTimeNodeExist = dontUnfocusBlocks.filter(node => validTimeNode(node)).length != 0;
+            if (!uid) throw new Error('uid is null');
+            if (!map.has(uid))
+                map.set(uid, await getComponentMap_cb(uid, config)); // a map inside a map 🤯
+            return map.get(uid);
+        } catch (error)
+        {
+            console.log(error);
+            return null;
+        }
+    }
+    async function getComponentMap(tempUID, config)
+    {
+        let indentFunc = 0;
+        let componentsInOrderMap = new Map();
+        const { targetStringRgx, componentsRgx, componentsWithUidsRgx } = config;
 
 
-            for (const node of found)
-            {
-                const clone = node?.parentNode?.cloneNode(true);
-                if (clone?.querySelector('.bp3-text-overflow-ellipsis')?.innerHTML &&
-                    clone?.querySelector('.rm-icon-key-prompt')?.innerHTML &&
-                    clone?.querySelector('.bp3-icon')?.className)
-                {
-                    cloneSubResuslt = clone;
-                }
-
-
-                const emulations = [...document.querySelectorAll(`body > div.rm-autocomplete__results.bp3-elevation-3 > [class*="${emulationClass}"]`)];
-
-
-                if (validTimeNode(node))
-                {
-                    const parent = node.parentNode;
-
-                    if (cloneSubResuslt && emulations.length == 0)
-                    {
-                        const start = createSlashMenuEmulation_video({
-                            cloneFrom: cloneSubResuslt,
-                            emulationSufix: '-start',
-                            prompt: 'YT GIF Timestamp - start',
-                            shortutPrompt: 'Ctrl + Alt + s',
-                        });
-                        parent.parentNode.insertBefore(start, parent);
-
-
-                        const end = createSlashMenuEmulation_video({
-                            cloneFrom: cloneSubResuslt,
-                            emulationSufix: '-end',
-                            prompt: 'YT GIF Timestamp - end',
-                            shortutPrompt: 'Ctrl + Alt + d',
-                        });
-                        parent.parentNode.insertBefore(end, parent);
-                    }
-
-                    if (LastTimeNode)
-                    {
-                        const parent = LastTimeNode.parentNode;
-                        emulations.forEach(el => parent.parentNode.insertBefore(el, parent));
-                    }
-                }
-            }
-
-
-            for (const node of removed)
-            {
-                if (timeNode(node) && !AnyTimeNodeExist)
-                {
-                    emulations.forEach(x => x.remove());
-                    return;
-                }
-            }
-
-            function createSlashMenuEmulation_video({ cloneFrom, emulationSufix, prompt, shortutPrompt, iconSufix })
-            {
-                iconSufix = iconSufix || 'video';
-                const el = cloneFrom.cloneNode(true);
-
-                el.classList.add(emulationClass + emulationSufix);
-                el.querySelector('.bp3-text-overflow-ellipsis').innerHTML = prompt;
-                el.querySelector('.rm-icon-key-prompt').innerHTML = shortutPrompt;
-                el.querySelector('.bp3-icon').className = `bp3-icon bp3-icon-${iconSufix}`;
-                return el;
-            }
+        const orderObj = {
+            order: -1,
+            incrementIf: function (condition) { return condition ? Number(++this.order) : 'ﾠ' },
+            condition: (x) => false,
         };
+        const results = { /* the order does matter */
+            'has components aliases': { tone: '#37d5d6' },
+            'has components': { tone: '#36096d' },
+            'has any aliases': { tone: '#734ae8' },
+            'has any components': { tone: '#21d190' },
 
+            'is component': { tone: '#20bf55' },
+            'is alias': { tone: '#bfe299' },
+            'is block referece': { tone: 'green' },
+        };
+        Object.keys(results).forEach(key => Object.assign(results[key], orderObj));
+
+
+        const FirstObj = await TryToFindTargetStrings_Rec(tempUID);
+        return componentsInOrderMap;
+
+
+        async function TryToFindTargetStrings_Rec(uid, parentObj)
+        {
+            const objRes = await TryToFindTargetString(uid);
+
+
+            results['has components aliases'].condition = () => parentObj?.innerAliasesUids?.includes(uid) && (!!objRes.urls?.[0]);
+            results['has any aliases'].condition = () => objRes?.innerAliasesUids.length > 0;
+            results['has components'].condition = () => objRes.components.length > 0;
+            const hasKey = Object.keys(results).filter(x => x.includes('has')).find(x => results[x].condition());
+            objRes.hasKey = hasKey;
+
+
+            //console.log("%c" + cleanIndentedBlock(), `color:${results[hasKey]?.tone || 'black'}`);
+
+
+            for (const i of objRes.targetStringsWithUids) // looping through RENDERED targetStrings (components) and uids (references)
+            {
+                results['is component'].condition = () => objRes?.targetStrings.includes(i);
+                results['is alias'].condition = () => objRes?.innerAliasesUids.includes(i);
+                results['is block referece'].condition = () => objRes?.blockReferencesAlone.includes(i);
+
+
+                const isKey = Object.keys(results).filter(x => x.includes('is')).find(x => results[x].condition());
+                const parentKeysArentAlias = !parentObj?.isKey?.includes('alias') && !parentObj?.hasKey?.includes('alias');
+                const AtLeast = (arr) => arr.find(w => w === isKey);
+
+
+                if (
+                    (parentKeysArentAlias && i != tempUID) // unrendered -> pass
+                    || AtLeast(['is component']) // targetStrings (components) -> go
+                )
+                {
+                    if (AtLeast(['is alias', 'is component']))
+                    {
+                        componentsInOrderMap.set(assertUniqueKey_while(uid, indentFunc, isKey, hasKey), i);
+                    }
+                }
+
+
+                if (isKey == 'is block referece')// it is rendered, so execute it's rec func
+                {
+                    await ExecuteIndented_Rec(isKey, i);
+                }
+            }
+
+            return { uid, objRes, parentObj };
+
+
+            async function ExecuteIndented_Rec(isKey, i)
+            {
+                indentFunc += 1;
+                objRes.isKey = isKey;
+                const awaitingObj = await TryToFindTargetStrings_Rec(i, objRes);
+                indentFunc -= 1;
+            }
+
+            function assertUniqueKey_while(uid, indent, isKey, hasKey)
+            {
+                // the order in which the components are rendered within the block
+                const keyhasAnyComponet = results['has any components'].incrementIf(UTILS.includesAtlest(['has components', 'has components aliases'], hasKey, null));
+                const keyHasComponents = results['has components'].incrementIf(hasKey === 'has components');
+                const keyHasAliasComponents = results['has components aliases'].incrementIf(hasKey === 'has components aliases');
+
+                const keyIsAlias = results['is alias'].incrementIf(isKey === 'is alias');
+                const keyIsComponent = results['is component'].incrementIf(isKey === 'is component');
+                const keyIsBlockRef = results['is block referece'].incrementIf(isKey === 'is block referece');
+
+                const baseKey = [indent, uid, hasKey, keyhasAnyComponet, keyHasComponents, keyHasAliasComponents, isKey, keyIsBlockRef, keyIsComponent, keyIsAlias];
+
+                let similarCount = 0; // keep track of similarities
+                const preKey = () => [similarCount, ...baseKey].join('  ');
+                let uniqueKey = preKey();
+
+
+                while (componentsInOrderMap.has(uniqueKey))
+                {
+                    debugger;
+                    similarCount += 1; // try to make it unique
+                    uniqueKey = preKey();
+                }
+                similarCount = 0;
+
+                //return { uniqueKey, original: preKey(), isKey, hasKey };
+                return uniqueKey
+            }
+
+            function cleanIndentedBlock()
+            {
+                const tab = '\t'.repeat(indentFunc);
+                const cleanLineBrakes = objRes.string.replace(/(\n)/gm, ". ");
+                const indentedBlock = tab + cleanLineBrakes.replace(/.{70}/g, '$&\n' + tab);
+                return indentedBlock;
+            }
+        }
+
+
+        async function TryToFindTargetString(desiredUID)
+        {
+            const info = await RAP.getBlockInfoByUID(desiredUID);
+            const rawText = info[0][0]?.string || "F";
+
+            const string = rawText.replace(/(`.*?`)/g, 'used_to_be_an_inline_code_block');
+
+            // {{[[page]]: x... xxxxxx xxx... }}
+            const components = [...string.matchAll(componentsRgx)].map(x => x = x[0]) || [];
+            // (((xxxuidxxx))) || ((xxxuidxxx))
+            const innerUIDs = string.match(/(?<=\(\()([^(].*?[^)])(?=\)\))/gm) || [];
+            // [xxxanything goesxxx](((xxxuidxxx)))
+            const aliasesPlusUids = [...string.matchAll(/\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm)];
+
+            // componets with uids // set in the order in which roam renders them
+            const targetStringsWithUids = [...[...string.matchAll(componentsWithUidsRgx)]
+                .map(x => x = x[0])]
+                .map(x => components.includes(x) ? x = x.match(targetStringRgx)?.[0] : x);
+            // uid aliases alone
+            const innerAliasesUids = [...aliasesPlusUids].map(x => x = x[2]) || []; // [xxnopexxx]('((xxxyesxxx))')
+
+            // uid block references alone
+            const blockReferencesAlone = innerUIDs?.filter(x => !innerAliasesUids.includes(x));
+
+
+
+            let targetStrings = [];
+            for (const i of components)
+            {
+                // {{page: -> xxxxxx <- }}
+                targetStrings = UTILS.pushSame(targetStrings, i.match(targetStringRgx)?.[0]);
+            }
+
+            return { uid: desiredUID, components, targetStrings, innerUIDs, targetStringsWithUids, aliasesPlusUids, innerAliasesUids, blockReferencesAlone, string, info };
+        };
+    }
+
+
+    // 6.0 observe added/removed nodes and act accordingly
+    function slashMenuMutation_cb(mutationsList, observer)
+    {
+        const found = [];
+        const removed = [];
+
+        for (const { addedNodes, removedNodes } of mutationsList)
+        {
+            for (const node of addedNodes)
+            {
+                if (!node.tagName) continue; // not an element
+
+                if (node.classList.contains(slashObj.targetClass) && !node.classList.contains(slashObj.emulationClass))
+                {
+                    found.push(node);
+                }
+                else if (node.firstElementChild)
+                {
+                    found.push(...node.getElementsByClassName(slashObj.targetClass));
+                }
+            }
+
+            for (const node of removedNodes)
+            {
+                if (!node.tagName) continue; // not an element
+
+                if (node.classList.contains(slashObj.targetClass) && !node.classList.contains(slashObj.emulationClass))
+                {
+                    removed.push(node);
+                }
+                else if (node.firstElementChild)
+                {
+                    removed.push(...node.getElementsByClassName(slashObj.targetClass));
+                }
+            }
+        }
+
+        if (removed.length == 0 && found.length == 0) return;
+
+        const timeNode = (node) => node.innerHTML.includes('Time');
+        const YTtimeNode = (node) => node.innerHTML.includes('YT GIF');
+        const validTimeNode = (node) => timeNode(node) && !YTtimeNode(node);
+
+        const dontUnfocusBlocks = [...document.querySelectorAll('body > div.rm-autocomplete__results.bp3-elevation-3 > .dont-unfocus-block .bp3-text-overflow-ellipsis')];
+        const emulations = [...document.querySelectorAll(`body > div.rm-autocomplete__results.bp3-elevation-3 > [class*="${slashObj.emulationClass}"]`)];
+        const LastTimeNode = dontUnfocusBlocks.reverse().find(node => validTimeNode(node));
+        const AnyTimeNodeExist = dontUnfocusBlocks.filter(node => validTimeNode(node)).length != 0;
+
+
+        for (const node of found)
+        {
+            const clone = node?.parentNode?.cloneNode(true);
+            if (clone?.querySelector('.bp3-text-overflow-ellipsis')?.innerHTML &&
+                clone?.querySelector('.rm-icon-key-prompt')?.innerHTML &&
+                clone?.querySelector('.bp3-icon')?.className)
+            {
+                slashObj.clone = clone;
+            }
+
+
+            const emulations = [...document.querySelectorAll(`body > div.rm-autocomplete__results.bp3-elevation-3 > [class*="${slashObj.emulationClass}"]`)];
+
+
+            if (validTimeNode(node))
+            {
+                const parent = node.parentNode;
+
+                if (slashObj.clone && emulations.length == 0)
+                {
+                    const start = createSlashMenuEmulation_videoItem({
+                        cloneFrom: slashObj.clone,
+                        emulationSufix: '-start',
+                        prompt: 'YT GIF Timestamp - start',
+                        shortutPrompt: 'Ctrl + Alt + s',
+                    });
+                    parent.parentNode.insertBefore(start, parent);
+                    start.addEventListener('click', async () => addBlockTimestamp_smart('start'));
+
+
+                    const end = createSlashMenuEmulation_videoItem({
+                        cloneFrom: slashObj.clone,
+                        emulationSufix: '-end',
+                        prompt: 'YT GIF Timestamp - end',
+                        shortutPrompt: 'Ctrl + Alt + d',
+                    });
+                    parent.parentNode.insertBefore(end, parent);
+                    end.addEventListener('click', async () => addBlockTimestamp_smart('end'));
+                }
+
+                if (LastTimeNode)
+                {
+                    const parent = LastTimeNode.parentNode;
+                    emulations.forEach(el => parent.parentNode.insertBefore(el, parent));
+                }
+            }
+        }
+
+
+        for (const node of removed)
+        {
+            if (timeNode(node) && !AnyTimeNodeExist)
+            {
+                emulations.forEach(x => x.remove());
+                return;
+            }
+        }
+
+        function createSlashMenuEmulation_videoItem({ cloneFrom, emulationSufix, prompt, shortutPrompt, iconSufix })
+        {
+            iconSufix = iconSufix || 'video';
+            const el = cloneFrom.cloneNode(true);
+
+            el.classList.add(slashObj.emulationClass + emulationSufix);
+            el.querySelector('.bp3-text-overflow-ellipsis').innerHTML = prompt;
+            el.querySelector('.rm-icon-key-prompt').innerHTML = shortutPrompt;
+            el.querySelector('.bp3-icon').className = `bp3-icon bp3-icon-${iconSufix}`;
+            return el;
+        }
+    };
+    async function TimestampBtnsMutation_cb(mutationsList)
+    {
+        const found = [];
+
+        for (const { addedNodes } of mutationsList)
+        {
+            for (const node of addedNodes)
+            {
+                if (!node.tagName) continue; // not an element
+
+                if (node.classList.contains(timestampObj.start.targetClass) || node.classList.contains(timestampObj.end.targetClass))
+                {
+                    found.push(node);
+                }
+                else if (node.firstElementChild)
+                {
+                    found.push(...node.getElementsByClassName(timestampObj.start.targetClass));
+                    found.push(...node.getElementsByClassName(timestampObj.end.targetClass));
+                }
+            }
+        }
+
+        await cleanAndSetUp_TimestampEmulation(found);
     }
     //#endregion
 
@@ -2428,7 +2530,10 @@ async function onPlayerReady(event)
     const rocording = recordedIDs.get(blockID);
     // 🚧?
     if (rocording != null)
+    {
         rocording.target = t;
+        rocording.seekToUpdatedTime = seekToUpdatedTime; // 🍝
+    }
 
     const loadingMarginOfError = 1; //seconds
     let updateStartTime = start;
@@ -2521,11 +2626,15 @@ async function onPlayerReady(event)
 
 
     // 10. well well well - pause if user doesn't intents to watch
-    if (!parent.hasAttribute('play-right-away'))
+    if (!parent.hasAttribute('play-right-away')) // 🍝
         HumanInteraction_AutopalyFreeze(); // this being the last one, does matter
     else 
     {
-        videoIsPlayingWithSound();
+        if (parent.hasAttribute('seekTo')) // 🍝
+        {
+            seekToUpdatedTime(parent.getAttribute('seekTo'));
+            videoIsPlayingWithSound();
+        }
     }
 
 
@@ -3025,6 +3134,7 @@ async function onPlayerReady(event)
     {
         updateStartTime = desiredTime;
         t.seekTo(updateStartTime);
+        return true;
     }
     function tick(target = t)
     {
@@ -3461,7 +3571,7 @@ function btn_VS(bol, exp_btn, disabled)
 //#region clossesYTGIFParent Utils
 function closestYTGIFparentID(el)
 {
-    return (el?.closest('.rm-block__input') || el.closest('.dwn-yt-gif-player-container'))?.id
+    return (el?.closest('.rm-block__input') || el?.closest('.dwn-yt-gif-player-container'))?.id
 }
 function getWrapperUrlSufix(wrapper)
 {
@@ -3500,6 +3610,9 @@ I want to add ☐ ☑
     the ability to let only one frame to keep playing with sound
         while exiting the frame
         the usage of two InAndOutKeys will do the trick
+
+
+    relative and strict timestamps, specially when using nested references
 
 
 added
