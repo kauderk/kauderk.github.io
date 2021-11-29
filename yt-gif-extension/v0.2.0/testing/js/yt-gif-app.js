@@ -1273,6 +1273,7 @@ async function Ready()
         const succesfulEmulationMap = new Map();
 
 
+
         const renderedComponents = found.filter(node1 => document.body.contains(node1)).filter(node2 => isNotZoomPath(node2));
         for (const node of renderedComponents)
         {
@@ -1296,14 +1297,15 @@ async function Ready()
 
             let targetNode = siblingsArr.find(x => x === node);
             const targetIndex = siblingsArr.indexOf(node);
-            if (targetIndex == -1 || !targetNode || !targetNode?.parentNode) { continue; }
+            if (targetIndex == -1 || !targetNode || !targetNode?.parentNode) continue;
 
 
             const timestampContent = extractFromMap_AtIndex(startEndComponentMap, targetIndex);
+            if (!timestampContent) continue;
             const indent = parseInt(extractFromKeyMap_AtIndex(startEndComponentMap, 1, targetIndex), 10);
             const similarCount = extractFromKeyMap_AtIndex(startEndComponentMap, 0, targetIndex);
+            const similarCountButRoot = indent == 0 ? 0 : similarCount;
             const fromUid = extractFromKeyMap_AtIndex(startEndComponentMap, 2, targetIndex);
-
 
             const key = Object.keys(timestampObj).find(key => targetNode.classList.contains(timestampObj[key]?.targetClass)); // find timestampObj key that is included in targetNode classlist
             const page = timestampObj[key]?.page || 'timestamp';
@@ -1319,13 +1321,16 @@ async function Ready()
 
             emulationArr = await getMap_smart(block.id, succesfulEmulationMap, () => []);
             emulationArr = UTILS.pushSame(emulationArr, {
-                page, fromUid, indent, targetIndex, tempUID, targetNode,
-                fromUniqueUid: fromUid + similarCount,
+                fromUniqueUid: fromUid + similarCountButRoot,
                 similarCount: parseInt(similarCount, 10),
+                page, indent, targetIndex, tempUID, fromUid, targetNode,
                 timestamp: timestampContent,
                 color: window.getComputedStyle(targetNode).color,
             });
         }
+
+
+
         for (let [keys, values] of succesfulEmulationMap.entries())
         {
             values = values.sort((a, b) => a.indent - b.indent); // RAP utils
@@ -1354,41 +1359,6 @@ async function Ready()
 
 
 
-        function pickHex(color1, color2, weight)
-        {
-            var w1 = weight;
-            var w2 = 1 - w1;
-            var rgb = [Math.round(color1[0] * w1 + color2[0] * w2),
-            Math.round(color1[1] * w1 + color2[1] * w2),
-            Math.round(color1[2] * w1 + color2[2] * w2)];
-            return rgb;
-        }
-        function rgbToHex(a)
-        {
-            if (~a.indexOf("#")) return a;
-            a = a.replace(/[^\d,]/g, "").split(",");
-            return "#" + ((1 << 24) + (+a[0] << 16) + (+a[1] << 8) + +a[2]).toString(16).slice(1)
-        }
-        function increase_brightness(hex, percent)
-        {
-            // strip the leading # if it's there
-            hex = hex.replace(/^\s*#|\s*$/g, '');
-
-            // convert 3 char codes --> 6, e.g. `E0F` --> `EE00FF`
-            if (hex.length == 3)
-            {
-                hex = hex.replace(/(.)/g, '$1$1');
-            }
-
-            var r = parseInt(hex.substr(0, 2), 16),
-                g = parseInt(hex.substr(2, 2), 16),
-                b = parseInt(hex.substr(4, 2), 16);
-
-            return '#' +
-                ((0 | (1 << 8) + r + (256 - r) * percent / 100).toString(16)).substr(1) +
-                ((0 | (1 << 8) + g + (256 - g) * percent / 100).toString(16)).substr(1) +
-                ((0 | (1 << 8) + b + (256 - b) * percent / 100).toString(16)).substr(1);
-        }
         function sortObjByKey(key, obj)
         {// https://gist.github.com/JamieMason/0566f8412af9fe6a1d470aa1e089a752
             const groupBy = key => array => array.reduce((objectsByKeyValue, obj) =>
@@ -1416,7 +1386,7 @@ async function Ready()
         tEl.setAttribute('awaiting', true);
 
 
-        const { foundBlock } = await getLastComponentInHerarchy(uid);
+        const { foundBlock } = await getLastComponentInHerarchy(uid, YTGIF_Config);
         const { uid: f_uid } = foundBlock;
 
         const baseAnim = ['yt-timestamp-pulse-text-anim'];
@@ -1593,7 +1563,7 @@ async function Ready()
     // 6.3.1
     async function addBlockTimestamps(pageRefSufx, uid)
     {
-        const { secHMS, foundBlock, targetBlock } = await getLastComponentInHerarchy(uid);
+        const { secHMS, foundBlock, targetBlock } = await getLastComponentInHerarchy(uid, YTGIF_Config);
         if (!foundBlock) { debugger; return; }
 
         const { start, end } = targetBlock; // bulky and clunky... because there only two options
@@ -1610,261 +1580,6 @@ async function Ready()
         if (!pageRefSufx || !uid || !openInputBlock)
             return;
         await addBlockTimestamps(pageRefSufx, uid);
-    }
-
-
-    // backend/frontend communication - XXX_Config ={}
-    async function getLastComponentInHerarchy(tempUID)
-    {
-        const res = await kauderk.rap.getBlockParentUids(tempUID);
-        if (!res) { debugger; return; }
-        const original = await kauderk.rap.getBlockInfoByUID(tempUID);
-
-        const baseObj = {
-            blockID: null, start: 0, end: 0, secHMS: 000, crrTime: null,
-        }
-        const iframeMaps = {
-            targets: {
-                condition: function (sufix)
-                {
-                    this.blockID = [...recordedIDs.keys()].find(k => k?.endsWith(sufix));
-                    return this.crrTime = recordedIDs.get(this.blockID)?.target?.getCurrentTime() || false;
-                },
-            },
-            lastParams: {
-                condition: function (sufix)
-                {
-                    this.blockID = [...lastBlockIDParameters.keys()].find(k => k?.endsWith(sufix));
-                    return this.crrTime = lastBlockIDParameters.get(this.blockID)?.updateTime || false;
-                },
-            },
-        }
-        Object.keys(iframeMaps).forEach(key => Object.assign(iframeMaps[key], baseObj));
-
-        const blockStrings = res.map(arr => arr[0]);
-        for (const { string, uid } of blockStrings.reverse())
-        {
-            const componentMap = await getComponentMap(uid, YTGIF_Config);
-            const reverseValues = [...componentMap.values()].reverse();
-
-            const lastUrl = reverseValues.find(v => v?.includes('https'));
-            if (!lastUrl) continue;
-
-            const lastUrlIndex = reverseValues.indexOf(lastUrl);
-            const possibleBlockIDSufix = uid + properBlockIDSufix(lastUrl, lastUrlIndex);
-
-            const key = Object.keys(iframeMaps).find(x => iframeMaps[x].condition(possibleBlockIDSufix));
-
-            return {
-                secHMS: UTILS.convertHMS(iframeMaps[key]?.crrTime),
-                secondsOnly: iframeMaps[key]?.crrTime,
-                foundBlock: {
-                    string,
-                    uid,
-                    blockID: iframeMaps[key]?.blockID,
-                    possibleBlockIDSufix,
-                },
-                targetBlock: {
-                    string: original[0][0].string,
-                    uid: tempUID,
-                    start: UTILS.convertHMS(lastUrl.match(/(t=|start=)(?:(\d+))/)?.[2] || 0),
-                    end: UTILS.convertHMS(lastUrl.match(/(end=)(?:(\d+))/)?.[2] || 0),
-                },
-            };
-        }
-        return {};
-    }
-    function extractFromMap_AtIndex(map, valueAtIndex)
-    {
-        if (!map) debugger;
-        let val = [...map.values()][valueAtIndex];
-        if (!val) debugger;
-        return val;
-    }
-    function extractFromKeyMap_AtIndex(mpa, valueAtIndex, mapIndex)
-    {
-        if (!mpa) debugger;
-        let val = [...mpa.keys()].map(x => x.split('  ')).map(y => y[valueAtIndex])[mapIndex];
-        if (!val) debugger;
-        return val;
-    }
-    async function getMap_smart(key, map, callback, ...cb_params)
-    {// https://stackoverflow.com/questions/3458553/javascript-passing-parameters-to-a-callback-function#:~:text=console.log(param1)%3B%0A%7D-,function%20callbackTester(callback%2C%20...params)%20%7B,-callback(...params)%3B%0A%7D%0A%0A%0A%0AcallbackTester
-        // since it store recursive maps, once per instance it's enough
-        try
-        {
-            if (!key) throw new Error('uid is null');
-            if (!map.has(key))
-                map.set(key, await callback(...cb_params)); // a map inside a map 🤯
-            return map.get(key);
-        } catch (error)
-        {
-            console.log(error);
-            return null;
-        }
-
-    }
-    async function getComponentMap(tempUID, config)
-    {
-        let uidMagazine = [];
-        let indentFunc = 0;
-        let componentsInOrderMap = new Map();
-        const { targetStringRgx, componentsRgx, componentsWithUidsRgx } = config;
-
-
-        const orderObj = {
-            order: -1,
-            incrementIf: function (condition) { return condition ? Number(++this.order) : 'ﾠ' },
-            condition: (x) => false,
-        };
-        const results = { /* the order does matter */
-            'has components aliases': { tone: '#37d5d6' },
-            'has components': { tone: '#36096d' },
-            'has any aliases': { tone: '#734ae8' },
-            'has any components': { tone: '#21d190' },
-
-            'is component': { tone: '#20bf55' },
-            'is alias': { tone: '#bfe299' },
-            'is block referece': { tone: 'green' },
-        };
-        Object.keys(results).forEach(key => Object.assign(results[key], orderObj));
-
-
-        const FirstObj = await TryToFindTargetStrings_Rec(tempUID);
-        return componentsInOrderMap;
-
-
-
-
-        async function TryToFindTargetStrings_Rec(uid, parentObj)
-        {
-            const objRes = await TryToFindTargetString(uid);
-
-
-            results['has components aliases'].condition = () => parentObj?.innerAliasesUids?.includes(uid) && (!!objRes.urls?.[0]);
-            results['has any aliases'].condition = () => objRes?.innerAliasesUids.length > 0;
-            results['has components'].condition = () => objRes.components.length > 0;
-            const hasKey = Object.keys(results).filter(x => x.includes('has')).find(x => results[x].condition());
-            objRes.hasKey = hasKey;
-
-
-            //console.log("%c" + cleanIndentedBlock(), `color:${results[hasKey]?.tone || 'black'}`);
-
-
-            for (const i of objRes.targetStringsWithUids) // looping through RENDERED targetStrings (components) and uids (references)
-            {
-                results['is component'].condition = () => objRes?.targetStrings.includes(i);
-                results['is alias'].condition = () => objRes?.innerAliasesUids.includes(i);
-                results['is block referece'].condition = () => objRes?.blockReferencesAlone.includes(i);
-
-
-                const isKey = Object.keys(results).filter(x => x.includes('is')).find(x => results[x].condition());
-                const parentKeysArentAlias = !parentObj?.isKey?.includes('alias') && !parentObj?.hasKey?.includes('alias');
-                const AtLeast = (arr) => arr.find(w => w === isKey);
-
-
-                if (
-                    (parentKeysArentAlias && i != tempUID) // unrendered -> pass
-                    || AtLeast(['is component']) // targetStrings (components) -> go
-                )
-                {
-                    if (AtLeast(['is alias', 'is component']))
-                    {
-                        componentsInOrderMap.set(assertUniqueKey_while(uid, indentFunc, isKey, hasKey), i);
-                    }
-                }
-
-
-                if (isKey == 'is block referece')// it is rendered, so execute it's rec func
-                {
-                    await ExecuteIndented_Rec(isKey, i);
-                }
-            }
-
-            return { uid, objRes, parentObj };
-
-
-            async function ExecuteIndented_Rec(isKey, i)
-            {
-                indentFunc += 1;
-                objRes.isKey = isKey;
-                const awaitingObj = await TryToFindTargetStrings_Rec(i, objRes);
-                indentFunc -= 1;
-            }
-
-            function assertUniqueKey_while(uid, indent, isKey, hasKey)
-            {
-                // the order in which the components are rendered within the block
-                const keyhasAnyComponet = results['has any components'].incrementIf(UTILS.includesAtlest(['has components', 'has components aliases'], hasKey, null));
-                const keyHasComponents = results['has components'].incrementIf(hasKey === 'has components');
-                const keyHasAliasComponents = results['has components aliases'].incrementIf(hasKey === 'has components aliases');
-
-                const keyIsAlias = results['is alias'].incrementIf(isKey === 'is alias');
-                const keyIsComponent = results['is component'].incrementIf(isKey === 'is component');
-                const keyIsBlockRef = results['is block referece'].incrementIf(isKey === 'is block referece');
-
-                const baseIs = [keyIsBlockRef, keyIsComponent, keyIsAlias];
-                const baseHas = [keyhasAnyComponet, keyHasComponents, keyHasAliasComponents];
-                const baseKey = [indent, uid, isKey];
-                const preKey = [...baseKey, hasKey, ...baseIs, '<-is|has->', ...baseHas];
-
-                uidMagazine = PushIfNewEntry(uidMagazine, uid); // clunky, but it works
-                const similarCount = uidMagazine.filter(x => x === uid).length;
-                return [similarCount, ...preKey].join('  '); // uniqueKey among non siblings
-            }
-
-            function cleanIndentedBlock()
-            {
-                const tab = '\t'.repeat(indentFunc);
-                const cleanLineBrakes = objRes.string.replace(/(\n)/gm, ". ");
-                const indentedBlock = tab + cleanLineBrakes.replace(/.{70}/g, '$&\n' + tab);
-                return indentedBlock;
-            }
-            function PushIfNewEntry(arr, item)
-            {
-                const lastItem = [...arr]?.pop();
-                if (lastItem != item)
-                    arr = UTILS.pushSame(arr, item);
-                return arr;
-            }
-        }
-
-
-        async function TryToFindTargetString(desiredUID)
-        {
-            const info = await RAP.getBlockInfoByUID(desiredUID);
-            const rawText = info[0][0]?.string || "F";
-
-            const string = rawText.replace(/(`.+?`)|(`([\s\S]*?)`)/gm, 'used_to_be_an_inline_code_block');
-
-            // {{[[page]]: x... xxxxxx xxx... }}
-            const components = [...string.matchAll(componentsRgx)].map(x => x = x[0]) || [];
-            // (((xxxuidxxx))) || ((xxxuidxxx))
-            const innerUIDs = string.match(/(?<=\(\()([^(].*?[^)])(?=\)\))/gm) || [];
-            // [xxxanything goesxxx](((xxxuidxxx)))
-            const aliasesPlusUids = [...string.matchAll(/\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm)];
-
-            // componets with uids // set in the order in which roam renders them
-            const targetStringsWithUids = [...[...string.matchAll(componentsWithUidsRgx)]
-                .map(x => x = x[0])]
-                .map(x => components.includes(x) ? x = x.match(targetStringRgx)?.[0] : x);
-            // uid aliases alone
-            const innerAliasesUids = [...aliasesPlusUids].map(x => x = x[2]) || []; // [xxnopexxx]('((xxxyesxxx))')
-
-            // uid block references alone
-            const blockReferencesAlone = innerUIDs?.filter(x => !innerAliasesUids.includes(x));
-
-
-
-            let targetStrings = [];
-            for (const i of components)
-            {
-                // {{page: -> xxxxxx <- }}
-                targetStrings = UTILS.pushSame(targetStrings, i.match(targetStringRgx)?.[0]);
-            }
-
-            return { uid: desiredUID, components, targetStrings, innerUIDs, targetStringsWithUids, aliasesPlusUids, innerAliasesUids, blockReferencesAlone, string, info };
-        };
     }
 
 
@@ -3709,6 +3424,267 @@ function properBlockIDSufix(url, urlIndex)
 
 
 
+//#region  backend/frontend communication - XXX_Config = {...}
+async function getLastComponentInHerarchy(tempUID, _Config = {})
+{
+    const res = await kauderk.rap.getBlockParentUids(tempUID);
+    if (!res) { debugger; return {}; }
+    const original = await kauderk.rap.getBlockInfoByUID(tempUID);
+
+    const baseObj = {
+        blockID: null, start: 0, end: 0, secHMS: 000, crrTime: null,
+    }
+    const iframeMaps = {
+        targets: {
+            condition: function (sufix)
+            {
+                this.blockID = [...recordedIDs.keys()].find(k => k?.endsWith(sufix));
+                return this.crrTime = recordedIDs.get(this.blockID)?.target?.getCurrentTime() || false;
+            },
+        },
+        lastParams: {
+            condition: function (sufix)
+            {
+                this.blockID = [...lastBlockIDParameters.keys()].find(k => k?.endsWith(sufix));
+                return this.crrTime = lastBlockIDParameters.get(this.blockID)?.updateTime || false;
+            },
+        },
+    }
+    Object.keys(iframeMaps).forEach(key => Object.assign(iframeMaps[key], baseObj));
+
+    const blockStrings = res.map(arr => arr[0]);
+    for (const { string, uid } of blockStrings.reverse())
+    {
+        const componentMap = await getComponentMap(uid, _Config);
+        const reverseValues = [...componentMap.values()].reverse();
+
+        const lastUrl = reverseValues.find(v => v?.includes('https'));
+        if (!lastUrl) continue;
+
+        const lastUrlIndex = reverseValues.indexOf(lastUrl);
+        const possibleBlockIDSufix = uid + properBlockIDSufix(lastUrl, lastUrlIndex);
+
+        const key = Object.keys(iframeMaps).find(x => iframeMaps[x].condition(possibleBlockIDSufix));
+
+        return {
+            secHMS: UTILS.convertHMS(iframeMaps[key]?.crrTime),
+            secondsOnly: iframeMaps[key]?.crrTime,
+            foundBlock: {
+                string,
+                uid,
+                blockID: iframeMaps[key]?.blockID,
+                possibleBlockIDSufix,
+            },
+            targetBlock: {
+                string: original[0][0].string,
+                uid: tempUID,
+                start: UTILS.convertHMS(lastUrl.match(/(t=|start=)(?:(\d+))/)?.[2] || 0),
+                end: UTILS.convertHMS(lastUrl.match(/(end=)(?:(\d+))/)?.[2] || 0),
+            },
+        };
+    }
+    return {};
+}
+function extractFromMap_AtIndex(map, valueAtIndex)
+{
+    if (!map) console.log(`map is null`); //debugger;
+    let val = [...map.values()][valueAtIndex];
+    if (!val) console.log(`val is null`); //debugger;
+    return val;
+}
+function extractFromKeyMap_AtIndex(mpa, valueAtIndex, mapIndex)
+{
+    if (!mpa) console.log(`map is null`); //debugger;
+    let val = [...mpa.keys()].map(x => x.split('  ')).map(y => y[valueAtIndex])[mapIndex];
+    if (!val) console.log(`val is null`); //debugger;
+    return val;
+}
+async function getMap_smart(key, map, callback, ...setMapCb_params)
+{// https://stackoverflow.com/questions/3458553/javascript-passing-parameters-to-a-callback-function#:~:text=console.log(param1)%3B%0A%7D-,function%20callbackTester(callback%2C%20...params)%20%7B,-callback(...params)%3B%0A%7D%0A%0A%0A%0AcallbackTester
+    // since it store recursive maps, once per instance it's enough
+    try
+    {
+        if (!key) throw new Error('uid is null');
+        if (!map.has(key))
+            map.set(key, await callback(...setMapCb_params));
+        return map.get(key);
+    } catch (error)
+    {
+        console.log(error);
+        return null;
+    }
+}
+async function getComponentMap(tempUID, _Config = {})
+{
+    let uidMagazine = [];
+    let indentFunc = 0;
+    let componentsInOrderMap = new Map();
+    const { targetStringRgx, componentsRgx, componentsWithUidsRgx } = _Config;
+
+
+    const orderObj = {
+        order: -1,
+        incrementIf: function (condition) { return condition ? Number(++this.order) : 'ﾠ' },
+        condition: (x) => false,
+    };
+    const results = { /* the order does matter */
+        'has components aliases': { tone: '#37d5d6' },
+        'has components': { tone: '#36096d' },
+        'has any aliases': { tone: '#734ae8' },
+        'has any components': { tone: '#21d190' },
+
+        'is component': { tone: '#20bf55' },
+        'is alias': { tone: '#bfe299' },
+        'is block referece': { tone: 'green' },
+    };
+    Object.keys(results).forEach(key => Object.assign(results[key], orderObj));
+
+
+    const FirstObj = await TryToFindTargetStrings_Rec(tempUID);
+    return componentsInOrderMap;
+
+
+
+
+    async function TryToFindTargetStrings_Rec(uid, parentObj)
+    {
+        const objRes = await TryToFindTargetString(uid);
+
+
+        results['has components aliases'].condition = () => parentObj?.innerAliasesUids?.includes(uid) && (!!objRes.urls?.[0]);
+        results['has any aliases'].condition = () => objRes?.innerAliasesUids.length > 0;
+        results['has components'].condition = () => objRes.components.length > 0;
+        const hasKey = Object.keys(results).filter(x => x.includes('has')).find(x => results[x].condition());
+        objRes.hasKey = hasKey;
+
+
+        //console.log("%c" + cleanIndentedBlock(), `color:${results[hasKey]?.tone || 'black'}`);
+
+
+        for (const i of objRes.targetStringsWithUids) // looping through RENDERED targetStrings (components) and uids (references)
+        {
+            results['is component'].condition = () => objRes?.targetStrings.includes(i);
+            results['is alias'].condition = () => objRes?.innerAliasesUids.includes(i);
+            results['is block referece'].condition = () => objRes?.blockReferencesAlone.includes(i);
+
+
+            const isKey = Object.keys(results).filter(x => x.includes('is')).find(x => results[x].condition());
+            const parentKeysArentAlias = !parentObj?.isKey?.includes('alias') && !parentObj?.hasKey?.includes('alias');
+            const AtLeast = (arr) => arr.find(w => w === isKey);
+
+            if (i == tempUID)
+            {
+                componentsInOrderMap.set(assertUniqueKey_while(uid, indentFunc, isKey, hasKey), i);
+                continue;
+            }
+
+            if (
+                parentKeysArentAlias ||   // unrendered -> pass
+                AtLeast(['is component']) // targetStrings (components) -> go
+            )
+            {
+                if (AtLeast(['is alias', 'is component']))
+                {
+                    componentsInOrderMap.set(assertUniqueKey_while(uid, indentFunc, isKey, hasKey), i);
+                }
+            }
+
+            if (isKey == 'is block referece')// it is rendered, so execute it's rec func
+            {
+                await ExecuteIndented_Rec(isKey, i);
+            }
+        }
+
+        return { uid, objRes, parentObj };
+
+
+        async function ExecuteIndented_Rec(isKey, i)
+        {
+            indentFunc += 1;
+            objRes.isKey = isKey;
+            const awaitingObj = await TryToFindTargetStrings_Rec(i, objRes);
+            indentFunc -= 1;
+        }
+
+        function assertUniqueKey_while(uid, indent, isKey, hasKey)
+        {
+            // the order in which the components are rendered within the block
+            const keyhasAnyComponet = results['has any components'].incrementIf(UTILS.includesAtlest(['has components', 'has components aliases'], hasKey, null));
+            const keyHasComponents = results['has components'].incrementIf(hasKey === 'has components');
+            const keyHasAliasComponents = results['has components aliases'].incrementIf(hasKey === 'has components aliases');
+
+            const keyIsAlias = results['is alias'].incrementIf(isKey === 'is alias');
+            const keyIsComponent = results['is component'].incrementIf(isKey === 'is component');
+            const keyIsBlockRef = results['is block referece'].incrementIf(isKey === 'is block referece');
+
+            const baseIs = [keyIsBlockRef, keyIsComponent, keyIsAlias];
+            const baseHas = [keyhasAnyComponet, keyHasComponents, keyHasAliasComponents];
+            const baseKey = [indent, uid, isKey];
+            const preKey = [...baseKey, hasKey, ...baseIs, '<-is|has->', ...baseHas];
+
+            uidMagazine = PushIfNewEntry(uidMagazine, uid); // clunky, but it works
+            const similarCount = uidMagazine.filter(x => x === uid).length;
+            return [similarCount, ...preKey].join('  '); // uniqueKey among non siblings
+        }
+
+        function cleanIndentedBlock()
+        {
+            const tab = '\t'.repeat(indentFunc);
+            const cleanLineBrakes = objRes.string.replace(/(\n)/gm, ". ");
+            const indentedBlock = tab + cleanLineBrakes.replace(/.{70}/g, '$&\n' + tab);
+            return indentedBlock;
+        }
+        function PushIfNewEntry(arr, item)
+        {
+            const lastItem = [...arr]?.pop();
+            if (lastItem != item)
+                arr = UTILS.pushSame(arr, item);
+            return arr;
+        }
+    }
+
+
+    async function TryToFindTargetString(desiredUID)
+    {
+        const info = await RAP.getBlockInfoByUID(desiredUID);
+        const rawText = info[0][0]?.string || "F";
+
+        const string = rawText.replace(/(`.+?`)|(`([\s\S]*?)`)/gm, 'used_to_be_an_inline_code_block');
+
+        // {{[[page]]: x... xxxxxx xxx... }}
+        const components = [...string.matchAll(componentsRgx)].map(x => x = x[0]) || [];
+        // (((xxxuidxxx))) || ((xxxuidxxx))
+        const innerUIDs = string.match(/(?<=\(\()([^(].*?[^)])(?=\)\))/gm) || [];
+        // [xxxanything goesxxx](((xxxuidxxx)))
+        const aliasesPlusUids = [...string.matchAll(/\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm)];
+
+        // componets with uids // set in the order in which roam renders them
+        const targetStringsWithUids = [...[...string.matchAll(componentsWithUidsRgx)]
+            .map(x => x = x[0])]
+            .map(x => components.includes(x) ? x = x.match(targetStringRgx)?.[0] : x);
+        // uid aliases alone
+        const innerAliasesUids = [...aliasesPlusUids].map(x => x = x[2]) || []; // [xxnopexxx]('((xxxyesxxx))')
+
+        // uid block references alone
+        const blockReferencesAlone = innerUIDs?.filter(x => !innerAliasesUids.includes(x));
+
+
+
+        let targetStrings = [];
+        for (const i of components)
+        {
+            // {{page: -> xxxxxx <- }}
+            targetStrings = UTILS.pushSame(targetStrings, i.match(targetStringRgx)?.[0]);
+        }
+
+        return { uid: desiredUID, components, targetStrings, innerUIDs, targetStringsWithUids, aliasesPlusUids, innerAliasesUids, blockReferencesAlone, string, info };
+    };
+}
+//#endregion
+
+
+
+
 /*
 
 user requested ☐ ☑
@@ -3830,6 +3806,13 @@ Bugs
     the weird recursive func doesn't work on block refereces - uids ((0UN_kefSF))
         plus the persistent timestamp doen't work as expected
 
+
+    when changing the url on a yt gif compoenent, if it has rendered block references
+        they don't update the url ☐
+
+    should happen only when there are yt-gif componenst whitin the block hierarchy
+        open/show the slash menu
+        paint/link them visually
 
 Fixed
      videoParams ☑ ☑
