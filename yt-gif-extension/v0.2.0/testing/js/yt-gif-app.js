@@ -460,12 +460,12 @@ async function Ready()
     const timestampObj = {
         roamClassName: 'rm-video-timestamp dont-focus-block',
         start: {
-            content: 'start',
+            page: 'start',
             targetClass: 'rm-xparser-default-start',
             buttonClass: componentClass('start'),
         },
         end: {
-            content: 'end',
+            page: 'end',
             targetClass: 'rm-xparser-default-end',
             buttonClass: componentClass('end'),
         },
@@ -1230,6 +1230,8 @@ async function Ready()
     }
     function RunEmulation()
     {
+        StopEmulation();
+
         const found = [];
         found.push(...targetNode.getElementsByClassName(timestampObj.start.targetClass));
         found.push(...targetNode.getElementsByClassName(timestampObj.end.targetClass));
@@ -1261,46 +1263,148 @@ async function Ready()
     // 6.1 on valid dom nodes get last component and add timestamp + click events
     async function cleanAndSetUp_TimestampEmulation(found)
     {
-        let uid = null;
-        let siblings = [];
+        let siblingsArr = [];
+        const previousSiblingsMap = new Map(); // block -> buttons
+
         let startEndComponentMap = null;
         const componentMapMap = new Map();
 
-        const foundInDom = found.filter(node => document.body.contains(node));
-        const successEmulation = new Map(); // block -> buttons
-        for (const node of foundInDom)
+        let emulationArr = [];
+        const succesfulEmulationMap = new Map();
+
+
+        const renderedComponents = found.filter(node1 => document.body.contains(node1)).filter(node2 => isNotZoomPath(node2));
+        for (const node of renderedComponents)
         {
             const block = node?.closest('.rm-block__input'); // closestYTGIFparentID
+            if (!block) { continue; }
             const tempUID = block?.id?.slice(-9);
-            let targetNode = siblings.find(x => x === node); // 🤓
+            const update_startEndComponentMap = async () => startEndComponentMap = await getMap_smart(block.id, componentMapMap, getComponentMap, tempUID, StartEnd_Config);;
 
-            if (tempUID && uid != tempUID || !targetNode)
+
+            // you are iterating through renderedComponents (mutation records), so you need to get the original siblings of each block
+            siblingsArr = await getMap_smart(block, previousSiblingsMap, () => [...block.querySelectorAll([timestampObj.end.targetClass, timestampObj.start.targetClass].map(x => '.' + x).join(', '))]);
+            await update_startEndComponentMap();
+
+            if (startEndComponentMap.size !== siblingsArr.length && !extractFromMap_AtIndex(startEndComponentMap, siblingsArr.indexOf(node)))
             {
-                siblings = [...block.querySelectorAll([timestampObj.end.targetClass, timestampObj.start.targetClass].map(x => '.' + x).join(', '))];
-                uid = tempUID;
-                startEndComponentMap = await getComponentMap_smart(tempUID, StartEnd_Config, componentMapMap, getComponentMap);
+                await RAP.sleep(800); // YIKES!
+                componentMapMap.set(block.id, await getComponentMap(tempUID, StartEnd_Config));
+                await update_startEndComponentMap();
             }
 
-            targetNode = siblings.find(x => x === node); // 🤓
-            const targetIndex = siblings.indexOf(node);
-            if (!targetNode || !targetNode?.parentNode) continue;
 
-            if (successEmulation.has(block))
-                successEmulation.set(block, UTILS.pushSame(successEmulation.get(block), targetNode));
-            else
-                successEmulation.set(block, [targetNode]);
+            let targetNode = siblingsArr.find(x => x === node);
+            const targetIndex = siblingsArr.indexOf(node);
+            if (targetIndex == -1 || !targetNode || !targetNode?.parentNode) { continue; }
 
-            // find timestampObj key is included in targetNode classlist
-            const key = Object.keys(timestampObj).find(key => targetNode.classList.contains(timestampObj[key]?.targetClass));
+
+            const timestampContent = extractFromMap_AtIndex(startEndComponentMap, targetIndex);
+            const indent = parseInt(extractFromKeyMap_AtIndex(startEndComponentMap, 1, targetIndex), 10);
+            const similarCount = extractFromKeyMap_AtIndex(startEndComponentMap, 0, targetIndex);
+            const fromUid = extractFromKeyMap_AtIndex(startEndComponentMap, 2, targetIndex);
+
+
+            const key = Object.keys(timestampObj).find(key => targetNode.classList.contains(timestampObj[key]?.targetClass)); // find timestampObj key that is included in targetNode classlist
+            const page = timestampObj[key]?.page || 'timestamp';
 
             targetNode.attributes.forEach(attr => targetNode.removeAttribute(attr.name));
             targetNode = UTILS.ChangeElementType(targetNode, 'a');
-            targetNode.setAttribute(timestampObj.attr.timestamp, key);
+            targetNode.setAttribute(timestampObj.attr.timestamp, page);
             targetNode.setAttribute(timestampObj.attr.emulation, ''); // color: #308d9f;
-
             targetNode.className = timestampObj.roamClassName;
-            targetNode.innerHTML = extractFromMap_AtIndex(startEndComponentMap, targetIndex);
-            targetNode.addEventListener('mousedown', async (e) => await PlayPauseOnClicks(e, uid));
+            targetNode.innerHTML = timestampContent;
+            targetNode.addEventListener('mousedown', async (e) => await PlayPauseOnClicks(e, tempUID));
+
+
+            emulationArr = await getMap_smart(block.id, succesfulEmulationMap, () => []);
+            emulationArr = UTILS.pushSame(emulationArr, {
+                page, fromUid, indent, targetIndex, tempUID, targetNode,
+                fromUniqueUid: fromUid + similarCount,
+                similarCount: parseInt(similarCount, 10),
+                timestamp: timestampContent,
+                color: window.getComputedStyle(targetNode).color,
+            });
+        }
+        for (let [keys, values] of succesfulEmulationMap.entries())
+        {
+            values = values.sort((a, b) => a.indent - b.indent); // RAP utils
+            const sortedByUid = sortObjByKey('fromUniqueUid', values);
+            const targetObjsArr = sortedByUid.map((v, i, a) => a[i]['data']);
+
+
+            targetObjsArr.forEach((v, i, a) =>
+            {
+                const lastStart = [...v].reverse().find(x => x.page == 'start');
+                const lastEnd = [...v].reverse().find(x => x.page == 'end');
+
+                if (lastStart && lastEnd)
+                {
+                    [lastStart, lastEnd].forEach((v, i, a) =>
+                    {
+                        const { targetNode, indent, targetIndex, color } = v;
+                        const b = 30;
+                        targetNode.style.filter = `brightness(${(100 + b) - (b * indent) + (targetIndex * 5)}%)`;
+                        targetNode.style.color = '#8d309f';
+                    });
+                    return;
+                }
+            });
+        }
+
+
+
+        function pickHex(color1, color2, weight)
+        {
+            var w1 = weight;
+            var w2 = 1 - w1;
+            var rgb = [Math.round(color1[0] * w1 + color2[0] * w2),
+            Math.round(color1[1] * w1 + color2[1] * w2),
+            Math.round(color1[2] * w1 + color2[2] * w2)];
+            return rgb;
+        }
+        function rgbToHex(a)
+        {
+            if (~a.indexOf("#")) return a;
+            a = a.replace(/[^\d,]/g, "").split(",");
+            return "#" + ((1 << 24) + (+a[0] << 16) + (+a[1] << 8) + +a[2]).toString(16).slice(1)
+        }
+        function increase_brightness(hex, percent)
+        {
+            // strip the leading # if it's there
+            hex = hex.replace(/^\s*#|\s*$/g, '');
+
+            // convert 3 char codes --> 6, e.g. `E0F` --> `EE00FF`
+            if (hex.length == 3)
+            {
+                hex = hex.replace(/(.)/g, '$1$1');
+            }
+
+            var r = parseInt(hex.substr(0, 2), 16),
+                g = parseInt(hex.substr(2, 2), 16),
+                b = parseInt(hex.substr(4, 2), 16);
+
+            return '#' +
+                ((0 | (1 << 8) + r + (256 - r) * percent / 100).toString(16)).substr(1) +
+                ((0 | (1 << 8) + g + (256 - g) * percent / 100).toString(16)).substr(1) +
+                ((0 | (1 << 8) + b + (256 - b) * percent / 100).toString(16)).substr(1);
+        }
+        function sortObjByKey(key, obj)
+        {// https://gist.github.com/JamieMason/0566f8412af9fe6a1d470aa1e089a752
+            const groupBy = key => array => array.reduce((objectsByKeyValue, obj) =>
+            {
+                const value = obj[key];
+                objectsByKeyValue[value] = (objectsByKeyValue[value] || []).concat(obj);
+                return objectsByKeyValue;
+            }, {});
+            const groupByKey = groupBy(key);
+            const objByKey = groupByKey(obj);
+            return Object.entries(objByKey).map(([title, data]) => ({ title, data }));
+        }
+
+        function isNotZoomPath(el)
+        {
+            return !el.closest("[class*='rm-zoom']");
         }
     }
     // 6.1.1
@@ -1311,7 +1415,9 @@ async function Ready()
         if (tEl.hasAttribute('awaiting')) return;
         tEl.setAttribute('awaiting', true);
 
-        const { uid: f_uid } = await getLastComponentInHerarchy(uid)?.foundBlock;
+
+        const { foundBlock } = await getLastComponentInHerarchy(uid);
+        const { uid: f_uid } = foundBlock;
 
         const baseAnim = ['yt-timestamp-pulse-text-anim'];
         const greenAnim = [...baseAnim, 'yt-timestamp-success'];
@@ -1357,8 +1463,8 @@ async function Ready()
 
 
         // root -> roam-article || rm-sidebar-outline
-        const TargetBlocks = (root) => [...document.querySelectorAll(`.${root} [id$="${f_uid}"] .yt-gif-wrapper`)];
-        const lastWrapperOnTargetBlock = (r) => [...TargetBlocks(r)]?.reverse()?.pop();
+        const WrappersInBlock = (root) => [...document.querySelectorAll(`.${root} [id$="${f_uid}"] .yt-gif-wrapper`)];
+        const lastWrapperInBlock = (r) => [...WrappersInBlock(r)]?.pop();
         // disable context menu
         tEl.addEventListener("contextmenu", e => e.preventDefault()); //https://codinhood.com/nano/dom/disable-context-menu-right-click-javascript
 
@@ -1372,7 +1478,6 @@ async function Ready()
             else if (mdlclick)
                 return await openingOnCrossRoot();
 
-            await playLastBlockOnly_SimHover(root);
             return NoLongerAwaiting();
         }
 
@@ -1394,6 +1499,8 @@ async function Ready()
         }
 
 
+        return NoLongerAwaiting();
+
 
 
         async function openingOnCrossRoot()
@@ -1402,34 +1509,37 @@ async function Ready()
             await RAP.sleep(50);
 
             pulse(blueAnim);
-            if (TargetBlocks(crossRoot).length == 0) // 0 instances on crossRoot
+            if (WrappersInBlock(crossRoot).length == 0) // 0 instances on crossRoot
             {
                 await RAP.navigateToUiOrCreate(f_uid, (root == PagesObj.main.root), 'block');
             }
 
             await RAP.sleep(50);
-            lastWrapperOnTargetBlock(crossRoot)?.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
-            await RAP.sleep(50);
+            const targetWrapper = lastWrapperInBlock(crossRoot);
+            targetWrapper?.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+
+            await RAP.sleep(UTILS.isElementVisible(targetWrapper) ? 50 : 500); // visible? then quicker
+
             await playLastBlockOnly_SimHover(crossRoot);
             return NoLongerAwaiting();
         }
-
         async function playLastBlockOnly_SimHover(r)
         {
-            const targetWrapper = lastWrapperOnTargetBlock(r);
+            const targetWrapper = lastWrapperInBlock(r);
 
 
             // pause everthing but this
-            UTILS.inViewportElsHard([...document.querySelectorAll('.yt-gif-wrapper')]).forEach(wrapper =>
-            {
-                if (wrapper != targetWrapper)
-                    wrapper?.dispatchEvent(UTILS.simHoverOut());
-            });
+            UTILS.inViewportElsHard([...document.querySelectorAll('.yt-gif-wrapper')])
+                .forEach(wrapper =>
+                {
+                    if (wrapper != targetWrapper)
+                        wrapper?.dispatchEvent(UTILS.simHoverOut());
+                });
             // hover this -> videoIsPlayingWithSound
             targetWrapper?.dispatchEvent(UTILS.simHover());
 
 
-            const targetBlockID = [...recordedIDs.keys()].find(k => k?.startsWith(closestYTGIFparentID(targetWrapper)));;
+            const targetBlockID = [...recordedIDs.keys()].reverse().find(k => k?.startsWith(closestYTGIFparentID(targetWrapper)));
             const record = recordedIDs.get(targetBlockID);
             const validTimestamp = tEl.innerHTML.match(StartEnd_Config.targetStringRgx)?.[0];
             const secondsOnly = UTILS.HMSToSecondsOnly(validTimestamp);
@@ -1453,8 +1563,8 @@ async function Ready()
         }
         async function pauseLastBlock_SimHoverOut(r)
         {
-            lastWrapperOnTargetBlock(r)?.setAttribute('play-right-away', false);
-            lastWrapperOnTargetBlock(r)?.dispatchEvent(UTILS.simHoverOut()); // hover out -> videoIsPlayingWithSound(false)
+            lastWrapperInBlock(r)?.setAttribute('play-right-away', false);
+            lastWrapperInBlock(r)?.dispatchEvent(UTILS.simHoverOut()); // hover out -> videoIsPlayingWithSound(false)
         }
         function NoLongerAwaiting()
         {
@@ -1507,6 +1617,7 @@ async function Ready()
     async function getLastComponentInHerarchy(tempUID)
     {
         const res = await kauderk.rap.getBlockParentUids(tempUID);
+        if (!res) { debugger; return; }
         const original = await kauderk.rap.getBlockInfoByUID(tempUID);
 
         const baseObj = {
@@ -1570,23 +1681,32 @@ async function Ready()
         if (!val) debugger;
         return val;
     }
-    async function getComponentMap_smart(uid, config, map, getComponentMap_cb)
+    function extractFromKeyMap_AtIndex(mpa, valueAtIndex, mapIndex)
     {
+        if (!mpa) debugger;
+        let val = [...mpa.keys()].map(x => x.split('  ')).map(y => y[valueAtIndex])[mapIndex];
+        if (!val) debugger;
+        return val;
+    }
+    async function getMap_smart(key, map, callback, ...cb_params)
+    {// https://stackoverflow.com/questions/3458553/javascript-passing-parameters-to-a-callback-function#:~:text=console.log(param1)%3B%0A%7D-,function%20callbackTester(callback%2C%20...params)%20%7B,-callback(...params)%3B%0A%7D%0A%0A%0A%0AcallbackTester
         // since it store recursive maps, once per instance it's enough
         try
         {
-            if (!uid) throw new Error('uid is null');
-            if (!map.has(uid))
-                map.set(uid, await getComponentMap_cb(uid, config)); // a map inside a map 🤯
-            return map.get(uid);
+            if (!key) throw new Error('uid is null');
+            if (!map.has(key))
+                map.set(key, await callback(...cb_params)); // a map inside a map 🤯
+            return map.get(key);
         } catch (error)
         {
             console.log(error);
             return null;
         }
+
     }
     async function getComponentMap(tempUID, config)
     {
+        let uidMagazine = [];
         let indentFunc = 0;
         let componentsInOrderMap = new Map();
         const { targetStringRgx, componentsRgx, componentsWithUidsRgx } = config;
@@ -1612,6 +1732,8 @@ async function Ready()
 
         const FirstObj = await TryToFindTargetStrings_Rec(tempUID);
         return componentsInOrderMap;
+
+
 
 
         async function TryToFindTargetStrings_Rec(uid, parentObj)
@@ -1681,23 +1803,14 @@ async function Ready()
                 const keyIsComponent = results['is component'].incrementIf(isKey === 'is component');
                 const keyIsBlockRef = results['is block referece'].incrementIf(isKey === 'is block referece');
 
-                const baseKey = [indent, uid, hasKey, keyhasAnyComponet, keyHasComponents, keyHasAliasComponents, isKey, keyIsBlockRef, keyIsComponent, keyIsAlias];
+                const baseIs = [keyIsBlockRef, keyIsComponent, keyIsAlias];
+                const baseHas = [keyhasAnyComponet, keyHasComponents, keyHasAliasComponents];
+                const baseKey = [indent, uid, isKey];
+                const preKey = [...baseKey, hasKey, ...baseIs, '<-is|has->', ...baseHas];
 
-                let similarCount = 0; // keep track of similarities
-                const preKey = () => [similarCount, ...baseKey].join('  ');
-                let uniqueKey = preKey();
-
-
-                while (componentsInOrderMap.has(uniqueKey))
-                {
-                    debugger;
-                    similarCount += 1; // try to make it unique
-                    uniqueKey = preKey();
-                }
-                similarCount = 0;
-
-                //return { uniqueKey, original: preKey(), isKey, hasKey };
-                return uniqueKey
+                uidMagazine = PushIfNewEntry(uidMagazine, uid); // clunky, but it works
+                const similarCount = uidMagazine.filter(x => x === uid).length;
+                return [similarCount, ...preKey].join('  '); // uniqueKey among non siblings
             }
 
             function cleanIndentedBlock()
@@ -1707,6 +1820,13 @@ async function Ready()
                 const indentedBlock = tab + cleanLineBrakes.replace(/.{70}/g, '$&\n' + tab);
                 return indentedBlock;
             }
+            function PushIfNewEntry(arr, item)
+            {
+                const lastItem = [...arr]?.pop();
+                if (lastItem != item)
+                    arr = UTILS.pushSame(arr, item);
+                return arr;
+            }
         }
 
 
@@ -1715,7 +1835,7 @@ async function Ready()
             const info = await RAP.getBlockInfoByUID(desiredUID);
             const rawText = info[0][0]?.string || "F";
 
-            const string = rawText.replace(/(`.*?`)/g, 'used_to_be_an_inline_code_block');
+            const string = rawText.replace(/(`.+?`)|(`([\s\S]*?)`)/gm, 'used_to_be_an_inline_code_block');
 
             // {{[[page]]: x... xxxxxx xxx... }}
             const components = [...string.matchAll(componentsRgx)].map(x => x = x[0]) || [];
