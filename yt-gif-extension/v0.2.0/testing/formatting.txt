@@ -1,21 +1,18 @@
-Alias 1
-[alias nmp chiken](((bC5iR3qFp)))
-
-YT GIF 1
-{{[[yt-gif]]: https://youtu.be/-vVQ6hQF618 }}
-
-▼▼▼▼▼▼▼▼
-Self 1
-((G9YLR4vvk))
-
-
-YT GIF 2
-{{[[yt-gif]]: https://youtu.be/OJLJVYTK26M }}
-
-▼▼▼▼▼▼▼▼
-Self 2
-((G9YLR4vvk))
-
-
-Alias 2
-[alias nmp chiken](((bC5iR3qFp)))
+is alias   bC5iR3qFp: 1
+ytGifApp:3408 is component   https://youtu.be/-vVQ6hQF618: 1
+ytGifApp:3408 is block referece   G9YLR4vvk: 1
+ytGifApp:3408 is alias   bC5iR3qFp: 2
+ytGifApp:3408 is component   https://youtu.be/-vVQ6hQF618: 2
+ytGifApp:3408 is block referece   G9YLR4vvk: 2
+ytGifApp:3408 is component   https://youtu.be/OJLJVYTK26M: 1
+ytGifApp:3408 is block referece   G9YLR4vvk: 3
+ytGifApp:3408 is alias   bC5iR3qFp: 3
+ytGifApp:3408 is component   https://youtu.be/OJLJVYTK26M: 2
+ytGifApp:3408 is block referece   G9YLR4vvk: 4
+ytGifApp:3408 is alias   bC5iR3qFp: 4
+ytGifApp:3408 is component   https://youtu.be/-vVQ6hQF618: 3
+ytGifApp:3408 is block referece   G9YLR4vvk: 5
+ytGifApp:3408 is component   https://youtu.be/OJLJVYTK26M: 3
+ytGifApp:3408 is block referece   G9YLR4vvk: 6
+ytGifApp:3408 is alias   bC5iR3qFp: 5
+ytGifApp:3408 is alias   bC5iR3qFp: 6
