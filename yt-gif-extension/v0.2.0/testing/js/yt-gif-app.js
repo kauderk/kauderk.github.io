@@ -6,8 +6,8 @@
  * It's property types will change.
  * - nested object >>> sesionValue
 */
-const UI = JSON.parse(JSON.stringify(window.YT_GIF_SETTINGS_PAGE));
-const UTILS = window.kauderk.util;
+const UI = JSON.parse(JSON.stringify(window?.YT_GIF_SETTINGS_PAGE || {}));
+const UTILS = window.kauderk?.util;
 /*-----------------------------------*/
 /* user doesn't need to see this */
 UI.label = {
@@ -101,7 +101,7 @@ const videoParams = {
 
     speed: 1,
 
-    volume: window.YT_GIF_DIRECT_SETTINGS.get('player_volume').sessionValue,
+    volume: window?.YT_GIF_DIRECT_SETTINGS?.get('player_volume').sessionValue,
     updateVolume: 30, // 'this' will be set afterwards
     volumeURLmapHistory: [],
 };
@@ -114,13 +114,11 @@ const sesionIDs = {
 }
 /*-----------------------------------*/
 const StartEnd_Config = {
-    componentsRgx: /{{(\[\[)?(yt-gif\/(start|end))(\]\]|):?(.*?)(\}\}|\{\{)/gm,
-    componentsWithUidsRgx: /{{(\[\[)?(yt-gif\/(start|end))(\]\]|):?(.*?)(\}\}|\{\{)|(?<=\(\()([^(].*?[^)])(?=\)\))/gm, // variables?
+    componentPage: 'yt-gif|video',
     targetStringRgx: /((\d{1,2}):)?((\d{1,2}):)((\d{1,2}))|((?<=\s)\d+(?=\s|\}))/,
 }
 const YTGIF_Config = {
-    componentsRgx: /{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)/gm,
-    componentsWithUidsRgx: /{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)|(?<=\(\()([^(].*?[^)])(?=\)\))/gm, // variables?
+    componentPage: 'yt-gif\\/(start|end)',
     targetStringRgx: /(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(.*?(?=\s|\}|\]|\)))/,
 }
 const UIDtoURLInstancesMapMap = new Map(); // since it store recursive maps, once per instance it's enough
@@ -1947,6 +1945,9 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 targetSelector,
                 grandParentBlock: function () { return closestBlockID(document.querySelector('.bp3-popover-open')) },//grandParentPopOver,
             },
+            'alias-tooltip': {
+                // TODO: ...
+            },
             'ddm-tutorial': {
                 uid: 'irrelevant-uid', url: null, el,
                 condition: function () { return this.url = this.el.getAttribute(attrInfo.url.path) },
@@ -1986,8 +1987,11 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
         resObj.url = extractFromMap_AtIndex(await getUrlMap_smart(resObj.uid), resObj.preUrlIndex);
         resObj.accUrlIndex += resObj.preUrlIndex;
-        if (!resObj.url.includes('http'))
+        if (!resObj.url || !resObj.url.includes('http'))
+        {
             resObj.url = null;
+            resObj.uid = resObj.uid || uidResults[key].uid;
+        }
         return resObj;
 
 
@@ -3309,16 +3313,12 @@ async function getLastComponentInHerarchy(tempUID, _Config = {})
 function extractFromMap_AtIndex(map, valueAtIndex)
 {
     if (!map) return null;
-    let val = [...map.values()][valueAtIndex];
-    // if (!val) console.log(`val is null`); //debugger;
-    return val;
+    return [...map.values()][valueAtIndex];
 }
 function extractFromKeyMap_AtIndex(mpa, valueAtIndex, mapIndex)
 {
     if (!mpa) return null;
-    let val = [...mpa.keys()].map(x => x.split('  ')).map(y => y[valueAtIndex])[mapIndex];
-    // if (!val) console.log(`val is null`); //debugger;
-    return val;
+    return [...mpa.keys()].map(x => x.split('  ')).map(y => y[valueAtIndex])[mapIndex];
 }
 async function getMap_smart(key, map, callback, ...setMapCb_params)
 {// https://stackoverflow.com/questions/3458553/javascript-passing-parameters-to-a-callback-function#:~:text=console.log(param1)%3B%0A%7D-,function%20callbackTester(callback%2C%20...params)%20%7B,-callback(...params)%3B%0A%7D%0A%0A%0A%0AcallbackTester
@@ -3340,7 +3340,7 @@ async function getComponentMap(tempUID, _Config = {})
     let uidMagazine = [];
     let indentFunc = 0;
     let componentsInOrderMap = new Map();
-    const { targetStringRgx, componentsRgx, componentsWithUidsRgx } = _Config;
+    const { targetStringRgx, componentPage } = _Config;
 
 
     const orderObj = {
@@ -3379,43 +3379,36 @@ async function getComponentMap(tempUID, _Config = {})
         objRes.hasKey = hasKey;
 
 
-        //console.log("%c" + cleanIndentedBlock(), `color:${results[hasKey]?.tone || 'black'}`);
+        //console.log("%c" + cleanIndentedBlock(), `color:${results[hasKey]?.tone || 'gray'}`);
 
 
-        for (const i of objRes.targetStringsWithUids) // looping through RENDERED targetStrings (components) and uids (references)
+        // looping through RENDERED targetStrings (components) and uids (references)
+        objRes.targetStringsWithUids.forEach((v, i, a) =>
         {
-            results['is component'].condition = () => objRes?.targetStrings.includes(i);
-            results['is alias'].condition = () => objRes?.innerAliasesUids.includes(i);
-            results['is block referece'].condition = () => objRes?.blockReferencesAlone.includes(i);
+            results['is component'].condition = () => objRes?.targetStrings.includes(v);
+            results['is alias'].condition = () => objRes?.innerAliasesUids.includes(v);
+            results['is block referece'].condition = () => objRes?.blockReferencesAlone.includes(v);
 
 
             const isKey = Object.keys(results).filter(x => x.includes('is')).find(x => results[x].condition());
             const parentKeysArentAlias = !parentObj?.isKey?.includes('alias') && !parentObj?.hasKey?.includes('alias');
-            const isSelfRecursive = objRes?.blockReferencesAlone?.includes(uid);
+            const isSelfRecursive = parentObj?.blockReferencesAlone?.includes(v);
             const AtLeast = (arr) => arr.find(w => w === isKey);
 
-            if (i == tempUID && isSelfRecursive)
-            {
-                componentsInOrderMap.set(assertUniqueKey_while(uid, indentFunc, isKey, hasKey), undefined);
-                continue;
-            }
 
-            if (
-                parentKeysArentAlias ||   // unrendered -> pass
-                AtLeast(['is component']) // targetStrings (components) -> go
-            )
+            if (AtLeast(['is alias', 'is component']))
             {
-                if (AtLeast(['is alias', 'is component']))
-                {
-                    componentsInOrderMap.set(assertUniqueKey_while(uid, indentFunc, isKey, hasKey), i);
-                }
+                componentsInOrderMap.set(assertUniqueKey_while(uid, indentFunc, isKey, hasKey), v);
             }
-
-            if (isKey == 'is block referece' && !isSelfRecursive)// it is rendered, so execute it's rec func
+            if (isKey == 'is block referece' || isSelfRecursive) debugger;
+            if (isKey == 'is block referece' && !isSelfRecursive) // it is rendered, so execute it's rec func
             {
-                await ExecuteIndented_Rec(isKey, i);
+                indentFunc += 1;
+                objRes.isKey = isKey;
+                const awaitingObj = await TryToFindTargetStrings_Rec(v, objRes);
+                indentFunc -= 1;
             }
-        }
+        });
 
         return { uid, objRes, parentObj };
 
@@ -3468,36 +3461,74 @@ async function getComponentMap(tempUID, _Config = {})
 
     async function TryToFindTargetString(desiredUID)
     {
-        const info = await RAP.getBlockInfoByUID(desiredUID);
-        const rawText = info[0][0]?.string || "F";
+        const info = await kauderk.rap.getBlockInfoByUID(desiredUID);
+        const s0 = info[0][0]?.string || "F";
+        const componentPage = '(yt-gif|video)';
+        const targetStringRgx = /(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(.*?(?=\s|\}|\]|\)))/;
 
-        const string = rawText.replace(/(`.+?`)|(`([\s\S]*?)`)/gm, 'used_to_be_an_inline_code_block');
+        const preRgxComp = (rgxPage) => `{{(\\[\\[)?(${rgxPage})(?!\\/)(?!\\/)(?:(\\]\\])(.*?(?::|))|:|\\s)(?:(?<=:)|)(.+)(\\}\\})`;
+        //                              yt-gif\/(start|end)
+        const componentRgx = new RegExp(preRgxComp(componentPage), 'gm');
+        const anyUidRgx = /(?<=\(\()([^(].*?[^)])(?=\)\))/gm
+        const aliasPlusUidsRgx = /\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm;
+        const YIKES___YIKES = [componentRgx, anyUidRgx, aliasPlusUidsRgx].reduce((acc, v, i, a) => // https://masteringjs.io/tutorials/fundamentals/concat-regexp
+            new RegExp(acc.source != '(?:)' ? acc.source + '|' + v.source : v.source, 'gm'), new RegExp());
+        // group 7 : x... raw target string xxx...  
+        // group 10: (((xxxuidxxx)))            
+        // group 11: ((xxxuidxxx))              
 
-        // {{[[page]]: x... xxxxxx xxx... }}
-        const components = [...string.matchAll(componentsRgx)].map(x => x = x[0]) || [];
+
+
+        const s1 = s0.replace(/(`.+?`)|(`([\s\S]*?)`)/gm, 'used_to_be_an_inline_code_block');
+        const s2 = s1.replace(/{{=:(.+?)\|(.+)}}/gm, '$1'); // {{=:_rendered_by_roam_|...}}
+        debugger;
+        const string = s2.replace(new RegExp(preRgxComp('embed'), 'gm'), 'used_to_be_an_embed_block');
+
+
+        // { ANything...Xxx Goes}
+        const anyPossibleComponents = [...string.matchAll(/{{.+}/gm)].map(x => x[0]);
+        // {{componentPage: x... xxxxxx xxx... }}
+        const components = [...string.matchAll(componentRgx)].map(x => x = x[0]) || [];
         // (((xxxuidxxx))) || ((xxxuidxxx))
-        const innerUIDs = string.match(/(?<=\(\()([^(].*?[^)])(?=\)\))/gm) || [];
+        const innerUIDs = string.match(anyUidRgx) || [];
         // [xxxanything goesxxx](((xxxuidxxx)))
-        const aliasesPlusUids = [...string.matchAll(/\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm)];
+        const aliasesPlusUids = [...string.matchAll(aliasPlusUidsRgx)];
+
+
+        // filer out components form anyPossibleComponents
+        const otherComponents = anyPossibleComponents.filter(x => !components.includes(x));
+
+        // filter out components_ from  inerrUIDs
+        const validInnerUIDs = innerUIDs.filter(x => !otherComponents.includes(x));
+
+
 
         // componets with uids // set in the order in which roam renders them
-        const targetStringsWithUids = [...[...string.matchAll(componentsWithUidsRgx)]
-            .map(x => x = x[0])]
-            .map(x => components.includes(x) ? x = x.match(targetStringRgx)?.[0] : x);
+        const targetStringsWithUids = [...[...string.matchAll(new RegExp(YIKES___YIKES, 'gm'))]
+            .map(x => x = x[0])] // matches [0]
+            .map(y =>
+            {
+                //  if it is componenet, then search within it's first target string : else it is an uid
+                const isComponent = components.includes(y);
+                const inOrderValue = isComponent ? y = y.match(targetStringRgx)?.[0] : y;
+                return {
+                    value: inOrderValue,
+                    is: isComponent ? 'target-string' : 'any-uid',
+                }
+            });
+
+
         // uid aliases alone
-        const innerAliasesUids = [...aliasesPlusUids].map(x => x = x[2]) || []; // [xxnopexxx]('((xxxyesxxx))')
+        const innerAliasesUids = [...aliasesPlusUids].map(x => x = { is: 'alias-uid', value: x[2] }) || []; // [xxnopexxx]('((xxxyesxxx))')
+
 
         // uid block references alone
-        const blockReferencesAlone = innerUIDs?.filter(x => !innerAliasesUids.includes(x));
+        const blockReferencesAlone = innerUIDs.filter((v, i, a) => v = { is: 'reference-uid', value: innerAliasesUids[i] }) || []; // innerUIDs?.filter(x => !innerAliasesUids.includes(x));
 
 
+        // {{component-page: -> xxxfirst target stringxxx <- }}
+        const targetStrings = [...components].map(x => x.match(targetStringRgx)?.[0]);
 
-        let targetStrings = [];
-        for (const i of components)
-        {
-            // {{page: -> xxxxxx <- }}
-            targetStrings = UTILS.pushSame(targetStrings, i.match(targetStringRgx)?.[0]);
-        }
 
         return { uid: desiredUID, components, targetStrings, innerUIDs, targetStringsWithUids, aliasesPlusUids, innerAliasesUids, blockReferencesAlone, string, info };
     };
