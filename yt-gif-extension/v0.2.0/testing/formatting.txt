@@ -1,18 +1,171 @@
-is alias   bC5iR3qFp isSelfRecursive undefined: 1
-​is component   https://youtu.be/-vVQ6hQF618 isSelfRecursive undefined: 1
-is block referece   G9YLR4vvk isSelfRecursive undefined: 1
-is alias   bC5iR3qFp isSelfRecursive false: 1
-is component   https://youtu.be/-vVQ6hQF618 isSelfRecursive false: 1
-is block referece   G9YLR4vvk isSelfRecursive true: 1
-is component   https://youtu.be/OJLJVYTK26M isSelfRecursive false: 1
-is block referece   G9YLR4vvk isSelfRecursive true: 2
-is alias   bC5iR3qFp isSelfRecursive false: 2
-is component   https://youtu.be/OJLJVYTK26M isSelfRecursive undefined: 1
-is block referece   G9YLR4vvk isSelfRecursive undefined: 2
-is alias   bC5iR3qFp isSelfRecursive false: 3
-is component   https://youtu.be/-vVQ6hQF618 isSelfRecursive false: 2
-is block referece   G9YLR4vvk isSelfRecursive true: 3
-is component   https://youtu.be/OJLJVYTK26M isSelfRecursive false: 2
-is block referece   G9YLR4vvk isSelfRecursive true: 4
-is alias   bC5iR3qFp isSelfRecursive false: 4
-is alias   bC5iR3qFp isSelfRecursive undefined: 2
+Alias 1
+[alias nmp chiken alias nmp chiken alias nmp chiken alias nmp chiken](((bC5iR3qFp)))
+
+YT GIF 1
+{{[[yt-gif]]: https://youtu.be/-vVQ6hQF618 ((bC5iR3qFp)) }}
+
+▼▼▼▼▼▼▼▼
+Self 1
+((G9YLR4vvk)) 
+
+
+YT GIF 2
+{{[[yt-gif]]: https://youtu.be/OJLJVYTK26M }} 
+
+{{[[yt-gif]] https://youtu.be/OJLJVYTK26M }} 
+
+▼▼▼▼▼▼▼▼
+Self 2
+((G9YLR4vvk))
+
+
+Alias 2
+[alias nmp chiken](((bC5iR3qFp)))
+
+-------------------------------------------------------------------
+{{[[yt-gif]] F: https://youtu.be/OJLJVYTK26M }}
+
+{{[[yt-gif ]] F: https://youtu.be/OJLJVYTK26M }}
+
+{{yt-gif F: https://youtu.be/OJLJVYTK26M }}
+
+`{{yt-gif: ((Z0g9RkEUl)) }}
+
+`{{[[yt-gif]]: ((Z0g9RkEUl)) }}
+
+`{{[[yt-gif]] ((Z0g9RkEUl)) }}
+
+{{yt-gif: https://youtu.be/OJLJVYTK26M }}
+
+{{[[yt-gif]] : https://youtu.be/OJLJVYTK26M }}
+
+`{{yt-gif/Fuck: ((Z0g9RkEUl)) }}
+
+`{{yt-gifff  : ((Z0g9RkEUl)) }}
+
+`{{yyt-gifff: ((Z0g9RkEUl)) }}
+
+`{{f/yt-gifff: ((Z0g9RkEUl)) }}
+
+`{{yt-gif/: ((Z0g9RkEUl)) }}
+
+-------------------------------------------------------------------
+{{[[video]] F: https://youtu.be/OJLJVYTK26M }}
+
+{{[[video ]] F: https://youtu.be/OJLJVYTK26M }}
+
+{{video F: https://youtu.be/OJLJVYTK26M }}
+
+`{{video: ((Z0g9RkEUl)) }}
+
+`{{[[video]]: ((Z0g9RkEUl)) }}
+
+`{{[[video]] ((Z0g9RkEUl)) }} // Roam renders invalid videos. that's annoying... // TODO: 
+
+{{video: https://youtu.be/OJLJVYTK26M }}
+
+{{[[video]] : https://youtu.be/OJLJVYTK26M }}
+
+`{{video/Fuck: ((Z0g9RkEUl)) }}
+
+`{{videoff  : ((Z0g9RkEUl)) }}
+
+`{{yvideoff: ((Z0g9RkEUl)) }}
+
+`{{f/videoff: ((Z0g9RkEUl)) }}
+
+`{{video/: ((Z0g9RkEUl)) }}
+
+
+-------------------------------------------------------------------
+
+{{[[yt-gif/start]]: 00:07:00}}
+
+{{[[yt-gif/start/hello]] 00:07:00}}
+
+{{[[yt-gif/end]]: 00:09:00}} 
+
+-------------------------------------------------------------------
+
+{{[[yt-gif/start]] F: https://youtu.be/OJLJVYTK26M }}
+
+{{[[yt-gif/start ]] F: https://youtu.be/OJLJVYTK26M }}
+
+{{yt-gif/start F: https://youtu.be/OJLJVYTK26M }}
+
+`{{yt-gif/start: ((Z0g9RkEUl)) }}
+
+`{{[[yt-gif/start]]: ((Z0g9RkEUl)) }}
+
+`{{[[yt-gif/start]] ((Z0g9RkEUl)) }}
+
+{{yt-gif/start: https://youtu.be/OJLJVYTK26M }}
+
+{{[[yt-gif/end]] : https://youtu.be/OJLJVYTK26M }}
+
+`{{yt-gif/end/Fuck: ((Z0g9RkEUl)) }}
+
+`{{yt-gif/endff  : ((Z0g9RkEUl)) }}
+
+`{{yyt-gif/endff: ((Z0g9RkEUl)) }}
+
+`{{f/yt-gif/endff: ((Z0g9RkEUl)) }}
+
+`{{yt-gif/end/: ((Z0g9RkEUl)) }}
+
+-------------------------------------------------------------------
+
+`((Z0g9RkEUl))
+((CzQO1wGkP)) J
+
+`{{[[embed]]: ((Z0g9RkEUl)) }}
+
+`{{[[embed]] ((Z0g9RkEUl)) }}
+
+`{{embed/Fuck: ((Z0g9RkEUl)) }}
+
+`{{embedff: ((Z0g9RkEUl)) }}
+
+`{{yembedff: ((Z0g9RkEUl)) }}
+
+`{{f/embedff: ((Z0g9RkEUl)) }}
+
+`{{embed/: ((Z0g9RkEUl)) }}
+
+-------------------------------------------------------------------
+
+{{[[embed]] F: https://youtu.be/OJLJVYTK26M }}
+
+{{[[embed ]] F: https://youtu.be/OJLJVYTK26M }}
+
+{{embed F: https://youtu.be/OJLJVYTK26M }}
+
+`{{embed: ((Z0g9RkEUl)) }}
+
+`{{[[embed]]: ((Z0g9RkEUl)) }}
+
+`{{[[embed]] ((Z0g9RkEUl)) }} // Roam renders invalid videos. that's annoying...
+
+{{embed: https://youtu.be/OJLJVYTK26M }}
+
+{{[[embed]] : https://youtu.be/OJLJVYTK26M }}
+
+`{{embed/Fuck: ((Z0g9RkEUl)) }}
+
+`{{embedff  : ((Z0g9RkEUl)) }}
+
+`{{yembedff: ((Z0g9RkEUl)) }}
+
+`{{f/embedff: ((Z0g9RkEUl)) }}
+
+`{{embed/: ((Z0g9RkEUl)) }}
+
+--------------------------------------------------------------------
+
+{{=:📮 tooltip alias | {{[[video]]: https://youtu.be/-vVQ6hQF618 ((bC5iR3qFp)) }} }} 
+{{=:📮 tooltip alias | {{[[video]]: https://youtu.be/-vVQ6hQF618 ((bC5iR3qFp)) }} }}
+
+{{=:📮 tooltip alias | {{[[video]]: https://youtu.be/-vVQ6hQF618 ((bC5iR3qFp)) }}  }}
+
+
+
