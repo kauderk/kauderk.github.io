@@ -114,11 +114,11 @@ const sesionIDs = {
 }
 /*-----------------------------------*/
 const StartEnd_Config = {
-    componentPage: 'yt-gif|video',
+    componentPage: 'yt-gif\\/(start|end)',
     targetStringRgx: /((\d{1,2}):)?((\d{1,2}):)((\d{1,2}))|((?<=\s)\d+(?=\s|\}))/,
 }
 const YTGIF_Config = {
-    componentPage: 'yt-gif\\/(start|end)',
+    componentPage: '(yt-gif|video)',
     targetStringRgx: /(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(.*?(?=\s|\}|\]|\)))/,
 }
 const UIDtoURLInstancesMapMap = new Map(); // since it store recursive maps, once per instance it's enough
@@ -1854,7 +1854,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     if (!wrapper || !wrapper.parentNode) return;
 
 
-
+    await RAP.sleep(1000);
     // 1. search and get urlIndex and uid
     const { url, accUrlIndex, uid, grandParentBlock } = await tempUidResultsObj(wrapper);
 
@@ -1945,9 +1945,9 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 targetSelector,
                 grandParentBlock: function () { return closestBlockID(document.querySelector('.bp3-popover-open')) },//grandParentPopOver,
             },
-            'alias-tooltip': {
-                // TODO: ...
-            },
+            // 'alias-tooltip': {
+            //     // TODO: ...
+            // },
             'ddm-tutorial': {
                 uid: 'irrelevant-uid', url: null, el,
                 condition: function () { return this.url = this.el.getAttribute(attrInfo.url.path) },
@@ -1964,6 +1964,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             uid: uidResults[key].uid,
             preUrlIndex: uidResults[key].getUrlIndex(),
             accUrlIndex: 0,
+            urlComponents: uidResults[key].urlComponents(),
             url: uidResults[key].url,
             grandParentBlock: uidResults[key].grandParentBlock(),
         }
@@ -1987,6 +1988,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
         resObj.url = extractFromMap_AtIndex(await getUrlMap_smart(resObj.uid), resObj.preUrlIndex);
         resObj.accUrlIndex += resObj.preUrlIndex;
+        console.log(uidResults[key], resObj);
         if (!resObj.url || !resObj.url.includes('http'))
         {
             resObj.url = null;
@@ -3339,6 +3341,7 @@ async function getComponentMap(tempUID, _Config = {})
 {
     let uidMagazine = [];
     let indentFunc = 0;
+    let isPass = 0, refPass = 0, isComp = 0, isAl = 0, isRef = 0;
     let componentsInOrderMap = new Map();
     const { targetStringRgx, componentPage } = _Config;
 
@@ -3362,6 +3365,7 @@ async function getComponentMap(tempUID, _Config = {})
 
 
     const FirstObj = await TryToFindTargetStrings_Rec(tempUID);
+    console.log({ isPass, refPass, isComp, isAl, isRef, componentsInOrderMap });
     return componentsInOrderMap;
 
 
@@ -3374,15 +3378,16 @@ async function getComponentMap(tempUID, _Config = {})
         // looping through RENDERED targetStrings (components) and uids (references)
         objRes.targetStringsWithUids.forEach(async ({ value, is }, i, a) =>
         {
-            const isSelfRecursive = parentObj?.is == 'is block reference' && parentObj?.targetStringsWithUids?.[i].value == value;
+            const isSelfRecursive = parentObj?.is == 'is block reference' && parentObj?.targetStringsWithUids?.[i]?.value == value;
 
-
-            if (['is alias', 'is component'].find(w => w === is))
+            if (['is component', 'is alias'].some(w => w === is))
             {
+                isPass++;
                 componentsInOrderMap.set(assertUniqueKey_while(uid, indentFunc, is), value);
             }
-            if (is == 'is block reference' && !isSelfRecursive) // it is rendered, so execute it's rec func
+            if (is == 'is block reference' && !!isSelfRecursive) // it is rendered, so execute it's rec func
             {
+                refPass++;
                 indentFunc += 1;
                 objRes.is = is;
                 const awaitingObj = await TryToFindTargetStrings_Rec(value, objRes);
@@ -3415,9 +3420,14 @@ async function getComponentMap(tempUID, _Config = {})
         }
         function PushIfNewEntry(arr, item)
         {
+            const pushSame = (arr = [], el) =>
+            {
+                arr.push(el);
+                return arr;
+            }
             const lastItem = [...arr]?.pop();
             if (lastItem != item)
-                arr = UTILS.pushSame(arr, item);
+                arr = pushSame(arr, item);
             return arr;
         }
     }
@@ -3445,7 +3455,6 @@ async function getComponentMap(tempUID, _Config = {})
         const s2 = s1.replace(/{{=:(.+?)\|(.+)}}/gm, '$1'); // {{=:_rendered_by_roam_|...}}
         const string = s2.replace(new RegExp(preRgxComp('embed'), 'gm'), 'used_to_be_an_embed_block');
 
-
         // {{componentPage: x... xxxxxx xxx... }}
         const components = [...string.matchAll(componentRgx)].map(x => x = x[0]) || [];
         // [xxxanything goesxxx](((xxxuidxxx)))
@@ -3461,13 +3470,19 @@ async function getComponentMap(tempUID, _Config = {})
 
                 if (components.includes(y))
                 {
+                    isComp++;
                     is = 'is component';
                     inOrderValue = y.match(targetStringRgx)?.[0];
                 }
                 else if (aliasesPlusUids.find(v => v[0] == y))
                 {
+                    isAl++;
                     is = 'is alias';
                     inOrderValue = aliasesPlusUids.find(v => v[0] == y)[2];
+                }
+                else
+                {
+                    isRef++;
                 }
 
                 return {
