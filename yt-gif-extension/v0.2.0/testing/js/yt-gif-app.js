@@ -1921,11 +1921,28 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     // 1. uidResultsObj
     async function tempUidResultsObj(el)
     {
-        const closestBlockID = (x) => x?.closest('.rm-block__input');
-        const grandParentBlock = function () { return closestBlockID(this.el) };
-        const grandParentPopOver = function () { return document.querySelector("div.bp3-popover-content > .rm-alias-tooltip__content") };
-        const uidFromGrandParent = function () { return this.uid = this.grandParentBlock()?.id?.slice(-9) };
-        const targetSelector = [[...rm_components.both.classesToObserve].map(x => '.' + x), '.yt-gif-wrapper', 'a.rm-alias.rm-alias--block'].join();
+        const closestBlock = (x) => x?.closest('.rm-block__input');
+
+        //#region alias like properties
+        const aliasSel = {
+            inline: {
+                is: 'a.rm-alias.rm-alias--block',
+                from: '.rm-alias-tooltip__content'
+            },
+            card: {
+                is: '.rm-block__part--equals',
+                from: '.bp3-card'
+            }
+        }
+        const openAlias = function (sel) { return document.querySelector(`.bp3-popover-target.bp3-popover-open > ${sel}`) };
+        const grandParentPopOver = function (sel) { return document.querySelector(`div.bp3-popover-content > ${sel}`) };
+        const grandParentBlockFromAlias = function () { return closestBlock(document.querySelector('.bp3-popover-open')) };
+        //#endregion
+
+        // uidFromGrandParent
+        const condition = function () { return this.uid = this.grandParentBlock()?.id?.slice(-9) };
+        const preSelector = [[...rm_components.both.classesToObserve].map(x => '.' + x), '.yt-gif-wrapper', aliasSel.inline.is];
+        const targetSelector = preSelector.join();
         const tempUrlObj = {
             urlComponents: function () { return [...this.grandParentBlock().querySelectorAll(this.targetSelector)] },
             getUrlIndex: function () { return this.urlComponents().indexOf(this.el) },
@@ -1934,21 +1951,29 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
         const uidResults = { /* a class makes the most sense here, but they're so similar, yet so different, and it only happens once at the time I hope... */
             'base-block': {
-                uid: null, url: null, el,
-                condition: uidFromGrandParent,
-                targetSelector,
-                grandParentBlock,
+                uid: null, url: null, targetSelector, el,
+
+                condition,
+                grandParentBlock: function () { return closestBlock(this.el) },
+            },
+            'tooltip-card': {
+                uid: null, url: null, el: openAlias(aliasSel.card.is),
+
+                targetSelector: [...preSelector, aliasSel.card.is].join(),
+                condition, from: aliasSel.card.from,
+                grandParentBlock: grandParentBlockFromAlias,
             },
             'popover': {
-                uid: null, url: null, el: document.querySelector('.bp3-popover-target.bp3-popover-open > a.rm-alias.rm-alias--block'),
-                condition: uidFromGrandParent,
-                targetSelector,
-                grandParentBlock: function () { return closestBlockID(document.querySelector('.bp3-popover-open')) },//grandParentPopOver,
+                uid: null, url: null, targetSelector, el: openAlias(aliasSel.inline.is),
+
+                condition, from: aliasSel.inline.from,
+                grandParentBlock: grandParentBlockFromAlias,
             },
             'ddm-tutorial': {
                 uid: 'irrelevant-uid', url: null, el,
-                condition: function () { return this.url = this.el.getAttribute(attrInfo.url.path) },
                 targetSelector: ['[data-video-url]'].join(),
+
+                condition: function () { return this.url = this.el.getAttribute(attrInfo.url.path) },
                 grandParentBlock: function () { return this.el.closest('.dwn-yt-gif-player-container') },
             },
         }
@@ -1972,11 +1997,11 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         }
 
 
-        if (key == 'popover')  
+        if (['popover', 'tooltip-card'].some(v => v == key))
         {
             // needs it's own UID                                   // is it's parent's
             resObj.uid = extractFromMap_AtIndex(await getUrlMap_smart(uidResults[key].uid), resObj.preUrlIndex);
-            uidResults['base-block'].grandParentBlock = grandParentPopOver; // once there (abstract enough to borrow functionalities)
+            uidResults['base-block'].grandParentBlock = () => grandParentPopOver(uidResults[key].from); // once there (abstract enough to borrow functionalities)
             resObj.accUrlIndex += resObj.preUrlIndex;
             resObj.preUrlIndex = uidResults['base-block'].getUrlIndex(); // it also needs it's own urlIndex
         }
