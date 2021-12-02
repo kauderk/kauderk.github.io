@@ -101,7 +101,7 @@ const videoParams = {
 
     speed: 1,
 
-    volume: window.YT_GIF_DIRECT_SETTINGS.get('player_volume').sessionValue,
+    volume: window.YT_GIF_DIRECT_SETTINGS?.get('player_volume')?.sessionValue,
     updateVolume: 30, // 'this' will be set afterwards
     volumeURLmapHistory: [],
 };
@@ -115,14 +115,10 @@ const sesionIDs = {
 /*-----------------------------------*/
 const StartEnd_Config = {
     componentPage: 'yt-gif\\/(start|end)',
-    //componentsRgx: /{{(\[\[)?(yt-gif\/(start|end))(\]\]|):?(.*?)(\}\}|\{\{)/gm,
-    //componentsWithUidsRgx: /{{(\[\[)?(yt-gif\/(start|end))(\]\]|):?(.*?)(\}\}|\{\{)|(?<=\(\()([^(].*?[^)])(?=\)\))/gm, // variables?
     targetStringRgx: /((\d{1,2}):)?((\d{1,2}):)((\d{1,2}))|((?<=\s)\d+(?=\s|\}))/,
 }
 const YTGIF_Config = {
     componentPage: 'yt-gif|video',
-    //componentsRgx: /{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)/gm,
-    //componentsWithUidsRgx: /{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)|(?<=\(\()([^(].*?[^)])(?=\)\))/gm, // variables?
     targetStringRgx: /(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(.*?(?=\s|\}|\]|\)))/,
 }
 const UIDtoURLInstancesMapMap = new Map(); // since it store recursive maps, once per instance it's enough
@@ -3342,7 +3338,7 @@ async function getComponentMap(tempUID, _Config = {})
     let uidMagazine = [];
     let indentFunc = 0;
     let componentsInOrderMap = new Map();
-    const { targetStringRgx, componentsRgxF, componentsWithUidsRgxF, componentPage } = _Config;
+    const { targetStringRgx, componentPage } = _Config;
 
 
     const orderObj = {
@@ -3350,12 +3346,11 @@ async function getComponentMap(tempUID, _Config = {})
         incrementIf: function (condition) { return condition ? Number(++this.order) : 'ﾠ' },
         condition: (x) => false,
     };
-    const results = { /* the order does matter */
-        'has components aliases': { tone: '#37d5d6' },
-        'has components': { tone: '#36096d' },
-        'has any aliases': { tone: '#734ae8' },
-        'has any components': { tone: '#21d190' },
-
+    const results = {
+        // 'has components aliases': { tone: '#37d5d6' },
+        // 'has components': { tone: '#36096d' },
+        // 'has any aliases': { tone: '#734ae8' },
+        // 'has any components': { tone: '#21d190' },
         'is component': { tone: '#20bf55' },
         'is alias': { tone: '#bfe299' },
         'is block reference': { tone: 'green' },
@@ -3364,8 +3359,8 @@ async function getComponentMap(tempUID, _Config = {})
 
 
     const FirstObj = await TryToFindTargetStrings_Rec(tempUID);
+    console.log(componentsInOrderMap);
     return componentsInOrderMap;
-
 
 
 
@@ -3374,37 +3369,20 @@ async function getComponentMap(tempUID, _Config = {})
         const objRes = await TryToFindTargetString(uid);
 
 
-        results['has components aliases'].condition = () => parentObj?.innerAliasesUids?.includes(uid) && (!!objRes.urls?.[0]);
-        results['has any aliases'].condition = () => objRes?.innerAliasesUids.length > 0;
-        results['has components'].condition = () => objRes.components.length > 0;
-        const hasKey = Object.keys(results).filter(x => x.includes('has')).find(x => results[x].condition());
-        objRes.hasKey = hasKey;
-
-
-        //console.log("%c" + cleanIndentedBlock(), `color:${results[hasKey]?.tone || 'black'}`);
-
-
-        for (const { value, is } of objRes.targetStringsWithUids) // looping through RENDERED targetStrings (components) and uids (references)
+        // loop through RENDERED targetStrings (components) and uids (references)
+        for (const { value, is } of objRes.targetStringsWithUids) 
         {
-            results['is component'].condition = () => is == 'is component';
-            results['is alias'].condition = () => is == 'is alias';
-            results['is block reference'].condition = () => is == 'is block reference';
-
-
-            const isKey = Object.keys(results).filter(x => x.includes('is')).find(x => results[x].condition());
-            const parentKeysArentAlias = !parentObj?.isKey?.includes('alias') && !parentObj?.hasKey?.includes('alias');
             const isSelfRecursive = parentObj?.blockReferencesAlone?.includes(value);
 
 
-            if (['is alias', 'is component'].some(w => w === isKey))
+            if (['is alias', 'is component'].some(w => w === is))
             {
-                componentsInOrderMap.set(assertUniqueKey_while(uid, indentFunc, isKey, hasKey), value);
+                componentsInOrderMap.set(assertUniqueKey_while(uid, indentFunc, is), value);
             }
-            if (isKey == 'is block reference' && !isSelfRecursive) // it is rendered, so execute it's rec func
+            if (is == 'is block reference' && !isSelfRecursive) // it is rendered, so execute it's rec func
             {
                 indentFunc += 1;
-                objRes.isKey = isKey;
-                objRes.hasKey = hasKey;
+                objRes.isKey = is;
                 const awaitingObj = await TryToFindTargetStrings_Rec(value, objRes);
                 indentFunc -= 1;
             }
@@ -3414,21 +3392,15 @@ async function getComponentMap(tempUID, _Config = {})
 
 
 
-        function assertUniqueKey_while(uid, indent, isKey, hasKey)
+        function assertUniqueKey_while(uid, indent, isKey)
         {
-            // the order in which the components are rendered within the block
-            const keyhasAnyComponet = results['has any components'].incrementIf(UTILS.includesAtlest(['has components', 'has components aliases'], hasKey, null));
-            const keyHasComponents = results['has components'].incrementIf(hasKey === 'has components');
-            const keyHasAliasComponents = results['has components aliases'].incrementIf(hasKey === 'has components aliases');
-
             const keyIsAlias = results['is alias'].incrementIf(isKey === 'is alias');
             const keyIsComponent = results['is component'].incrementIf(isKey === 'is component');
             const keyIsBlockRef = results['is block reference'].incrementIf(isKey === 'is block reference');
 
             const baseIs = [keyIsBlockRef, keyIsComponent, keyIsAlias];
-            const baseHas = [keyhasAnyComponet, keyHasComponents, keyHasAliasComponents];
             const baseKey = [indent, uid, isKey];
-            const preKey = [...baseKey, hasKey, ...baseIs, '<-is|has->', ...baseHas];
+            const preKey = [...baseKey, 'is -> ', ...baseIs];
 
             uidMagazine = PushIfNewEntry(uidMagazine, uid); // clunky, but it works
             const similarCount = uidMagazine.filter(x => x === uid).length;
@@ -3457,44 +3429,42 @@ async function getComponentMap(tempUID, _Config = {})
         const info = await RAP.getBlockInfoByUID(desiredUID);
         const rawText = info[0][0]?.string || "F";
 
-        const string = rawText.replace(/(`.+?`)|(`([\s\S]*?)`)/gm, 'used_to_be_an_inline_code_block');
-
 
         const preRgxComp = (rgxPage) => `{{(\\[\\[)?(${rgxPage})(?!\\/)(?!\\/)(?:(\\]\\])(.*?(?::|))|:|\\s)(?:(?<=:)|)(.+)(\\}\\})`;
-
         const componentRgx = new RegExp(preRgxComp(componentPage), 'gm');
         const anyPossibleComponents = /{{.+}/gm;
         const aliasPlusUidsRgx = /\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm;
         const anyUidRgx = /(?<=\(\()([^(].*?[^)])(?=\)\))/gm;
         // set in the order in which roam renders them - anyPossibleComponents is kinda like a joker card, it will trap components along with irrelevant uids
-        const YIKES___YIKES = [componentRgx, anyPossibleComponents, aliasPlusUidsRgx, anyUidRgx].reduce((acc, v, i, a) => // https://masteringjs.io/tutorials/fundamentals/concat-regexp
+        const blockRgx = [componentRgx, anyPossibleComponents, aliasPlusUidsRgx, anyUidRgx].reduce((acc, v, i, a) => // https://masteringjs.io/tutorials/fundamentals/concat-regexp
             new RegExp(acc.source != '(?:)' ? acc.source + '|' + v.source : v.source, 'gm'), new RegExp());
 
 
-        // {{componentPage: x... xxxxxx xxx... }}
-        const components = [...string.matchAll(componentRgx)].map(x => x = x[0]) || [];
-        // [xxxanything goesxxx](((xxxuidxxx)))
-        const aliasesPlusUids = [...string.matchAll(aliasPlusUidsRgx)];
+
+        const s1 = rawText.replace(/(`.+?`)|(`([\s\S]*?)`)/gm, 'used_to_be_an_inline_code_block');
+        const string = s1.replace(/{{=:(.+?)\|(.+)}}/gm, '$1'); // {{=:_rendered_by_roam_|...}}
+        //const string = s2.replace(new RegExp(preRgxComp('embed'), 'gm'), 'used_to_be_an_embed_block');
+
 
 
         let blockReferencesAlone = [];
-        const targetStringsWithUids = [...[...string.matchAll(new RegExp(YIKES___YIKES, 'gm'))]
+        const targetStringsWithUids = [...[...string.matchAll(new RegExp(blockRgx, 'gm'))]
             .map(x => x = x[0])]
             .map(y =>
             {
-                let is = 'is block reference', inOrderValue = y; // uid by default
+                let is = 'is block reference', inOrderValue = y;
 
-                if (components.includes(y))
+                if (y.match(targetStringRgx)?.[0]) // {{componentPage: -> x... <- xxxxxx xxx... }}
                 {
                     is = 'is component';
                     inOrderValue = y.match(targetStringRgx)?.[0];
                 }
-                else if (aliasesPlusUids.find(v => v[0] == y))
+                else if (y.match(aliasPlusUidsRgx)?.[0]) // [xxxanything goesxxx]((( -> xxxuidxxx <- )))
                 {
                     is = 'is alias';
-                    inOrderValue = aliasesPlusUids.find(v => v[0] == y)[2];
+                    inOrderValue = [...y.matchAll(aliasPlusUidsRgx)][0][2];
                 }
-                else
+                else // xxxuidxxx
                 {
                     blockReferencesAlone = UTILS.pushSame(blockReferencesAlone, y);
                 }
@@ -3506,7 +3476,7 @@ async function getComponentMap(tempUID, _Config = {})
             });
 
 
-        return { uid: desiredUID, components, targetStringsWithUids, aliasesPlusUids, blockReferencesAlone, string, info };
+        return { targetStringsWithUids, blockReferencesAlone };
     };
 }
 //#endregion
