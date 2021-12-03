@@ -3386,12 +3386,12 @@ async function getMap_smart(key, map, callback, ...setMapCb_params)
         return null;
     }
 }
-async function getComponentMap(tempUID, _Config = {})
+async function getComponentMap(tempUID, _Config = YTGIF_Config)
 {
     let uidMagazine = [];
     let indentFunc = 0;
     let componentsInOrderMap = new Map();
-    const { targetStringRgx, componentPage, renderTooltipCard } = _Config;
+    const { targetStringRgx, componentPage } = _Config;
 
 
     const orderObj = {
@@ -3404,6 +3404,7 @@ async function getComponentMap(tempUID, _Config = {})
         // 'has components': { tone: '#36096d' },
         // 'has any aliases': { tone: '#734ae8' },
         // 'has any components': { tone: '#21d190' },
+        'is tooltip card': { tone: '#21d190' },
         'is component': { tone: '#20bf55' },
         'is alias': { tone: '#bfe299' },
         'is block reference': { tone: 'green' },
@@ -3421,45 +3422,62 @@ async function getComponentMap(tempUID, _Config = {})
     {
         const objRes = await TryToFindTargetString(uid);
 
-
         // loop through RENDERED targetStrings (components) and uids (references)
-        for (const { value, is } of objRes.targetStringsWithUids) 
-        {
-            const isSelfRecursive = parentObj?.blockReferencesAlone?.includes(value);
-
-
-            if (['is alias', 'is component'].some(w => w === is))
-            {
-                componentsInOrderMap.set(assertUniqueKey_while(uid, indentFunc, is), value);
-            }
-            if (is == 'is block reference' && !isSelfRecursive) // it is rendered, so execute it's rec func
-            {
-                indentFunc += 1;
-                objRes.isKey = is;
-                const awaitingObj = await TryToFindTargetStrings_Rec(value, objRes);
-                indentFunc -= 1;
-            }
-        }
+        await loopingThroughObjRes(objRes);
 
         return { uid, objRes, parentObj };
 
 
+        async function loopingThroughObjRes(objRes)
+        {
+            for (const { value, is } of objRes.targetStringsWithUids)
+            {
+                const isSelfRecursive = parentObj?.blockReferencesAlone?.includes(value);
+                const comesFromTooltip = !!objRes.tooltipKey;
 
+                if (['is alias', 'is component'].some(w => w === is))
+                {
+                    if (comesFromTooltip)
+                    {
+                        componentsInOrderMap.get(objRes.tooltipKey)?.push(value);
+                    }
+                    else
+                    {
+                        componentsInOrderMap.set(assertUniqueKey_while(uid, indentFunc, is), value);
+                    }
+                }
+                if ('is tooltip card' === is)
+                {
+                    const tooltipObjRes = stringsWihtUidsObj(value);
+                    const tooltipKey = assertUniqueKey_while(uid, indentFunc, is);
+                    tooltipObjRes.tooltipKey = tooltipKey;
+                    componentsInOrderMap.set(tooltipKey, []);
+                    await loopingThroughObjRes(tooltipObjRes)
+                }
+                if (is == 'is block reference' && !isSelfRecursive) // it is rendered, so execute it's rec func
+                {
+                    indentFunc += 1;
+                    objRes.isKey = is;
+                    const awaitingObj = await TryToFindTargetStrings_Rec(value, objRes);
+                    indentFunc -= 1;
+                }
+            }
+        }
         function assertUniqueKey_while(uid, indent, isKey)
         {
+            const keyIsToolip = results['is tooltip card'].incrementIf(isKey === 'is tooltip card');
             const keyIsAlias = results['is alias'].incrementIf(isKey === 'is alias');
             const keyIsComponent = results['is component'].incrementIf(isKey === 'is component');
             const keyIsBlockRef = results['is block reference'].incrementIf(isKey === 'is block reference');
 
-            const baseIs = [keyIsBlockRef, keyIsComponent, keyIsAlias];
+            const baseIs = [keyIsBlockRef, keyIsComponent, keyIsAlias, keyIsToolip];
             const baseKey = [indent, uid, isKey];
-            const preKey = [...baseKey, 'is -> ', ...baseIs];
+            const preKey = [...baseKey, ...baseIs];
 
             uidMagazine = PushIfNewEntry(uidMagazine, uid); // clunky, but it works
             const similarCount = uidMagazine.filter(x => x === uid).length;
             return [similarCount, ...preKey].join('  '); // uniqueKey among non siblings
         }
-
         function cleanIndentedBlock()
         {
             const tab = '\t'.repeat(indentFunc);
@@ -3481,43 +3499,38 @@ async function getComponentMap(tempUID, _Config = {})
     {
         const info = await RAP.getBlockInfoByUID(desiredUID);
         const rawText = info[0][0]?.string || "F";
+        return stringsWihtUidsObj(rawText);
+    }
 
+    function stringsWihtUidsObj(rawText)
+    {
+        const string = rawText.replace(/(`.+?`)|(`([\s\S]*?)`)/gm, 'used_to_be_an_inline_code_block');
 
-        const preRgxComp = (rgxPage) => `{{(\\[\\[)?(${rgxPage})(?!\\/)(?!\\/)(?:(\\]\\])(.*?(?::|))|:|\\s)(?:(?<=:)|)(.+)(\\}\\})`;
-        const componentRgx = new RegExp(preRgxComp(componentPage), 'gm');
-        const anyPossibleComponents = /{{.+}/gm;
-        const aliasPlusUidsRgx = /\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm;
-        const anyUidRgx = /(?<=\(\()([^(].*?[^)])(?=\)\))/gm;
-        // set in the order in which roam renders them - anyPossibleComponents is kinda like a joker card, it will trap components along with irrelevant uids
-        const blockRgx = [componentRgx, anyPossibleComponents, aliasPlusUidsRgx, anyUidRgx].reduce((acc, v, i, a) => // https://masteringjs.io/tutorials/fundamentals/concat-regexp
-            new RegExp(acc.source != '(?:)' ? acc.source + '|' + v.source : v.source, 'gm'), new RegExp());
-
-
-
-        const s1 = rawText.replace(/(`.+?`)|(`([\s\S]*?)`)/gm, 'used_to_be_an_inline_code_block');
-        let string = s1;
-        if (!renderTooltipCard)
-            string = s1.replace(/{{=:(.+?)\|(.+)}}/gm, '$1'); // {{=:_rendered_by_roam_|...}}
-        //const string = s2.replace(new RegExp(preRgxComp('embed'), 'gm'), 'used_to_be_an_embed_block');
-
+        const { blockRgx, aliasPlusUidsRgx, tooltipCardRgx } = BlockRegexObj(componentPage);
 
 
         let blockReferencesAlone = [];
-        const targetStringsWithUids = [...[...string.matchAll(new RegExp(blockRgx, 'gm'))]
-            .map(x => x = x[0])]
+        let tooltipReferencesAlone = [];
+        const targetStringsWithUids = [...[...string.matchAll(new RegExp(blockRgx, 'gm'))].map(x => x = x[0])]
             .map(y =>
             {
                 let is = 'is block reference', inOrderValue = y;
 
-                if (y.match(targetStringRgx)?.[0]) // {{componentPage: -> x... <- xxxxxx xxx... }}
+                if (y.match(tooltipCardRgx)?.[0]) // {{=:_rendered_by_roam_| -> string XXxxxx ... <- }}
                 {
-                    is = 'is component';
-                    inOrderValue = y.match(targetStringRgx)?.[0];
+                    is = 'is tooltip card';
+                    inOrderValue = [...y.matchAll(tooltipCardRgx)][0][2];
                 }
                 else if (y.match(aliasPlusUidsRgx)?.[0]) // [xxxanything goesxxx]((( -> xxxuidxxx <- )))
                 {
                     is = 'is alias';
                     inOrderValue = [...y.matchAll(aliasPlusUidsRgx)][0][2];
+                    tooltipReferencesAlone = UTILS.pushSame(tooltipReferencesAlone, inOrderValue);
+                }
+                else if (y.match(targetStringRgx)?.[0]) // {{componentPage: -> first target <- xxxxxx xxx... }}
+                {
+                    is = 'is component';
+                    inOrderValue = y.match(targetStringRgx)?.[0];
                 }
                 else // xxxuidxxx
                 {
@@ -3527,12 +3540,27 @@ async function getComponentMap(tempUID, _Config = {})
                 return {
                     value: inOrderValue,
                     is,
-                }
+                };
             });
 
 
         return { targetStringsWithUids, blockReferencesAlone };
-    };
+    }
+
+    function BlockRegexObj(componentPage)
+    {
+        const preRgxComp = (rgxPage) => `{{(\\[\\[)?(${rgxPage})(?!\\/)(?!\\/)(?:(\\]\\])(.*?(?::|))|:|\\s)(?:(?<=:)|)(.+)(\\}\\})`;
+        const componentRgx = new RegExp(preRgxComp(componentPage), 'gm');
+        const anyPossibleComponents = /{{.+}/gm;
+        const aliasPlusUidsRgx = /\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm;
+        const tooltipCardRgx = /{{=:(.+?)\|(.+)}}/gm;
+        const anyUidRgx = /(?<=\(\()([^(].*?[^)])(?=\)\))/gm;
+        // set in the order in which roam renders them - anyPossibleComponents is kinda like a joker card, it will trap components along with irrelevant uids
+        const blockRgx = [tooltipCardRgx, componentRgx, anyPossibleComponents, aliasPlusUidsRgx, anyUidRgx].reduce((acc, v, i, a) => // https://masteringjs.io/tutorials/fundamentals/concat-regexp
+            new RegExp(acc.source != '(?:)' ? acc.source + '|' + v.source : v.source, 'gm'), new RegExp());
+        //const string = s2.replace(new RegExp(preRgxComp('embed'), 'gm'), 'used_to_be_an_embed_block');
+        return { blockRgx, aliasPlusUidsRgx, tooltipCardRgx };
+    }
 }
 //#endregion
 
