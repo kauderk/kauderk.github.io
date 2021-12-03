@@ -122,6 +122,7 @@ const YTGIF_Config = {
     targetStringRgx: /(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(.*?(?=\s|\}|\]|\)))/,
 }
 const UIDtoURLInstancesMapMap = new Map(); // since it store recursive maps, once per instance it's enough
+const UIDtoTooltipURLInstancesMapMap = new Map(); // since it store recursive maps, once per instance it's enough
 /*-----------------------------------*/
 const urlFolder = (f) => `https://kauderk.github.io/yt-gif-extension/resources/${f}`;
 const self_urlFolder = (f) => `https://kauderk.github.io/yt-gif-extension/v0.2.0/testing/${f}`;
@@ -1922,6 +1923,8 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     async function tempUidResultsObj(el)
     {
         const closestBlock = (x) => x?.closest('.rm-block__input');
+        const grandParentBlock = function () { return closestBlock(this.el) };
+        const condition = function () { return this.uid = this.grandParentBlock()?.id?.slice(-9) };
 
         //#region alias like properties
         const aliasSel = {
@@ -1934,13 +1937,13 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 from: '.bp3-card'
             }
         }
-        const openAlias = function (sel) { return document.querySelector(`.bp3-popover-target.bp3-popover-open > ${sel}`) };
-        const grandParentPopOver = function (sel) { return document.querySelector(`div.bp3-popover-content > ${sel}`) };
-        const grandParentBlockFromAlias = function () { return closestBlock(document.querySelector('.bp3-popover-open')) };
+        const openAlias = function (isSel) { return document.querySelector(`.bp3-popover-open > ${isSel}`) };
+        const PopOverParent = function (fromSel) { return document.querySelector(`div.bp3-popover-content > ${fromSel}`) };
+        const aliasCondition = function () { return PopOverParent(this.from) && this.uidCondition() };
+        const grandParentBlockFromAlias = function () { return closestBlock(this.el.closest('.bp3-popover-open')) };
         //#endregion
 
         // uidFromGrandParent
-        const condition = function () { return this.uid = this.grandParentBlock()?.id?.slice(-9) };
         const preSelector = [[...rm_components.both.classesToObserve].map(x => '.' + x), '.yt-gif-wrapper', aliasSel.inline.is];
         const targetSelector = preSelector.join();
         const tempUrlObj = {
@@ -1954,20 +1957,26 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 uid: null, url: null, targetSelector, el,
 
                 condition,
-                grandParentBlock: function () { return closestBlock(this.el) },
+                grandParentBlock,//: function () { return closestBlock(this.el) },
+            },
+            'popover': {
+                uid: null, url: null, targetSelector, el: openAlias(aliasSel.inline.is),
+
+
+                from: aliasSel.inline.from,
+                grandParentBlock: grandParentBlockFromAlias,
+                uidCondition: condition,
+                condition: aliasCondition,
             },
             'tooltip-card': {
                 uid: null, url: null, el: openAlias(aliasSel.card.is),
 
                 targetSelector: [...preSelector, aliasSel.card.is].join(),
-                condition, from: aliasSel.card.from,
-                grandParentBlock: grandParentBlockFromAlias,
-            },
-            'popover': {
-                uid: null, url: null, targetSelector, el: openAlias(aliasSel.inline.is),
 
-                condition, from: aliasSel.inline.from,
+                from: aliasSel.card.from,
                 grandParentBlock: grandParentBlockFromAlias,
+                uidCondition: condition,
+                condition: aliasCondition,
             },
             'ddm-tutorial': {
                 uid: 'irrelevant-uid', url: null, el,
@@ -1995,15 +2004,23 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         {
             return resObj;
         }
-
-
-        if (['popover', 'tooltip-card'].some(v => v == key))
+        else if (key == 'tooltip-card')
+        {
+            // const info = await RAP.getBlockInfoByUID(uidResults[key].uid);
+            // const string = info[0][0].string || 'F';
+            // const TooltipContent = [...string.matchAll(/{{=:(.+?)\|(.+)}}/gm)][resObj.preUrlIndex][2];
+            debugger;
+            updateUrlIndexInsideAlias();
+            //objRes.url = TooltipContent.match(YTGIF_Config.targetStringRgx)?.[0];
+            resObj.url = extractFromMap_AtIndex(await getUrlMapWithToltip_smart(uidResults[key].uid), resObj.accUrlIndex);
+            resObj.accUrlIndex += resObj.preUrlIndex;
+            return resObj;
+        }
+        else if (key == 'popover')
         {
             // needs it's own UID                                   // is it's parent's
             resObj.uid = extractFromMap_AtIndex(await getUrlMap_smart(uidResults[key].uid), resObj.preUrlIndex);
-            uidResults['base-block'].grandParentBlock = () => grandParentPopOver(uidResults[key].from); // once there (abstract enough to borrow functionalities)
-            resObj.accUrlIndex += resObj.preUrlIndex;
-            resObj.preUrlIndex = uidResults['base-block'].getUrlIndex(); // it also needs it's own urlIndex
+            updateUrlIndexInsideAlias();
         }
 
 
@@ -2014,9 +2031,20 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         return resObj;
 
 
+        function updateUrlIndexInsideAlias()
+        {
+            uidResults['base-block'].grandParentBlock = () => PopOverParent(uidResults[key].from); // once there (abstract enough to borrow functionalities)
+            resObj.accUrlIndex += resObj.preUrlIndex;
+            resObj.preUrlIndex = uidResults['base-block'].getUrlIndex();  // it also needs it's own urlIndex
+        }
+
         async function getUrlMap_smart(uid)
         {
             return await getMap_smart(uid, UIDtoURLInstancesMapMap, getComponentMap, uid, YTGIF_Config);
+        }
+        async function getUrlMapWithToltip_smart(uid)
+        {
+            return await getMap_smart(uid, UIDtoTooltipURLInstancesMapMap, getComponentMap, uid, Object.assign(YTGIF_Config, { renderTooltipCard: true }));
         }
     }
 
@@ -3363,7 +3391,7 @@ async function getComponentMap(tempUID, _Config = {})
     let uidMagazine = [];
     let indentFunc = 0;
     let componentsInOrderMap = new Map();
-    const { targetStringRgx, componentPage } = _Config;
+    const { targetStringRgx, componentPage, renderTooltipCard } = _Config;
 
 
     const orderObj = {
@@ -3467,7 +3495,9 @@ async function getComponentMap(tempUID, _Config = {})
 
 
         const s1 = rawText.replace(/(`.+?`)|(`([\s\S]*?)`)/gm, 'used_to_be_an_inline_code_block');
-        const string = s1.replace(/{{=:(.+?)\|(.+)}}/gm, '$1'); // {{=:_rendered_by_roam_|...}}
+        let string = s1;
+        if (!renderTooltipCard)
+            string = s1.replace(/{{=:(.+?)\|(.+)}}/gm, '$1'); // {{=:_rendered_by_roam_|...}}
         //const string = s2.replace(new RegExp(preRgxComp('embed'), 'gm'), 'used_to_be_an_embed_block');
 
 
