@@ -1944,7 +1944,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         //#endregion
 
         // uidFromGrandParent
-        const preSelector = [[...rm_components.both.classesToObserve].map(x => '.' + x), '.yt-gif-wrapper', aliasSel.inline.is, aliasSel.card.is];
+        const preSelector = [[...rm_components.both.classesToObserve].map(x => '.' + x), '.yt-gif-wrapper', aliasSel.inline.is];
         const targetSelector = preSelector.join();
         const tempUrlObj = {
             urlComponents: function () { return [...this.grandParentBlock().querySelectorAll(this.targetSelector)] },
@@ -1953,13 +1953,13 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
         const uidResults = { /* a class makes the most sense here, but they're so similar, yet so different, and it only happens once at the time I hope... */
-            'base-block': {
+            'is component': {
                 uid: null, url: null, targetSelector, el,
 
                 condition,
                 grandParentBlock,
             },
-            'popover': {
+            'is alias': {
                 uid: null, url: null, targetSelector, el: openAlias(aliasSel.inline.is),
 
 
@@ -1968,17 +1968,17 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 uidCondition: condition,
                 condition: aliasCondition,
             },
-            'tooltip-card': {
+            'is tooltip card': {
                 uid: null, url: null, el: openAlias(aliasSel.card.is),
 
-                targetSelector,//: [...preSelector, aliasSel.card.is].join(),
+                targetSelector: [...preSelector, aliasSel.card.is].join(),
 
                 from: aliasSel.card.from,
                 grandParentBlock: grandParentBlockFromAlias,
                 uidCondition: condition,
                 condition: aliasCondition,
             },
-            'ddm-tutorial': {
+            'is ddm tutorial': {
                 uid: 'irrelevant-uid', url: null, el,
                 targetSelector: ['[data-video-url]'].join(),
 
@@ -2001,17 +2001,18 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         }
 
 
-        if (key == 'ddm-tutorial')
+        if (key == 'is ddm tutorial')
         {
             return resObj;
         }
-        else if (key == 'tooltip-card')
+        else if (key == 'is tooltip card')
         {
             // it's a block in it's own right
-            resObj.nestedComponentMap = extractFromMap_AtIndex(await getUrlMap_smart(uidResults[key].uid), resObj.preUrlIndex);
+            const tooltipMap = await getUrlMap_smart(uidResults[key].uid);
+            resObj.nestedComponentMap = extractFromMap_AtIndex_Key(tooltipMap, resObj.preUrlIndex, 'is tooltip card');
             updateUrlIndexInsideAlias();
         }
-        else if (key == 'popover')
+        else if (key == 'is alias')
         {
             // needs it's own UID                                   // is it's parent's
             resObj.uid = extractFromMap_AtIndex(await getUrlMap_smart(uidResults[key].uid), resObj.preUrlIndex);
@@ -2024,7 +2025,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         }
 
 
-        resObj.url = extractFromMap_AtIndex(resObj.nestedComponentMap, resObj.preUrlIndex);
+        resObj.url = extractFromMap_AtIndex_Key(resObj.nestedComponentMap, resObj.preUrlIndex, 'is component');
         resObj.accUrlIndex += resObj.preUrlIndex;
         try
         {
@@ -2040,9 +2041,9 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
         function updateUrlIndexInsideAlias()
         {
-            uidResults['base-block'].grandParentBlock = () => PopOverParent(uidResults[key].from); // once there (abstract enough to borrow functionalities)
+            uidResults['is component'].grandParentBlock = () => PopOverParent(uidResults[key].from); // once there (abstract enough to borrow functionalities)
             resObj.accUrlIndex += resObj.preUrlIndex;
-            resObj.preUrlIndex = uidResults['base-block'].getUrlIndex();  // it also needs it's own urlIndex
+            resObj.preUrlIndex = uidResults['is component'].getUrlIndex();  // it also needs it's own urlIndex
         }
 
         async function getUrlMap_smart(uid)
@@ -3371,6 +3372,14 @@ function extractFromMap_AtIndex(map, valueAtIndex)
     // if (!val) console.log(`val is null`); //debugger;
     return val;
 }
+function extractFromMap_AtIndex_Key(map, valueAtIndex, property)
+{
+    if (!map) return null;
+    const key = [...map.keys()].filter(o => o['isKey'] == property)[valueAtIndex];
+    const val = map.get(key);
+    // if (!val) console.log(`val is null`); //debugger;
+    return val;
+}
 function extractFromKeyMap_AtIndex(mpa, valueAtIndex, mapIndex)
 {
     if (!mpa) return null;
@@ -3439,8 +3448,10 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
             {
                 const tooltipObj = stringsWihtUidsObj(value);
                 tooltipObj.uid = objRes.uid + '_t' + (results['is tooltip card'].order < 0 ? 0 : results['is tooltip card'].order);
+                const tooltipKey = generateUniqueKey();
+                map.set(tooltipKey, {});
                 const tooltipMap = await TryToFindTargetStrings_Rec(tooltipObj, objRes, new Map());
-                map.set(generateUniqueKey(), tooltipMap);
+                map.set(tooltipKey, tooltipMap);
             }
             if (is == 'is block reference' && !isSelfRecursive) // it is rendered, so execute it's rec func
             {
@@ -3455,18 +3466,15 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
 
         function assertUniqueKey_while(uid, indent, isKey)
         {
-            const keyIsToolip = results['is tooltip card'].incrementIf(isKey === 'is tooltip card');
-            const keyIsAlias = results['is alias'].incrementIf(isKey === 'is alias');
-            const keyIsComponent = results['is component'].incrementIf(isKey === 'is component');
-            const keyIsBlockRef = results['is block reference'].incrementIf(isKey === 'is block reference');
-
-            const baseIs = [keyIsBlockRef, keyIsComponent, keyIsAlias, keyIsToolip];
-            const baseKey = [indent, uid, isKey];
-            const preKey = [...baseKey, ...baseIs];
-
             uidMagazine = PushIfNewEntry(uidMagazine, uid); // clunky, but it works
-            const similarCount = uidMagazine.filter(x => x === uid).length;
-            return [similarCount, ...preKey].join('  '); // uniqueKey among non siblings
+            const similarCount = uidMagazine.filter(x => x === uid).length; // uniqueKey among non siblings
+            return {
+                indent, uid, isKey, similarCount,
+                keyIsToolip: results['is tooltip card'].incrementIf(isKey === 'is tooltip card'),
+                keyIsAlias: results['is alias'].incrementIf(isKey === 'is alias'),
+                keyIsComponent: results['is component'].incrementIf(isKey === 'is component'),
+                keyIsBlockRef: results['is block reference'].incrementIf(isKey === 'is block reference'),
+            }
         }
         function cleanIndentedBlock()
         {
