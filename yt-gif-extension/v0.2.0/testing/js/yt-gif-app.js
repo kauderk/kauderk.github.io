@@ -1944,7 +1944,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         //#endregion
 
         // uidFromGrandParent
-        const preSelector = [[...rm_components.both.classesToObserve].map(x => '.' + x), '.yt-gif-wrapper', aliasSel.inline.is];
+        const preSelector = [[...rm_components.both.classesToObserve].map(x => '.' + x), '.yt-gif-wrapper'];
         const targetSelector = preSelector.join();
         const tempUrlObj = {
             urlComponents: function () { return [...this.grandParentBlock().querySelectorAll(this.targetSelector)] },
@@ -1962,6 +1962,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             'is alias': {
                 uid: null, url: null, targetSelector, el: openAlias(aliasSel.inline.is),
 
+                targetSelector: [aliasSel.inline.is].join(),
 
                 from: aliasSel.inline.from,
                 grandParentBlock: grandParentBlockFromAlias,
@@ -1971,7 +1972,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             'is tooltip card': {
                 uid: null, url: null, el: openAlias(aliasSel.card.is),
 
-                targetSelector: [...preSelector, aliasSel.card.is].join(),
+                targetSelector: [aliasSel.card.is].join(),
 
                 from: aliasSel.card.from,
                 grandParentBlock: grandParentBlockFromAlias,
@@ -2008,15 +2009,24 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         else if (key == 'is tooltip card')
         {
             // it's a block in it's own right
-            const tooltipMap = await getUrlMap_smart(uidResults[key].uid);
-            resObj.nestedComponentMap = extractFromMap_AtIndex_Key(tooltipMap, resObj.preUrlIndex, 'is tooltip card');
+            const tempMap = await resultUidMap();
+            resObj.nestedComponentMap = extractFromMap_AtIndex_Key(tempMap, resObj.preUrlIndex, key);
+            if (!resObj?.nestedComponentMap || !resObj?.nestedComponentMap.size == 0)
+            {
+                debugger;
+                resObj.nestedComponentMap = [...tempMap.values()][resObj.preUrlIndex];
+            }
             updateUrlIndexInsideAlias();
         }
         else if (key == 'is alias')
         {
             // needs it's own UID                                   // is it's parent's
-            resObj.uid = extractFromMap_AtIndex(await getUrlMap_smart(uidResults[key].uid), resObj.preUrlIndex);
+            // resObj.uid = extractFromMap_AtIndex(await getUrlMap_smart(uidResults[key].uid), resObj.preUrlIndex);
+            // resObj.nestedComponentMap = await getUrlMap_smart(resObj.uid);
+            const tempMap = await resultUidMap();
+            resObj.uid = extractFromMap_AtIndex_Key(tempMap, resObj.preUrlIndex, key);
             resObj.nestedComponentMap = await getUrlMap_smart(resObj.uid);
+
             updateUrlIndexInsideAlias();
         }
         else
@@ -2038,6 +2048,11 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         }
         return resObj;
 
+
+        async function resultUidMap()
+        {
+            return await getUrlMap_smart(uidResults[key].uid);
+        }
 
         function updateUrlIndexInsideAlias()
         {
@@ -3450,7 +3465,7 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
                 tooltipObj.uid = objRes.uid + '_t' + (results['is tooltip card'].order < 0 ? 0 : results['is tooltip card'].order);
                 const tooltipKey = generateUniqueKey();
                 map.set(tooltipKey, {});
-                const tooltipMap = await TryToFindTargetStrings_Rec(tooltipObj, objRes, new Map());
+                const tooltipMap = await TryToFindTargetStrings_Rec(tooltipObj, parentObj, new Map());
                 map.set(tooltipKey, tooltipMap);
             }
             if (is == 'is block reference' && !isSelfRecursive) // it is rendered, so execute it's rec func
