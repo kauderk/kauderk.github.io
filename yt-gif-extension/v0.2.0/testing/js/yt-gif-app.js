@@ -2006,13 +2006,9 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         }
         else if (key == 'tooltip-card')
         {
-            // const info = await RAP.getBlockInfoByUID(uidResults[key].uid);
-            // const string = info[0][0].string || 'F';
-            // const TooltipContent = [...string.matchAll(/{{=:(.+?)\|(.+)}}/gm)][resObj.preUrlIndex][2];
-            debugger;
+            const tooltipMap = extractFromMap_AtIndex(await getUrlMapWithToltip_smart(uidResults[key].uid), resObj.accUrlIndex);
             updateUrlIndexInsideAlias();
-            //objRes.url = TooltipContent.match(YTGIF_Config.targetStringRgx)?.[0];
-            resObj.url = extractFromMap_AtIndex(await getUrlMapWithToltip_smart(uidResults[key].uid), resObj.accUrlIndex);
+            resObj.url = extractFromMap_AtIndex(tooltipMap, resObj.preUrlIndex);
             resObj.accUrlIndex += resObj.preUrlIndex;
             return resObj;
         }
@@ -3390,7 +3386,8 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
 {
     let uidMagazine = [];
     let indentFunc = 0;
-    let componentsInOrderMap = new Map();
+    let useTooltipMap = false;
+    //let componentsInOrderMap = new Map();
     const { targetStringRgx, componentPage } = _Config;
 
 
@@ -3412,57 +3409,45 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
     Object.keys(results).forEach(key => Object.assign(results[key], orderObj));
 
 
-    const FirstObj = await TryToFindTargetStrings_Rec(tempUID);
+    const componentsInOrderMap = await TryToFindTargetStrings_Rec(await TryToFindTargetString(tempUID), {}, new Map());
     console.log(componentsInOrderMap);
     return componentsInOrderMap;
 
 
 
-    async function TryToFindTargetStrings_Rec(uid, parentObj)
+    async function TryToFindTargetStrings_Rec(objRes, parentObj, map)
     {
-        const objRes = await TryToFindTargetString(uid);
-
-        // loop through RENDERED targetStrings (components) and uids (references)
-        await loopingThroughObjRes(objRes);
-
-        return { uid, objRes, parentObj };
-
-
-        async function loopingThroughObjRes(objRes)
+        for (const { value, is } of objRes.targetStringsWithUids) // loop through RENDERED targetStrings (components) and uids (references)
         {
-            for (const { value, is } of objRes.targetStringsWithUids)
-            {
-                const isSelfRecursive = parentObj?.blockReferencesAlone?.includes(value);
-                const comesFromTooltip = !!objRes.tooltipKey;
+            const isSelfRecursive = parentObj?.blockReferencesAlone?.includes(value);
+            const generateUniqueKey = () => assertUniqueKey_while(objRes.uid, indentFunc, is);
 
-                if (['is alias', 'is component'].some(w => w === is))
-                {
-                    if (comesFromTooltip)
-                    {
-                        componentsInOrderMap.get(objRes.tooltipKey)?.push(value);
-                    }
-                    else
-                    {
-                        componentsInOrderMap.set(assertUniqueKey_while(uid, indentFunc, is), value);
-                    }
-                }
-                if ('is tooltip card' === is)
-                {
-                    const tooltipObjRes = stringsWihtUidsObj(value);
-                    const tooltipKey = assertUniqueKey_while(uid, indentFunc, is);
-                    tooltipObjRes.tooltipKey = tooltipKey;
-                    componentsInOrderMap.set(tooltipKey, []);
-                    await loopingThroughObjRes(tooltipObjRes)
-                }
-                if (is == 'is block reference' && !isSelfRecursive) // it is rendered, so execute it's rec func
-                {
-                    indentFunc += 1;
-                    objRes.isKey = is;
-                    const awaitingObj = await TryToFindTargetStrings_Rec(value, objRes);
-                    indentFunc -= 1;
-                }
+            if (['is alias', 'is component'].some(w => w === is))
+            {
+                map.set(generateUniqueKey(), value);
+            }
+            if ('is tooltip card' === is)
+            {
+                useTooltipMap = true;
+                const tooltipObj = stringsWihtUidsObj(value);
+                tooltipObj.uid = objRes.uid + '_t' + (results['is tooltip card'].order < 0 ? 0 : results['is tooltip card'].order);
+                const tooltipKey = generateUniqueKey();
+                map.set(tooltipKey, {});
+                const tooltipMap = await TryToFindTargetStrings_Rec(tooltipObj, objRes, new Map());
+                map.set(tooltipKey, tooltipMap);
+                useTooltipMap = false;
+            }
+            if (is == 'is block reference' && !isSelfRecursive) // it is rendered, so execute it's rec func
+            {
+                indentFunc += 1;
+                objRes.isKey = is;
+                map = await TryToFindTargetStrings_Rec(await TryToFindTargetString(value), objRes, map);
+                indentFunc -= 1;
             }
         }
+
+        return map;
+
         function assertUniqueKey_while(uid, indent, isKey)
         {
             const keyIsToolip = results['is tooltip card'].incrementIf(isKey === 'is tooltip card');
@@ -3499,7 +3484,9 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
     {
         const info = await RAP.getBlockInfoByUID(desiredUID);
         const rawText = info[0][0]?.string || "F";
-        return stringsWihtUidsObj(rawText);
+        const resObj = stringsWihtUidsObj(rawText);
+        resObj.uid = desiredUID;
+        return resObj;
     }
 
     function stringsWihtUidsObj(rawText)
