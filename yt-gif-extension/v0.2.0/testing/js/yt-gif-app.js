@@ -1944,7 +1944,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         //#endregion
 
         // uidFromGrandParent
-        const preSelector = [[...rm_components.both.classesToObserve].map(x => '.' + x), '.yt-gif-wrapper', aliasSel.inline.is];
+        const preSelector = [[...rm_components.both.classesToObserve].map(x => '.' + x), '.yt-gif-wrapper', aliasSel.inline.is, aliasSel.card.is];
         const targetSelector = preSelector.join();
         const tempUrlObj = {
             urlComponents: function () { return [...this.grandParentBlock().querySelectorAll(this.targetSelector)] },
@@ -1957,7 +1957,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 uid: null, url: null, targetSelector, el,
 
                 condition,
-                grandParentBlock,//: function () { return closestBlock(this.el) },
+                grandParentBlock,
             },
             'popover': {
                 uid: null, url: null, targetSelector, el: openAlias(aliasSel.inline.is),
@@ -1971,7 +1971,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             'tooltip-card': {
                 uid: null, url: null, el: openAlias(aliasSel.card.is),
 
-                targetSelector: [...preSelector, aliasSel.card.is].join(),
+                targetSelector,//: [...preSelector, aliasSel.card.is].join(),
 
                 from: aliasSel.card.from,
                 grandParentBlock: grandParentBlockFromAlias,
@@ -1997,6 +1997,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             accUrlIndex: 0,
             url: uidResults[key].url,
             grandParentBlock: uidResults[key].grandParentBlock(),
+            nestedComponentMap: new Map()
         }
 
 
@@ -2006,24 +2007,34 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         }
         else if (key == 'tooltip-card')
         {
-            const tooltipMap = extractFromMap_AtIndex(await getUrlMapWithToltip_smart(uidResults[key].uid), resObj.accUrlIndex);
+            // it's a block in it's own right
+            resObj.nestedComponentMap = extractFromMap_AtIndex(await getUrlMap_smart(uidResults[key].uid), resObj.preUrlIndex);
             updateUrlIndexInsideAlias();
-            resObj.url = extractFromMap_AtIndex(tooltipMap, resObj.preUrlIndex);
-            resObj.accUrlIndex += resObj.preUrlIndex;
-            return resObj;
         }
         else if (key == 'popover')
         {
             // needs it's own UID                                   // is it's parent's
             resObj.uid = extractFromMap_AtIndex(await getUrlMap_smart(uidResults[key].uid), resObj.preUrlIndex);
+            resObj.nestedComponentMap = await getUrlMap_smart(resObj.uid);
             updateUrlIndexInsideAlias();
+        }
+        else
+        {
+            resObj.nestedComponentMap = await getUrlMap_smart(resObj.uid);
         }
 
 
-        resObj.url = extractFromMap_AtIndex(await getUrlMap_smart(resObj.uid), resObj.preUrlIndex);
+        resObj.url = extractFromMap_AtIndex(resObj.nestedComponentMap, resObj.preUrlIndex);
         resObj.accUrlIndex += resObj.preUrlIndex;
-        if (!resObj?.url?.includes('http'))
-            resObj.url = null;
+        try
+        {
+            if (!resObj?.url?.includes('http'))
+                resObj.url = null;
+        } catch (error)
+        {
+            console.log(error);
+            debugger;
+        }
         return resObj;
 
 
