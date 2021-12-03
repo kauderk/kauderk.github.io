@@ -3397,8 +3397,6 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
 {
     let uidMagazine = [];
     let indentFunc = 0;
-    let useTooltipMap = false;
-    //let componentsInOrderMap = new Map();
     const { targetStringRgx, componentPage } = _Config;
 
 
@@ -3439,14 +3437,10 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
             }
             if ('is tooltip card' === is)
             {
-                useTooltipMap = true;
                 const tooltipObj = stringsWihtUidsObj(value);
                 tooltipObj.uid = objRes.uid + '_t' + (results['is tooltip card'].order < 0 ? 0 : results['is tooltip card'].order);
-                const tooltipKey = generateUniqueKey();
-                map.set(tooltipKey, {});
                 const tooltipMap = await TryToFindTargetStrings_Rec(tooltipObj, objRes, new Map());
-                map.set(tooltipKey, tooltipMap);
-                useTooltipMap = false;
+                map.set(generateUniqueKey(), tooltipMap);
             }
             if (is == 'is block reference' && !isSelfRecursive) // it is rendered, so execute it's rec func
             {
@@ -3502,6 +3496,7 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
 
     function stringsWihtUidsObj(rawText)
     {
+        if (!rawText) debugger;
         const string = rawText.replace(/(`.+?`)|(`([\s\S]*?)`)/gm, 'used_to_be_an_inline_code_block');
 
         const { blockRgx, aliasPlusUidsRgx, tooltipCardRgx } = BlockRegexObj(componentPage);
@@ -3509,40 +3504,58 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
 
         let blockReferencesAlone = [];
         let tooltipReferencesAlone = [];
-        const targetStringsWithUids = [...[...string.matchAll(new RegExp(blockRgx, 'gm'))].map(x => x = x[0])]
-            .map(y =>
-            {
-                let is = 'is block reference', inOrderValue = y;
+        const compactObjs = getRenderedStuff(string);
+        const targetStringsWithUids = compactObjs.flat(Infinity);
 
-                if (y.match(tooltipCardRgx)?.[0]) // {{=:_rendered_by_roam_| -> string XXxxxx ... <- }}
-                {
-                    is = 'is tooltip card';
-                    inOrderValue = [...y.matchAll(tooltipCardRgx)][0][2];
-                }
-                else if (y.match(aliasPlusUidsRgx)?.[0]) // [xxxanything goesxxx]((( -> xxxuidxxx <- )))
-                {
-                    is = 'is alias';
-                    inOrderValue = [...y.matchAll(aliasPlusUidsRgx)][0][2];
-                    tooltipReferencesAlone = UTILS.pushSame(tooltipReferencesAlone, inOrderValue);
-                }
-                else if (y.match(targetStringRgx)?.[0]) // {{componentPage: -> first target <- xxxxxx xxx... }}
-                {
-                    is = 'is component';
-                    inOrderValue = y.match(targetStringRgx)?.[0];
-                }
-                else // xxxuidxxx
-                {
-                    blockReferencesAlone = UTILS.pushSame(blockReferencesAlone, y);
-                }
-
-                return {
-                    value: inOrderValue,
-                    is,
-                };
-            });
 
 
         return { targetStringsWithUids, blockReferencesAlone };
+
+        function getRenderedStuff(string)
+        {
+            const blockMatches = [...[...string.matchAll(new RegExp(blockRgx, 'gm'))].map(x => x = x[0])];
+            return blockMatches.map(val => isValueObj(val));
+        }
+
+        function isValueObj(val)
+        {
+            let is = 'is block reference', inOrderValue = val;
+
+            if (val.match(tooltipCardRgx)?.[0]) // {{=:_rendered_by_roam_| -> string XXxxxx ... <- }}
+            {
+                is = 'is tooltip card';
+                inOrderValue = [...val.matchAll(tooltipCardRgx)][0][2];
+
+                const blockLikeString = [...val.matchAll(tooltipCardRgx)][0][1];
+                return [
+                    ...getRenderedStuff(blockLikeString),
+                    {
+                        value: inOrderValue,
+                        is
+                    },
+                ]
+            }
+            else if (val.match(aliasPlusUidsRgx)?.[0]) // [xxxanything goesxxx]((( -> xxxuidxxx <- )))
+            {
+                is = 'is alias';
+                inOrderValue = [...val.matchAll(aliasPlusUidsRgx)][0][2];
+                tooltipReferencesAlone = UTILS.pushSame(tooltipReferencesAlone, inOrderValue);
+            }
+            else if (val.match(targetStringRgx)?.[0]) // {{componentPage: -> first target <- xxxxxx xxx... }}
+            {
+                is = 'is component';
+                inOrderValue = val.match(targetStringRgx)?.[0];
+            }
+            else // xxxuidxxx
+            {
+                blockReferencesAlone = UTILS.pushSame(blockReferencesAlone, val);
+            }
+
+            return {
+                value: inOrderValue,
+                is,
+            };
+        }
     }
 
     function BlockRegexObj(componentPage)
