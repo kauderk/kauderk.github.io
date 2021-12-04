@@ -1269,8 +1269,14 @@ async function Ready()
 
         let emulationArr = [];
         const succesfulEmulationMap = new Map();
-        const componenSel = `.${timestampObj.end.targetClass}, .${timestampObj.start.targetClass}`;
-        const ownComponetSel = `:is(${componenSel}):not(.rm-embed-container :is(${componenSel}))`;
+        const componenSel = `.${timestampObj.end.targetClass}, .${timestampObj.start.targetClass}, .rm-video-timestamp.dont-focus-block`;
+        const ownComponetSel = (block) =>
+        {
+            if (block.querySelector('.rm-embed-container'))
+                return `:is(${componenSel})`;
+            else
+                return `:is(${componenSel}) :not(.rm-embed-container :is(${componenSel}))`
+        }
 
 
         const renderedComponents = found.filter(node1 => document.body.contains(node1)).filter(node2 => isNotZoomPath(node2));
@@ -1283,11 +1289,13 @@ async function Ready()
 
 
             // you are iterating through renderedComponents (mutation records), so you need to get the original siblings of each block
-            siblingsArr = await getMap_smart(block, previousSiblingsMap, () => [...block.querySelectorAll(ownComponetSel)]);
+            siblingsArr = await getMap_smart(block, previousSiblingsMap, () => [...block.querySelectorAll(ownComponetSel(block))]);
             await update_startEndComponentMap();
 
             if (!startEndComponentMap || ((startEndComponentMap.size !== siblingsArr.length) && !MapAtIndex_Value(startEndComponentMap, siblingsArr.indexOf(node), 'is component')))
             {
+                if (siblingsArr.length == 0) { debugger; continue; }
+                console.count('emulation            ...             ...');
                 await RAP.sleep(800); // YIKES!
                 componentMapMap.set(block.id, await getComponentMap(tempUID, StartEnd_Config));
                 await update_startEndComponentMap();
@@ -3464,7 +3472,6 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
                 if (tempUID == value || parentObj?.uidHierarchy?.some(u => u == value)) 
                 {
                     console.count(`STOP ------------------------------------------------------------------ ${value}`);
-                    debugger;
                     continue;
                 }
                 console.count(value);
