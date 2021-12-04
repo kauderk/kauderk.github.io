@@ -3451,9 +3451,8 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
     {
         for (const { value, is } of objRes.targetStringsWithUids) // loop through RENDERED targetStrings (components) and uids (references)
         {
-            const isSelfRecursive = parentObj?.blockReferencesAlone?.includes(value)
-            const was = parentObj?.uidHierarchy?.includes(value);
-            const wassss = objRes?.uidHierarchy?.includes(value);
+            const isSelfRecursive = parentObj?.blockReferencesAlone?.includes(value) && value == tempUID;
+            const comesFromRecursiveParent = parentObj?.uidHierarchy?.includes(value);
             const generateUniqueKey = () => assertUniqueKey_while(objRes.uid, indentFunc, is);
 
             if (['is alias', 'is component'].some(w => w === is))
@@ -3471,18 +3470,8 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
             }
             if (is == 'is block reference' && !isSelfRecursive) // it is rendered, so execute it's rec func
             {
-                if (indentFunc > 1)
-                    if (
-                        was
-                        || (tempUID == value)
-                        || wassss
-                        || (parentObj.uid == value)
-                        || (objRes.uid == value)
-                        || objRes?.blockReferencesAlone?.includes(value)
-                    )
-                    {
-                        continue;
-                    }
+                if (comesFromRecursiveParent || indentFunc > 1)
+                    continue;
                 console.count(value);
                 indentFunc += 1;
                 objRes.isKey = is;
@@ -3618,7 +3607,7 @@ function preRgxComp(rgxPage) { return `{{(\\[\\[)?(${rgxPage})(?!\\/)(?!\\/)(?:(
 function clean_rm_string(rawText)
 {
     const s1 = rawText.replace(/(`.+?`)|(`([\s\S]*?)`)/gm, 'used_to_be_an_inline_code_block');
-    return s1//.replace(new RegExp(preRgxComp('embed'), 'gm'), 'used_to_be_an_embed_block');
+    return s1.replace(new RegExp(preRgxComp('embed'), 'gm'), 'used_to_be_an_embed_block');
 }
 //#endregion
 
