@@ -1272,10 +1272,10 @@ async function Ready()
         const componenSel = `.${timestampObj.end.targetClass}, .${timestampObj.start.targetClass}, .rm-video-timestamp.dont-focus-block`;
         const ownComponetSel = (block) =>
         {
-            if (block.querySelector('.rm-embed-container'))
-                return `:is(${componenSel})`;
-            else
-                return `:is(${componenSel}) :not(.rm-embed-container :is(${componenSel}))`
+            // if (block.querySelector('.rm-embed-container'))
+            //     return `:is(${componenSel}):not(.rm-embed-container :is(${componenSel}))`
+            // else
+            return `:is(${componenSel})`;
         }
 
 
@@ -1289,7 +1289,7 @@ async function Ready()
 
 
             // you are iterating through renderedComponents (mutation records), so you need to get the original siblings of each block
-            siblingsArr = await getMap_smart(block, previousSiblingsMap, () => [...block.querySelectorAll(ownComponetSel(block))]);
+            siblingsArr = [...block.querySelectorAll(ownComponetSel(block))] || [];
             await update_startEndComponentMap();
 
             if (!startEndComponentMap || ((startEndComponentMap.size !== siblingsArr.length) && !MapAtIndex_Value(startEndComponentMap, siblingsArr.indexOf(node), 'is component')))
