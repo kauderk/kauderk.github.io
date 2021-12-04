@@ -1938,7 +1938,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             }
         }
         const openAlias = function (isSel) { return document.querySelector(`.bp3-popover-open > ${isSel}`) };
-        const PopOverParent = function (fromSel) { return document.querySelector(`div.bp3-popover-content > ${fromSel}`) };
+        const PopOverParent = function (fromSel) { return el.closest(`div.bp3-popover-content > ${fromSel}`) };
         const aliasCondition = function () { return PopOverParent(this.from) && this.uidCondition() };
         const grandParentBlockFromAlias = function () { return closestBlock(this.el.closest('.bp3-popover-open')) };
         //#endregion
@@ -1959,22 +1959,22 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 condition,
                 grandParentBlock,
             },
-            'is alias': {
-                uid: null, url: null, targetSelector, el: openAlias(aliasSel.inline.is),
-
-                targetSelector: [aliasSel.inline.is].join(),
-
-                from: aliasSel.inline.from,
-                grandParentBlock: grandParentBlockFromAlias,
-                uidCondition: condition,
-                condition: aliasCondition,
-            },
             'is tooltip card': {
                 uid: null, url: null, el: openAlias(aliasSel.card.is),
 
                 targetSelector: [aliasSel.card.is].join(),
 
                 from: aliasSel.card.from,
+                grandParentBlock: grandParentBlockFromAlias,
+                uidCondition: condition,
+                condition: aliasCondition,
+            },
+            'is alias': {
+                uid: null, url: null, targetSelector, el: openAlias(aliasSel.inline.is),
+
+                targetSelector: [aliasSel.inline.is].join(),
+
+                from: aliasSel.inline.from,
                 grandParentBlock: grandParentBlockFromAlias,
                 uidCondition: condition,
                 condition: aliasCondition,
@@ -2011,7 +2011,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             // it's a block in it's own right
             const tempMap = await resultUidMap();
             resObj.nestedComponentMap = extractFromMap_AtIndex_Key(tempMap, resObj.preUrlIndex, key);
-            if (!resObj?.nestedComponentMap || !resObj?.nestedComponentMap.size == 0)
+            if (!resObj?.nestedComponentMap || resObj?.nestedComponentMap.size == 0)
             {
                 debugger;
                 resObj.nestedComponentMap = [...tempMap.values()][resObj.preUrlIndex];
@@ -2020,6 +2020,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         }
         else if (key == 'is alias')
         {
+            // needs it's own UID                                   // is it's parent's
             // needs it's own UID                                   // is it's parent's
             // resObj.uid = extractFromMap_AtIndex(await getUrlMap_smart(uidResults[key].uid), resObj.preUrlIndex);
             // resObj.nestedComponentMap = await getUrlMap_smart(resObj.uid);
@@ -2058,6 +2059,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         {
             uidResults['is component'].grandParentBlock = () => PopOverParent(uidResults[key].from); // once there (abstract enough to borrow functionalities)
             resObj.accUrlIndex += resObj.preUrlIndex;
+            //uidResults['is component'].targetSelector = uidResults[key].targetSelector;
             resObj.preUrlIndex = uidResults['is component'].getUrlIndex();  // it also needs it's own urlIndex
         }
 
