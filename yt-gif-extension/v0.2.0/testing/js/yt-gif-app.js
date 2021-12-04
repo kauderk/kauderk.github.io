@@ -1269,7 +1269,8 @@ async function Ready()
 
         let emulationArr = [];
         const succesfulEmulationMap = new Map();
-
+        const componenSel = `.${timestampObj.end.targetClass}, .${timestampObj.start.targetClass}`;
+        const ownComponetSel = `:is(${componenSel}):not(.rm-embed-container :is(${componenSel}))`;
 
 
         const renderedComponents = found.filter(node1 => document.body.contains(node1)).filter(node2 => isNotZoomPath(node2));
@@ -1282,10 +1283,10 @@ async function Ready()
 
 
             // you are iterating through renderedComponents (mutation records), so you need to get the original siblings of each block
-            siblingsArr = await getMap_smart(block, previousSiblingsMap, () => [...block.querySelectorAll([timestampObj.end.targetClass, timestampObj.start.targetClass].map(x => '.' + x).join(', '))]);
+            siblingsArr = await getMap_smart(block, previousSiblingsMap, () => [...block.querySelectorAll(ownComponetSel)]);
             await update_startEndComponentMap();
 
-            if (!startEndComponentMap || startEndComponentMap.size !== siblingsArr.length && !MapAtIndex_Value(startEndComponentMap, siblingsArr.indexOf(node), 'is component'))
+            if (!startEndComponentMap || ((startEndComponentMap.size !== siblingsArr.length) && !MapAtIndex_Value(startEndComponentMap, siblingsArr.indexOf(node), 'is component')))
             {
                 await RAP.sleep(800); // YIKES!
                 componentMapMap.set(block.id, await getComponentMap(tempUID, StartEnd_Config));
@@ -3458,8 +3459,15 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
                 const tooltipMap = await TryToFindTargetStrings_Rec(tooltipObj, parentObj, new Map());
                 map.set(tooltipKey, tooltipMap);
             }
-            if (is == 'is block reference' && (indentFunc == 1 || !isSelfRecursive)) // it is rendered, so execute it's rec func
+            if (is == 'is block reference' && !isSelfRecursive) // it is rendered, so execute it's rec func
             {
+                if (tempUID == value || parentObj?.uidHierarchy?.some(u => u == value)) 
+                {
+                    console.count(`STOP ------------------------------------------------------------------ ${value}`);
+                    debugger;
+                    continue;
+                }
+                console.count(value);
                 indentFunc += 1;
                 objRes.isKey = is;
                 map = await TryToFindTargetStrings_Rec(await TryToFindTargetString(value), objRes, map);
@@ -3497,12 +3505,21 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
         }
     }
 
+    async function ParentHierarchyUID(tempUID)
+    {
+        const ParentHierarchy = await RAP.getBlockParentUids(tempUID);
+        const uids = ParentHierarchy.map(arr => arr[0]).map(o => o.uid).reverse();
+        return uids;
+    }
+
     async function TryToFindTargetString(desiredUID)
     {
         const info = await RAP.getBlockInfoByUID(desiredUID);
         const rawText = info[0][0]?.string || "F";
         const resObj = stringsWihtUidsObj(rawText);
         resObj.uid = desiredUID;
+        resObj.uidHierarchy = resObj?.uidHierarchy ? resObj.uidHierarchy : [];
+        resObj.uidHierarchy = [...resObj.uidHierarchy, desiredUID];
         return resObj;
     }
 
@@ -3551,7 +3568,7 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
             }
             else // xxxuidxxx
             {
-                if (inOrderValue.length != 9) // yep ... be careful
+                if (inOrderValue.length != 9)
                 {
                     is = 'is component';
                     inOrderValue = '';
