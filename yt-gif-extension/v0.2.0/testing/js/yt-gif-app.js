@@ -122,7 +122,6 @@ const YTGIF_Config = {
     targetStringRgx: /(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(.*?(?=\s|\}|\]|\)))/,
 }
 const UIDtoURLInstancesMapMap = new Map(); // since it store recursive maps, once per instance it's enough
-const UIDtoTooltipURLInstancesMapMap = new Map(); // since it store recursive maps, once per instance it's enough
 /*-----------------------------------*/
 const urlFolder = (f) => `https://kauderk.github.io/yt-gif-extension/resources/${f}`;
 const self_urlFolder = (f) => `https://kauderk.github.io/yt-gif-extension/v0.2.0/testing/${f}`;
@@ -2008,26 +2007,29 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         }
         else if (key == 'is tooltip card')
         {
-            // it's a block in it's own right
-            const tempMap = await resultUidMap();
+            // it is a block in it's own right
+            const tempMap = await getUrlMap_smart(uidResults[key].uid);
+
             resObj.nestedComponentMap = extractFromMap_AtIndex_Key(tempMap, resObj.preUrlIndex, key);
+            // https://roamresearch.slack.com/archives/CTAE9JC2K/p1638578496037700
             if (!resObj?.nestedComponentMap || resObj?.nestedComponentMap.size == 0)
             {
                 debugger;
                 resObj.nestedComponentMap = [...tempMap.values()][resObj.preUrlIndex];
             }
+            if (!resObj?.nestedComponentMap || resObj?.nestedComponentMap.size == 0)
+            {
+                return resObj;
+            }
             updateUrlIndexInsideAlias();
         }
         else if (key == 'is alias')
         {
+            const tempMap = await getUrlMap_smart(uidResults[key].uid);
+
             // needs it's own UID                                   // is it's parent's
-            // needs it's own UID                                   // is it's parent's
-            // resObj.uid = extractFromMap_AtIndex(await getUrlMap_smart(uidResults[key].uid), resObj.preUrlIndex);
-            // resObj.nestedComponentMap = await getUrlMap_smart(resObj.uid);
-            const tempMap = await resultUidMap();
             resObj.uid = extractFromMap_AtIndex_Key(tempMap, resObj.preUrlIndex, key);
             resObj.nestedComponentMap = await getUrlMap_smart(resObj.uid);
-
             updateUrlIndexInsideAlias();
         }
         else
@@ -2044,32 +2046,23 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 resObj.url = null;
         } catch (error)
         {
-            console.log(error);
+            resObj.url = null;
             debugger;
         }
         return resObj;
 
 
-        async function resultUidMap()
-        {
-            return await getUrlMap_smart(uidResults[key].uid);
-        }
 
         function updateUrlIndexInsideAlias()
         {
             uidResults['is component'].grandParentBlock = () => PopOverParent(uidResults[key].from); // once there (abstract enough to borrow functionalities)
             resObj.accUrlIndex += resObj.preUrlIndex;
-            //uidResults['is component'].targetSelector = uidResults[key].targetSelector;
             resObj.preUrlIndex = uidResults['is component'].getUrlIndex();  // it also needs it's own urlIndex
         }
 
         async function getUrlMap_smart(uid)
         {
             return await getMap_smart(uid, UIDtoURLInstancesMapMap, getComponentMap, uid, YTGIF_Config);
-        }
-        async function getUrlMapWithToltip_smart(uid)
-        {
-            return await getMap_smart(uid, UIDtoTooltipURLInstancesMapMap, getComponentMap, uid, Object.assign(YTGIF_Config, { renderTooltipCard: true }));
         }
     }
 
@@ -3425,7 +3418,6 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
     let indentFunc = 0;
     const { targetStringRgx, componentPage } = _Config;
 
-
     const orderObj = {
         order: -1,
         incrementIf: function (condition) { return condition ? Number(++this.order) : 'ﾠ' },
@@ -3443,10 +3435,8 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
     };
     Object.keys(results).forEach(key => Object.assign(results[key], orderObj));
 
-
-    const componentsInOrderMap = await TryToFindTargetStrings_Rec(await TryToFindTargetString(tempUID), {}, new Map());
-    console.log(componentsInOrderMap);
-    return componentsInOrderMap;
+    // componentsInOrderMap
+    return await TryToFindTargetStrings_Rec(await TryToFindTargetString(tempUID), {}, new Map());
 
 
 
@@ -3461,7 +3451,7 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
             {
                 map.set(generateUniqueKey(), value);
             }
-            if ('is tooltip card' === is)
+            if (is === 'is tooltip card')
             {
                 const tooltipObj = stringsWihtUidsObj(value);
                 tooltipObj.uid = objRes.uid + '_t' + (results['is tooltip card'].order < 0 ? 0 : results['is tooltip card'].order);
@@ -3509,7 +3499,6 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
         }
     }
 
-
     async function TryToFindTargetString(desiredUID)
     {
         const info = await RAP.getBlockInfoByUID(desiredUID);
@@ -3523,16 +3512,12 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
     {
         if (!rawText) debugger;
         const string = rawText.replace(/(`.+?`)|(`([\s\S]*?)`)/gm, 'used_to_be_an_inline_code_block');
-
         const { blockRgx, aliasPlusUidsRgx, tooltipCardRgx } = BlockRegexObj(componentPage);
-
 
         let blockReferencesAlone = [];
         let tooltipReferencesAlone = [];
         const compactObjs = getRenderedStuff(string);
         const targetStringsWithUids = compactObjs.flat(Infinity);
-
-
 
         return { targetStringsWithUids, blockReferencesAlone };
 
@@ -3544,6 +3529,7 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
 
         function isValueObj(val)
         {
+            const resObj = () => o = { value: inOrderValue, is }
             let is = 'is block reference', inOrderValue = val;
 
             if (val.match(tooltipCardRgx)?.[0]) // {{=:_rendered_by_roam_| -> string XXxxxx ... <- }}
@@ -3553,11 +3539,8 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
 
                 const blockLikeString = [...val.matchAll(tooltipCardRgx)][0][1];
                 return [
+                    resObj(),
                     ...getRenderedStuff(blockLikeString),
-                    {
-                        value: inOrderValue,
-                        is
-                    },
                 ]
             }
             else if (val.match(aliasPlusUidsRgx)?.[0]) // [xxxanything goesxxx]((( -> xxxuidxxx <- )))
@@ -3576,10 +3559,7 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
                 blockReferencesAlone = UTILS.pushSame(blockReferencesAlone, val);
             }
 
-            return {
-                value: inOrderValue,
-                is,
-            };
+            return resObj()
         }
     }
 
