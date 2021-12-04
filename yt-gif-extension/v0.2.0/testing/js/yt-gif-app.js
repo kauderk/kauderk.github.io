@@ -1269,11 +1269,13 @@ async function Ready()
 
         let emulationArr = [];
         const succesfulEmulationMap = new Map();
-        const componenSel = `.${timestampObj.end.targetClass}, .${timestampObj.start.targetClass}, .rm-video-timestamp.dont-focus-block`;
+        const componenSel = `.${timestampObj.end.targetClass}, .${timestampObj.start.targetClass}, .rm-video-timestamp[${timestampObj.attr.emulation}]`;
         const ownComponetSel = (block) =>
         {
-
-            return `:is(${componenSel})`;
+            if (block.querySelector('.rm-embed-container'))
+                return `:is(${componenSel}):not(.rm-embed-container :is(${componenSel}))`
+            else
+                return `:is(${componenSel})`;
         }
 
 
@@ -3450,7 +3452,8 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
         for (const { value, is } of objRes.targetStringsWithUids) // loop through RENDERED targetStrings (components) and uids (references)
         {
             const isSelfRecursive = parentObj?.blockReferencesAlone?.includes(value)
-            const comesFromRecursiveParents = parentObj?.uidHierarchy?.includes(value);
+            const was = parentObj?.uidHierarchy?.includes(value);
+            const wassss = objRes?.uidHierarchy?.includes(value);
             const generateUniqueKey = () => assertUniqueKey_while(objRes.uid, indentFunc, is);
 
             if (['is alias', 'is component'].some(w => w === is))
@@ -3468,10 +3471,18 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
             }
             if (is == 'is block reference' && !isSelfRecursive) // it is rendered, so execute it's rec func
             {
-                if (comesFromRecursiveParents && indentFunc > 1)
-                {
-                    continue;
-                }
+                if (indentFunc > 1)
+                    if (
+                        was
+                        || (tempUID == value)
+                        || wassss
+                        || (parentObj.uid == value)
+                        || (objRes.uid == value)
+                        || objRes?.blockReferencesAlone?.includes(value)
+                    )
+                    {
+                        continue;
+                    }
                 console.count(value);
                 indentFunc += 1;
                 objRes.isKey = is;
