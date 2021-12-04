@@ -1285,7 +1285,7 @@ async function Ready()
             siblingsArr = await getMap_smart(block, previousSiblingsMap, () => [...block.querySelectorAll([timestampObj.end.targetClass, timestampObj.start.targetClass].map(x => '.' + x).join(', '))]);
             await update_startEndComponentMap();
 
-            if (startEndComponentMap.size !== siblingsArr.length && !extractFromMap_AtIndex(startEndComponentMap, siblingsArr.indexOf(node)))
+            if (!startEndComponentMap || startEndComponentMap.size !== siblingsArr.length && !MapAtIndex_Value(startEndComponentMap, siblingsArr.indexOf(node), 'is component'))
             {
                 await RAP.sleep(800); // YIKES!
                 componentMapMap.set(block.id, await getComponentMap(tempUID, StartEnd_Config));
@@ -1298,12 +1298,13 @@ async function Ready()
             if (targetIndex == -1 || !targetNode || !targetNode?.parentNode) continue;
 
 
-            const timestampContent = extractFromMap_AtIndex(startEndComponentMap, targetIndex);
+            const timestampContent = MapAtIndex_Value(startEndComponentMap, targetIndex, 'is component');
             if (!timestampContent) continue;
-            const indent = parseInt(extractFromKeyMap_AtIndex(startEndComponentMap, 1, targetIndex), 10);
-            const similarCount = extractFromKeyMap_AtIndex(startEndComponentMap, 0, targetIndex);
+            const ObjAsKey = MapAtIndex_ObjKey(startEndComponentMap, targetIndex, 'is component');
+            const indent = parseInt(ObjAsKey.indent, 10);
+            const similarCount = ObjAsKey.similarCount;
             const similarCountButRoot = indent == 0 ? 0 : similarCount;
-            const fromUid = extractFromKeyMap_AtIndex(startEndComponentMap, 2, targetIndex);
+            const fromUid = ObjAsKey.uid;
 
             const key = Object.keys(timestampObj).find(key => targetNode.classList.contains(timestampObj[key]?.targetClass)); // find timestampObj key that is included in targetNode classlist
             const page = timestampObj[key]?.page || 'timestamp';
@@ -1384,8 +1385,9 @@ async function Ready()
         tEl.setAttribute('awaiting', true);
 
 
-        const { foundBlock } = await getLastComponentInHerarchy(uid, YTGIF_Config);
-        const { uid: f_uid } = foundBlock;
+        const { foundBlock } = await getLastComponentInHierarchy(uid, YTGIF_Config);
+        if (!foundBlock?.uid) console.warn(`YT GIF Timestamps: couldn't find YT GIFs within the parent Hierarchy: ((${uid}))`);
+        const { uid: f_uid } = foundBlock || { uid: '' };
 
         const baseAnim = ['yt-timestamp-pulse-text-anim'];
         const greenAnim = [...baseAnim, 'yt-timestamp-success'];
@@ -1441,7 +1443,7 @@ async function Ready()
 
         if (!blockExist) // fail
         {
-            if (click || rghtclick)
+            if (click || rghtclick || !f_uid)
                 pulse(redAnim);
             else if (mdlclick)
                 return await openingOnCrossRoot();
@@ -1561,7 +1563,7 @@ async function Ready()
     // 6.3.1
     async function addBlockTimestamps(pageRefSufx, uid)
     {
-        const { secHMS, foundBlock, targetBlock } = await getLastComponentInHerarchy(uid, YTGIF_Config);
+        const { secHMS, foundBlock, targetBlock } = await getLastComponentInHierarchy(uid, YTGIF_Config);
         if (!foundBlock) { debugger; return; }
 
         const { start, end } = targetBlock; // bulky and clunky... because there only two options
@@ -2010,7 +2012,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             // it is a block in it's own right
             const tempMap = await getUrlMap_smart(uidResults[key].uid);
 
-            resObj.nestedComponentMap = extractFromMap_AtIndex_Key(tempMap, resObj.preUrlIndex, key);
+            resObj.nestedComponentMap = MapAtIndex_Value(tempMap, resObj.preUrlIndex, key);
             // https://roamresearch.slack.com/archives/CTAE9JC2K/p1638578496037700
             if (!resObj?.nestedComponentMap || resObj?.nestedComponentMap.size == 0)
             {
@@ -2028,7 +2030,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             const tempMap = await getUrlMap_smart(uidResults[key].uid);
 
             // needs it's own UID                                   // is it's parent's
-            resObj.uid = extractFromMap_AtIndex_Key(tempMap, resObj.preUrlIndex, key);
+            resObj.uid = MapAtIndex_Value(tempMap, resObj.preUrlIndex, key);
             resObj.nestedComponentMap = await getUrlMap_smart(resObj.uid);
             updateUrlIndexInsideAlias();
         }
@@ -2038,7 +2040,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         }
 
 
-        resObj.url = extractFromMap_AtIndex_Key(resObj.nestedComponentMap, resObj.preUrlIndex, 'is component');
+        resObj.url = MapAtIndex_Value(resObj.nestedComponentMap, resObj.preUrlIndex, 'is component');
         resObj.accUrlIndex += resObj.preUrlIndex;
         try
         {
@@ -3315,10 +3317,10 @@ function properBlockIDSufix(url, urlIndex)
 
 
 //#region  backend/frontend communication - XXX_Config = {...}
-async function getLastComponentInHerarchy(tempUID, _Config = {})
+async function getLastComponentInHierarchy(tempUID, _Config = {})
 {
-    const res = await kauderk.rap.getBlockParentUids(tempUID);
-    if (!res) { debugger; return {}; }
+    const ParentHierarchy = await kauderk.rap.getBlockParentUids(tempUID);
+    if (!ParentHierarchy) { debugger; return {}; }
     const original = await kauderk.rap.getBlockInfoByUID(tempUID);
 
     const baseObj = {
@@ -3342,7 +3344,7 @@ async function getLastComponentInHerarchy(tempUID, _Config = {})
     }
     Object.keys(iframeMaps).forEach(key => Object.assign(iframeMaps[key], baseObj));
 
-    const blockStrings = res.map(arr => arr[0]);
+    const blockStrings = ParentHierarchy.map(arr => arr[0]).map(o => res = { string: clean_rm_string(o.string), uid: o.uid });
     for (const { string, uid } of blockStrings.reverse())
     {
         const componentMap = await getComponentMap(uid, _Config);
@@ -3375,28 +3377,24 @@ async function getLastComponentInHerarchy(tempUID, _Config = {})
     }
     return {};
 }
-function extractFromMap_AtIndex(map, valueAtIndex)
+
+
+function MapAtIndex_Value(map, valueAtIndex, property)
 {
-    if (!map) return null;
-    let val = [...map.values()][valueAtIndex];
-    // if (!val) console.log(`val is null`); //debugger;
-    return val;
+    const key = FilterMapByIsKey(map, property)?.[valueAtIndex];
+    return map?.get(key);
 }
-function extractFromMap_AtIndex_Key(map, valueAtIndex, property)
+function MapAtIndex_ObjKey(map, valueAtIndex, property)
 {
-    if (!map) return null;
-    const key = [...map.keys()].filter(o => o['isKey'] == property)[valueAtIndex];
-    const val = map.get(key);
-    // if (!val) console.log(`val is null`); //debugger;
-    return val;
+    return FilterMapByIsKey(map, property)?.[valueAtIndex];
 }
-function extractFromKeyMap_AtIndex(mpa, valueAtIndex, mapIndex)
+function FilterMapByIsKey(map, property)
 {
-    if (!mpa) return null;
-    let val = [...mpa.keys()].map(x => x.split('  ')).map(y => y[valueAtIndex])[mapIndex];
-    // if (!val) console.log(`val is null`); //debugger;
-    return val;
+    if (!map || map?.size == 0) return null;
+    return [...map.keys()].filter(o => o['isKey'] == property);
 }
+
+
 async function getMap_smart(key, map, callback, ...setMapCb_params)
 {// https://stackoverflow.com/questions/3458553/javascript-passing-parameters-to-a-callback-function#:~:text=console.log(param1)%3B%0A%7D-,function%20callbackTester(callback%2C%20...params)%20%7B,-callback(...params)%3B%0A%7D%0A%0A%0A%0AcallbackTester
     // since it store recursive maps, once per instance it's enough
@@ -3460,7 +3458,7 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
                 const tooltipMap = await TryToFindTargetStrings_Rec(tooltipObj, parentObj, new Map());
                 map.set(tooltipKey, tooltipMap);
             }
-            if (is == 'is block reference' && !isSelfRecursive) // it is rendered, so execute it's rec func
+            if (is == 'is block reference' && (indentFunc == 1 || !isSelfRecursive)) // it is rendered, so execute it's rec func
             {
                 indentFunc += 1;
                 objRes.isKey = is;
@@ -3510,12 +3508,10 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
 
     function stringsWihtUidsObj(rawText)
     {
-        if (!rawText) debugger;
-        const string = rawText.replace(/(`.+?`)|(`([\s\S]*?)`)/gm, 'used_to_be_an_inline_code_block');
         const { blockRgx, aliasPlusUidsRgx, tooltipCardRgx } = BlockRegexObj(componentPage);
+        const string = clean_rm_string(rawText);
 
         let blockReferencesAlone = [];
-        let tooltipReferencesAlone = [];
         const compactObjs = getRenderedStuff(string);
         const targetStringsWithUids = compactObjs.flat(Infinity);
 
@@ -3547,7 +3543,6 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
             {
                 is = 'is alias';
                 inOrderValue = [...val.matchAll(aliasPlusUidsRgx)][0][2];
-                tooltipReferencesAlone = UTILS.pushSame(tooltipReferencesAlone, inOrderValue);
             }
             else if (val.match(targetStringRgx)?.[0]) // {{componentPage: -> first target <- xxxxxx xxx... }}
             {
@@ -3556,7 +3551,15 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
             }
             else // xxxuidxxx
             {
-                blockReferencesAlone = UTILS.pushSame(blockReferencesAlone, val);
+                if (inOrderValue.length != 9) // yep ... be careful
+                {
+                    is = 'is component';
+                    inOrderValue = '';
+                }
+                else
+                {
+                    blockReferencesAlone = UTILS.pushSame(blockReferencesAlone, val);
+                }
             }
 
             return resObj()
@@ -3565,7 +3568,6 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
 
     function BlockRegexObj(componentPage)
     {
-        const preRgxComp = (rgxPage) => `{{(\\[\\[)?(${rgxPage})(?!\\/)(?!\\/)(?:(\\]\\])(.*?(?::|))|:|\\s)(?:(?<=:)|)(.+)(\\}\\})`;
         const componentRgx = new RegExp(preRgxComp(componentPage), 'gm');
         const anyPossibleComponents = /{{.+}/gm;
         const aliasPlusUidsRgx = /\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm;
@@ -3574,9 +3576,16 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
         // set in the order in which roam renders them - anyPossibleComponents is kinda like a joker card, it will trap components along with irrelevant uids
         const blockRgx = [tooltipCardRgx, componentRgx, anyPossibleComponents, aliasPlusUidsRgx, anyUidRgx].reduce((acc, v, i, a) => // https://masteringjs.io/tutorials/fundamentals/concat-regexp
             new RegExp(acc.source != '(?:)' ? acc.source + '|' + v.source : v.source, 'gm'), new RegExp());
-        //const string = s2.replace(new RegExp(preRgxComp('embed'), 'gm'), 'used_to_be_an_embed_block');
+
         return { blockRgx, aliasPlusUidsRgx, tooltipCardRgx };
     }
+}
+function preRgxComp(rgxPage) { return `{{(\\[\\[)?(${rgxPage})(?!\\/)(?!\\/)(?:(\\]\\])(.*?(?::|))|:|\\s)(?:(?<=:)|)(.+?)(\\}\\})` };
+
+function clean_rm_string(rawText)
+{
+    const s1 = rawText.replace(/(`.+?`)|(`([\s\S]*?)`)/gm, 'used_to_be_an_inline_code_block');
+    return s1.replace(new RegExp(preRgxComp('embed'), 'gm'), 'used_to_be_an_embed_block');
 }
 //#endregion
 
