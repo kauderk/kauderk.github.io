@@ -1290,7 +1290,7 @@ async function Ready()
 
             if (!startEndComponentMap || ((startEndComponentMap.size !== siblingsArr.length) && !MapAtIndex_Value(startEndComponentMap, siblingsArr.indexOf(node), isKey)))
             {
-                //console.count(`YT GIF Timestamps: updating block strings: ((${tempUID})) ...        ...       ...         ...`);
+                console.count(`YT GIF Timestamps: updating block strings: ((${tempUID})) ...        ...       ...         ...`);
                 await RAP.sleep(800); // YIKES!!!
                 componentMapMap.set(mapsKEY, await getComponentMap(tempUID, StartEnd_Config));
                 await update_startEndComponentMap();
@@ -1341,22 +1341,20 @@ async function Ready()
             const targetObjsArr = sortedByUid.map((v, i, a) => a[i]['data']);
 
 
-            targetObjsArr.forEach((v, i, a) =>
+            targetObjsArr.forEach((ArrObjs, i, a) =>
             {
-                const lastStart = [...v].reverse().find(x => x.page == 'start');
-                const lastEnd = [...v].reverse().find(x => x.page == 'end');
+                const findPage = (p) => [...ArrObjs].reverse().find(x => x.page == p);
+                const lastArr = [findPage('start'), findPage('end')];
+                const filterOut = [...ArrObjs].reverse().filter(i => !lastArr.some(el => el == i));
 
-                if (lastStart && lastEnd)
+
+                if (!!lastArr.some(el => !el))
                 {
-                    [lastStart, lastEnd].forEach((v, i, a) =>
-                    {
-                        const { targetNode, indent, targetIndex, color } = v;
-                        const b = 30;
-                        targetNode.style.filter = `brightness(${(100 + b) - (b * indent) + (targetIndex * 5)}%)`;
-                        targetNode.style.color = '#8d309f';
-                    });
-                    return;
+                    lastArr.forEach((o, i) => o.targetNode.style.filter = `brightness(${100 + (5 * i)}%)`);
                 }
+
+
+                filterOut.forEach((o, i) => o.targetNode.style.filter = `brightness(70%)`)
             });
         }
 
@@ -3446,7 +3444,7 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
     Object.keys(results).forEach(key => Object.assign(results[key], orderObj));
 
     // componentsInOrderMap
-    return await TryToFindTargetStrings_Rec(await TryToFindTargetString(tempUID), { uidHierarchy2: [] }, new Map());
+    return await TryToFindTargetStrings_Rec(await TryToFindTargetString(tempUID), { uidHierarchy: [] }, new Map());
 
 
 
@@ -3454,29 +3452,26 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
     {
         for (const { value, is } of objRes?.targetStringsWithUids) // loop through RENDERED targetStrings (components) and uids (references)
         {
-            const isSelfRecursive = parentObj?.blockReferencesAlone?.includes(value);
-            const comesFromRecursiveParent = parentObj?.uidHierarchy?.includes(value);
             const generateUniqueKey = () => assertUniqueKey_while(objRes.uid, indentFunc, is);
 
             if (['is alias', 'is component'].some(w => w === is))
             {
                 map.set(generateUniqueKey(), value);
             }
-            if (is === 'is tooltip card')
+            else if (is === 'is tooltip card')
             {
-                const { tooltipKey, tooltipObj } = generateTooltipObj(value, objRes, generateUniqueKey);
-                map.set(tooltipKey, {}); // save it a spot in the map
+                const { tooltipKey, tooltipObj } = generateTooltipObj(value, objRes, generateUniqueKey); // save it a spot in the map
                 const tooltipMap = await TryToFindTargetStrings_Rec(tooltipObj, parentObj, new Map());
                 map.set(tooltipKey, tooltipMap); // assign it
             }
-            if (is == 'is block reference')
+            else if (is == 'is block reference')
             {
-                parentObj.uidHierarchy2 = UTILS.pushSame(parentObj.uidHierarchy2, value);
-                console.log(value, indentFunc, objRes?.uidHierarchy, parentObj?.uidHierarchy, parentObj?.uidHierarchy2);
-                if (
-                    comesFromRecursiveParent || // hierarchy...
-                    ((indentFunc > parentObj?.uidHierarchy2?.length ?? 1) && (isSelfRecursive || value == tempUID)) // past the first level and it is self recursive
-                )
+                parentObj.uidHierarchy = UTILS.pushSame(parentObj.uidHierarchy, value);
+
+                const comesFromRecursiveParent = parentObj?.uid == value;
+                const isSelfRecursive = parentObj?.blockReferencesAlone?.includes(value) || value == tempUID;
+                const pastFirstLevel = indentFunc > parentObj?.uidHierarchy?.length ?? 1;
+                if (comesFromRecursiveParent || (pastFirstLevel && isSelfRecursive))
                     continue; // skip it | unrendered
 
                 // it is rendered, so execute it's rec func
@@ -3531,9 +3526,7 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
         const rawText = info[0][0]?.string || "F";
         const resObj = stringsWihtUidsObj(rawText);
         resObj.uid = desiredUID;
-        resObj.uidHierarchy = resObj?.uidHierarchy ? resObj.uidHierarchy : [];
-        resObj.uidHierarchy = [...resObj.uidHierarchy, desiredUID];
-        resObj.uidHierarchy2 = resObj.uidHierarchy2 ?? [];
+        resObj.uidHierarchy = resObj.uidHierarchy ?? [];
         return resObj;
     }
 
