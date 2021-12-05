@@ -388,7 +388,7 @@ async function Ready()
 
     // 1. set up looks
     //#region relevant variables
-    const { css_theme, player_span } = Object.fromEntries(window.YT_GIF_DIRECT_SETTINGS);;
+    const { css_theme, player_span } = Object.fromEntries(window.YT_GIF_DIRECT_SETTINGS);
     const { themes, playerStyle, dropDownMenuStyle } = links.css;
     const { playerControls, dropDownMenu } = links.html;
     const { yt_gif } = cssData; // CssThemes_UCS
@@ -1269,25 +1269,26 @@ async function Ready()
 
         let emulationArr = [];
         const succesfulEmulationMap = new Map();
-        const componenSel = `.${timestampObj.end.targetClass}, .${timestampObj.start.targetClass}, .rm-video-timestamp[${timestampObj.attr.emulation}]`; //, a.rm-alias.rm-alias--block` ????
-
+        const componenSel = `.${timestampObj.end.targetClass}, .${timestampObj.start.targetClass}, .rm-video-timestamp[${timestampObj.attr.emulation}]`;
+        const isKey = 'is component';
 
 
         const renderedComponents = found.filter(node1 => document.body.contains(node1)).filter(node2 => isNotZoomPath(node2));
         for (const node of renderedComponents)
         {
-            const block = node?.closest('.rm-block__input'); // closestYTGIFparentID
-            if (!block) { continue; }
+            const block = closestBlock(node);
+            if (!block) continue;
+
             const tempUID = block?.id?.slice(-9);
             const mapsKEY = block.id;
-            const update_startEndComponentMap = async () => startEndComponentMap = await getMap_smart(mapsKEY, componentMapMap, getComponentMap, tempUID, StartEnd_Config);;
+            const update_startEndComponentMap = async () => startEndComponentMap = await getMap_smart(mapsKEY, componentMapMap, getComponentMap, tempUID, StartEnd_Config);
 
 
             // you are iterating through renderedComponents (mutation records), so you need to get the original siblings of each block
-            siblingsArr = [...block.querySelectorAll(`:is(${componenSel})`)].filter(b => b.closest('.rm-block__input') == block); //[...block.querySelectorAll(ownComponetSel(block))] || [];
+            siblingsArr = [...block.querySelectorAll(`:is(${componenSel})`)].filter(b => closestBlock(b) == block);
             await update_startEndComponentMap();
 
-            if (!startEndComponentMap || ((startEndComponentMap.size !== siblingsArr.length) && !MapAtIndex_Value(startEndComponentMap, siblingsArr.indexOf(node))))
+            if (!startEndComponentMap || ((startEndComponentMap.size !== siblingsArr.length) && !MapAtIndex_Value(startEndComponentMap, siblingsArr.indexOf(node), isKey)))
             {
                 //console.count(`YT GIF Timestamps: updating block strings: ((${tempUID})) ...        ...       ...         ...`);
                 await RAP.sleep(800); // YIKES!!!
@@ -1301,9 +1302,9 @@ async function Ready()
             if (targetIndex == -1 || !targetNode || !targetNode?.parentNode) continue;
 
 
-            const timestampContent = MapAtIndex_Value(startEndComponentMap, targetIndex, 'is');
+            const timestampContent = MapAtIndex_Value(startEndComponentMap, targetIndex, isKey);
             if (!timestampContent) continue;
-            const ObjAsKey = MapAtIndex_ObjKey(startEndComponentMap, targetIndex, 'is');
+            const ObjAsKey = MapAtIndex_ObjKey(startEndComponentMap, targetIndex, isKey);
             const indent = parseInt(ObjAsKey.indent, 10);
             const similarCount = ObjAsKey.similarCount;
             const similarCountButRoot = indent == 0 ? 0 : similarCount;
@@ -1926,7 +1927,6 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     // 1. uidResultsObj
     async function tempUidResultsObj(el)
     {
-        const closestBlock = (x) => x?.closest('.rm-block__input');
         const grandParentBlock = function () { return closestBlock(this.el) };
         const condition = function () { return this.uid = this.grandParentBlock()?.id?.slice(-9) };
 
@@ -3301,7 +3301,11 @@ function btn_VS(bol, exp_btn, disabled)
 //#region clossesYTGIFParent Utils
 function closestYTGIFparentID(el)
 {
-    return (el?.closest('.rm-block__input') || el?.closest('.dwn-yt-gif-player-container'))?.id
+    return (closestBlock(el) || el?.closest('.dwn-yt-gif-player-container'))?.id
+}
+function closestBlock(el)
+{
+    return el?.closest('.rm-block__input')
 }
 function getWrapperUrlSufix(wrapper)
 {
@@ -3358,7 +3362,7 @@ async function getLastComponentInHierarchy(tempUID, _Config = {}, includeOrigin 
         const componentMap = await getComponentMap(uid, _Config);
         const reverseValues = [...componentMap.values()].reverse();
 
-        const lastUrl = reverseValues.find(v => v?.includes('https'));
+        const lastUrl = reverseValues?.find(v => typeof v === 'string' && v?.includes('https'));
         if (!lastUrl) continue;
 
         const lastUrlIndex = reverseValues.indexOf(lastUrl);
