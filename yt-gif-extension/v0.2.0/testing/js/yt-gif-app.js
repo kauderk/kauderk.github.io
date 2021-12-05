@@ -1487,11 +1487,11 @@ async function Ready()
                 await RAP.navigateToUiOrCreate(f_uid, (root == PagesObj.main.root), 'block');
             }
 
-            await RAP.sleep(50);
-            const targetWrapper = lastWrapperInBlock(crossRoot);
-            targetWrapper?.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+            const prevWrapper = lastWrapperInBlock(crossRoot);
+            const isRendered = prevWrapper instanceof Element && UTILS.isElementVisible(prevWrapper);
+            await RAP.sleep(isRendered ? 50 : 500); // visible? then quicker
 
-            await RAP.sleep(UTILS.isElementVisible(targetWrapper) ? 50 : 500); // visible? then quicker
+            lastWrapperInBlock(crossRoot)?.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
 
             await playLastBlockOnly_SimHover(crossRoot);
             return NoLongerAwaiting();
@@ -3320,11 +3320,13 @@ function properBlockIDSufix(url, urlIndex)
 
 
 //#region  backend/frontend communication - XXX_Config = {...}
-async function getLastComponentInHierarchy(tempUID, _Config = {})
+async function getLastComponentInHierarchy(tempUID, _Config = {}, includeOrigin = true)
 {
-    const ParentHierarchy = await kauderk.rap.getBlockParentUids(tempUID);
-    if (!ParentHierarchy) { debugger; return {}; }
-    const original = await kauderk.rap.getBlockInfoByUID(tempUID);
+    const original = await RAP.getBlockInfoByUID(tempUID);
+    const ParentHierarchy = await RAP.getBlockParentUids(tempUID);
+    if (!ParentHierarchy && !original) { debugger; return {}; }
+    const originalStr = original[0]?.[0]?.string || '';
+
 
     const baseObj = {
         blockID: null, start: 0, end: 0, secHMS: 000, crrTime: null,
@@ -3347,7 +3349,10 @@ async function getLastComponentInHierarchy(tempUID, _Config = {})
     }
     Object.keys(iframeMaps).forEach(key => Object.assign(iframeMaps[key], baseObj));
 
-    const blockStrings = ParentHierarchy.map(arr => arr[0]).map(o => res = { string: clean_rm_string(o.string), uid: o.uid });
+    const Hierarchy = !includeOrigin ? ParentHierarchy : UTILS.unshiftSame([...ParentHierarchy], [{ uid: tempUID, string: originalStr }, { title: 'made-up', uid: 'invalid' }]);
+    const blockStrings = Hierarchy.map(arr => arr[0]).map(o => res = { string: clean_rm_string(o.string), uid: o.uid });
+
+
     for (const { string, uid } of blockStrings.reverse())
     {
         const componentMap = await getComponentMap(uid, _Config);
@@ -3371,7 +3376,7 @@ async function getLastComponentInHierarchy(tempUID, _Config = {})
                 possibleBlockIDSufix,
             },
             targetBlock: {
-                string: original[0][0].string,
+                string: originalStr,
                 uid: tempUID,
                 start: UTILS.convertHMS(lastUrl.match(/(t=|start=)(?:(\d+))/)?.[2] || 0),
                 end: UTILS.convertHMS(lastUrl.match(/(end=)(?:(\d+))/)?.[2] || 0),
@@ -3443,7 +3448,7 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
 
     async function TryToFindTargetStrings_Rec(objRes, parentObj, map)
     {
-        for (const { value, is } of objRes.targetStringsWithUids) // loop through RENDERED targetStrings (components) and uids (references)
+        for (const { value, is } of objRes?.targetStringsWithUids) // loop through RENDERED targetStrings (components) and uids (references)
         {
             const isSelfRecursive = parentObj?.blockReferencesAlone?.includes(value);
             const comesFromRecursiveParent = parentObj?.uidHierarchy?.includes(value);
@@ -3464,7 +3469,7 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
             {
                 if (
                     comesFromRecursiveParent || // hierarchy...
-                    (indentFunc > 1 && (isSelfRecursive || value == tempUID)) // it's past first level and it's self recursive
+                    (indentFunc > 1 && (isSelfRecursive || value == tempUID)) // past the first level and it is self recursive
                 ) continue; // skip it | unrendered
 
                 // it is rendered, so execute it's rec func
@@ -3513,13 +3518,6 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
         return { tooltipKey, tooltipObj };
     }
 
-    async function ParentHierarchyUID(tempUID)
-    {
-        const ParentHierarchy = await RAP.getBlockParentUids(tempUID);
-        const uids = ParentHierarchy.map(arr => arr[0]).map(o => o.uid).reverse();
-        return uids;
-    }
-
     async function TryToFindTargetString(desiredUID)
     {
         const info = await RAP.getBlockInfoByUID(desiredUID);
@@ -3538,7 +3536,7 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
 
         let blockReferencesAlone = [];
         const compactObjs = getRenderedStuff(string);
-        const targetStringsWithUids = compactObjs.flat(Infinity);
+        const targetStringsWithUids = compactObjs.flat(Infinity).filter(x => x != null);
 
         return { targetStringsWithUids, blockReferencesAlone };
 
@@ -3578,8 +3576,9 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
             {
                 if (inOrderValue.length != 9)
                 {
-                    is = 'is component';
-                    inOrderValue = '';
+                    return null;
+                    //is = 'is component';
+                    //inOrderValue = '';
                 }
                 else
                 {
@@ -3594,19 +3593,23 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
     function BlockRegexObj(componentPage)
     {
         const componentRgx = new RegExp(preRgxComp(componentPage), 'gm');
-        const anyPossibleComponents = /{{.+}/gm;
+        const anyPossibleComponentsRgx = /{{.+}/gm;
         const aliasPlusUidsRgx = /\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm;
         const tooltipCardRgx = /{{=:(.+?)\|(.+)}}/gm;
         const anyUidRgx = /(?<=\(\()([^(].*?[^)])(?=\)\))/gm;
         // set in the order in which roam renders them - anyPossibleComponents is kinda like a joker card, it will trap components along with irrelevant uids
-        const blockRgx = [tooltipCardRgx, componentRgx, anyPossibleComponents, aliasPlusUidsRgx, anyUidRgx].reduce((acc, v, i, a) => // https://masteringjs.io/tutorials/fundamentals/concat-regexp
+        const blockRgx = [tooltipCardRgx, componentRgx, anyPossibleComponentsRgx, aliasPlusUidsRgx, anyUidRgx].reduce((acc, v, i, a) => // https://masteringjs.io/tutorials/fundamentals/concat-regexp
             new RegExp(acc.source != '(?:)' ? acc.source + '|' + v.source : v.source, 'gm'), new RegExp());
 
-        return { blockRgx, aliasPlusUidsRgx, tooltipCardRgx };
+        return { blockRgx, aliasPlusUidsRgx, tooltipCardRgx, anyPossibleComponentsRgx };
     }
 }
-function preRgxComp(rgxPage) { return `{{(\\[\\[)?(${rgxPage})(?!\\/)(?!\\/)(?:(\\]\\])(.*?(?::|))|:|\\s)(?:(?<=:)|)(.+?)(\\}\\})` };
 
+
+function preRgxComp(rgxPage)
+{
+    return `{{(\\[\\[)?(${rgxPage})(?!\\/)(?!\\/)(?:(\\]\\])(.*?(?::|))|:|\\s)(?:(?<=:)|)(.+?)(\\}\\})`
+}
 function clean_rm_string(rawText)
 {
     const s1 = rawText.replace(/(`.+?`)|(`([\s\S]*?)`)/gm, 'used_to_be_an_inline_code_block');
