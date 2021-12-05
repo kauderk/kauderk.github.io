@@ -3453,7 +3453,7 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
     {
         for (const { value, is } of objRes.targetStringsWithUids) // loop through RENDERED targetStrings (components) and uids (references)
         {
-            const isSelfRecursive = parentObj?.blockReferencesAlone?.includes(value) && value == tempUID;
+            const isSelfRecursive = parentObj?.blockReferencesAlone?.includes(value) || value == tempUID;
             const comesFromRecursiveParent = parentObj?.uidHierarchy?.includes(value);
             const generateUniqueKey = () => assertUniqueKey_while(objRes.uid, indentFunc, is);
 
@@ -3472,7 +3472,7 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
             }
             if (is == 'is block reference' && !isSelfRecursive) // it is rendered, so execute it's rec func
             {
-                if (comesFromRecursiveParent || indentFunc > 1)
+                if (comesFromRecursiveParent) //|| value == tempUID)//|| indentFunc > 1)
                     continue;
                 console.count(value);
                 indentFunc += 1;
