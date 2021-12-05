@@ -3446,7 +3446,7 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
     Object.keys(results).forEach(key => Object.assign(results[key], orderObj));
 
     // componentsInOrderMap
-    return await TryToFindTargetStrings_Rec(await TryToFindTargetString(tempUID), {}, new Map());
+    return await TryToFindTargetStrings_Rec(await TryToFindTargetString(tempUID), { uidHierarchy2: [] }, new Map());
 
 
 
@@ -3471,10 +3471,13 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
             }
             if (is == 'is block reference')
             {
+                parentObj.uidHierarchy2 = UTILS.pushSame(parentObj.uidHierarchy2, value);
+                console.log(value, indentFunc, objRes?.uidHierarchy, parentObj?.uidHierarchy, parentObj?.uidHierarchy2);
                 if (
                     comesFromRecursiveParent || // hierarchy...
-                    (indentFunc > 1 && (isSelfRecursive || value == tempUID)) // past the first level and it is self recursive
-                ) continue; // skip it | unrendered
+                    ((indentFunc > parentObj?.uidHierarchy2?.length ?? 1) && (isSelfRecursive || value == tempUID)) // past the first level and it is self recursive
+                )
+                    continue; // skip it | unrendered
 
                 // it is rendered, so execute it's rec func
                 indentFunc += 1;
@@ -3530,6 +3533,7 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
         resObj.uid = desiredUID;
         resObj.uidHierarchy = resObj?.uidHierarchy ? resObj.uidHierarchy : [];
         resObj.uidHierarchy = [...resObj.uidHierarchy, desiredUID];
+        resObj.uidHierarchy2 = resObj.uidHierarchy2 ?? [];
         return resObj;
     }
 
