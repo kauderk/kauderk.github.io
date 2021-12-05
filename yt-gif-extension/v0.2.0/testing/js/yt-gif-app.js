@@ -1269,7 +1269,7 @@ async function Ready()
 
         let emulationArr = [];
         const succesfulEmulationMap = new Map();
-        const componenSel = `.${timestampObj.end.targetClass}, .${timestampObj.start.targetClass}, .rm-video-timestamp[${timestampObj.attr.emulation}]`;
+        const componenSel = `.${timestampObj.end.targetClass}, .${timestampObj.start.targetClass}, .rm-video-timestamp[${timestampObj.attr.emulation}]`; //, a.rm-alias.rm-alias--block`;
         const ownComponetSel = (block) =>
         {
             if (block.querySelector('.rm-embed-container'))
@@ -1292,8 +1292,10 @@ async function Ready()
             siblingsArr = [...block.querySelectorAll(ownComponetSel(block))] || [];
             await update_startEndComponentMap();
 
-            if (!startEndComponentMap || ((startEndComponentMap.size !== siblingsArr.length) && !MapAtIndex_Value(startEndComponentMap, siblingsArr.indexOf(node), 'is component')))
+            if (!startEndComponentMap || ((startEndComponentMap.size !== siblingsArr.length) && !MapAtIndex_Value(startEndComponentMap, siblingsArr.indexOf(node))))
             {
+                console.log('yooo --------------------------------------------------------------');
+                continue;
                 if (siblingsArr.length == 0) { debugger; continue; }
                 console.count('emulation            ...             ...');
                 await RAP.sleep(800); // YIKES!
@@ -1307,9 +1309,9 @@ async function Ready()
             if (targetIndex == -1 || !targetNode || !targetNode?.parentNode) continue;
 
 
-            const timestampContent = MapAtIndex_Value(startEndComponentMap, targetIndex, 'is component');
+            const timestampContent = MapAtIndex_Value(startEndComponentMap, targetIndex, 'is');
             if (!timestampContent) continue;
-            const ObjAsKey = MapAtIndex_ObjKey(startEndComponentMap, targetIndex, 'is component');
+            const ObjAsKey = MapAtIndex_ObjKey(startEndComponentMap, targetIndex, 'is');
             const indent = parseInt(ObjAsKey.indent, 10);
             const similarCount = ObjAsKey.similarCount;
             const similarCountButRoot = indent == 0 ? 0 : similarCount;
@@ -3388,19 +3390,19 @@ async function getLastComponentInHierarchy(tempUID, _Config = {})
 }
 
 
-function MapAtIndex_Value(map, valueAtIndex, property)
+function MapAtIndex_Value(map, valueAtIndex, property = 'is')
 {
     const key = FilterMapByIsKey(map, property)?.[valueAtIndex];
     return map?.get(key);
 }
-function MapAtIndex_ObjKey(map, valueAtIndex, property)
+function MapAtIndex_ObjKey(map, valueAtIndex, property = 'is')
 {
     return FilterMapByIsKey(map, property)?.[valueAtIndex];
 }
 function FilterMapByIsKey(map, property)
 {
     if (!map || map?.size == 0) return null;
-    return [...map.keys()].filter(o => o['isKey'] == property);
+    return [...map.keys()].filter(o => o['isKey'].includes(property));
 }
 
 
