@@ -338,7 +338,7 @@ kauderk.util = ((util) =>
     util.isElementVisible = (elem) =>
     {
         // https://stackoverflow.com/questions/19669786/check-if-element-is-visible-in-dom#:~:text=function%20isElementVisible(elem)%20%7B%0A%20%20%20%20if%20(!(elem%20instanceof%20Element))%20throw%20Error(%27DomUtil%3A%20elem%20is%20not%20an%20element.%27)%3B%0A%20%20%20%20const%20style%20%3D%20getComputedStyle(elem)%3B
-        if (!(elem instanceof Element)) throw Error('DomUtil: elem is not an element.');
+        if (!(elem instanceof Element)) { console.warn('DomUtil: elem is not an element.'); return null; }
         const style = getComputedStyle(elem);
         if (style.display === 'none') return false;
         if (style.visibility !== 'visible') return false;
