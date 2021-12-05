@@ -1269,14 +1269,8 @@ async function Ready()
 
         let emulationArr = [];
         const succesfulEmulationMap = new Map();
-        const componenSel = `.${timestampObj.end.targetClass}, .${timestampObj.start.targetClass}, .rm-video-timestamp[${timestampObj.attr.emulation}]`; //, a.rm-alias.rm-alias--block`;
-        const ownComponetSel = (block) =>
-        {
-            if (block.querySelector('.rm-embed-container'))
-                return `:is(${componenSel}):not(.rm-embed-container :is(${componenSel}))`
-            else
-                return `:is(${componenSel})`;
-        }
+        const componenSel = `.${timestampObj.end.targetClass}, .${timestampObj.start.targetClass}, .rm-video-timestamp[${timestampObj.attr.emulation}]`; //, a.rm-alias.rm-alias--block` ????
+
 
 
         const renderedComponents = found.filter(node1 => document.body.contains(node1)).filter(node2 => isNotZoomPath(node2));
@@ -1285,21 +1279,19 @@ async function Ready()
             const block = node?.closest('.rm-block__input'); // closestYTGIFparentID
             if (!block) { continue; }
             const tempUID = block?.id?.slice(-9);
-            const update_startEndComponentMap = async () => startEndComponentMap = await getMap_smart(block.id, componentMapMap, getComponentMap, tempUID, StartEnd_Config);;
+            const mapsKEY = block.id;
+            const update_startEndComponentMap = async () => startEndComponentMap = await getMap_smart(mapsKEY, componentMapMap, getComponentMap, tempUID, StartEnd_Config);;
 
 
             // you are iterating through renderedComponents (mutation records), so you need to get the original siblings of each block
-            siblingsArr = [...block.querySelectorAll(ownComponetSel(block))] || [];
+            siblingsArr = [...block.querySelectorAll(`:is(${componenSel})`)].filter(b => b.closest('.rm-block__input') == block); //[...block.querySelectorAll(ownComponetSel(block))] || [];
             await update_startEndComponentMap();
 
             if (!startEndComponentMap || ((startEndComponentMap.size !== siblingsArr.length) && !MapAtIndex_Value(startEndComponentMap, siblingsArr.indexOf(node))))
             {
-                console.log('yooo --------------------------------------------------------------');
-                continue;
-                if (siblingsArr.length == 0) { debugger; continue; }
-                console.count('emulation            ...             ...');
-                await RAP.sleep(800); // YIKES!
-                componentMapMap.set(block.id, await getComponentMap(tempUID, StartEnd_Config));
+                //console.count(`YT GIF Timestamps: updating block strings: ((${tempUID})) ...        ...       ...         ...`);
+                await RAP.sleep(800); // YIKES!!!
+                componentMapMap.set(mapsKEY, await getComponentMap(tempUID, StartEnd_Config));
                 await update_startEndComponentMap();
             }
 
@@ -1329,7 +1321,7 @@ async function Ready()
             targetNode.addEventListener('mousedown', async (e) => await PlayPauseOnClicks(e, tempUID));
 
 
-            emulationArr = await getMap_smart(block.id, succesfulEmulationMap, () => []);
+            emulationArr = await getMap_smart(mapsKEY, succesfulEmulationMap, () => []);
             emulationArr = UTILS.pushSame(emulationArr, {
                 fromUniqueUid: fromUid + similarCountButRoot,
                 similarCount: parseInt(similarCount, 10),
@@ -3463,22 +3455,19 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
             }
             if (is === 'is tooltip card')
             {
-                const tooltipObj = stringsWihtUidsObj(value);
-                tooltipObj.uid = objRes.uid + '_t' + (results['is tooltip card'].order < 0 ? 0 : results['is tooltip card'].order);
-                const tooltipKey = generateUniqueKey();
-                map.set(tooltipKey, {});
+                const { tooltipKey, tooltipObj } = generateTooltipObj(value, objRes, generateUniqueKey);
+                map.set(tooltipKey, {}); // save it a spot in the map
                 const tooltipMap = await TryToFindTargetStrings_Rec(tooltipObj, parentObj, new Map());
-                map.set(tooltipKey, tooltipMap);
+                map.set(tooltipKey, tooltipMap); // assign it
             }
-            if (is == 'is block reference') // it is rendered, so execute it's rec func
+            if (is == 'is block reference')
             {
                 if (
-                    comesFromRecursiveParent
-                    || (isSelfRecursive && indentFunc > 1)
-                    || (value == tempUID && indentFunc > 1)
-                )
-                    continue;
-                console.count(value);
+                    comesFromRecursiveParent || // hierarchy...
+                    (indentFunc > 1 && (isSelfRecursive || value == tempUID)) // it's past first level and it's self recursive
+                ) continue; // skip it | unrendered
+
+                // it is rendered, so execute it's rec func
                 indentFunc += 1;
                 objRes.isKey = is;
                 map = await TryToFindTargetStrings_Rec(await TryToFindTargetString(value), objRes, map);
@@ -3514,6 +3503,14 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
                 arr = UTILS.pushSame(arr, item);
             return arr;
         }
+    }
+
+    function generateTooltipObj(value, objRes, generateUniqueKey)
+    {
+        const tooltipObj = stringsWihtUidsObj(value);
+        tooltipObj.uid = objRes.uid + '_t' + (results['is tooltip card'].order < 0 ? 0 : results['is tooltip card'].order);
+        const tooltipKey = generateUniqueKey();
+        return { tooltipKey, tooltipObj };
     }
 
     async function ParentHierarchyUID(tempUID)
