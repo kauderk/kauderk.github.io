@@ -2,6 +2,11 @@ var kauderk = window.kauderk || {};
 
 kauderk.util = ((util) =>
 {
+    util.unshiftSame = (arr = [], el) =>
+    {
+        arr.unshift(el);
+        return arr;
+    }
     util.convertHMS = (value) =>
     {
         const sec = parseInt(value, 10); // convert value to number if it's string
