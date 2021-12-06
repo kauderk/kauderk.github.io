@@ -261,11 +261,13 @@ function baseDeploymentObj_both()
 const rm_components = {
     video: {
         description: '{{[[video]]}}',
+        page: 'video',
         classToObserve: 'rm-video-player__spacing-wrapper',
         BinaryDomUI: () => UI.deploymentStyle.deployment_style_video,
     },
     yt_gif: {
         description: '{{[[yt-gif]]}}',
+        page: 'yt-gif',
         classToObserve: `rm-xparser-default-${cssData.yt_gif}`,
         BinaryDomUI: () => UI.deploymentStyle.deployment_style_yt_gif,
     },
@@ -275,11 +277,13 @@ const rm_components = {
     state: {
         currentKey: '',
         initialKey: '',
+        currentClassesToObserver: [],
     },
     currentTarget: function ()
     {
         const crr = this.state.currentKey;
         const tkey = (crr == 'both') ? 'yt_gif' : crr;
+        //currentClassesToObserver = (crr == 'both') ? this[tkey].classToObserve;
         return this[tkey].classToObserve;
     },
     assertCurrentKey: function (override_roam_video_component)
@@ -297,6 +301,12 @@ const rm_components = {
         {
             newKey = 'yt_gif';
         }
+
+        // 🍝 // 🍝 // 🍝
+        this.state.currentClassesToObserver = (newKey == 'both') ? this[newKey].classesToObserve : [this[newKey].classToObserve];
+        // 🍝 // 🍝 // 🍝
+        YTGIF_Config.componentPage = (newKey == 'both') ? 'yt-gif|video' : this[newKey].page;
+
         return this.state.currentKey = newKey;
     },
     validOverrideComponentSettingBlock: function (el)
@@ -1975,7 +1985,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         //#endregion
 
         // uidFromGrandParent
-        const preSelector = [[...rm_components.both.classesToObserve].map(x => '.' + x), '.yt-gif-wrapper'];
+        const preSelector = [[...rm_components.state.currentClassesToObserver].map(s => '.' + s), '.yt-gif-wrapper'];
         const targetSelector = preSelector.join();
         const tempUrlObj = {
             urlComponents: function () { return [...this.grandParentBlock().querySelectorAll(this.targetSelector)] },
@@ -2072,15 +2082,8 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
         resObj.url = MapAtIndex_Value(resObj.nestedComponentMap, resObj.preUrlIndex, 'is component');
         resObj.accUrlIndex += resObj.preUrlIndex;
-        try
-        {
-            if (!resObj?.url?.includes('http'))
-                resObj.url = null;
-        } catch (error)
-        {
+        if (!resObj?.url?.includes?.('http'))
             resObj.url = null;
-            debugger;
-        }
         return resObj;
 
 
@@ -3561,7 +3564,7 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
 
     function stringsWihtUidsObj(rawText)
     {
-        const { blockRgx, aliasPlusUidsRgx, tooltipCardRgx } = BlockRegexObj(componentPage);
+        const { blockRgx, aliasPlusUidsRgx, tooltipCardRgx, componentRgx } = BlockRegexObj(componentPage);
         const string = clean_rm_string(rawText);
 
         let blockReferencesAlone = [];
@@ -3597,7 +3600,7 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
                 is = 'is alias';
                 inOrderValue = [...val.matchAll(aliasPlusUidsRgx)][0][2];
             }
-            else if (val.match(targetStringRgx)?.[0]) // {{componentPage: -> first target <- xxxxxx xxx... }}
+            else if (val.match(componentRgx)?.[0]) // {{componentPage: -> first target <- xxxxxx xxx... }}
             {
                 is = 'is component';
                 inOrderValue = val.match(targetStringRgx)?.[0];
@@ -3605,15 +3608,9 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
             else // xxxuidxxx
             {
                 if (inOrderValue.length != 9)
-                {
                     return null;
-                    //is = 'is component';
-                    //inOrderValue = '';
-                }
                 else
-                {
                     blockReferencesAlone = UTILS.pushSame(blockReferencesAlone, val);
-                }
             }
 
             return resObj()
@@ -3631,7 +3628,7 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
         const blockRgx = [tooltipCardRgx, componentRgx, anyPossibleComponentsRgx, aliasPlusUidsRgx, anyUidRgx].reduce((acc, v, i, a) => // https://masteringjs.io/tutorials/fundamentals/concat-regexp
             new RegExp(acc.source != '(?:)' ? acc.source + '|' + v.source : v.source, 'gm'), new RegExp());
 
-        return { blockRgx, aliasPlusUidsRgx, tooltipCardRgx, anyPossibleComponentsRgx };
+        return { blockRgx, aliasPlusUidsRgx, tooltipCardRgx, anyPossibleComponentsRgx, componentRgx };
     }
 }
 
