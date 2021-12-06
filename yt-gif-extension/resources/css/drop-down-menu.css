@@ -422,6 +422,10 @@ span.dropdown-item.yt-gif-wrapper-parent .yt-gif-wrapper.dont-focus-block {
 .yt-timestamp-opening{
   --pulse-c: 0, 0, 255;
 }
+.yt-gif-timestamp-prevent-scroll{
+  overscroll-behavior: contain;
+  overflow: auto;
+}
 
 @keyframes pulseText{
   0%{
