@@ -1237,9 +1237,9 @@ async function Ready()
 
         slashMenuObserver.observe(targetNode, config);
         timestampObserver.observe(targetNode, config);
-        document.removeEventListener('keyup', keyupEventHanlder);
+        document.removeEventListener('keydown', keyupEventHanlder);
         keyupEventHanlder = registerKeyCombinations;
-        document.addEventListener('keyup', keyupEventHanlder);
+        document.addEventListener('keydown', keyupEventHanlder);
     }
     function StopEmulation()
     {
@@ -1254,7 +1254,7 @@ async function Ready()
 
         slashMenuObserver.disconnect();
         timestampObserver.disconnect();
-        document.removeEventListener('keyup', keyupEventHanlder);
+        document.removeEventListener('keydown', keyupEventHanlder);
     }
 
 
@@ -1348,7 +1348,7 @@ async function Ready()
                 const filterOut = [...ArrObjs].reverse().filter(i => !lastArr.some(el => el == i));
 
 
-                if (!!lastArr.some(el => !el))
+                if (lastArr.every(el => !!el))
                 {
                     lastArr.forEach((o, i) => o.targetNode.style.filter = `brightness(${100 + (5 * i)}%)`);
                 }
@@ -1388,7 +1388,7 @@ async function Ready()
 
 
         const { foundBlock } = await getLastComponentInHierarchy(uid, YTGIF_Config);
-        if (!foundBlock?.uid) console.warn(`YT GIF Timestamps: couldn't find YT GIFs within the parent Hierarchy: ((${uid}))`);
+        if (!foundBlock?.uid) console.warn(`YT GIF Timestamps: couldn't find YT GIFs within the Hierarchy: ((${uid}))`);
         const { uid: f_uid } = foundBlock || { uid: '' };
 
         const baseAnim = ['yt-timestamp-pulse-text-anim'];
@@ -1566,22 +1566,51 @@ async function Ready()
     async function addBlockTimestamps(pageRefSufx, uid)
     {
         const { secHMS, foundBlock, targetBlock } = await getLastComponentInHierarchy(uid, YTGIF_Config);
-        if (!foundBlock) { debugger; return; }
+        if (!foundBlock) return;
 
-        const { start, end } = targetBlock; // bulky and clunky... because there only two options
+        const { start, end, uid: tUid } = targetBlock; // bulky and clunky... because there only two options
         const boundaries = (pageRefSufx == 'start') ? start : end;
         const targetSecHMS = secHMS.includes('NaN') ? boundaries : secHMS;
+        const fmtSecHMS = `{{[[yt-gif/${pageRefSufx}]]: ${targetSecHMS}}}`;
 
-        const updateString = targetBlock.string.concat(` {{[[yt-gif/${pageRefSufx}]]: ${targetSecHMS}}}`);
-        await kauderk.rap.updateBlock(targetBlock.uid, updateString);
+        const { updatedString, el } = concatStringAtCaret(getCurrentInputBlock(), fmtSecHMS);
+
+        await RAP.updateBlock(tUid, updatedString);
+        await RAP.sleep(50);
+
+        updateAtCaret(getCurrentInputBlock(), el.selectionEnd);
     }
     async function addBlockTimestamp_smart(pageRefSufx)
     {
-        const openInputBlock = document.querySelector(".rm-block__input--active.rm-block-text");
+        const openInputBlock = getCurrentInputBlock();
         const uid = openInputBlock?.id?.slice(-9);
         if (!pageRefSufx || !uid || !openInputBlock)
             return;
         await addBlockTimestamps(pageRefSufx, uid);
+    }
+    function getCurrentInputBlock()
+    {
+        return document.querySelector(".rm-block__input--active.rm-block-text")
+    }
+    function updateAtCaret(el, atLength = 0, start = false)
+    {
+        if (start)
+            el.selectionStart = el.selectionEnd = atLength;
+        else
+            el.selectionEnd = el.selectionStart = atLength;
+        el.focus();
+    }
+    function concatStringAtCaret(el, newText)
+    {
+        const start = el.selectionStart
+        const end = el.selectionEnd
+        const text = el.value
+        const before = text.substring(0, start)
+        const after = text.substring(end, text.length)
+        el.value = (before + newText + after)
+        updateAtCaret(el, (end + newText.length));
+
+        return { updatedString: el.value, el }
     }
 
 
