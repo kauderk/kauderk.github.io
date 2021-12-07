@@ -423,7 +423,7 @@ span.dropdown-item.yt-gif-wrapper-parent .yt-gif-wrapper.dont-focus-block {
   --pulse-c: 0, 0, 255;
 }
 .yt-gif-timestamp-parent{
-  display: inline-block;
+  display: table-cell;
 }
 .yt-gif-timestamp-prevent-scroll{
   overscroll-behavior: contain;
