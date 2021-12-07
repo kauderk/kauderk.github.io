@@ -304,7 +304,6 @@ const rm_components = {
 
         // 🍝 // 🍝 // 🍝
         this.state.currentClassesToObserver = (newKey == 'both') ? this[newKey].classesToObserve : [this[newKey].classToObserve];
-        // 🍝 // 🍝 // 🍝
         YTGIF_Config.componentPage = (newKey == 'both') ? 'yt-gif|video' : this[newKey].page;
 
         return this.state.currentKey = newKey;
@@ -490,10 +489,14 @@ async function Ready()
         },
         attr: {
             emulation: 'yt-gif-timestamp-emulation',
-            timestamp: 'timestamp', // start or end
+            timestampStyle: 'timestamp-style', // start or end
+            timestamp: 'timestamp',
         },
         timestamp: {
             buttonClass: componentClass('timestamp'),
+        },
+        parent: {
+            className: 'yt-gif-timestamp-parent',
         },
     };
 
@@ -1256,7 +1259,7 @@ async function Ready()
         const found = [...targetNode.querySelectorAll(`[${timestampObj.attr.emulation}]`)];
         for (let i of found)
         {
-            const key = i.getAttribute(timestampObj.attr.timestamp) || 'timestamp';
+            const key = i.getAttribute(timestampObj.attr.timestampStyle) || 'timestamp';
             i.innerHTML = key;
             i = UTILS.ChangeElementType(i, 'button');
             i.className = timestampObj[key].buttonClass;
@@ -1300,16 +1303,16 @@ async function Ready()
 
             if (!startEndComponentMap || ((startEndComponentMap.size !== siblingsArr.length) && !MapAtIndex_Value(startEndComponentMap, siblingsArr.indexOf(node), isKey)))
             {
-                console.count(`YT GIF Timestamps: updating block strings: ((${tempUID})) ...        ...       ...         ...`);
+                // console.count(`YT GIF Timestamps: updating block strings: ((${tempUID})) ...        ...       ...         ...`);
                 await RAP.sleep(800); // YIKES!!!
                 componentMapMap.set(mapsKEY, await getComponentMap(tempUID, StartEnd_Config));
                 await update_startEndComponentMap();
             }
 
 
-            let targetNode = siblingsArr.find(x => x === node);
+            let targetNodeParent = siblingsArr.find(x => x === node);
             const targetIndex = siblingsArr.indexOf(node);
-            if (targetIndex == -1 || !targetNode || !targetNode?.parentNode) continue;
+            if (targetIndex == -1 || !targetNodeParent || !targetNodeParent?.parentNode) continue;
 
 
             const timestampContent = MapAtIndex_Value(startEndComponentMap, targetIndex, isKey);
@@ -1320,26 +1323,40 @@ async function Ready()
             const similarCountButRoot = indent == 0 ? 0 : similarCount;
             const fromUid = ObjAsKey.uid;
 
-            const key = Object.keys(timestampObj).find(key => targetNode.classList.contains(timestampObj[key]?.targetClass)); // find timestampObj key that is included in targetNode classlist
+            const key = Object.keys(timestampObj).find(key => targetNodeParent.classList.contains(timestampObj[key]?.targetClass)); // find timestampObj key that is included in targetNode classlist
             const page = timestampObj[key]?.page || 'timestamp';
 
-            targetNode.attributes.forEach(attr => targetNode.removeAttribute(attr.name));
-            targetNode = UTILS.ChangeElementType(targetNode, 'a');
-            targetNode.setAttribute(timestampObj.attr.timestamp, page);
-            targetNode.setAttribute(timestampObj.attr.emulation, ''); // color: #308d9f;
+            targetNodeParent.attributes.forEach(attr => targetNodeParent.removeAttribute(attr.name));
+            targetNodeParent = UTILS.ChangeElementType(targetNodeParent, 'div');
+            targetNodeParent.className = timestampObj.parent.className;
+            targetNodeParent.innerHTML = '';
+            const targetNode = UTILS.elm('', 'a');
+            targetNodeParent.appendChild(targetNode);
+
+            targetNode.setAttribute(timestampObj.attr.timestampStyle, page);
+            targetNode.setAttribute(timestampObj.attr.emulation, '');
+            targetNode.setAttribute(timestampObj.attr.timestamp, timestampContent);
             targetNode.className = timestampObj.roamClassName;
             targetNode.innerHTML = timestampContent;
-            targetNode.addEventListener('mousedown', async (e) => await PlayPauseOnClicks(e, tempUID));
 
-
-            emulationArr = await getMap_smart(mapsKEY, succesfulEmulationMap, () => []);
-            emulationArr = UTILS.pushSame(emulationArr, {
+            const targetNodePpts = {
                 fromUniqueUid: fromUid + similarCountButRoot,
                 similarCount: parseInt(similarCount, 10),
                 page, indent, targetIndex, tempUID, fromUid, targetNode,
                 timestamp: timestampContent,
                 color: window.getComputedStyle(targetNode).color,
-            });
+                ObjAsKey, blockUid: tempUID, startEndComponentMap
+            }
+
+
+            emulationArr = await getMap_smart(mapsKEY, succesfulEmulationMap, () => []);
+            emulationArr = UTILS.pushSame(emulationArr, targetNodePpts);
+
+
+            targetNode.addEventListener('mousedown', async (e) => await PlayPauseOnClicks(e, tempUID));
+            targetNode.addEventListener('wheel', async (e) => await rawTimestampOnWheel(e, tempUID));
+            targetNodeParent.addEventListener('mouseleave', async (e) => await updateTimestampOnMouseleave(e, tempUID, targetNodePpts));
+            targetNodeParent.addEventListener('mouseenter', e => toogleDocumentScroll(e.currentTarget, true));
         }
 
 
@@ -1553,6 +1570,39 @@ async function Ready()
             tEl.removeAttribute('awaiting');
         }
     }
+    // 6.2.1
+    async function updateTimestampOnMouseleave(e, uid, nodePpts)
+    {
+        const { currentTarget: tEl } = e;
+        toogleDocumentScroll(tEl, false);
+        debugger;
+    }
+    async function rawTimestampOnWheel(e, uid)
+    {
+        const { currentTarget: tEl } = e;
+        if (!tEl.parentNode.classList.contains('yt-gif-timestamp-prevent-scroll')) return;
+
+        const validTimestamp = tEl.innerHTML.match(StartEnd_Config.targetStringRgx)?.[0];
+        const secondsOnly = UTILS.HMSToSecondsOnly(validTimestamp);
+
+        if (!validTimestamp || typeof secondsOnly !== 'number') return;
+
+        const newTimestamp = SliderValue(secondsOnly);
+        tEl.innerHTML = UTILS.convertHMS(newTimestamp);
+
+        function SliderValue(value)
+        {
+            const dir = Math.sign(e.deltaY) * -1;
+            const parsed = parseInt(value, 10);
+            return Number(dir + parsed);
+        }
+    }
+    // 6.2.2
+    function toogleDocumentScroll(el, bol)
+    {
+        UTILS.toggleClasses(bol, ['yt-gif-timestamp-prevent-scroll'], el);
+    }
+
 
 
     // 6.3
