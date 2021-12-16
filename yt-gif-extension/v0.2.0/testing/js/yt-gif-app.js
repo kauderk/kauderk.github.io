@@ -1575,6 +1575,9 @@ async function Ready()
     {
         const { currentTarget: tEl } = e;
         toogleDocumentScroll(tEl, false);
+        const { blockRgx } = BlockRegexObj(StartEnd_Config.componentPage, true);
+        const res = RAP.getBlockInfoByUID(nodePpts.fromUid);
+        const rawText = res[0]?.[0]?.string || 'F';
         debugger;
     }
     async function rawTimestampOnWheel(e, uid)
@@ -3532,9 +3535,9 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
 
     async function TryToFindTargetStrings_Rec(objRes, parentObj, map)
     {
-        for (const { value, is } of objRes?.targetStringsWithUids) // loop through RENDERED targetStrings (components) and uids (references)
+        for (const { value, is, order } of objRes?.targetStringsWithUids) // loop through RENDERED targetStrings (components) and uids (references)
         {
-            const generateUniqueKey = () => assertUniqueKey_while(objRes.uid, indentFunc, is);
+            const generateUniqueKey = () => assertUniqueKey_while(objRes.uid, indentFunc, is, order);
 
             if (['is alias', 'is component'].some(w => w === is))
             {
@@ -3566,7 +3569,7 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
 
         return map;
 
-        function assertUniqueKey_while(uid, indent, isKey)
+        function assertUniqueKey_while(uid, indent, isKey, order)
         {
             uidMagazine = PushIfNewEntry(uidMagazine, uid); // clunky, but it works
             const similarCount = uidMagazine.filter(x => x === uid).length; // uniqueKey among non siblings
@@ -3576,6 +3579,7 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
                 keyIsAlias: results['is alias'].incrementIf(isKey === 'is alias'),
                 keyIsComponent: results['is component'].incrementIf(isKey === 'is component'),
                 keyIsBlockRef: results['is block reference'].incrementIf(isKey === 'is block reference'),
+                order
             }
         }
         function cleanIndentedBlock()
@@ -3626,62 +3630,83 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
         function getRenderedStuff(string)
         {
             const blockMatches = [...[...string.matchAll(new RegExp(blockRgx, 'gm'))].map(x => x = x[0])];
-            return blockMatches.map(val => isValueObj(val));
+            const siblingsOrderObj = {
+                'is block reference': {},
+                'is tooltip card': {},
+                'is alias': {},
+                'is component': {},
+            }
+            Object.keys(siblingsOrderObj).forEach(key => Object.assign(siblingsOrderObj[key], orderObj));
+
+            return blockMatches.map(val => isValueObj(val, siblingsOrderObj));
+
+            function isValueObj(val, siblingsOrder)
+            {
+                const resObj = () =>
+                {
+                    siblingsOrder[is].incrementIf(true);
+                    return { value: inOrderValue, is, order: siblingsOrder[is].order }
+                }
+
+                let is = 'is block reference', inOrderValue = val;
+
+                if (val.match(tooltipCardRgx)?.[0]) // {{=:_rendered_by_roam_| -> string XXxxxx ... <- }}
+                {
+                    is = 'is tooltip card';
+                    inOrderValue = [...val.matchAll(tooltipCardRgx)][0][2];
+
+                    const blockLikeString = [...val.matchAll(tooltipCardRgx)][0][1];
+                    return [resObj(), ...getRenderedStuff(blockLikeString),]
+                }
+                else if (val.match(aliasPlusUidsRgx)?.[0]) // [xxxanything goesxxx]((( -> xxxuidxxx <- )))
+                {
+                    is = 'is alias';
+                    inOrderValue = [...val.matchAll(aliasPlusUidsRgx)][0][2];
+                }
+                else if (val.match(componentRgx)?.[0]) // {{componentPage: -> first target <- xxxxxx xxx... }}
+                {
+                    is = 'is component';
+                    inOrderValue = val.match(targetStringRgx)?.[0];
+                }
+                else // xxxuidxxx
+                {
+                    if (inOrderValue.length != 9)
+                        return null;
+                    else
+                        blockReferencesAlone = UTILS.pushSame(blockReferencesAlone, val);
+                }
+
+                return resObj()
+            }
         }
 
-        function isValueObj(val)
-        {
-            const resObj = () => o = { value: inOrderValue, is }
-            let is = 'is block reference', inOrderValue = val;
-
-            if (val.match(tooltipCardRgx)?.[0]) // {{=:_rendered_by_roam_| -> string XXxxxx ... <- }}
-            {
-                is = 'is tooltip card';
-                inOrderValue = [...val.matchAll(tooltipCardRgx)][0][2];
-
-                const blockLikeString = [...val.matchAll(tooltipCardRgx)][0][1];
-                return [
-                    resObj(),
-                    ...getRenderedStuff(blockLikeString),
-                ]
-            }
-            else if (val.match(aliasPlusUidsRgx)?.[0]) // [xxxanything goesxxx]((( -> xxxuidxxx <- )))
-            {
-                is = 'is alias';
-                inOrderValue = [...val.matchAll(aliasPlusUidsRgx)][0][2];
-            }
-            else if (val.match(componentRgx)?.[0]) // {{componentPage: -> first target <- xxxxxx xxx... }}
-            {
-                is = 'is component';
-                inOrderValue = val.match(targetStringRgx)?.[0];
-            }
-            else // xxxuidxxx
-            {
-                if (inOrderValue.length != 9)
-                    return null;
-                else
-                    blockReferencesAlone = UTILS.pushSame(blockReferencesAlone, val);
-            }
-
-            return resObj()
-        }
     }
 
-    function BlockRegexObj(componentPage)
-    {
-        const componentRgx = new RegExp(preRgxComp(componentPage), 'gm');
-        const anyPossibleComponentsRgx = /{{.+}/gm;
-        const aliasPlusUidsRgx = /\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm;
-        const tooltipCardRgx = /{{=:(.+?)\|(.+)}}/gm;
-        const anyUidRgx = /(?<=\(\()([^(].*?[^)])(?=\)\))/gm;
-        // set in the order in which roam renders them - anyPossibleComponents is kinda like a joker card, it will trap components along with irrelevant uids
-        const blockRgx = [tooltipCardRgx, componentRgx, anyPossibleComponentsRgx, aliasPlusUidsRgx, anyUidRgx].reduce((acc, v, i, a) => // https://masteringjs.io/tutorials/fundamentals/concat-regexp
-            new RegExp(acc.source != '(?:)' ? acc.source + '|' + v.source : v.source, 'gm'), new RegExp());
-
-        return { blockRgx, aliasPlusUidsRgx, tooltipCardRgx, anyPossibleComponentsRgx, componentRgx };
-    }
 }
 
+function BlockRegexObj(componentPage, caputureGargabe = false)
+{
+    const componentRgx = new RegExp(preRgxComp(componentPage), 'gm');
+    const inlindeCodeRgx = /(`.+?`)|(`([\s\S]*?)`)/gm;
+    const embedCompRgx = new RegExp(preRgxComp('embed'), 'gm');
+    const anyPossibleComponentsRgx = /{{.+}/gm;
+    const aliasPlusUidsRgx = /\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm;
+    const tooltipCardRgx = /{{=:(.+?)\|(.+)}}/gm;
+    const anyUidRgx = /(?<=\(\()([^(].*?[^)])(?=\)\))/gm;
+    // set in the order in which roam renders them - anyPossibleComponents is kinda like a joker card, it will trap components along with irrelevant uids
+    const baseBlockRgx = [tooltipCardRgx, componentRgx, anyPossibleComponentsRgx, aliasPlusUidsRgx, anyUidRgx]
+    const withGarbage = [inlindeCodeRgx, embedCompRgx, ...baseBlockRgx];
+
+    const blockRgx = reduceRgxArr(!caputureGargabe ? baseBlockRgx : withGarbage);
+
+    return { blockRgx, aliasPlusUidsRgx, tooltipCardRgx, anyPossibleComponentsRgx, componentRgx };
+
+    function reduceRgxArr(regexArr)
+    {// https://masteringjs.io/tutorials/fundamentals/concat-regexp
+        return regexArr.reduce((acc, v, i, a) =>
+            new RegExp(acc.source != '(?:)' ? acc.source + '|' + v.source : v.source, 'gm'), new RegExp());
+    }
+}
 
 function preRgxComp(rgxPage)
 {
