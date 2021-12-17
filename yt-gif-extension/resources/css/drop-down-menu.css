@@ -406,8 +406,11 @@ span.dropdown-item.yt-gif-wrapper-parent .yt-gif-wrapper.dont-focus-block {
 }
 
 /* timestamp emulation */
-.rm-video-timestamp[yt-gif-timestamp-emulation]{
+a.rm-video-timestamp[timestamp-style="start"]{
   color: #308d9f;
+}
+a.rm-video-timestamp[timestamp-style="end"] {
+  color: #30649f;
 }
 
 .yt-timestamp-pulse-text-anim{
@@ -429,6 +432,7 @@ span.dropdown-item.yt-gif-wrapper-parent .yt-gif-wrapper.dont-focus-block {
   overscroll-behavior: contain;
   overflow: auto;
 }
+
 
 @keyframes pulseText{
   0%{
