@@ -355,7 +355,7 @@ rm_components.both = {
 }
 Object.assign(rm_components.both, baseDeploymentObj_both());
 /*-----------------------------------*/
-var endSecOffset = 0;
+
 
 
 
@@ -1559,32 +1559,37 @@ async function Ready()
             if (!validTimestamp || typeof secondsOnly !== 'number') { debugger; return; }
 
 
+            const sec = (p) => targetNodePpts.self.page == p;
+            const pearSec = () => UTILS.HMSToSecondsOnly(targetNodePpts.pears?.find(o => o != targetNodePpts.self)?.timestamp || '');
+
+            const startSec = sec("start") ? secondsOnly : (pearSec() || 0);
+            const endSec = sec("end") ? secondsOnly : (pearSec() || record.player.getDuration());
+            const seekTo = sec("end") ? secondsOnly + 1 : secondsOnly;
+
+
             if (record?.player?.loadVideoById)
             {
-                const sec = (p) => targetNodePpts.self.page == p;
-                const pearSec = () => UTILS.HMSToSecondsOnly(targetNodePpts.pears?.find(o => o != targetNodePpts.self)?.timestamp || '');
-
-                const startSec = sec("start") ? secondsOnly : (pearSec() || 0);
-                const pre_endSec = sec("end") ? secondsOnly : (pearSec() || record.player.getDuration());
-                const endSec = pre_endSec + endSecOffset;
-
                 const vars = record.player.i.h;
                 const map = allVideoParameters.get(record.player.h.id);
 
-                vars.playerVars.start = startSec;
-                vars.playerVars.end = endSec;
-
-                map.start = startSec;
-                map.end = endSec;
+                vars.playerVars.start = map.start = startSec;
+                vars.playerVars.end = map.end = endSec;
+                const iframe = record.player.getIframe();
 
                 await record?.player.loadVideoById({
                     'videoId': vars.videoId,
                     'startSeconds': startSec,
                     'endSeconds': endSec,
                 });
+
+                while (document.body.contains(iframe) && !record?.player?.getCurrentTime())
+                    await RAP.sleep(50);
+
+                if (sec("end"))
+                    record.player.seekTo(seekTo);
             }
             targetWrapper?.setAttribute('play-right-away', true);
-            targetWrapper?.setAttribute('seekTo', secondsOnly);
+            targetWrapper?.setAttribute('seekTo', seekTo);
         }
         async function pauseLastBlock_SimHoverOut(r)
         {
@@ -2473,6 +2478,8 @@ async function onPlayerReady(event)
     {
         if (parent.hasAttribute('seekTo')) // 🍝
         {
+            while (document.body.contains(iframe) && !t?.getCurrentTime())
+                await RAP.sleep(50);
             seekToUpdatedTime(parent.getAttribute('seekTo'));
             videoIsPlayingWithSound();
         }
@@ -3112,10 +3119,8 @@ function onStateChange(state)
 
     if (state.data === YT.PlayerState.ENDED)
     {
-        console.log(`start: ${state.target.i.h.playerVars.start} end: ${state.target.i.h.playerVars.end}`);
         const startSec = map?.start || 0;
-        const pre_endSec = map?.end || t.getDuration();
-        const endSec = pre_endSec + endSecOffset;
+        const endSec = map?.end || t.getDuration();
 
         t.i.h.playerVars.start = startSec;
         t.i.h.playerVars.end = endSec;
