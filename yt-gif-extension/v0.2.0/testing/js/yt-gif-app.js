@@ -1395,6 +1395,14 @@ async function Ready()
                         };
                     });
                 }
+                else
+                {
+                    lastArr.forEach((o, i, a) =>
+                    {
+                        if (o?.targetNode)
+                            o.targetNode.style.filter = `brightness(85%)`;
+                    });
+                }
 
             });
         }
@@ -1559,6 +1567,14 @@ async function Ready()
             if (!validTimestamp || typeof secondsOnly !== 'number') { debugger; return; }
 
 
+            [...targetWrapper.closest('.roam-block-container')?.querySelectorAll('a.rm-video-timestamp[yt-gif-timestamp-emulation]')]
+                .forEach(el => el.removeAttribute('active-timestamp'));
+            if (targetNodePpts.pears)
+                targetNodePpts.pears.forEach(o => o.targetNode.setAttribute('active-timestamp', ''));
+            else
+                targetNodePpts.self.targetNode.setAttribute('active-timestamp', '');
+
+
             const sec = (p) => targetNodePpts.self.page == p;
             const pearSec = () => UTILS.HMSToSecondsOnly(targetNodePpts.pears?.find(o => o != targetNodePpts.self)?.timestamp || '');
 
@@ -1582,11 +1598,12 @@ async function Ready()
                     'endSeconds': endSec,
                 });
 
+                //if (sec("end"))
+                //{
                 while (document.body.contains(iframe) && !record?.player?.getCurrentTime())
                     await RAP.sleep(50);
-
-                if (sec("end"))
-                    record.player.seekTo(seekTo);
+                record.player.seekTo(seekTo);
+                //}
             }
             targetWrapper?.setAttribute('play-right-away', true);
             targetWrapper?.setAttribute('seekTo', seekTo);
@@ -2479,7 +2496,7 @@ async function onPlayerReady(event)
         if (parent.hasAttribute('seekTo')) // 🍝
         {
             while (document.body.contains(iframe) && !t?.getCurrentTime())
-                await RAP.sleep(50);
+                await RAP.sleep(500);
             seekToUpdatedTime(parent.getAttribute('seekTo'));
             videoIsPlayingWithSound();
         }
