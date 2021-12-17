@@ -1601,12 +1601,9 @@ async function Ready()
                     'endSeconds': endSec,
                 });
 
-                //if (sec("end"))
-                //{
                 while (document.body.contains(iframe) && !record?.player?.getCurrentTime())
                     await RAP.sleep(50);
                 record.player.seekTo(seekTo);
-                //}
             }
             targetWrapper?.setAttribute('play-right-away', true);
             targetWrapper?.setAttribute('seekTo', seekTo);
@@ -1674,38 +1671,21 @@ async function Ready()
             {
                 pageRefSufx = 'end'
             }
-            await addBlockTimestamp_smart(pageRefSufx);
+            await addBlockTimestamp_smart_local(pageRefSufx);
         }
     }
     // 6.3.1
-    async function addBlockTimestamps(pageRefSufx, uid)
+    async function addBlockTimestamp_smart_local(pageRefSufx)
     {
-        const { secHMS, foundBlock, targetBlock } = await getLastComponentInHierarchy(uid, YTGIF_Config);
-        if (!foundBlock) return;
-
-        const { start, end, uid: tUid } = targetBlock; // bulky and clunky... because there only two options
-        const boundaries = (pageRefSufx == 'start') ? start : end;
-        const targetSecHMS = secHMS.includes('NaN') ? boundaries : secHMS;
-        const fmtSecHMS = `{{[[yt-gif/${pageRefSufx}]]: ${targetSecHMS}}}`;
+        const { fmtSecHMS, uid } = await getTimestampObj_smart(pageRefSufx);
+        if (!uid) return;
 
         const { updatedString, el } = concatStringAtCaret(getCurrentInputBlock(), fmtSecHMS);
 
-        await RAP.updateBlock(tUid, updatedString);
+        await RAP.updateBlock(uid, updatedString);
         await RAP.sleep(50);
 
         updateAtCaret(getCurrentInputBlock(), el.selectionEnd);
-    }
-    async function addBlockTimestamp_smart(pageRefSufx)
-    {
-        const openInputBlock = getCurrentInputBlock();
-        const uid = openInputBlock?.id?.slice(-9);
-        if (!pageRefSufx || !uid || !openInputBlock)
-            return;
-        await addBlockTimestamps(pageRefSufx, uid);
-    }
-    function getCurrentInputBlock()
-    {
-        return document.querySelector(".rm-block__input--active.rm-block-text")
     }
     function updateAtCaret(el, atLength = 0, start = false)
     {
@@ -1805,7 +1785,7 @@ async function Ready()
                         shortutPrompt: 'Ctrl + Alt + s',
                     });
                     parent.parentNode.insertBefore(start, parent);
-                    start.addEventListener('click', async () => addBlockTimestamp_smart('start'));
+                    start.addEventListener('click', async () => addBlockTimestamp_smart_local('start'));
 
 
                     const end = createSlashMenuEmulation_videoItem({
@@ -1815,7 +1795,7 @@ async function Ready()
                         shortutPrompt: 'Ctrl + Alt + d',
                     });
                     parent.parentNode.insertBefore(end, parent);
-                    end.addEventListener('click', async () => addBlockTimestamp_smart('end'));
+                    end.addEventListener('click', async () => addBlockTimestamp_smart_local('end'));
                 }
 
                 if (LastTimeNode)
@@ -3463,6 +3443,40 @@ function getWrapperUrlSufix(wrapper)
 function properBlockIDSufix(url, urlIndex)
 {
     return '_' + [url, urlIndex].join('_');
+}
+//#endregion
+
+
+
+
+//#region Timestamp
+window.YTGIF = {
+    getTimestampObj: getTimestampObj_smart
+}
+async function getTimestampObj_smart(pageRefSufx)
+{
+    const openInputBlock = getCurrentInputBlock();
+    const uid = openInputBlock?.id?.slice(-9);
+    if (!pageRefSufx || !uid || !openInputBlock)
+        return { pageRefSufx: '' };
+    return await getTimestampObj(pageRefSufx, uid);
+
+    async function getTimestampObj(pageRefSufx, uid)
+    {
+        const { secHMS, foundBlock, targetBlock } = await getLastComponentInHierarchy(uid, YTGIF_Config);
+        if (!foundBlock) return {};
+
+        const { start, end, uid: tUid } = targetBlock; // bulky and clunky... because there only two options
+        const boundaries = (pageRefSufx == 'start') ? start : end;
+        const targetSecHMS = secHMS.includes('NaN') ? boundaries : secHMS;
+        const fmtSecHMS = `{{[[yt-gif/${pageRefSufx}]]: ${targetSecHMS}}}`;
+
+        return { fmtSecHMS, uid: tUid, }
+    }
+}
+function getCurrentInputBlock()
+{
+    return document.querySelector(".rm-block__input--active.rm-block-text")
 }
 //#endregion
 
