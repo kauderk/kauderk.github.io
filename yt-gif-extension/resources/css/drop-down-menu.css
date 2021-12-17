@@ -409,6 +409,9 @@ span.dropdown-item.yt-gif-wrapper-parent .yt-gif-wrapper.dont-focus-block {
 a.rm-video-timestamp[yt-gif-timestamp-emulation]
 {
   color: var(--c);
+}
+a.rm-video-timestamp[active-timestamp]
+{
   box-shadow: inset 0 0 2px 0px var(--c);
   border-radius: 5px;
 }
