@@ -355,7 +355,7 @@ rm_components.both = {
 }
 Object.assign(rm_components.both, baseDeploymentObj_both());
 /*-----------------------------------*/
-
+var endSecOffset = 0;
 
 
 
@@ -1353,10 +1353,10 @@ async function Ready()
             emulationArr = UTILS.pushSame(emulationArr, targetNodePpts);
 
 
-            targetNode.addEventListener('mousedown', async (e) => await PlayPauseOnClicks(e, tempUID));
-            targetNode.addEventListener('wheel', async (e) => await rawTimestampOnWheel(e, tempUID));
-            targetNodeParent.addEventListener('mouseleave', async (e) => await updateTimestampOnMouseleave(e, tempUID, targetNodePpts));
-            targetNodeParent.addEventListener('mouseenter', e => toogleDocumentScroll(e.currentTarget, true));
+            //targetNode.addEventListener('mousedown', async (e) => await PlayPauseOnClicks(e, tempUID, targetNodePpts));
+            //targetNode.addEventListener('wheel', async (e) => await rawTimestampOnWheel(e, tempUID));
+            // targetNodeParent.addEventListener('mouseleave', async (e) => await updateTimestampOnMouseleave(e, tempUID, targetNodePpts));
+            // targetNodeParent.addEventListener('mouseenter', e => toogleDocumentScroll(e.currentTarget, true));
         }
 
 
@@ -1372,16 +1372,30 @@ async function Ready()
             {
                 const findPage = (p) => [...ArrObjs].reverse().find(x => x.page == p);
                 const lastArr = [findPage('start'), findPage('end')];
-                const filterOut = [...ArrObjs].reverse().filter(i => !lastArr.some(el => el == i));
+
+
+                ArrObjs.forEach((o, i) =>
+                {
+                    o.targetNode.style.filter = `brightness(70%)`;
+                    o.targetNode.onmousedown = async function (e)
+                    {
+                        await PlayPauseOnClicks(e, o.tempUID, { self: o })
+                    };
+                });
 
 
                 if (lastArr.every(el => !!el))
                 {
-                    lastArr.forEach((o, i) => o.targetNode.style.filter = `brightness(${100 + (5 * i)}%)`);
+                    lastArr.forEach((o, i, a) =>
+                    {
+                        o.targetNode.style.filter = `brightness(${100 + (5 * i)}%)`;
+                        o.targetNode.onmousedown = async function (e)
+                        {
+                            await PlayPauseOnClicks(e, o.tempUID, { pears: a, self: o })
+                        };
+                    });
                 }
 
-
-                filterOut.forEach((o, i) => o.targetNode.style.filter = `brightness(70%)`)
             });
         }
 
@@ -1406,7 +1420,7 @@ async function Ready()
         }
     }
     // 6.1.1
-    async function PlayPauseOnClicks(e, uid)
+    async function PlayPauseOnClicks(e, uid, targetNodePpts)
     {
         const { currentTarget: tEl, which } = e;
 
@@ -1545,20 +1559,32 @@ async function Ready()
             if (!validTimestamp || typeof secondsOnly !== 'number') { debugger; return; }
 
 
+            if (record?.player?.loadVideoById)
+            {
+                const sec = (p) => targetNodePpts.self.page == p;
+                const pearSec = () => UTILS.HMSToSecondsOnly(targetNodePpts.pears?.find(o => o != targetNodePpts.self)?.timestamp || '');
 
+                const startSec = sec("start") ? secondsOnly : (pearSec() || 0);
+                const pre_endSec = sec("end") ? secondsOnly : (pearSec() || record.player.getDuration());
+                const endSec = pre_endSec + endSecOffset;
+
+                const vars = record.player.i.h;
+                const map = allVideoParameters.get(record.player.h.id);
+
+                vars.playerVars.start = startSec;
+                vars.playerVars.end = endSec;
+
+                map.start = startSec;
+                map.end = endSec;
+
+                await record?.player.loadVideoById({
+                    'videoId': vars.videoId,
+                    'startSeconds': startSec,
+                    'endSeconds': endSec,
+                });
+            }
             targetWrapper?.setAttribute('play-right-away', true);
             targetWrapper?.setAttribute('seekTo', secondsOnly);
-
-
-
-            if (record?.seekToUpdatedTime)
-            {
-                record.seekToUpdatedTime(secondsOnly);
-            }
-            else if (record?.target)
-            {
-                record.target.seekTo(secondsOnly);
-            }
         }
         async function pauseLastBlock_SimHoverOut(r)
         {
@@ -1570,7 +1596,8 @@ async function Ready()
             tEl.removeAttribute('awaiting');
         }
     }
-    // 6.2.1
+
+    //#region 6.2.1
     async function updateTimestampOnMouseleave(e, uid, nodePpts)
     {
         const { currentTarget: tEl } = e;
@@ -1578,7 +1605,6 @@ async function Ready()
         const { blockRgx } = BlockRegexObj(StartEnd_Config.componentPage, true);
         const res = RAP.getBlockInfoByUID(nodePpts.fromUid);
         const rawText = res[0]?.[0]?.string || 'F';
-        debugger;
     }
     async function rawTimestampOnWheel(e, uid)
     {
@@ -1605,6 +1631,7 @@ async function Ready()
     {
         UTILS.toggleClasses(bol, ['yt-gif-timestamp-prevent-scroll'], el);
     }
+    //#endregion
 
 
 
@@ -2310,7 +2337,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     }
     function DeployYT_IFRAME()
     {
-        return new window.YT.Player(newId, playerConfig(configParams));
+        return record.player = new window.YT.Player(newId, playerConfig(configParams));
     }
 }
 //
@@ -2331,9 +2358,10 @@ async function onPlayerReady(event)
     const parent = getParent(iframe);
 
     const map = allVideoParameters.get(key); //videoParams
-    const start = map?.start || 0;
-    const end = map?.end || t.getDuration();
-    const clipSpan = end - start;
+    map.start = map?.start || 0;
+    map.end = map?.end || t.getDuration();
+    const clipSpan = () => map.end - map.start;
+
     const speed = map?.speed || 1;
     const entryVolume = validVolumeURL();
     const tickOffset = 1000 / speed;
@@ -2349,7 +2377,7 @@ async function onPlayerReady(event)
     }
 
     const loadingMarginOfError = 1; //seconds
-    let updateStartTime = start;
+    let updateStartTime = map.start;
 
 
     // javascript is crazy
@@ -2483,10 +2511,10 @@ async function onPlayerReady(event)
         if (strict_start_timestamp.checked)
         {
             const timeHist = sesion.timeURLmapHistory;
-            if (timeHist[timeHist.length - 1] != start) // new entry is valid ≡ user updated "?t="
+            if (timeHist[timeHist.length - 1] != map.start) // new entry is valid ≡ user updated "?t="
             {
-                timeHist.push(start);
-                seekToUpdatedTime(start);
+                timeHist.push(map.start);
+                seekToUpdatedTime(map.start);
             }
             else
             {
@@ -2681,16 +2709,16 @@ async function onPlayerReady(event)
     }
     function UpdateTimeDisplay()
     {
-        const sec = Math.abs(clipSpan - (end - tick()));
+        const sec = Math.abs(clipSpan() - (map.end - tick()));
 
         //timeDisplay.innerHTML = '00:00/00:00'
         if (UI.display.clip_life_span_format.checked) 
         {
-            timeDisplay.innerHTML = `${fmtMSS(sec)}/${fmtMSS(clipSpan)}`; //'sec':'clip end'
+            timeDisplay.innerHTML = `${fmtMSS(sec)}/${fmtMSS(clipSpan())}`; //'sec':'clip end'
         }
         else
         {
-            timeDisplay.innerHTML = `${fmtMSS(tick())}/${fmtMSS(end)}`; //'update':'end'
+            timeDisplay.innerHTML = `${fmtMSS(tick())}/${fmtMSS(map.end)}`; //'update':'end'
         }
 
 
@@ -2713,11 +2741,11 @@ async function onPlayerReady(event)
 
         if (UI.display.clip_life_span_format.checked)
         {
-            if (dir <= start)
-                dir = end - 1; //can go beyond that
+            if (dir <= map.start)
+                dir = map.end - 1; //can go beyond that
 
-            if (dir >= end)
-                dir = start; //can go beyond that
+            if (dir >= map.end)
+                dir = map.start; //can go beyond that
         }
 
         t.seekTo(dir);
@@ -2801,11 +2829,11 @@ async function onPlayerReady(event)
         const media = JSON.parse(JSON.stringify(videoParams));
         media.src = getWrapperUrlSufix(parent);
         media.id = map.id;
-        media.updateTime = isBounded(tick()) ? tick() : start;
+        media.updateTime = isBounded(tick()) ? tick() : map.start;
         media.updateVolume = isValidVolNumber(t.__proto__.newVol) ? t.__proto__.newVol : validUpdateVolume();
         if (media.timeURLmapHistory.length == 0) // kinda spaguetti, but it's super necesary - This will not ignore the first block editing - stack change
         {
-            media.timeURLmapHistory.push(start);
+            media.timeURLmapHistory.push(map.start);
         }
         if (blockID != null)
         {
@@ -2959,7 +2987,7 @@ async function onPlayerReady(event)
     //#region validate - check values utils
     function isBounded(x)
     {
-        return start < x && x < end;
+        return map.start < x && x < map.end;
     }
     function validUpdateVolume()
     {
@@ -3084,7 +3112,17 @@ function onStateChange(state)
 
     if (state.data === YT.PlayerState.ENDED)
     {
-        t.seekTo(map?.start || 0);
+        console.log(`start: ${state.target.i.h.playerVars.start} end: ${state.target.i.h.playerVars.end}`);
+        const startSec = map?.start || 0;
+        const pre_endSec = map?.end || t.getDuration();
+        const endSec = pre_endSec + endSecOffset;
+
+        t.i.h.playerVars.start = startSec;
+        t.i.h.playerVars.end = endSec;
+
+        t.seekTo(startSec);
+
+
 
         const soundSrc = validSoundURL();
         if (soundSrc)
