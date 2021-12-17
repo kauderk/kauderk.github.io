@@ -1564,7 +1564,10 @@ async function Ready()
             const record = recordedIDs.get(targetBlockID);
             const validTimestamp = tEl.innerHTML.match(StartEnd_Config.targetStringRgx)?.[0];
             const secondsOnly = UTILS.HMSToSecondsOnly(validTimestamp);
-            if (!validTimestamp || typeof secondsOnly !== 'number') { debugger; return; }
+            if (!validTimestamp || typeof secondsOnly !== 'number')
+            {
+                return;
+            }
 
 
             [...targetWrapper.closest('.roam-block-container')?.querySelectorAll('a.rm-video-timestamp[yt-gif-timestamp-emulation]')]
@@ -1579,7 +1582,7 @@ async function Ready()
             const pearSec = () => UTILS.HMSToSecondsOnly(targetNodePpts.pears?.find(o => o != targetNodePpts.self)?.timestamp || '');
 
             const startSec = sec("start") ? secondsOnly : (pearSec() || 0);
-            const endSec = sec("end") ? secondsOnly : (pearSec() || record.player.getDuration());
+            const endSec = sec("end") ? secondsOnly : (pearSec() || record?.player?.getDuration?.() || 86400);
             const seekTo = sec("end") ? secondsOnly + 1 : secondsOnly;
 
 
