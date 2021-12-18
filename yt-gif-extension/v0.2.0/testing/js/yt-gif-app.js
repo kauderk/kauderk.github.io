@@ -1144,7 +1144,7 @@ async function Ready()
                     ToogleVisualFeedback(bol);
                 });
 
-                function ToogleVisualFeedback()
+                function ToogleVisualFeedback(bol)
                 {
                     UTILS.toggleClasses(bol, [agrredIcon], btn);
                     UTILS.toggleClasses(!bol, [cssData.dwn_pulse_anim], pulsingMessageEl);
