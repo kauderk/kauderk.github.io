@@ -61,7 +61,9 @@ window.YT_GIF_SETTINGS_PAGE = {
     experience: {
         baseKey: BaseSetting(chk),
         sound_when_video_loops: dom('1'),
-        awaiting_for_mouseenter_to_initialize: dom(),
+        awaiting_for_user_input_to_initialize: dom('', chk),
+        awaiting_for_mouseenter_to_initialize: dom('', rad),
+        awaiting_for_mousedown_to_initialize: dom('', rad),
         awaiting_with_video_thumnail_as_bg: dom('1'),
         iframe_buffer_stack: dom('1'),
         try_to_load_on_intersection_beta: dom(),

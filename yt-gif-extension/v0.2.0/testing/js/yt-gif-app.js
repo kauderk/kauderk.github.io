@@ -427,7 +427,7 @@ async function Ready()
     const { timestamp_display_scroll_offset, end_loop_sound_volume, iframe_buffer_slider } = UI.range;
     const { rangeValue, loop_volume_displayed, iframe_buffer_label } = UI.label;
     const { awaiting_with_video_thumnail_as_bg } = UI.experience;
-    const { iframe_buffer_stack, awaiting_for_mouseenter_to_initialize, try_to_load_on_intersection_beta } = UI.experience;
+    const { iframe_buffer_stack, awaiting_for_user_input_to_initialize, try_to_load_on_intersection_beta } = UI.experience;
     const { dwp_message, stt_allow } = cssData;
     const { navigate_btn } = cssData.id;
     //#endregion
@@ -444,7 +444,7 @@ async function Ready()
 
     navigateToSettingsPageInSidebar(navigate_btn, dwp_message, stt_allow);
 
-    IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_mouseenter_to_initialize, iframe_buffer_slider, try_to_load_on_intersection_beta);
+    IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_user_input_to_initialize, iframe_buffer_slider, try_to_load_on_intersection_beta);
 
 
 
@@ -907,13 +907,13 @@ async function Ready()
             UTILS.toggleClasses(open, [stt_allow], settingsBtnWrapper);
         }
     }
-    function IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_mouseenter_to_initialize, iframe_buffer_slider, try_to_load_on_intersection_beta)
+    function IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_user_input_to_initialize, iframe_buffer_slider, try_to_load_on_intersection_beta)
     {
-        initialCheck_awaitngBtn = awaiting_for_mouseenter_to_initialize.checked;
+        initialCheck_awaitngBtn = awaiting_for_user_input_to_initialize.checked;
 
         Initial_synergy_btns();
 
-        awaiting_for_mouseenter_to_initialize.addEventListener('change', function (e)
+        awaiting_for_user_input_to_initialize.addEventListener('change', function (e)
         {
             const { checked, parentNode } = e.currentTarget;
             toggleBtn_VS(checked, TryingBtn_VisualFeedback);
@@ -2318,13 +2318,17 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     async function DeployYT_IFRAME_OnInteraction()
     {
         const mainAnimation = setUpWrapperAwaitingAnimation();
-        wrapper.addEventListener('mouseenter', CreateYTPlayer);
+        const { awaiting_for_mousedown_to_initialize, awaiting_for_mouseenter_to_initialize } = UI.experience;
+        const eventListener = awaiting_for_mousedown_to_initialize.checked ? 'mousedown' : 'mouseenter'; // huga buga
+
+        wrapper.addEventListener(eventListener, CreateYTPlayer);
         return wrapper;
+
         function CreateYTPlayer(e)
         {
             UTILS.toggleClasses(false, mainAnimation, wrapper);
             UTILS.removeIMGbg(wrapper);
-            wrapper.removeEventListener('mouseenter', CreateYTPlayer);
+            wrapper.removeEventListener(eventListener, CreateYTPlayer);
             return DeployYT_IFRAME();
         }
         function setUpWrapperAwaitingAnimation()
@@ -3285,7 +3289,7 @@ function ifStack_ShiftAllOlder_IframeBuffer()
         // 2.1 mix and match
         if (atLeastOne || cap <= arr.length)
         {
-            AwaitingBtn_Dispatch_ActiveCheck(true);
+            AwaitingBtn_ActiveCheck(true);
             AwaitingBtn_VisualFeedback(true);
         }
         else if (!atLeastOne || cap > arr.length)
@@ -3401,18 +3405,18 @@ function smart_AwaitingBtn_Dispatch_ActiveCheck()
 
     if (typeof validCheck !== 'undefined')
     {
-        return AwaitingBtn_Dispatch_ActiveCheck(validCheck);
+        return AwaitingBtn_ActiveCheck(validCheck);
     }
 
     return undefined;
 }
-function AwaitingBtn_Dispatch_ActiveCheck(bol)
+function AwaitingBtn_ActiveCheck(bol)
 {
-    const { awaiting_for_mouseenter_to_initialize } = UI.experience;
-    awaiting_for_mouseenter_to_initialize.disabled = bol;
-    awaiting_for_mouseenter_to_initialize.checked = bol;
+    const { awaiting_for_user_input_to_initialize } = UI.experience;
+    awaiting_for_user_input_to_initialize.disabled = bol;
+    awaiting_for_user_input_to_initialize.checked = bol;
 
-    return awaiting_for_mouseenter_to_initialize;
+    return awaiting_for_user_input_to_initialize;
 }
 /* *********************** */
 function isValid_TryIntersection_EnabledCheck()
@@ -3427,9 +3431,9 @@ function isValid_TryIntersection_check()
 }
 function isValid_Awaiting_check()
 {
-    const { awaiting_for_mouseenter_to_initialize } = UI.experience;
+    const { awaiting_for_user_input_to_initialize } = UI.experience;
     // kinda spaghetti, but they are pretty much entangled and only one of those can be true at a time
-    return awaiting_for_mouseenter_to_initialize.checked && !isValid_TryIntersection_check();
+    return awaiting_for_user_input_to_initialize.checked && !isValid_TryIntersection_check();
 }
 /* *********************** */
 function TryingBtn_VisualFeedback(bol, disabled = undefined)
@@ -3440,12 +3444,18 @@ function TryingBtn_VisualFeedback(bol, disabled = undefined)
 }
 function AwaitingBtn_VisualFeedback(bol, disabled = undefined)
 {
-    const { awaiting_for_mouseenter_to_initialize } = UI.experience;
+    const { awaiting_for_user_input_to_initialize, awaiting_for_mousedown_to_initialize, awaiting_for_mouseenter_to_initialize } = UI.experience;
 
     const clause = "Full stack Iframe Buffer has priority";
-    UTILS.toggleAttribute(bol, 'data-tooltip', awaiting_for_mouseenter_to_initialize, clause);
+    const awaiting_toogle_opts = [awaiting_for_user_input_to_initialize, awaiting_for_mousedown_to_initialize, awaiting_for_mouseenter_to_initialize];
 
-    return btn_VS(bol, awaiting_for_mouseenter_to_initialize, disabled);
+    for (const opt of awaiting_toogle_opts)
+    {
+        UTILS.toggleAttribute(bol, 'data-tooltip', opt, clause);
+        btn_VS(bol, opt, disabled);
+    }
+
+    //return awaiting_for_user_input_to_initialize;//btn_VS(bol, awaiting_for_user_input_to_initialize, disabled);
 }
 /* *********** */
 function toggleBtn_VS(checked, VisualFeedback_cb = () => { }) 
