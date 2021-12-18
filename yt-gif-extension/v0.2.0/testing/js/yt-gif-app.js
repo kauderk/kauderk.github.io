@@ -524,9 +524,9 @@ async function Ready()
 
     function HandleEmulation(e)
     {
-        const checked = e.target.checked;
+        const checked = e.currentTarget.checked;
         toggleEmulation(checked);
-        UTILS.toggleClasses(checked, [`${cssData.dropdown__hidden}`], document.querySelector('.dropdown_timestamp-style'));
+        UTILS.toggleClasses(!checked, [`${cssData.dropdown__hidden}`], document.querySelector('.dropdown_timestamp-style'));
     }
 
 
@@ -1605,6 +1605,7 @@ async function Ready()
 
             const options = {
                 el: targetWrapper,
+                directMatch: true,
                 OnRemmovedFromDom_cb: () => UI.timestamps.timestamp_remember_hierarchy.checked ? RemoveAllTimestampsInHierarchy(block) : null,
             }
             UTILS.ObserveRemovedEl_Smart(options); // Expensive? think so. Elegant? no, but works
