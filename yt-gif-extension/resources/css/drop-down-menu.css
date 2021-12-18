@@ -36,7 +36,9 @@
   padding: 0ch 1ch;
 
   --ddm-tooltip-traslate-y: calc(-100% - var(--ddm-tooltip-arrow-size));
-  
+}
+.ddm-tooltip-line:is([data-tooltip])::before{
+  inline-size: initial;
 }
 
 .dropdown :is([data-tooltip]):hover::before,
