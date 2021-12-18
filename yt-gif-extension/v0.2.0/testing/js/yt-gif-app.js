@@ -500,7 +500,7 @@ async function Ready()
         },
     };
 
-    const { simulate_slash_menu_beta } = UI.display;
+    const { simulate_roam_research_timestamps } = UI.display;
     const { timestamp_remember_hierarchy, timestamp_shortcuts_enabled } = UI.timestamps;
 
     let { slashMenuObserver, timestampObserver, keyupEventHanlder } = window.YT_GIF_OBSERVERS;
@@ -517,20 +517,14 @@ async function Ready()
     // 6.2 run slashMenuObserver & timestampObserver
     // 6.3 registerKeyCombinations (keyupEventHanlder)
     //      6.3.1 addBlockTimestamps
-    toggleEmulation(simulate_slash_menu_beta.checked);
-    simulate_slash_menu_beta.addEventListener('change', HandleEmulation);
+    toggleTimestampEmulation(simulate_roam_research_timestamps.checked);
+    simulate_roam_research_timestamps.addEventListener('change', (e) => toggleTimestampEmulation(e.currentTarget.checked));
     timestamp_remember_hierarchy.addEventListener('change', () => { });
     timestamp_shortcuts_enabled.addEventListener('change', e => ToogleTimestampShortcuts(e.target.checked));
 
-    function HandleEmulation(e)
-    {
-        const checked = e.currentTarget.checked;
-        toggleEmulation(checked);
-        UTILS.toggleClasses(!checked, [`${cssData.dropdown__hidden}`], document.querySelector('.dropdown_timestamp-style'));
-    }
-
 
     console.log('YT GIF extension activated');
+
 
 
 
@@ -699,10 +693,10 @@ async function Ready()
         }
         if (type == 'radio') // special case...
         {
-            for (const key of siblingKeys)
-            {
-                window.YT_GIF_DIRECT_SETTINGS.get(key).UpdateSettingsBlockValue(''); // to false
-            }
+            [...siblingKeys]
+                .map(x => window.YT_GIF_DIRECT_SETTINGS.get(x))
+                .filter(y => y.inputType == 'radio')
+                .forEach(o => o.UpdateSettingsBlockValue('')) // to false
         }
 
         window.YT_GIF_DIRECT_SETTINGS.get(keyObj)?.UpdateSettingsBlockValue(replaceWith);
@@ -1242,12 +1236,15 @@ async function Ready()
 
 
     //#region 6. Emulate slash menu & timestamps
-    function toggleEmulation(bol)
+    function toggleTimestampEmulation(bol)
     {
         if (bol)
             RunEmulation();
         else
             StopEmulation();
+
+        UTILS.toggleClasses(!bol, [`${cssData.dropdown__hidden}`], document.querySelector('.dropdown_timestamp-style'));
+
         function RunEmulation()
         {
             StopEmulation();
@@ -2321,16 +2318,57 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         const { awaiting_for_mousedown_to_initialize, awaiting_for_mouseenter_to_initialize } = UI.experience;
         const eventListener = awaiting_for_mousedown_to_initialize.checked ? 'mousedown' : 'mouseenter'; // huga buga
 
-        wrapper.addEventListener(eventListener, CreateYTPlayer);
+        AddInteractionEventListener();
+        function changeToMousedown(e)
+        {
+            if (!document.body.contains(e.currentTarget))
+                return RemoveAllListeners();
+            ReplaceInteractionEventListener('mousedown')
+        }
+        function changeToMouseenter(e)
+        {
+            if (!document.body.contains(e.currentTarget))
+                return RemoveAllListeners();
+            ReplaceInteractionEventListener('mouseenter')
+        }
+
+        awaiting_for_mousedown_to_initialize.addEventListener('change', changeToMousedown);
+        awaiting_for_mouseenter_to_initialize.addEventListener('change', changeToMouseenter);
+
         return wrapper;
+
 
         function CreateYTPlayer(e)
         {
             UTILS.toggleClasses(false, mainAnimation, wrapper);
             UTILS.removeIMGbg(wrapper);
-            wrapper.removeEventListener(eventListener, CreateYTPlayer);
+
+            RemoveAllListeners();
+
             return DeployYT_IFRAME();
         }
+
+        function RemoveAllListeners()
+        {
+            RemoveInteractionEventListener();
+
+            awaiting_for_mousedown_to_initialize.removeEventListener('change', changeToMousedown);
+            awaiting_for_mouseenter_to_initialize.removeEventListener('change', changeToMouseenter);
+        }
+        function ReplaceInteractionEventListener(listener = eventListener)
+        {
+            RemoveInteractionEventListener();
+            AddInteractionEventListener(listener);
+        }
+        function AddInteractionEventListener(listener = eventListener)
+        {
+            wrapper.addEventListener(listener, CreateYTPlayer);
+        }
+        function RemoveInteractionEventListener()
+        {
+            wrapper.removeEventListener(eventListener, CreateYTPlayer);
+        }
+
         function setUpWrapperAwaitingAnimation()
         {
             const { awiting_player_pulse_anim, awaitng_player_user_input, awaitng_input_with_thumbnail } = cssData;
@@ -3440,6 +3478,15 @@ function TryingBtn_VisualFeedback(bol, disabled = undefined)
 {
     const { try_to_load_on_intersection_beta } = UI.experience;
 
+    if (!try_to_load_on_intersection_beta.hasAttribute("data-tooltip-original"))
+    {
+        try_to_load_on_intersection_beta.setAttribute("data-tooltip-original", try_to_load_on_intersection_beta.getAttribute("data-tooltip"));
+    }
+    const originalClause = try_to_load_on_intersection_beta.getAttribute("data-tooltip-original");
+
+    const clause = bol ? '"Awaiting for user input" has priority' : originalClause;
+    try_to_load_on_intersection_beta.setAttribute("data-tooltip", clause);
+    //UTILS.toggleAttribute(bol, 'data-tooltip', try_to_load_on_intersection_beta, clause);
     return btn_VS(bol, try_to_load_on_intersection_beta, disabled);
 }
 function AwaitingBtn_VisualFeedback(bol, disabled = undefined)
@@ -3449,11 +3496,11 @@ function AwaitingBtn_VisualFeedback(bol, disabled = undefined)
     const clause = "Full stack Iframe Buffer has priority";
     const awaiting_toogle_opts = [awaiting_for_user_input_to_initialize, awaiting_for_mousedown_to_initialize, awaiting_for_mouseenter_to_initialize];
 
-    for (const opt of awaiting_toogle_opts)
-    {
-        UTILS.toggleAttribute(bol, 'data-tooltip', opt, clause);
-        btn_VS(bol, opt, disabled);
-    }
+    // for (const opt of awaiting_toogle_opts)
+    // {
+    UTILS.toggleAttribute(bol, 'data-tooltip', awaiting_for_user_input_to_initialize, clause);
+    btn_VS(bol, awaiting_for_user_input_to_initialize, disabled);
+    // }
 
     //return awaiting_for_user_input_to_initialize;//btn_VS(bol, awaiting_for_user_input_to_initialize, disabled);
 }
