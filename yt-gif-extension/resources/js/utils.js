@@ -72,7 +72,10 @@ kauderk.util = ((util) =>
                 if (directMatch)
                 {
                     observer.disconnect();
-                    console.log(`node ${options.el} was directly removed!`);
+                    if (options.directMatch)
+                        options.OnRemmovedFromDom_cb(observer);
+                    else
+                        console.log(`node ${options.el} was directly removed!`);
                 }
                 else if (parentMatch)
                 {
