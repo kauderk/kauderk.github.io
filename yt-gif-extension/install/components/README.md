@@ -14,6 +14,6 @@
 - Click **Import 1 Files**
 
 ### Once Imported
-I should resemble something like this:
+It should resemble something like this:
 ![image](https://user-images.githubusercontent.com/65237382/146626618-8a63c940-87c2-4cba-a696-72b7a4a5e9ac.png)
 
