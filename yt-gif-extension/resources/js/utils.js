@@ -414,7 +414,7 @@ kauderk.util = ((util) =>
             el.classList.remove(...classNames);
         }
     }
-    util.toggleAttribute = (bol, Name, el, value) =>
+    util.toggleAttribute = (bol, Name, el, value = '') =>
     {
         if (bol)
         {
