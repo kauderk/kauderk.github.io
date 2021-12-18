@@ -386,6 +386,10 @@ span.dropdown-item.yt-gif-wrapper-parent *{
 span.dropdown-item.yt-gif-wrapper-parent .yt-gif-wrapper.dont-focus-block {
   width: auto;
 }
+.yt-gif-wrapper-parent.yt-gif-asserting-tutorial{
+  align-items: flex-start;
+  justify-content: center;
+}
 
 .ddm-tut-awaiting-input{
   border-radius: 8px;
@@ -406,6 +410,8 @@ span.dropdown-item.yt-gif-wrapper-parent .yt-gif-wrapper.dont-focus-block {
   outline: var(--yt-gif-icon-focus-contour) auto 2px;
   outline-offset: 2px;
 }
+
+
 
 /* timestamp emulation */
 a.rm-video-timestamp[yt-gif-timestamp-emulation]

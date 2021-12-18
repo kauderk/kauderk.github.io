@@ -1130,27 +1130,23 @@ async function Ready()
 
         for (const tutCont of tutContArr)
         {
-            const btn = tutCont.querySelector('.bp3-button[class*=bp3-icon-]')
+            //#region hardcoded values
+            const btn = tutCont.querySelector('.bp3-button[class*=bp3-icon-]');
+            const pulsingMessageEl = tutCont.querySelector('.drodown_item-pulse-animation.dropdown-info-message');
             const defaultIcon = [...btn?.classList]?.reverse().find(c => c.includes('bp3-icon-'));
             const agrredIcon = 'bp3-icon-graph-remove';
 
             if (defaultIcon)
             {
-                // btn.setAttribute("data-tooltip-original", btn.getAttribute("data-tooltip"));
-                // const originalClause = btn.getAttribute("data-tooltip-original");
-
-                const toogle = (el) => el.classList.contains(agrredIcon) ? false : true;
-
                 btn.addEventListener('mousedown', (e) =>
                 {
-                    const el = e.currentTarget;
-                    //const bol = toogle(el);
-                    //const clause = bol ? 'Disabled update pulsing' : originalClause;
+                    const bol = btn.classList.contains(agrredIcon) ? false : true;
 
-                    UTILS.toggleClasses(toogle(el), [agrredIcon], el);
-                    //el.setAttribute("data-tooltip", clause);
+                    UTILS.toggleClasses(bol, [agrredIcon], btn);
+                    UTILS.toggleClasses(!bol, [cssData.dwn_pulse_anim], pulsingMessageEl);
                 });
             }
+            //#endregion
 
             DDM_onlyOneTut(tutCont);
             atLeastOne = true;
