@@ -149,6 +149,10 @@ window.YT_GIF_SETTINGS_PAGE = {
             elss_opt: InlinePmt(`src sound when yt gif makes a loop, empty if unwanted`),
         },
     },
+    dropdownMenu: {
+        baseKey: BaseSetting(),
+        yt_gif_update_visual_feedback: dom('', chk),
+    },
     LogStatus: {
         baseKey: BasePmt(`Everything looks alright :D`),
         DisplacedBlocks: {

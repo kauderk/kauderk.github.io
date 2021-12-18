@@ -1138,13 +1138,31 @@ async function Ready()
 
             if (defaultIcon)
             {
-                btn.addEventListener('mousedown', (e) =>
+                btn.addEventListener('change', (e) =>
                 {
                     const bol = btn.classList.contains(agrredIcon) ? false : true;
+                    ToogleVisualFeedback(bol);
+                });
 
+                function ToogleVisualFeedback()
+                {
                     UTILS.toggleClasses(bol, [agrredIcon], btn);
                     UTILS.toggleClasses(!bol, [cssData.dwn_pulse_anim], pulsingMessageEl);
-                });
+                }
+
+                if (UTILS.hasOneDayPassed_localStorage(btn.id))
+                {
+                    debugger;
+                    btn.checked = false;
+                    btn.click();
+                    btn.dispatchEvent(new Event('change'));
+                }
+                else
+                {
+                    const sessionValue = window.YT_GIF_DIRECT_SETTINGS.get(btn.id)?.sessionValue;
+                    const bol = typeof sessionValue === 'undefined' ? true : bol;
+                    ToogleVisualFeedback(bol);
+                }
             }
             //#endregion
 
