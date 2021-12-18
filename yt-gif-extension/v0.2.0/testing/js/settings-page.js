@@ -39,6 +39,11 @@ window.YT_GIF_SETTINGS_PAGE = {
         clip_life_span_format: dom('1'),
         simulate_slash_menu_beta: dom(),
     },
+    timestamps: {
+        baseKey: BaseSetting(chk),
+        timestamp_remember_hierarchy: dom(),
+        timestamp_shortcuts_enabled: dom(),
+    },
     previousTimestamp: {
         baseKey: BaseSetting(rad),
         /* one a time */

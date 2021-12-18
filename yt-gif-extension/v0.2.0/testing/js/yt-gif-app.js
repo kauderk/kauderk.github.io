@@ -42,7 +42,7 @@ const YT_GIF_OBSERVERS_TEMP = {
     masterIntersectionObservers: [],
     masterIntersectionObservers_buffer: [],
     masterIframeBuffer: [],
-    slashMenuObserver: null,
+    //slashMenuObserver: null,
     timestampObserver: null,
     keyupEventHanlder: () => { },
     creationCounter: -1, // crucial, because the api won't reload iframes with the same id
@@ -501,15 +501,16 @@ async function Ready()
     };
 
     const { simulate_slash_menu_beta } = UI.display;
+    const { timestamp_remember_hierarchy, timestamp_shortcuts_enabled } = UI.timestamps;
 
     let { slashMenuObserver, timestampObserver, keyupEventHanlder } = window.YT_GIF_OBSERVERS;
-    slashMenuObserver?.disconnect();
+    //slashMenuObserver?.disconnect();
     timestampObserver?.disconnect();
     const targetNode = document.body;
     const config = { childList: true, subtree: true };
     //#endregion
 
-    slashMenuObserver = new MutationObserver(slashMenuMutation_cb);
+    //slashMenuObserver = new MutationObserver(slashMenuMutation_cb);
     timestampObserver = new MutationObserver(TimestampBtnsMutation_cb);
 
     // 6.1 cleanAndSetUp_TimestampEmulation -> PlayPauseOnClicks
@@ -517,7 +518,16 @@ async function Ready()
     // 6.3 registerKeyCombinations (keyupEventHanlder)
     //      6.3.1 addBlockTimestamps
     toggleEmulation(simulate_slash_menu_beta.checked);
-    simulate_slash_menu_beta.addEventListener('change', e => toggleEmulation(e.target.checked));
+    simulate_slash_menu_beta.addEventListener('change', HandleEmulation);
+    timestamp_remember_hierarchy.addEventListener('change', () => { });
+    timestamp_shortcuts_enabled.addEventListener('change', e => ToogleTimestampShortcuts(e.target.checked));
+
+    function HandleEmulation(e)
+    {
+        const checked = e.target.checked;
+        toggleEmulation(checked);
+        UTILS.toggleClasses(checked, [`${cssData.dropdown__hidden}`], document.querySelector('.dropdown_timestamp-style'));
+    }
 
 
     console.log('YT GIF extension activated');
@@ -1238,36 +1248,56 @@ async function Ready()
             RunEmulation();
         else
             StopEmulation();
-    }
-    function RunEmulation()
-    {
-        StopEmulation();
-
-        const found = [];
-        found.push(...targetNode.getElementsByClassName(timestampObj.start.targetClass));
-        found.push(...targetNode.getElementsByClassName(timestampObj.end.targetClass));
-        cleanAndSetUp_TimestampEmulation(found);
-
-        slashMenuObserver.observe(targetNode, config);
-        timestampObserver.observe(targetNode, config);
-        document.removeEventListener('keydown', keyupEventHanlder);
-        keyupEventHanlder = registerKeyCombinations;
-        document.addEventListener('keydown', keyupEventHanlder);
-    }
-    function StopEmulation()
-    {
-        const found = [...targetNode.querySelectorAll(`[${timestampObj.attr.emulation}]`)];
-        for (let i of found)
+        function RunEmulation()
         {
-            const key = i.getAttribute(timestampObj.attr.timestampStyle) || 'timestamp';
-            i.innerHTML = key;
-            i = UTILS.ChangeElementType(i, 'button');
-            i.className = timestampObj[key].buttonClass;
+            StopEmulation();
+            ToogleTimestampSetUp(true);
+            ToogleTimestampShortcuts(timestamp_shortcuts_enabled.checked);
         }
-
-        slashMenuObserver.disconnect();
+        function StopEmulation()
+        {
+            ToogleTimestampSetUp(false);
+            ToogleTimestampShortcuts(false);
+        }
+    }
+    function ToogleTimestampSetUp(bol)
+    {
         timestampObserver.disconnect();
+
+        if (bol)
+        {
+            const found = [];
+            found.push(...targetNode.getElementsByClassName(timestampObj.start.targetClass));
+            found.push(...targetNode.getElementsByClassName(timestampObj.end.targetClass));
+            cleanAndSetUp_TimestampEmulation(found);
+            timestampObserver.observe(targetNode, config);
+        }
+        else
+        {
+            const foundToRemove = [...targetNode.querySelectorAll(`[${timestampObj.attr.emulation}]`)];
+            for (let i of foundToRemove)
+            {
+                const key = i.getAttribute(timestampObj.attr.timestampStyle) || 'timestamp';
+                i.innerHTML = key;
+                i = UTILS.ChangeElementType(i, 'button');
+                i.className = timestampObj[key].buttonClass;
+            }
+            // already disconnected
+        }
+    }
+    function ToogleTimestampShortcuts(bol)
+    {
+        // remove them anyway, avoid duplicates
         document.removeEventListener('keydown', keyupEventHanlder);
+        if (bol)
+        {
+            keyupEventHanlder = registerKeyCombinations;
+            document.addEventListener('keydown', keyupEventHanlder);
+        }
+        else
+        {
+            // already removed
+        }
     }
 
 
@@ -1570,12 +1600,20 @@ async function Ready()
             }
 
 
-            [...targetWrapper.closest('.roam-block-container')?.querySelectorAll('a.rm-video-timestamp[yt-gif-timestamp-emulation]')]
-                .forEach(el => el.removeAttribute('active-timestamp'));
+            const block = targetWrapper.closest('.roam-block-container');
+            RemoveAllTimestampsInHierarchy(block);
+
+            const options = {
+                el: targetWrapper,
+                OnRemmovedFromDom_cb: () => UI.timestamps.timestamp_remember_hierarchy.checked ? RemoveAllTimestampsInHierarchy(block) : null,
+            }
+            UTILS.ObserveRemovedEl_Smart(options); // Expensive? think so. Elegant? no, but works
+
+
             if (targetNodePpts.pears)
-                targetNodePpts.pears.forEach(o => o.targetNode.setAttribute('active-timestamp', ''));
+                targetNodePpts.pears.forEach(o => toogleActiveAttr(true, o.targetNode));
             else
-                targetNodePpts.self.targetNode.setAttribute('active-timestamp', '');
+                toogleActiveAttr(true, targetNodePpts.self.targetNode);
 
 
             const sec = (p) => targetNodePpts.self.page == p;
@@ -1603,10 +1641,26 @@ async function Ready()
 
                 while (document.body.contains(iframe) && !record?.player?.getCurrentTime())
                     await RAP.sleep(50);
-                record.player.seekTo(seekTo);
+
+                if (sec("end"))
+                    record.player.seekTo(seekTo);
             }
             targetWrapper?.setAttribute('play-right-away', true);
             targetWrapper?.setAttribute('seekTo', seekTo);
+
+            function RemoveAllTimestampsInHierarchy(block)
+            {
+                return [...block?.querySelectorAll('a.rm-video-timestamp[yt-gif-timestamp-emulation]')]
+                    .forEach(el => toogleActiveAttr(false, el));
+            }
+            function toogleActiveAttr(bol, el)
+            {
+                if (bol)
+                    el.setAttribute('active-timestamp', '')
+                else
+                    el.removeAttribute('active-timestamp');
+            }
+
         }
         async function pauseLastBlock_SimHoverOut(r)
         {
