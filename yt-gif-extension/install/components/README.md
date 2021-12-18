@@ -4,7 +4,7 @@
 - #42SmartBlock YTGIF end timestamp
 
 ### Installation
-- Download this [Json Roam file](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/components)
+- Download this [Json Roam file](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/install/components/smartblocks-yt-gif-timestamp-components.json)
 - Open Roam, top right click on the *three dots ioon menu - Share, export and more* **· · ·**
 - Click on **Import Files**
 - Browse to the file on your machine and click **Open**
