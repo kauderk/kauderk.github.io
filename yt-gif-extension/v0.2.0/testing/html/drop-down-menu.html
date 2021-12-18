@@ -62,22 +62,28 @@
                             </div>
                         </div>
 
-                        <div class="dropdown yt-gif-style dropdown--hidden dropdown_deployment-style">
+                        <div class="dropdown yt-gif-style dropdown--hidden dropdown_timestamp-style">
                             <span class="dropdown-info-message" data-tooltip="Set timestamps per Block and Hierarchy">YT
                                 GIF timestamps</span>
                             <div class="dropdown-content dropdown-info-box">
                                 <span class="dropdown-item">
-                                    <label for="" class="dropdown-item-description" data-tooltip="">Remember active
-                                        timestamps after editing YT GIF Blocks</label>
-                                    <input type="checkbox" name="timestamp" id="block_instance_timestamp">
+                                    <label for="" class="dropdown-item-description"
+                                        data-tooltip="Remember active
+                                    timestamps after editing YT GIF Blocks - per Hierarchy, else deactivate them">Active timestamps as
+                                        boundaries</label>
+                                    <input type="checkbox" name="timestamp" id="timestamp_remember_hierarchy">
                                 </span>
                                 <span class="dropdown-item">
-                                    <label for="" class="dropdown-item-description"
+                                    <label for="" class="dropdown-item-description ddm-tooltip-line"
                                         data-tooltip="Start: Ctrl + Alt + s | End: Ctrl + Alt + d">Enable
                                         Shortcuts</label>
                                     <input type="checkbox" name="timestamp" id="timestamp_shortcuts_enabled">
                                 </span>
                                 <span class="dropdown-item-separator"></span>
+                                <span class="dropdown-info-message dropdown-info-message--aditional"
+                                    data-tooltip="{{[[yt-gif/start]]: 00:01:00}} {{[[yt-gif/end]]: 00:02:00}}">Create
+                                    timestamp components, under YT GIF Blocks; click on them and set new
+                                    boundaries.</span>
                                 <span class="dropdown-info-message dropdown-info-message--aditional"><a
                                         href="https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/components"
                                         data-tooltip="kauderk.github.io/yt-gif-components">Grab start & end timestamp
