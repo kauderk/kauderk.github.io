@@ -462,8 +462,22 @@ async function Ready()
 
 
 
-    // 5. TESTING!
-    SettingUpTutorials();
+    // 5. Setting up tutorials
+    const { icon, mainDDM, mainMenu } = GetMainYTGIFicon(ddm_icon);
+
+    // if the user entered/initizlied/played the tutorial,
+    // the ddm won't be closed until it losses focus,
+    // conventionally clicking anything but the ddm/ddm-children
+    mainDDMdisplay('none');
+    mainMenu.addEventListener('mouseenter', () => openMenu());
+    mainMenu.addEventListener('mouseleave', () => tryToCloseMenu());
+    icon.addEventListener('blur', () => tryToCloseMenu());
+
+    let previousValue = mainDDM.style.display; // changes inside style_cb
+    const observer = new MutationObserver(mainDDMstyle_cb); // when closed, clean tutorials -> wrappers
+    observer.observe(mainDDM, { attributes: true });
+
+    SetUpTutorials_smartNotification();
 
 
 
@@ -1109,37 +1123,35 @@ async function Ready()
 
 
     //#region 5. Setting up tutorials
-    function SettingUpTutorials()
+    function SetUpTutorials_smartNotification()
     {
-        const { icon, mainDDM, mainMenu } = GetMainYTGIFicon(ddm_icon);
-
-
-        const mainDDMdisplay = (d) => mainDDM.style.display = d;
-        const canCloseMenu = () => !mainDDM.classList.contains(ddm_focus) && !mainMenu.matches(':hover');
-        const tryToCloseMenu = () => canCloseMenu() ? mainDDMdisplay('none') : null;
-        const openMenu = () => mainDDMdisplay('flex');
-        const iconIsPulsing = (bol) => UTILS.toggleClasses(bol, [cssData.dwn_pulse_anim], icon);
-
-
-        // if the user entered/initizlied/played the tutorial,
-        // the ddm won't be closed until it losses focus,
-        // conventionally clicking anything but the ddm/ddm-children
-        mainDDMdisplay('none');
-        mainMenu.addEventListener('mouseenter', () => openMenu());
-        mainMenu.addEventListener('mouseleave', () => tryToCloseMenu());
-        icon.addEventListener('blur', () => tryToCloseMenu());
-
-
-        let previousValue = mainDDM.style.display; // changes inside style_cb
-        const config = { attributes: true };
-        const observer = new MutationObserver(mainDDMstyle_cb); // when closed, clean tutorials -> wrappers
-        observer.observe(mainDDM, config);
-
-
-        const tutContArr = [document.querySelector("#yt-gif-tutorial-container--update")].filter(el => el != null) // trying to make it modular
+        const tutContArr = [...document.querySelectorAll('.dwn-yt-gif-player-container')].filter(el => el != null); // trying to make it modular
         let atLeastOne = false;
+
         for (const tutCont of tutContArr)
         {
+            const btn = tutCont.querySelector('.bp3-button[class*=bp3-icon-]')
+            const defaultIcon = [...btn?.classList]?.reverse().find(c => c.includes('bp3-icon-'));
+            const agrredIcon = 'bp3-icon-graph-remove';
+
+            if (defaultIcon)
+            {
+                // btn.setAttribute("data-tooltip-original", btn.getAttribute("data-tooltip"));
+                // const originalClause = btn.getAttribute("data-tooltip-original");
+
+                const toogle = (el) => el.classList.contains(agrredIcon) ? false : true;
+
+                btn.addEventListener('mousedown', (e) =>
+                {
+                    const el = e.currentTarget;
+                    //const bol = toogle(el);
+                    //const clause = bol ? 'Disabled update pulsing' : originalClause;
+
+                    UTILS.toggleClasses(toogle(el), [agrredIcon], el);
+                    //el.setAttribute("data-tooltip", clause);
+                });
+            }
+
             DDM_onlyOneTut(tutCont);
             atLeastOne = true;
         }
@@ -1150,87 +1162,107 @@ async function Ready()
             iconIsPulsing(true);
             setTimeout(() => iconIsPulsing(false), 3000);
         }
+    }
+
+    function DDM_onlyOneTut(updateCont)
+    {
+        const updateCont_content = updateCont.querySelector('.dropdown-content');
+        const updateTutParents = [updateCont_content, mainDDM];
 
 
-        function DDM_onlyOneTut(updateCont)
+        const { classToObserve } = rm_components.yt_gif_tut;
+        const { forceAwaiting } = attrInfo.creation;
+        let tutWrapperAwaiting = null;
+
+        updateCont.addEventListener('mouseenter', deployTutorialVideo);
+        icon.addEventListener('blur', () => toggleFocusOnDMMsparents(false));
+
+
+        async function deployTutorialVideo(e)
         {
-            const updateCont_content = updateCont.querySelector('.dropdown-content');
-            const updateTutParents = [updateCont_content, mainDDM];
+            if (e.currentTarget.querySelector('.yt-gif-wrapper')) // video already deployed
+                return;
+
+            const tutWrapper = e.currentTarget.querySelector('[data-target]');
+
+            tutWrapperAwaiting = await onYouTubePlayerAPIReady(tutWrapper, classToObserve, forceAwaiting, 'testing manual ty gif tutorial');
+
+            tutWrapperAwaiting.addEventListener('mouseenter', () => icon.dispatchEvent(new Event('click')));
+            tutWrapperAwaiting.addEventListener('mouseleave', () => toggleFocusOnDMMsparents(true));
 
 
-            const { classToObserve } = rm_components.yt_gif_tut;
-            const { forceAwaiting } = attrInfo.creation;
-            let tutWrapperAwaiting = null;
+            tutWrapperAwaiting.addEventListener('mouseenter', (e) => toggle_VisualFeedback(e, false));
+            tutWrapperAwaiting.addEventListener('mouseleave', (e) => toggle_VisualFeedback(e, true));
+        }
 
-            updateCont.addEventListener('mouseenter', deployTutorialVideo);
-            icon.addEventListener('blur', () => toggleFocusOnDMMsparents(false));
-
-
-            async function deployTutorialVideo(e)
+        function toggleFocusOnDMMsparents(toggle = true)
+        {
+            for (const el of updateTutParents)
             {
-                if (e.currentTarget.querySelector('.yt-gif-wrapper')) // video already deployed
-                    return;
-
-                const tutWrapper = e.currentTarget.querySelector('[data-target]');
-
-                tutWrapperAwaiting = await onYouTubePlayerAPIReady(tutWrapper, classToObserve, forceAwaiting, 'testing manual ty gif tutorial');
-
-                tutWrapperAwaiting.addEventListener('mouseenter', () => icon.dispatchEvent(new Event('click')));
-                tutWrapperAwaiting.addEventListener('mouseleave', () => toggleFocusOnDMMsparents(true));
-
-
-                tutWrapperAwaiting.addEventListener('mouseenter', (e) => toggle_VisualFeedback(e, false));
-                tutWrapperAwaiting.addEventListener('mouseleave', (e) => toggle_VisualFeedback(e, true));
+                UTILS.toggleClasses(toggle, [ddm_focus], el);
             }
 
-            function toggleFocusOnDMMsparents(toggle = true)
+            if (toggle)
             {
-                for (const el of updateTutParents)
-                {
-                    UTILS.toggleClasses(toggle, [ddm_focus], el);
-                }
-
-                if (toggle)
-                {
-                    icon.dispatchEvent(new Event('click'));
-                }
-            }
-
-            function toggle_VisualFeedback(e, bol)
-            {
-                UTILS.toggleClasses(bol, [cssData.ddn_tut_awaiting], e.currentTarget);
+                icon.dispatchEvent(new Event('click'));
             }
         }
-        function mainDDMstyle_cb(mutationList)
-        {//https://stackoverflow.com/questions/37168158/javascript-jquery-how-to-trigger-an-event-when-display-none-is-removed#:~:text=11-,Here%20we%20go,-var%20blocker%20%20%3D%20document
-            // observers for computed styles... -it needs to be a thing... 🙃
-            mutationList.forEach(function (record)
-            {
-                if (record.attributeName !== 'style')
-                    return;
 
-                const currentValue = record.target.style.display;
-                const displayWas = (d) => previousValue === d && currentValue !== d;
-
-                if (currentValue !== previousValue)
-                {
-                    if (displayWas('flex'))
-                    {
-                        // sometimes you just want to see the world burn
-                        const cleanedWrappers = [...(mainDDM).querySelectorAll('iframe')]
-                            .map(el => el.closest('[data-target]'))
-                            .filter(el => el != null)
-                            .forEach(el =>
-                            {
-                                el.removeAttribute('class'); // target classes
-                                el = UTILS.RemoveAllChildren(el);
-                            });
-                    }
-
-                    previousValue = record.target.style.display;
-                }
-            });
+        function toggle_VisualFeedback(e, bol)
+        {
+            UTILS.toggleClasses(bol, [cssData.ddn_tut_awaiting], e.currentTarget);
         }
+    }
+    function mainDDMstyle_cb(mutationList)
+    {//https://stackoverflow.com/questions/37168158/javascript-jquery-how-to-trigger-an-event-when-display-none-is-removed#:~:text=11-,Here%20we%20go,-var%20blocker%20%20%3D%20document
+        // observers for computed styles... -it needs to be a thing... 🙃
+        mutationList.forEach(function (record)
+        {
+            if (record.attributeName !== 'style')
+                return;
+
+            const currentValue = record.target.style.display;
+            const displayWas = (d) => previousValue === d && currentValue !== d;
+
+            if (currentValue !== previousValue)
+            {
+                if (displayWas('flex'))
+                {
+                    // sometimes you just want to see the world burn
+                    const cleanedWrappers = [...(mainDDM).querySelectorAll('iframe')]
+                        .map(el => el.closest('[data-target]'))
+                        .filter(el => el != null)
+                        .forEach(el =>
+                        {
+                            el.removeAttribute('class'); // target classes
+                            el = UTILS.RemoveAllChildren(el);
+                        });
+                }
+
+                previousValue = record.target.style.display;
+            }
+        });
+    }
+
+    function mainDDMdisplay(d)
+    {
+        return mainDDM.style.display = d
+    }
+    function canCloseMenu()
+    {
+        return !mainDDM.classList.contains(ddm_focus) && !mainMenu.matches(':hover')
+    }
+    function tryToCloseMenu()
+    {
+        return canCloseMenu() ? mainDDMdisplay('none') : null
+    }
+    function openMenu()
+    {
+        return mainDDMdisplay('flex')
+    }
+    function iconIsPulsing(bol)
+    {
+        return UTILS.toggleClasses(bol, [cssData.dwn_pulse_anim], icon)
     }
     //#endregion
 
