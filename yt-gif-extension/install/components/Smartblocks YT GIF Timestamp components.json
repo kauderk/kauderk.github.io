@@ -1,0 +1,88 @@
+[
+    {
+        "create-time": 1639729257437,
+        "title": "December 17th, 2021",
+        ":create/user": {
+            ":user/uid": "HO1iZa5FjjQw6q3hLDx2bOSJewJ2"
+        },
+        "children": [
+            {
+                "edit-time": 1639793705265,
+                "children": [
+                    {
+                        "string": "<%JA:```javascript\nconst obj = await window.YTGIF?.getTimestampObj?.(\"start\");\nreturn obj?.fmtSecHMS || '';```%>",
+                        "create-time": 1639730540368,
+                        "uid": "4FkQaNVBP",
+                        "edit-time": 1639733605742,
+                        ":create/user": {
+                            ":user/uid": "HO1iZa5FjjQw6q3hLDx2bOSJewJ2"
+                        },
+                        ":edit/user": {
+                            ":user/uid": "HO1iZa5FjjQw6q3hLDx2bOSJewJ2"
+                        }
+                    }
+                ],
+                "refs": [
+                    {
+                        "uid": "Ms9z4jEq9"
+                    }
+                ],
+                "uid": "a3xiisTfh",
+                ":block/refs": [
+                    {
+                        ":block/uid": "Ms9z4jEq9"
+                    }
+                ],
+                "string": "#42SmartBlock YTGIF start timestamp",
+                ":create/user": {
+                    ":user/uid": "HO1iZa5FjjQw6q3hLDx2bOSJewJ2"
+                },
+                "create-time": 1639793367955,
+                ":edit/user": {
+                    ":user/uid": "HO1iZa5FjjQw6q3hLDx2bOSJewJ2"
+                }
+            },
+            {
+                "edit-time": 1639732110284,
+                "children": [
+                    {
+                        "string": "<%JA:```javascript\nconst obj = await window.YTGIF?.getTimestampObj?.(\"end\");\nreturn obj?.fmtSecHMS || '';```%>",
+                        "create-time": 1639730577119,
+                        "uid": "DYsYiyT01",
+                        "edit-time": 1639733787761,
+                        ":create/user": {
+                            ":user/uid": "HO1iZa5FjjQw6q3hLDx2bOSJewJ2"
+                        },
+                        ":edit/user": {
+                            ":user/uid": "HO1iZa5FjjQw6q3hLDx2bOSJewJ2"
+                        }
+                    }
+                ],
+                "refs": [
+                    {
+                        "uid": "Ms9z4jEq9"
+                    }
+                ],
+                "uid": "VpWt7GIcD",
+                ":block/refs": [
+                    {
+                        ":block/uid": "Ms9z4jEq9"
+                    }
+                ],
+                "string": "#42SmartBlock YTGIF end timestamp",
+                ":create/user": {
+                    ":user/uid": "HO1iZa5FjjQw6q3hLDx2bOSJewJ2"
+                },
+                "create-time": 1639730577119,
+                ":edit/user": {
+                    ":user/uid": "HO1iZa5FjjQw6q3hLDx2bOSJewJ2"
+                }
+            }
+        ],
+        "uid": "12-17-2021",
+        "edit-time": 1639729257437,
+        ":edit/user": {
+            ":user/uid": "HO1iZa5FjjQw6q3hLDx2bOSJewJ2"
+        }
+    }
+]
