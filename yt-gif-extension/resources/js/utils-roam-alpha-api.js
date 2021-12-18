@@ -15,6 +15,13 @@ kauderk.rap = ((rap) =>
     >>>> "Why not use those already?" Well, I learned some things in the process. I'd like to think that way. 
     Also, this piece of code is less dependent on external resources.
     */
+
+    rap.getBlockByPhrase = async (search_phrase) =>
+    {
+        var blocks = await window.roamAlphaAPI.q(`[:find (pull ?e [:block/uid :block/string] ) :where [?e :block/string ?contents][(clojure.string/includes? ?contents "${search_phrase}")]]`);
+        return blocks;
+    }
+
     const mouseOverEvents = ['mouseover'];
     rap.simulateMouseOver = (element) =>
     {
