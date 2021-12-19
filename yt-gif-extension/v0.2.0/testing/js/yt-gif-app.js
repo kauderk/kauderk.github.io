@@ -515,7 +515,7 @@ async function Ready()
     };
 
     const { simulate_roam_research_timestamps } = UI.display;
-    const { timestamp_remember_hierarchy, timestamp_shortcuts_enabled } = UI.timestamps;
+    const { timestamp_recovery, timestamp_shortcuts_enabled } = UI.timestamps;
 
     let { slashMenuObserver, timestampObserver, keyupEventHanlder } = window.YT_GIF_OBSERVERS;
     //slashMenuObserver?.disconnect();
@@ -533,7 +533,7 @@ async function Ready()
     //      6.3.1 addBlockTimestamps
     toggleTimestampEmulation(simulate_roam_research_timestamps.checked);
     simulate_roam_research_timestamps.addEventListener('change', (e) => toggleTimestampEmulation(e.currentTarget.checked));
-    timestamp_remember_hierarchy.addEventListener('change', () => { });
+    //timestamp_recovery.addEventListener('change', () => { });
     timestamp_shortcuts_enabled.addEventListener('change', e => ToogleTimestampShortcuts(e.target.checked));
 
 
@@ -1418,7 +1418,7 @@ async function Ready()
                 page, indent, targetIndex, tempUID, fromUid, targetNode,
                 timestamp: timestampContent,
                 color: window.getComputedStyle(targetNode).color,
-                ObjAsKey, blockUid: tempUID, startEndComponentMap
+                ObjAsKey, blockUid: tempUID, blockID: mapsKEY, startEndComponentMap
             }
 
 
@@ -1450,8 +1450,24 @@ async function Ready()
                 ArrObjs.forEach((o, i) =>
                 {
                     o.targetNode.style.filter = `brightness(70%)`;
+                    // const { uid: blockUid, blockID } = o;
+                    // const timestampComponent = o.targetNode;
+
+
                     o.targetNode.onmousedown = async function (e)
                     {
+                        // const options = {
+                        //     el: o.targetNode,
+                        //     OnRemmovedFromDom_cb: () =>
+                        //     {
+                        //         if (timestampComponent.getAttribute('active-timestamp'))
+                        //         {
+
+                        //         }
+                        //     },
+                        // }
+                        // UTILS.ObserveRemovedEl_Smart(options);
+
                         await PlayPauseOnClicks(e, o.tempUID, { self: o })
                     };
                 });
@@ -2117,7 +2133,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         OnRemmovedFromDom_cb: () =>
         {
             UIDtoURLInstancesMapMap.delete(uid);
-            if (!UI.timestamps.timestamp_remember_hierarchy.checked)
+            if (!UI.timestamps.timestamp_recovery.checked)
                 DeactivateTimestampsInHierarchy(block);
         },
     }
@@ -2484,7 +2500,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     }
     function DeployYT_IFRAME()
     {
-        if (UI.timestamps.timestamp_remember_hierarchy.checked)
+        if (UI.timestamps.timestamp_recovery.checked)
         {
             const TryActiveTimestamp = (p) => closest_rm_container(grandParentBlock)?.querySelector(`.rm-video-timestamp[timestamp-style="${p}"][active-timestamp]`)?.getAttribute('timestamp') || '';
             configParams.start = UTILS.HMSToSecondsOnly(TryActiveTimestamp('start')) || configParams.start;
