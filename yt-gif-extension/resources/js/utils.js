@@ -50,6 +50,78 @@ kauderk.util = ((util) =>
                 'cancelable': true
             });
     }
+    util.ObserveMutationRecords_Smart = (options) =>
+    {
+        const _options = {
+            observerTarget: document.body,
+            config: {
+                subtree: true,
+                childList: true,
+            },
+            added: {
+                el: null,
+                directMatch: false,
+                OnMutationRecord: null,
+                mutationRecord: "addedNodes",
+                observerCallback: null,
+            },
+            removed: {
+                el: null,
+                directMatch: false,
+                OnMutationRecord: null,
+                mutationRecord: "removedNodes",
+                observerCallback: null,
+            },
+        }
+        Object.assign(_options, options);
+
+        const observerCallbacks = [...Object.keys(_options)]
+            .map(key =>
+            {
+                if (!_options[key]?.el)
+                    return null;
+                return key = (mut, obs) => MutationRecordCallback_options(mut, obs, key);
+            })
+            .filter(x => !!x);
+
+        if (observerCallbacks.length === 0)
+            return;
+
+
+        const observer = new MutationObserver(MutationRemoval_cb); // will fire OnRemmovedFromDom... the acutal logic
+        observer.observe(_options.observerTarget, _options.config);
+        return observer;
+
+        function MutationRemoval_cb(mutationsList, observer)
+        {
+            mutationsList.forEach(function (mutation)
+            {
+                observerCallbacks.forEach(cb => cb(mutation, observer))
+            });
+        };
+
+        function MutationRecordCallback_options(mutation, observer, recordOpt)
+        {
+            const nodes = Array.from(mutation[options[recordOpt].mutationRecord]);
+            const directMatch = nodes.indexOf(options.el) > -1;
+            const parentMatch = nodes.some(parentEl => parentEl.contains(options.el));
+
+            if (directMatch)
+            {
+                observer.disconnect();
+                if (options[recordOpt].directMatch)
+                    options[recordOpt].OnMutationRecord(observer);
+                else
+                    console.log(`node ${options[recordOpt].el} was directly ${recordOpt}!`);
+            }
+            else if (parentMatch)
+            {
+                observer.disconnect();
+                options[recordOpt].OnMutationRecord(observer);
+            }
+        }
+    }
+
     util.ObserveRemovedEl_Smart = (options) =>
     {
         if (!options.el)
