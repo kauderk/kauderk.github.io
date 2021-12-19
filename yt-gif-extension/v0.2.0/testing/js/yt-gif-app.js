@@ -204,6 +204,7 @@ const attrData = {
     initialize_bg: 'initialize-bg',
     initialize_loop: 'initialize-loop',
     iframe_buffer: 'iframe_buffer', // ok "_" and "-" is causing confusion... fix this later
+    timestamp_experience: 'timestamp-experience',
 }
 const attrInfo = {
     url: {
