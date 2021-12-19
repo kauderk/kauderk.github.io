@@ -69,16 +69,35 @@
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description"
                                         data-tooltip="Remember active
-                                    timestamps boundaries after editing YT GIF Blocks - per Hierarchy, else deactivate them">Active timestamps as
-                                        boundaries</label>
-                                    <input type="checkbox" name="timestamp" id="timestamp_remember_hierarchy">
+                                    timestamps boundaries after editing YT GIF Blocks - per Hierarchy, else deactivate them">
+                                        Timestamp Boundaries Recovery
+                                    </label>
+                                    <input type="checkbox" name="" data-main="timestamp-experience"
+                                        id="timestamp_recovery" checked>
+                                </span>
+                                <span class="dropdown-item" data-bind="timestamp-experience-item">
+                                    <label for="" class="dropdown-item-description"
+                                        data-tooltip="Recovers the most valid timestamps">Seek to
+                                        start - strict recovery
+                                    </label>
+                                    <input type="radio" name="timestamp_recovery_styles" id="timestamp_recovery_strict"
+                                        checked>
+                                </span>
+                                <span class="dropdown-item" data-bind="timestamp-experience-item">
+                                    <label for="" class="dropdown-item-description"
+                                        data-tooltip="Recovers the most valid timestamps">Maintain current
+                                        time - soft recovery
+                                    </label>
+                                    <input type="radio" name="timestamp_recovery_styles" id="timestamp_recovery_soft">
                                 </span>
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description ddm-tooltip-line"
                                         data-tooltip="Start: Ctrl + Alt + s End: Ctrl + Alt + d">Enable
-                                        Shortcuts to grab timestamp components</label>
+                                        Shortcuts to grab timestamp components
+                                    </label>
                                     <input type="checkbox" name="timestamp" id="timestamp_shortcuts_enabled">
                                 </span>
+
                                 <span class="dropdown-item-separator"></span>
                                 <span class="dropdown-info-message dropdown-info-message--aditional"
                                     data-tooltip="{{[[yt-gif/start]]: 00:01:00}} {{[[yt-gif/end]]: 00:02:00}}">Create
