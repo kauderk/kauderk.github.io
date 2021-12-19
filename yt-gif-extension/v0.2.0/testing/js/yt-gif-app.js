@@ -1629,8 +1629,8 @@ async function Ready()
                     if (wrapper != targetWrapper)
                         wrapper?.dispatchEvent(UTILS.simHoverOut());
                 });
-            // hover this -> videoIsPlayingWithSound
-            targetWrapper?.dispatchEvent(UTILS.simHover());
+            // play this
+            targetWrapper?.dispatchEvent(new CustomEvent('playerReadyCustom', { bubbles: true }));
 
 
             const targetBlockID = [...recordedIDs.keys()].reverse().find(k => k?.startsWith(closestYTGIFparentID(targetWrapper)));
@@ -1643,25 +1643,13 @@ async function Ready()
             }
 
 
-            const block = targetWrapper.closest('.roam-block-container');
-            RemoveAllTimestampsInHierarchy(block);
-
-            const options = {
-                el: targetWrapper,
-                directMatch: true,
-                OnRemmovedFromDom_cb: () => UI.timestamps.timestamp_remember_hierarchy.checked ? RemoveAllTimestampsInHierarchy(block) : null,
-            }
-            UTILS.ObserveRemovedEl_Smart(options); // Expensive? think so. Elegant? no, but works
-
+            DeactivateTimestampsInHierarchy(closest_rm_container(targetWrapper));
 
             if (targetNodePpts.pears)
                 targetNodePpts.pears.forEach(o => toogleActiveAttr(true, o.targetNode));
             else
                 toogleActiveAttr(true, targetNodePpts.self.targetNode);
 
-
-            const sec = (p) => targetNodePpts.self.page == p;
-            const pearSec = () => UTILS.HMSToSecondsOnly(targetNodePpts.pears?.find(o => o != targetNodePpts.self)?.timestamp || '');
 
             const startSec = sec("start") ? secondsOnly : (pearSec() || 0);
             const endSec = sec("end") ? secondsOnly : (pearSec() || record?.player?.getDuration?.() || 86400);
@@ -1677,7 +1665,7 @@ async function Ready()
                 vars.playerVars.end = map.end = endSec;
                 const iframe = record.player.getIframe();
 
-                await record?.player.loadVideoById({
+                await record.player.loadVideoById({
                     'videoId': vars.videoId,
                     'startSeconds': startSec,
                     'endSeconds': endSec,
@@ -1687,24 +1675,15 @@ async function Ready()
                     await RAP.sleep(50);
 
                 if (sec("end"))
-                    record.player.seekTo(seekTo);
+                    record?.player?.seekTo?.(seekTo);
             }
             targetWrapper?.setAttribute('play-right-away', true);
             targetWrapper?.setAttribute('seekTo', seekTo);
 
-            function RemoveAllTimestampsInHierarchy(block)
-            {
-                return [...block?.querySelectorAll('a.rm-video-timestamp[yt-gif-timestamp-emulation]')]
-                    .forEach(el => toogleActiveAttr(false, el));
-            }
             function toogleActiveAttr(bol, el)
             {
-                if (bol)
-                    el.setAttribute('active-timestamp', '')
-                else
-                    el.removeAttribute('active-timestamp');
+                UTILS.toggleAttribute(bol, 'active-timestamp', el);
             }
-
         }
         async function pauseLastBlock_SimHoverOut(r)
         {
@@ -1714,6 +1693,14 @@ async function Ready()
         function NoLongerAwaiting()
         {
             tEl.removeAttribute('awaiting');
+        }
+        function sec(p)
+        {
+            return targetNodePpts.self.page == p
+        }
+        function pearSec()
+        {
+            return UTILS.HMSToSecondsOnly(targetNodePpts.pears?.find(o => o != targetNodePpts.self)?.timestamp || '')
         }
     }
 
@@ -2124,9 +2111,15 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
     // 5. clean url map when removed from DOM
+    const block = closest_rm_container(grandParentBlock);
     const options = {
         el: grandParentBlock?.querySelector('span'),
-        OnRemmovedFromDom_cb: () => UIDtoURLInstancesMapMap.delete(uid),
+        OnRemmovedFromDom_cb: () =>
+        {
+            UIDtoURLInstancesMapMap.delete(uid);
+            if (!UI.timestamps.timestamp_remember_hierarchy.checked)
+                DeactivateTimestampsInHierarchy(block);
+        },
     }
     UTILS.ObserveRemovedEl_Smart(options); // Expensive? think so. Elegant? no, but works
 
@@ -2365,6 +2358,8 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         const eventListener = awaiting_for_mousedown_to_initialize.checked ? 'mousedown' : 'mouseenter'; // huga buga
 
         AddInteractionEventListener();
+        wrapper.addEventListener('playerReadyCustom', CreateYTPlayer);
+
         function changeToMousedown(e)
         {
             if (!document.body.contains(e.currentTarget))
@@ -2386,10 +2381,13 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
         function CreateYTPlayer(e)
         {
+            e.preventDefault();
+
             UTILS.toggleClasses(false, mainAnimation, wrapper);
             UTILS.removeIMGbg(wrapper);
 
             RemoveAllListeners();
+            wrapper.dispatchEvent(UTILS.simHover());
 
             return DeployYT_IFRAME();
         }
@@ -2397,6 +2395,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         function RemoveAllListeners()
         {
             RemoveInteractionEventListener();
+            wrapper.removeEventListener('playerReadyCustom', CreateYTPlayer);
 
             awaiting_for_mousedown_to_initialize.removeEventListener('change', changeToMousedown);
             awaiting_for_mouseenter_to_initialize.removeEventListener('change', changeToMouseenter);
@@ -2485,6 +2484,13 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     }
     function DeployYT_IFRAME()
     {
+        if (UI.timestamps.timestamp_remember_hierarchy.checked)
+        {
+            const TryActiveTimestamp = (p) => closest_rm_container(grandParentBlock)?.querySelector(`.rm-video-timestamp[timestamp-style="${p}"][active-timestamp]`)?.getAttribute('timestamp') || '';
+            configParams.start = UTILS.HMSToSecondsOnly(TryActiveTimestamp('start')) || configParams.start;
+            configParams.end = UTILS.HMSToSecondsOnly(TryActiveTimestamp('end')) || configParams.end;
+        }
+
         return record.player = new window.YT.Player(newId, playerConfig(configParams));
     }
 }
@@ -3591,6 +3597,10 @@ function closestBlock(el)
 {
     return el?.closest('.rm-block__input')
 }
+function closest_rm_container(el)
+{
+    return el?.closest('.roam-block-container')
+}
 function getWrapperUrlSufix(wrapper)
 {
     const url = wrapper.getAttribute(attrInfo.url.path);
@@ -3635,6 +3645,14 @@ async function getTimestampObj_smart(pageRefSufx)
 function getCurrentInputBlock()
 {
     return document.querySelector(".rm-block__input--active.rm-block-text")
+}
+function DeactivateTimestampsInHierarchy(container)
+{
+    if (!container) return;
+    const sel = 'a.rm-video-timestamp[yt-gif-timestamp-emulation]';
+    [...container.querySelectorAll(`:is(${sel})`)]
+        .filter(b => closest_rm_container(b).id == container.id)
+        .forEach(el => UTILS.toggleAttribute(false, 'active-timestamp', el));
 }
 //#endregion
 
@@ -3981,6 +3999,15 @@ I want to add ☐ ☑
 
 
     relative and strict timestamps, specially when using nested references
+
+
+    timestamps
+        when folding a block or when the current active timestamp disappears
+            add an observer with the uid and block id
+            to activate them when they get rendered
+                add strict and soft boundaries recoveries
+                    keep the current time
+                    seek to recoverd start
 
 
 added
