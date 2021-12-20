@@ -1360,7 +1360,7 @@ async function Ready()
         const isKey = 'is component';
 
 
-        const renderedComponents = found.filter(node1 => document.body.contains(node1)).filter(node2 => isNotZoomPath(node2));
+        const renderedComponents = found.filter(node1 => document.body.contains(node1)).filter(node2 => UTILS.isNotZoomPath(node2));
         for (const node of renderedComponents)
         {
             const block = closestBlock(node);
@@ -1489,11 +1489,6 @@ async function Ready()
             const groupByKey = groupBy(key);
             const objByKey = groupByKey(obj);
             return Object.entries(objByKey).map(([title, data]) => ({ title, data }));
-        }
-
-        function isNotZoomPath(el)
-        {
-            return !el.closest("[class*='rm-zoom']");
         }
     }
     // 6.1.1
@@ -2041,7 +2036,7 @@ function ObserveIframesAndDelployYTPlayers(targetClass)
         }
         for (const node of found)
         {
-            if (isNotZoomPath(node))
+            if (UTILS.isNotZoomPath(node))
             {
                 window.YT_GIF_OBSERVERS.masterIntersectionObservers.push(ObserveIntersectToSetUpPlayer(node, 'valid entries MutationObserver'));
             }
@@ -2054,11 +2049,7 @@ function ObserveIframesAndDelployYTPlayers(targetClass)
     {
         const components = Array.from(document.querySelectorAll('.' + targetClass));
         //valids
-        return components.filter(el => isNotZoomPath(el));
-    }
-    function isNotZoomPath(el)
-    {
-        return !el.closest("[class*='rm-zoom']");
+        return components.filter(el => UTILS.isNotZoomPath(el));
     }
     //#endregion
 }
