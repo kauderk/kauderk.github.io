@@ -2,6 +2,10 @@ var kauderk = window.kauderk || {};
 
 kauderk.util = ((util) =>
 {
+    util.isNotZoomPath = (el) =>
+    {
+        return !el.closest("[class*='rm-zoom']");
+    }
     util.unshiftSame = (arr = [], el) =>
     {
         arr.unshift(el);
