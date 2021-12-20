@@ -32,23 +32,26 @@ kauderk.util = ((util) =>
 
         return s;
     }
-    util.simHover = () =>
+    util.simMouseEvent = (eventName) =>
     {
-        return new MouseEvent('mouseenter',
+        return new MouseEvent(eventName,
             {
                 'view': window,
                 'bubbles': true,
-                'cancelable': true
+                'cancelable': true,
             });
+    }
+    util.simMousedown = () =>
+    {
+        return util.simMouseEvent('mousedown');
+    }
+    util.simHover = () =>
+    {
+        return util.simMouseEvent('mouseenter');
     }
     util.simHoverOut = () =>
     {
-        return new MouseEvent('mouseleave',
-            {
-                'view': window,
-                'bubbles': true,
-                'cancelable': true
-            });
+        return util.simMouseEvent('mouseleave');
     }
     util.ObserveMutationRecords_Smart = (options) =>
     {
