@@ -1662,9 +1662,29 @@ async function Ready()
 
             DeactivateTimestampsInHierarchy(closest_rm_container(targetWrapper));
 
-            const pears = targetNodePpts.pears;
-            const self = targetNodePpts.self;
-            await SetBoundariesWithActiveTimestamp(pears, self, secondsOnly, record, targetWrapper);
+            if (targetNodePpts.pears)
+                targetNodePpts.pears.forEach(o => toogleActiveAttr(true, o.targetNode));
+            else
+                toogleActiveAttr(true, targetNodePpts.self.targetNode);
+
+
+            const startSec = sec("start") ? secondsOnly : (pearSec() || 0);
+            const endSec = sec("end") ? secondsOnly : (pearSec() || record?.player?.getDuration?.() || 86400);
+            const seekTo = sec("end") ? secondsOnly + 1 : secondsOnly;
+
+
+            await ReloadRecordBoundaries(record, startSec, endSec, () =>
+            {
+                if (sec("end"))
+                    record?.player?.seekTo?.(seekTo);
+            });
+            targetWrapper?.setAttribute('play-right-away', true);
+            targetWrapper?.setAttribute('seekTo', seekTo);
+
+            function toogleActiveAttr(bol, el)
+            {
+                UTILS.toggleAttribute(bol, 'active-timestamp', el);
+            }
         }
         async function pauseLastBlock_SimHoverOut(r)
         {
@@ -1675,7 +1695,14 @@ async function Ready()
         {
             tEl.removeAttribute('awaiting');
         }
-
+        function sec(p)
+        {
+            return targetNodePpts.self.page == p
+        }
+        function pearSec()
+        {
+            return UTILS.HMSToSecondsOnly(targetNodePpts.pears?.find(o => o != targetNodePpts.self)?.timestamp || '')
+        }
     }
 
     //#region 6.2.1
@@ -1927,20 +1954,8 @@ async function Ready()
 
 
 
-async function SetBoundariesWithActiveTimestamp(pears, self, secondsOnly, record, targetWrapper, seekToRecoverySecondsOnly)
+async function ReloadRecordBoundaries(record, startSec, endSec, callback)
 {
-    if (pears)
-        pears.forEach(o => toogleActiveAttr(true, o.targetNode));
-
-    else
-        toogleActiveAttr(true, self.targetNode);
-
-
-    const startSec = sec("start") ? secondsOnly : (pearSec() || 0);
-    const endSec = sec("end") ? secondsOnly : (pearSec() || record?.player?.getDuration?.() || 86400);
-    const seekTo = sec("end") ? secondsOnly + 1 : secondsOnly;
-
-
     if (record?.player?.loadVideoById)
     {
         const vars = record.player.i.h;
@@ -1958,28 +1973,7 @@ async function SetBoundariesWithActiveTimestamp(pears, self, secondsOnly, record
 
         while (document.body.contains(iframe) && !record?.player?.getCurrentTime())
             await RAP.sleep(50);
-
-        if (sec("end"))
-            record?.player?.seekTo?.(seekTo);
-        else if (typeof seekToRecoverySecondsOnly === 'number')
-        {
-            record?.player?.seekTo?.(seekToRecoverySecondsOnly);
-        }
-    }
-    targetWrapper?.setAttribute('play-right-away', true);
-    targetWrapper?.setAttribute('seekTo', seekTo);
-
-    function toogleActiveAttr(bol, el)
-    {
-        UTILS.toggleAttribute(bol, 'active-timestamp', el);
-    }
-    function sec(p)
-    {
-        return self.page == p;
-    }
-    function pearSec()
-    {
-        return UTILS.HMSToSecondsOnly(pears?.find(o => o != self)?.timestamp || '');
+        callback();
     }
 }
 
@@ -2139,25 +2133,13 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     wrapper.querySelector('.yt-gif-player').id = newId;
 
 
-    //const isContainerClosed = () => block.classList.contains('rm-block--closed');
-    const recoveryObj = {
-        found: {
-            uid: null,
-            blockID: null,
-            start: 0,
-            end: 86400,
-            secondsOnly: 0,
-        },
-        removed: {
-            uid: null,
-            blockID: null,
-            start: 0,
-            end: 86400,
-            secondsOnly: 0,
-        },
-    }
 
-    // 5. timestamp_recovery_strict
+    // 5. 
+
+    const MutationObj = {
+        added: [],
+        removed: [],
+    }
     const { timestamp_recovery, timestamp_recovery_soft } = UI.timestamps;
 
     const rm_container = closest_rm_container(grandParentBlock);
@@ -2170,19 +2152,6 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         ActiveTimestampObserver.observe(childrenBlock, { childList: true, subtree: true });
     }
 
-    const options = {
-        el: grandParentBlock?.querySelector('span'),
-        OnRemmovedFromDom_cb: () =>
-        {
-            UIDtoURLInstancesMapMap.delete(uid);
-            ActiveTimestampObserver?.disconnect();
-            if (!timestamp_recovery.checked)
-                DeactivateTimestampsInHierarchy(rm_container);
-        },
-    }
-    UTILS.ObserveRemovedEl_Smart(options); // Expensive? think so. Elegant? no, but works
-
-
     async function BlockChildrenMutation_cb(mutationsList)
     {
         if (childrenBlock.hasAttribute('awaiting')) return;
@@ -2191,38 +2160,60 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         if (!timestamp_recovery.checked)
             return;
 
-        const targetClass = `rm-video-timestamp`;
-        const targetAttr = 'active-timestamp';
-        let removed = [];
+        let added = [];
 
-        for (const { removedNodes } of mutationsList)
+        for (const { removedNodes, addedNodes } of mutationsList)
         {
-            removed = [...removed, NodesRecord(removedNodes)];
+            MutationObj.removed = [...MutationObj.removed, NodesRecord(removedNodes, 'active-timestamp')];
+            added = [...added, NodesRecord(addedNodes, 'yt-gif-timestamp-emulation')];
         }
 
-        removed = removed.flat(Infinity).filter(x => !!x);
+        MutationObj.removed = MutationObj.removed.flat(Infinity).filter(x => !!x);
+        added = added.flat(Infinity).filter(x => !!x);
 
-        if (removed.length == 0)
-            return NoLongerAwaiting();
+        const activeBlockID = added.find(x => MutationObj.removed.includes(x));
+        if (activeBlockID)
+        {
+            MutationObj.removed.length = 0;
+            await RAP.sleep(10);
 
-        const removedObj = { start: removed[0], end: removed[1] };
-        debugger;
+            const activeBlock = document.getElementById(activeBlockID);
 
-        assertRecoveryPpt('removed', removedObj);
+            if (!document.body.contains(rm_container))
+                return NoLongerAwaiting();
 
 
-        const pears = [{ targetNode: removed[0] }, { targetNode: removed[1] }];
-        const self = { targetNode: removed.find(el => !!el) };
-        const secondsOnly = recoveryObj?.removed?.start;
-        const record = recordedIDs.get(blockID);
-        const targetWrapper = record?.player?.getIframe()?.closest('.yt-gif-wrapper');
-        let seekToRecoverySecondsOnly;
+            DeactivateTimestampsInHierarchy(rm_container);
 
-        if (timestamp_recovery_soft.checked)
-            recoveryObj.removed.secondsOnly = seekToRecoverySecondsOnly = lastBlockIDParameters.get(blockID)?.updateTime;
 
-        debugger;
-        await SetBoundariesWithActiveTimestamp(pears, self, secondsOnly, record, targetWrapper, seekToRecoverySecondsOnly);
+            const timestamps = [...activeBlock.querySelectorAll(`.rm-video-timestamp[yt-gif-timestamp-emulation]`)].filter(b => closestBlock(b) == activeBlock);
+            const findPage = (p) => [...timestamps].reverse().find(x => x.getAttribute('timestamp-style') == p);
+
+            const record = recordedIDs.get(blockID);
+            const currentTime = record?.player?.getCurrentTime?.();
+            const duration = record?.player?.getDuration?.();
+
+            if (!record) return NoLongerAwaiting;
+            ['start', 'end'].forEach(page =>
+            {
+                const timestamp = findPage(page);
+                if (timestamp)
+                    UTILS.toggleAttribute(true, 'active-timestamp', timestamp);
+
+                const defaultTime = page == 'start' ? 0 : (duration || 86400);
+                const time = UTILS.HMSToSecondsOnly(timestamp?.getAttribute('timestamp') || '');
+
+                configParams[page] = time || defaultTime;
+            });
+
+            debugger;
+            await ReloadRecordBoundaries(record, configParams.start, configParams.end, () =>
+            {
+                const seekTo = timestamp_recovery_soft.checked ? currentTime : configParams.start;
+                record?.player?.seekTo?.(seekTo);
+            });
+        }
+
 
         return NoLongerAwaiting();
 
@@ -2230,40 +2221,42 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         {
             childrenBlock.removeAttribute('awaiting');
         }
-
-        function assertRecoveryPpt(ppt, recordObj)
-        {
-            if (recordObj.length == 0) return;
-
-            recoveryObj[ppt].blockID = closestBlock(recordObj.start || recordObj.end)?.id;
-            recoveryObj[ppt].uid = recoveryObj[ppt].blockID?.slice(-9);
-            recoveryObj[ppt].start = UTILS.HMSToSecondsOnly(recordObj.start?.getAttribute('timestamp') || '') || configParams.start;
-            recoveryObj[ppt].end = UTILS.HMSToSecondsOnly(recordObj.end?.getAttribute('timestamp') || '') || configParams.end;
-        }
-        function NodesRecord(Nodes)
-        {
-            if (!Nodes || Nodes.length == 0)
-                return null;
-
-            const record = [...Array.from(Nodes)]
-                .filter(el => !!el.tagName)
-                .map(x =>
-                {
-                    if (x.hasAttribute('yt-gif-timestamp-emulation'))
-                        return x
-                    else
-                        return [...x.querySelectorAll(`[yt-gif-timestamp-emulation]`)]
-                })
-                .flat(Infinity)
-                .filter(el => el.hasAttribute(targetAttr));
-
-
-            //if (Nodes && record.length == 0) debugger;
-            const findPage = (p) => [...record].reverse().find(x => x.getAttribute('timestamp-style') == p);
-
-            return [findPage('start'), findPage('end')];
-        }
     }
+
+    function NodesRecord(Nodes, attr)
+    {
+        if (!Nodes || Nodes.length == 0)
+            return null;
+
+        return [...Array.from(Nodes)]
+            .filter(el => !!el.tagName)
+            .map(x =>
+            {
+                if (x.hasAttribute(attr))
+                    return x
+                else
+                    return [...x.querySelectorAll(`[${attr}]`)]
+            })
+            .flat(Infinity)
+            .map(el => closestBlock(el))
+            .filter((v, i, a) => a.indexOf(v) === i)// remove duplicates
+            .map(el => el.id);
+        //.map(el => ({ blockID: el.id, uid: el.id.slice(-9) }))
+    }
+
+
+
+
+    const options = {
+        el: grandParentBlock?.querySelector('span'),
+        OnRemmovedFromDom_cb: () =>
+        {
+            UIDtoURLInstancesMapMap.delete(uid);
+            if (!UI.timestamps.timestamp_recovery.checked)
+                DeactivateTimestampsInHierarchy(rm_container);
+        },
+    }
+    UTILS.ObserveRemovedEl_Smart(options); // Expensive? think so. Elegant? no, but works
 
 
 
@@ -4150,6 +4143,25 @@ I want to add ☐ ☑
                 add strict and soft boundaries recoveries
                     keep the current time
                     seek to recoverd start
+
+    https://www.designcise.com/web/tutorial/how-to-return-the-position-of-a-regular-expression-match-in-javascript#:~:text=football%27%3B%0A%0Aconst%20indexPairs%20%3D%20%5B%5D%3B-,while%20(null%20!%3D%3D%20(matchArr%20%3D%20regex.exec(str)))%20%7B,-indexPairs.push(%5BmatchArr
+    while (null !== (matchArr = regex.exec(str))) {
+        indexPairs.push([matchArr.index, regex.lastIndex]);
+    }
+    indexPairs.reduce((acc, v,i,a)=> [...acc, sb(a[i-1]?.[0],v[0]), sb(v[0],v[1]), sb(v[1], a[i+1]?.[1]) ], [])
+    (`.+?`)|({{.+?}})
+
+    var regex = /(`.+?`)|({{.+?}})/gm;
+    var indexPairs = [];
+
+    while (null !== (matchArr = regex.exec(str3))) {
+        indexPairs.push([matchArr.index, regex.lastIndex]);
+    }
+
+    console.log(indexPairs);
+
+    https://stackoverflow.com/questions/4514144/js-string-split-without-removing-the-delimiters#:~:text=%22abcdeabcde%22.split(-,/(%3F%3Dd)/g,-)%20//%2D%3E%20%5B%22abc%22%2C%20%22deabc%22%2C%20%22de
+    /(?=d)/g
 
 
 added
