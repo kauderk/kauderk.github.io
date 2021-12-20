@@ -1,3 +1,4 @@
+// working??
 // version 38 - semi-refactored
 /**
  * @summary USER INPUTS
@@ -1667,6 +1668,8 @@ async function Ready()
             else
                 toogleActiveAttr(true, targetNodePpts.self.targetNode);
 
+            UTILS.toggleAttribute(true, 'last-active-timestamp', targetNodePpts.self.targetNode);
+
 
             const startSec = sec("start") ? secondsOnly : (pearSec() || 0);
             const endSec = sec("end") ? secondsOnly : (pearSec() || record?.player?.getDuration?.() || 86400);
@@ -2135,6 +2138,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
     // 5. 
+    const timestampsPerBlock = (block, attr) => [...block.querySelectorAll(`[${attr}]`)].filter(b => closestBlock(b).id == block.id);
 
     const MutationObj = {
         added: [],
@@ -2171,47 +2175,27 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         MutationObj.removed = MutationObj.removed.flat(Infinity).filter(x => !!x);
         added = added.flat(Infinity).filter(x => !!x);
 
-        const activeBlockID = added.find(x => MutationObj.removed.includes(x));
-        if (activeBlockID)
+        const commonObj = MutationObj.removed.find(aO => [...added].map(o => o.blockID).includes(aO.blockID));
+        if (commonObj)
         {
             MutationObj.removed.length = 0;
             await RAP.sleep(10);
+            const activeBlock = document.getElementById(commonObj.blockID);
 
-            const activeBlock = document.getElementById(activeBlockID);
+            const timestamps = timestampsPerBlock(activeBlock, 'yt-gif-timestamp-emulation') || [];
+            const targetTimestamp = timestamps[commonObj.target.index] || timestamps[commonObj.start.index] || timestamps[commonObj.end.index] || timestamps[timestamps.length - 1];
 
-            if (!document.body.contains(rm_container))
-                return NoLongerAwaiting();
+            targetTimestamp?.dispatchEvent(mousedownEvent());
 
-
-            DeactivateTimestampsInHierarchy(rm_container);
-
-
-            const timestamps = [...activeBlock.querySelectorAll(`.rm-video-timestamp[yt-gif-timestamp-emulation]`)].filter(b => closestBlock(b) == activeBlock);
-            const findPage = (p) => [...timestamps].reverse().find(x => x.getAttribute('timestamp-style') == p);
-
-            const record = recordedIDs.get(blockID);
-            const currentTime = record?.player?.getCurrentTime?.();
-            const duration = record?.player?.getDuration?.();
-
-            if (!record) return NoLongerAwaiting;
-            ['start', 'end'].forEach(page =>
+            function mousedownEvent()
             {
-                const timestamp = findPage(page);
-                if (timestamp)
-                    UTILS.toggleAttribute(true, 'active-timestamp', timestamp);
-
-                const defaultTime = page == 'start' ? 0 : (duration || 86400);
-                const time = UTILS.HMSToSecondsOnly(timestamp?.getAttribute('timestamp') || '');
-
-                configParams[page] = time || defaultTime;
-            });
-
-            debugger;
-            await ReloadRecordBoundaries(record, configParams.start, configParams.end, () =>
-            {
-                const seekTo = timestamp_recovery_soft.checked ? currentTime : configParams.start;
-                record?.player?.seekTo?.(seekTo);
-            });
+                return new MouseEvent('mousedown',
+                    {
+                        'view': window,
+                        'bubbles': true,
+                        'cancelable': true
+                    });
+            }
         }
 
 
@@ -2240,8 +2224,29 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             .flat(Infinity)
             .map(el => closestBlock(el))
             .filter((v, i, a) => a.indexOf(v) === i)// remove duplicates
-            .map(el => el.id);
-        //.map(el => ({ blockID: el.id, uid: el.id.slice(-9) }))
+            //.map(el => el.id);
+            .map(el => 
+            {
+                const timestamps = timestampsPerBlock(el, 'yt-gif-timestamp-emulation') || [];
+                const activeTimestamps = timestamps.filter(x => x.hasAttribute('active-timestamp')) || [];
+
+                const getActivePage = (p) => activeTimestamps.find(x => x.getAttribute('timestamp-style') == p);
+                const timestampPage = (page) => ({
+                    timestamp: page?.getAttribute('timestamp'),
+                    index: timestamps.indexOf(page),
+                });
+
+                return {
+                    blockID: el.id,
+                    start: timestampPage(getActivePage("start")),
+                    end: timestampPage(getActivePage("end")),
+                    target: timestampPage(activeTimestamps.find(x => x.hasAttribute('last-active-timestamp'))),
+                    timestamps: {
+                        active: activeTimestamps.length,
+                        total: timestamps.length,
+                    },
+                }
+            });
     }
 
 
@@ -3787,7 +3792,11 @@ function DeactivateTimestampsInHierarchy(container)
     const sel = 'a.rm-video-timestamp[yt-gif-timestamp-emulation]';
     [...container.querySelectorAll(`:is(${sel})`)]
         .filter(b => closest_rm_container(b).id == container.id)
-        .forEach(el => UTILS.toggleAttribute(false, 'active-timestamp', el));
+        .forEach(el =>
+        {
+            UTILS.toggleAttribute(false, 'active-timestamp', el);
+            UTILS.toggleAttribute(false, 'last-active-timestamp', el);
+        });
 }
 //#endregion
 
@@ -4144,6 +4153,7 @@ I want to add ☐ ☑
                     keep the current time
                     seek to recoverd start
 
+    https://chrome.google.com/webstore/detail/video-annotation-bookmark/apoimieffgakgcbagednnmdhgaiedbea
     https://www.designcise.com/web/tutorial/how-to-return-the-position-of-a-regular-expression-match-in-javascript#:~:text=football%27%3B%0A%0Aconst%20indexPairs%20%3D%20%5B%5D%3B-,while%20(null%20!%3D%3D%20(matchArr%20%3D%20regex.exec(str)))%20%7B,-indexPairs.push(%5BmatchArr
     while (null !== (matchArr = regex.exec(str))) {
         indexPairs.push([matchArr.index, regex.lastIndex]);
@@ -4164,7 +4174,7 @@ I want to add ☐ ☑
     /(?=d)/g
 
 
-added
+    added
     visible_clips_start_to_play_unmuted synergy with fullscreenStyle ☑ ☑
         each does what they're suposed be doing
             when entering fullscreen mode
