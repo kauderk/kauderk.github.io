@@ -2121,14 +2121,20 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
             const observer = new MutationObserver(async (mutationsList) =>
             {
-                if (childrenBlock.hasAttribute('awaiting')) return;
-                childrenBlock.setAttribute('awaiting', true);
                 if (!timestamp_recovery.checked)
-                    return;
+                    return awaiting(false);
+
+                if (childrenBlock.hasAttribute('awaiting')) return;
+                awaiting(true);
 
                 await TimestampsInHierarchyMutation_cb(mutationsList, MutationObj);
-                childrenBlock.removeAttribute('awaiting');
-            });
+                awaiting(false);
+
+                function awaiting(bol)
+                {
+                    return UTILS.toggleAttribute(bol, 'awaiting', childrenBlock);
+                }
+            })
 
             observer.observe(childrenBlock, { childList: true, subtree: true });
         }
