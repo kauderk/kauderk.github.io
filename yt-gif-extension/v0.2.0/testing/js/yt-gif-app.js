@@ -1,4 +1,3 @@
-// working??
 // version 38 - semi-refactored
 /**
  * @summary USER INPUTS
@@ -1373,7 +1372,7 @@ async function Ready()
 
 
             // you are iterating through renderedComponents (mutation records), so you need to get the original siblings of each block
-            siblingsArr = [...block.querySelectorAll(`:is(${componenSel})`)].filter(b => closestBlock(b) == block);
+            siblingsArr = ElementsPerBlock(block, `:is(${componenSel})`);
             await update_startEndComponentMap();
 
             if (!startEndComponentMap || ((startEndComponentMap.size !== siblingsArr.length) && !MapAtIndex_Value(startEndComponentMap, siblingsArr.indexOf(node), isKey)))
@@ -1447,55 +1446,34 @@ async function Ready()
             {
                 const findPage = (p) => [...ArrObjs].reverse().find(x => x.page == p);
                 const lastArr = [findPage('start'), findPage('end')];
-
+                const completePears = lastArr.every(el => !!el);
 
                 ArrObjs.forEach((o, i) =>
                 {
-                    o.targetNode.style.filter = `brightness(70%)`;
-                    // const { uid: blockUid, blockID } = o;
-                    // const timestampComponent = o.targetNode;
-
-
-                    o.targetNode.onmousedown = async function (e)
+                    if (!o?.targetNode)
+                        return;
+                    const isPear = lastArr.includes(o);
+                    if (isPear)
                     {
-                        // const options = {
-                        //     el: o.targetNode,
-                        //     OnRemmovedFromDom_cb: () =>
-                        //     {
-                        //         if (timestampComponent.getAttribute('active-timestamp'))
-                        //         {
-
-                        //         }
-                        //     },
-                        // }
-                        // UTILS.ObserveRemovedEl_Smart(options);
-
-                        await PlayPauseOnClicks(e, o.tempUID, { self: o })
-                    };
-                });
-
-
-                if (lastArr.every(el => !!el))
-                {
-                    lastArr.forEach((o, i, a) =>
-                    {
-                        o.targetNode.style.filter = `brightness(${100 + (5 * i)}%)`;
-                        o.targetNode.onmousedown = async function (e)
-                        {
-                            await PlayPauseOnClicks(e, o.tempUID, { pears: a, self: o })
-                        };
-                    });
-                }
-                else
-                {
-                    lastArr.forEach((o, i, a) =>
-                    {
-                        if (o?.targetNode)
+                        if (completePears)
+                            o.targetNode.style.filter = `brightness(${100 + (5 * i)}%)`;
+                        else
                             o.targetNode.style.filter = `brightness(85%)`;
-                    });
-                }
+                    }
+                    else
+                    {
+                        o.targetNode.style.filter = `brightness(70%)`;
+                    }
 
-            });
+                    async function OnClicks(e)
+                    {
+                        await PlayPauseOnClicks(e, o.tempUID, { self: o, pears: (isPear && completePears) ? lastArr : null });
+                    }
+
+                    o.targetNode.addEventListener('customMousedown', OnClicks);
+                    o.targetNode.onmousedown = OnClicks;
+                })
+            })
         }
 
 
@@ -1521,7 +1499,8 @@ async function Ready()
     // 6.1.1
     async function PlayPauseOnClicks(e, uid, targetNodePpts)
     {
-        const { currentTarget: tEl, which } = e;
+        const { currentTarget: tEl } = e;
+        const { which, seekToMessage } = typeof e.detail == 'object' ? e.detail : e;
 
         if (tEl.hasAttribute('awaiting')) return;
         tEl.setAttribute('awaiting', true);
@@ -1648,7 +1627,7 @@ async function Ready()
                         wrapper?.dispatchEvent(UTILS.simHoverOut());
                 });
             // play this
-            targetWrapper?.dispatchEvent(new CustomEvent('playerReadyCustom', { bubbles: true }));
+            targetWrapper?.dispatchEvent(new CustomEvent('customPlayerReady', { bubbles: true }));
 
 
             const targetBlockID = [...recordedIDs.keys()].reverse().find(k => k?.startsWith(closestYTGIFparentID(targetWrapper)));
@@ -1674,19 +1653,55 @@ async function Ready()
             const startSec = sec("start") ? secondsOnly : (pearSec() || 0);
             const endSec = sec("end") ? secondsOnly : (pearSec() || record?.player?.getDuration?.() || 86400);
             const seekTo = sec("end") ? secondsOnly + 1 : secondsOnly;
+            const currentTime = record?.player?.getCurrentTime?.();
 
-
-            await ReloadRecordBoundaries(record, startSec, endSec, () =>
+            await ReloadRecordBoundaries_Smart(record, startSec, endSec, () =>
             {
-                if (sec("end"))
-                    record?.player?.seekTo?.(seekTo);
+                const seekToBoundary = (sec("end") || seekToMessage == 'last-active') ? true : false;
+
+                if (seekToMessage == 'currentTime')
+                    record?.player?.seekTo?.(currentTime)
+                else if (seekToBoundary)
+                    record?.player?.seekTo?.(seekTo)
             });
             targetWrapper?.setAttribute('play-right-away', true);
             targetWrapper?.setAttribute('seekTo', seekTo);
 
+
+            async function ReloadRecordBoundaries_Smart(record, startSec, endSec, callback)
+            {
+                if (record?.player?.loadVideoById)
+                {
+                    const vars = record.player.i.h;
+                    const map = allVideoParameters.get(record.player.h.id);
+
+                    vars.playerVars.start = map.start = startSec;
+                    vars.playerVars.end = map.end = endSec;
+                    const iframe = record.player.getIframe();
+
+                    await record.player.loadVideoById({
+                        'videoId': vars.videoId,
+                        'startSeconds': startSec,
+                        'endSeconds': endSec,
+                    });
+
+                    while (document.body.contains(iframe) && !record?.player?.getCurrentTime())
+                        await RAP.sleep(50);
+                    callback();
+                }
+            }
             function toogleActiveAttr(bol, el)
             {
-                UTILS.toggleAttribute(bol, 'active-timestamp', el);
+                if (el)
+                    UTILS.toggleAttribute(bol, 'active-timestamp', el);
+            }
+            function sec(p)
+            {
+                return targetNodePpts.self.page == p
+            }
+            function pearSec()
+            {
+                return UTILS.HMSToSecondsOnly(targetNodePpts.pears?.find(o => o != targetNodePpts.self)?.timestamp || '')
             }
         }
         async function pauseLastBlock_SimHoverOut(r)
@@ -1697,14 +1712,6 @@ async function Ready()
         function NoLongerAwaiting()
         {
             tEl.removeAttribute('awaiting');
-        }
-        function sec(p)
-        {
-            return targetNodePpts.self.page == p
-        }
-        function pearSec()
-        {
-            return UTILS.HMSToSecondsOnly(targetNodePpts.pears?.find(o => o != targetNodePpts.self)?.timestamp || '')
         }
     }
 
@@ -1957,29 +1964,6 @@ async function Ready()
 
 
 
-async function ReloadRecordBoundaries(record, startSec, endSec, callback)
-{
-    if (record?.player?.loadVideoById)
-    {
-        const vars = record.player.i.h;
-        const map = allVideoParameters.get(record.player.h.id);
-
-        vars.playerVars.start = map.start = startSec;
-        vars.playerVars.end = map.end = endSec;
-        const iframe = record.player.getIframe();
-
-        await record.player.loadVideoById({
-            'videoId': vars.videoId,
-            'startSeconds': startSec,
-            'endSeconds': endSec,
-        });
-
-        while (document.body.contains(iframe) && !record?.player?.getCurrentTime())
-            await RAP.sleep(50);
-        callback();
-    }
-}
-
 function ObserveIframesAndDelployYTPlayers(targetClass)
 {
     // 1. set up all visible YT GIFs
@@ -2086,11 +2070,6 @@ function ObserveIframesAndDelployYTPlayers(targetClass)
 //
 async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, message = 'I dunno')
 {
-    if (message == 'testing manual ty gif tutorial')
-    {
-        console.log(message);
-        //debugger;
-    }
     if (!wrapper || !wrapper.parentNode) return;
 
 
@@ -2137,121 +2116,36 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
 
-    // 5. 
-    const timestampsPerBlock = (block, attr) => [...block.querySelectorAll(`[${attr}]`)].filter(b => closestBlock(b).id == block.id);
-
-    const MutationObj = {
-        added: [],
-        removed: [],
-    }
-    const { timestamp_recovery, timestamp_recovery_soft } = UI.timestamps;
-
+    // 5. Observe children containers and recover active timestamps respectively
     const rm_container = closest_rm_container(grandParentBlock);
-    const childrenBlock = rm_container.querySelector('.rm-block-children');
-    let ActiveTimestampObserver = null;
-    if (childrenBlock && !childrenBlock.hasAttribute('active-timestamp-observer'))
+    if (rm_container)
     {
-        childrenBlock.setAttribute('active-timestamp-observer', '');
-        ActiveTimestampObserver = new MutationObserver(BlockChildrenMutation_cb);
-        ActiveTimestampObserver.observe(childrenBlock, { childList: true, subtree: true });
-    }
+        const MutationObj = { removed: [] };
+        const { timestamp_recovery } = UI.timestamps;
+        const childrenBlock = rm_container?.querySelector('.rm-block-children');
 
-    async function BlockChildrenMutation_cb(mutationsList)
-    {
-        if (childrenBlock.hasAttribute('awaiting')) return;
-        childrenBlock.setAttribute('awaiting', true);
-
-        if (!timestamp_recovery.checked)
-            return;
-
-        let added = [];
-
-        for (const { removedNodes, addedNodes } of mutationsList)
+        if (childrenBlock || !childrenBlock?.hasAttribute('active-timestamp-observer'))
         {
-            MutationObj.removed = [...MutationObj.removed, NodesRecord(removedNodes, 'active-timestamp')];
-            added = [...added, NodesRecord(addedNodes, 'yt-gif-timestamp-emulation')];
-        }
+            childrenBlock.setAttribute('active-timestamp-observer', '');
 
-        MutationObj.removed = MutationObj.removed.flat(Infinity).filter(x => !!x);
-        added = added.flat(Infinity).filter(x => !!x);
-
-        const commonObj = MutationObj.removed.find(aO => [...added].map(o => o.blockID).includes(aO.blockID));
-        if (commonObj)
-        {
-            MutationObj.removed.length = 0;
-            await RAP.sleep(10);
-            const activeBlock = document.getElementById(commonObj.blockID);
-
-            const timestamps = timestampsPerBlock(activeBlock, 'yt-gif-timestamp-emulation') || [];
-            const targetTimestamp = timestamps[commonObj.target.index] || timestamps[commonObj.start.index] || timestamps[commonObj.end.index] || timestamps[timestamps.length - 1];
-
-            targetTimestamp?.dispatchEvent(mousedownEvent());
-
-            function mousedownEvent()
+            const observer = new MutationObserver(async (mutationsList) =>
             {
-                return new MouseEvent('mousedown',
-                    {
-                        'view': window,
-                        'bubbles': true,
-                        'cancelable': true
-                    });
-            }
-        }
+                if (childrenBlock.hasAttribute('awaiting')) return;
+                childrenBlock.setAttribute('awaiting', true);
+                if (!timestamp_recovery.checked)
+                    return;
 
-
-        return NoLongerAwaiting();
-
-        function NoLongerAwaiting()
-        {
-            childrenBlock.removeAttribute('awaiting');
-        }
-    }
-
-    function NodesRecord(Nodes, attr)
-    {
-        if (!Nodes || Nodes.length == 0)
-            return null;
-
-        return [...Array.from(Nodes)]
-            .filter(el => !!el.tagName)
-            .map(x =>
-            {
-                if (x.hasAttribute(attr))
-                    return x
-                else
-                    return [...x.querySelectorAll(`[${attr}]`)]
-            })
-            .flat(Infinity)
-            .map(el => closestBlock(el))
-            .filter((v, i, a) => a.indexOf(v) === i)// remove duplicates
-            //.map(el => el.id);
-            .map(el => 
-            {
-                const timestamps = timestampsPerBlock(el, 'yt-gif-timestamp-emulation') || [];
-                const activeTimestamps = timestamps.filter(x => x.hasAttribute('active-timestamp')) || [];
-
-                const getActivePage = (p) => activeTimestamps.find(x => x.getAttribute('timestamp-style') == p);
-                const timestampPage = (page) => ({
-                    timestamp: page?.getAttribute('timestamp'),
-                    index: timestamps.indexOf(page),
-                });
-
-                return {
-                    blockID: el.id,
-                    start: timestampPage(getActivePage("start")),
-                    end: timestampPage(getActivePage("end")),
-                    target: timestampPage(activeTimestamps.find(x => x.hasAttribute('last-active-timestamp'))),
-                    timestamps: {
-                        active: activeTimestamps.length,
-                        total: timestamps.length,
-                    },
-                }
+                await TimestampsInHierarchyMutation_cb(mutationsList, MutationObj);
+                childrenBlock.removeAttribute('awaiting');
             });
+
+            observer.observe(childrenBlock, { childList: true, subtree: true });
+        }
     }
 
 
 
-
+    // 6. On removed from DOM clear Uid2Url map and deactivate timestamps
     const options = {
         el: grandParentBlock?.querySelector('span'),
         OnRemmovedFromDom_cb: () =>
@@ -2261,11 +2155,11 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 DeactivateTimestampsInHierarchy(rm_container);
         },
     }
-    UTILS.ObserveRemovedEl_Smart(options); // Expensive? think so. Elegant? no, but works
+    UTILS.ObserveRemovedEl_Smart(options);
 
 
 
-    // 6. 
+    // 7. 
     if (dataCreation == attrInfo.creation.forceAwaiting || isValid_Awaiting_check())
     {
         return await DeployYT_IFRAME_OnInteraction();
@@ -2490,7 +2384,85 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         return false;
     }
 
-    // 5.0
+    // 5.0 timestamp recovery
+    async function TimestampsInHierarchyMutation_cb(mutationsList, MutationObj)
+    {
+        let added = [];
+
+        for (const { removedNodes, addedNodes } of mutationsList)
+        {
+            MutationObj.removed = [...MutationObj.removed, NodesRecord(removedNodes, 'active-timestamp')];
+            added = [...added, NodesRecord(addedNodes, 'yt-gif-timestamp-emulation')];
+        }
+
+        MutationObj.removed = MutationObj.removed.flat(Infinity).filter(x => !!x);
+        added = added.flat(Infinity).filter(x => !!x);
+
+        const commonObj = MutationObj.removed.find(aO => [...added].map(o => o.blockID).includes(aO.blockID));
+        if (commonObj)
+        {
+            MutationObj.removed.length = 0;
+            await TryToRecoverActiveTimestamp(commonObj);
+        }
+    }
+    async function TryToRecoverActiveTimestamp(commonObj)
+    {
+        await RAP.sleep(10);
+        const activeBlock = document.getElementById(commonObj.blockID);
+
+        const timestamps = ElementsPerBlock(activeBlock, '[yt-gif-timestamp-emulation]') || [];
+        const targetTimestamp = timestamps[commonObj.target.index] || timestamps[commonObj.start.index] || timestamps[commonObj.end.index] || timestamps[timestamps.length - 1];
+
+        targetTimestamp?.dispatchEvent(new CustomEvent('customMousedown',
+            {
+                'view': window,
+                'bubbles': true,
+                'cancelable': true,
+                'detail': {
+                    currentTarget: targetTimestamp,
+                    which: 1,
+                    seekToMessage: UI.timestamps?.timestamp_recovery_soft?.checked ? 'currentTime' : 'last-active',
+                },
+            }));
+    }
+    function NodesRecord(Nodes, attr)
+    {
+        if (!Nodes || Nodes.length == 0)
+            return null;
+
+        return [...Array.from(Nodes)]
+            .filter(el => !!el.tagName)
+            .map(x =>
+            {
+                if (x.hasAttribute(attr))
+                    return x
+                else
+                    return [...x.querySelectorAll(`[${attr}]`)]
+            })
+            .flat(Infinity)
+            .map(el => closestBlock(el))
+            .filter((v, i, a) => a.indexOf(v) === i)// remove duplicates
+            .map(el => 
+            {
+                const timestamps = ElementsPerBlock(el, '[yt-gif-timestamp-emulation]') || [];
+                const activeTimestamps = timestamps.filter(x => x.hasAttribute('active-timestamp')) || [];
+
+                const getActivePage = (p) => activeTimestamps.find(x => x.getAttribute('timestamp-style') == p);
+                const timestampPage = (page) => ({
+                    timestamp: page?.getAttribute('timestamp'),
+                    index: timestamps.indexOf(page),
+                });
+
+                return {
+                    blockID: el.id,
+                    start: timestampPage(getActivePage("start")),
+                    end: timestampPage(getActivePage("end")),
+                    target: timestampPage(activeTimestamps.find(x => x.hasAttribute('last-active-timestamp'))),
+                }
+            });
+    }
+
+    // 7.0
     async function DeployYT_IFRAME_OnInteraction()
     {
         const mainAnimation = setUpWrapperAwaitingAnimation();
@@ -2498,7 +2470,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         const eventListener = awaiting_for_mousedown_to_initialize.checked ? 'mousedown' : 'mouseenter'; // huga buga
 
         AddInteractionEventListener();
-        wrapper.addEventListener('playerReadyCustom', CreateYTPlayer);
+        wrapper.addEventListener('customPlayerReady', CreateYTPlayer);
 
         function changeToMousedown(e)
         {
@@ -2535,7 +2507,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         function RemoveAllListeners()
         {
             RemoveInteractionEventListener();
-            wrapper.removeEventListener('playerReadyCustom', CreateYTPlayer);
+            wrapper.removeEventListener('customPlayerReady', CreateYTPlayer);
 
             awaiting_for_mousedown_to_initialize.removeEventListener('change', changeToMousedown);
             awaiting_for_mouseenter_to_initialize.removeEventListener('change', changeToMouseenter);
@@ -3797,6 +3769,10 @@ function DeactivateTimestampsInHierarchy(container)
             UTILS.toggleAttribute(false, 'active-timestamp', el);
             UTILS.toggleAttribute(false, 'last-active-timestamp', el);
         });
+}
+function ElementsPerBlock(block, selector)
+{
+    return [...block.querySelectorAll(selector)]?.filter(b => closestBlock(b).id == block.id);
 }
 //#endregion
 
