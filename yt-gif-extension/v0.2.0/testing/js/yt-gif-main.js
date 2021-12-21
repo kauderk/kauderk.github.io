@@ -24,7 +24,7 @@ async function LoadExternalResources()
         await createXload('https://kauderk.github.io/yt-gif-extension/resources/js/utils.js');
         await createXload('https://kauderk.github.io/yt-gif-extension/resources/js/utils-roam-alpha-api.js');
 
-        await createXload('https://kauderk.github.io/yt-gif-extension/v0.2.0/js/settings-page.js');
+        await createXload('https://kauderk.github.io/yt-gif-extension/v0.2.0/testing/js/settings-page.js');
 
         return null;
     }
