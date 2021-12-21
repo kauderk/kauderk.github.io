@@ -3805,7 +3805,7 @@ function DeactivateTimestampsInHierarchy(container)
 }
 function ElementsPerBlock(block, selector)
 {
-    return [...block.querySelectorAll(selector)]?.filter(b => closestBlock(b).id == block.id);
+    return [...block?.querySelectorAll(selector)]?.filter(b => closestBlock(b).id == block.id) || [];
 }
 //#endregion
 
