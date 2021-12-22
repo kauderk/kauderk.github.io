@@ -1611,16 +1611,15 @@ async function Ready()
             const targetWrapper = lastWrapperInBlock(r);
 
 
-            // pause everthing but this
+            // 1. pause everthing but this
             UTILS.inViewportElsHard([...document.querySelectorAll('.yt-gif-wrapper')])
                 .forEach(wrapper =>
                 {
                     if (wrapper != targetWrapper)
                         wrapper?.dispatchEvent(UTILS.simHoverOut());
                 });
-            // play this
-            targetWrapper?.dispatchEvent(new CustomEvent('customPlayerReady', { bubbles: true }));
 
+            // 2. 
             const targetBlockID = [...recordedIDs.keys()].reverse().find(k => k?.startsWith(closestYTGIFparentID(targetWrapper)));
             const record = recordedIDs.get(targetBlockID);
             const validTimestamp = tEl.innerHTML.match(StartEnd_Config.targetStringRgx)?.[0];
@@ -1630,8 +1629,9 @@ async function Ready()
                 return;
             }
 
-            const wasLastActive = targetNodePpts.self.targetNode.hasAttribute('last-active-timestamp');
 
+            // 3.
+            const wasLastActive = targetNodePpts.self.targetNode.hasAttribute('last-active-timestamp');
             DeactivateTimestampsInHierarchy(closest_rm_container(targetWrapper));
 
             if (targetNodePpts.pears)
@@ -1642,47 +1642,42 @@ async function Ready()
             UTILS.toggleAttribute(true, 'last-active-timestamp', targetNodePpts.self.targetNode);
 
 
+            // 4.
             const startSec = sec("start") ? secondsOnly : (pearSec() || 0);
-            const endSec = sec("end") ? secondsOnly : (pearSec() || record?.player?.getDuration?.() || 86400);
+            const endSec = sec("end") ? secondsOnly : pearSec() || record?.player?.getDuration?.();
             const seekTo = sec("end") ? secondsOnly + 1 : secondsOnly;
             const currentTime = record?.player?.getCurrentTime?.();
 
             await ReloadRecordBoundaries_Smart(record, startSec, endSec, seekingTo_cb);
 
-            // 🍝 useful once... man...
-            targetWrapper?.setAttribute('play-right-away', true);
-            targetWrapper?.setAttribute('seekTo', seekTo);
-            const mute = UI?.timestamps?.timestamp_mute_when_seeking?.checked && UI?.display?.simulate_roam_research_timestamps?.checked;
-            UTILS.toggleAttribute(mute, 'yt-mute', targetWrapper);
+
+            // 6. play this
+            targetWrapper?.dispatchEvent(new CustomEvent('customPlayerReady',
+                {
+                    bubbles: true,
+                    detail: {
+                        start: startSec,
+                        end: endSec,
+                        updateTime: currentTime ?? seekTo,
+                        ['play-right-away']: true,
+                        mute: UI?.timestamps?.timestamp_mute_when_seeking?.checked && UI?.display?.simulate_roam_research_timestamps?.checked,
+                    },
+                }));
 
             function seekingTo_cb()
             {
                 record?.player?.playVideo?.()
-                record?.player?.seekTo?.(seekToTime())
+
+                if (seekToMessage == 'seekTo-soft')
+                    record?.player?.seekTo?.(currentTime)
+                else if (sec("end") || seekToMessage == 'seekTo-strict' || !wasLastActive) // seekToBoundary
+                    record?.player?.seekTo?.(seekTo)
 
                 if (UI?.display?.simulate_roam_research_timestamps?.checked)
                     if (UI?.timestamps?.timestamp_mute_when_seeking?.checked)
                         record?.player?.mute?.()
                     else
                         record?.player?.unMute?.()
-            }
-            function seekToTime()
-            {
-                // semantics...
-                if (UI.timestamps?.timestamp_recovery?.checked)
-                {
-                    if (UI.timestamps?.timestamp_recovery_strict?.checked)
-                        return seekTo
-                    else if (UI.timestamps?.timestamp_recovery_soft?.checked)
-                        return currentTime
-                }
-                else
-                {
-                    if (sec("end") || seekToMessage == 'seekTo-strict') // seekToBoundary
-                        return seekTo
-                }
-
-                return currentTime
             }
             async function ReloadRecordBoundaries_Smart(record, startSec, endSec, callback)
             {
@@ -1727,7 +1722,7 @@ async function Ready()
         }
         async function pauseLastBlock_SimHoverOut(r)
         {
-            lastWrapperInBlock(r)?.setAttribute('play-right-away', false);
+            //lastWrapperInBlock(r)?.setAttribute('play-right-away', false);
             lastWrapperInBlock(r)?.dispatchEvent(UTILS.simHoverOut()); // hover out -> videoIsPlayingWithSound(false)
         }
         function NoLongerAwaiting()
@@ -2523,8 +2518,17 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             UTILS.removeIMGbg(wrapper);
 
             RemoveAllListeners();
+
             if (!e.type.includes('custom'))
                 wrapper.dispatchEvent(UTILS.simHover());
+            else if (typeof e.detail == 'object')
+            {
+                configParams.start = e.detail.start ?? configParams.start;
+                configParams.end = e.detail.end ?? configParams.end;
+                configParams.updateTime = e.detail.currentTime ?? configParams.updateTime;
+                configParams.mute = e.detail.mute ?? configParams.mute;
+                configParams['play-right-away'] = e.detail['play-right-away'] ?? configParams['play-right-away'];
+            }
 
             return DeployYT_IFRAME();
         }
@@ -2621,12 +2625,13 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     }
     function DeployYT_IFRAME()
     {
-        if (UI.timestamps.timestamp_recovery.checked)
-        {
-            const TryActiveTimestamp = (p) => closest_rm_container(grandParentBlock)?.querySelector(`.rm-video-timestamp[timestamp-style="${p}"][active-timestamp]`)?.getAttribute('timestamp') || '';
-            configParams.start = UTILS.HMSToSecondsOnly(TryActiveTimestamp('start')) || configParams.start;
-            configParams.end = UTILS.HMSToSecondsOnly(TryActiveTimestamp('end')) || configParams.end;
-        }
+        if (UI.display.simulate_roam_research_timestamps.checked)
+            if (UI.timestamps.timestamp_recovery.checked)
+            {
+                const TryActiveTimestamp = (p) => closest_rm_container(grandParentBlock)?.querySelector(`.rm-video-timestamp[timestamp-style="${p}"][active-timestamp]`)?.getAttribute('timestamp') || '';
+                configParams.start = UTILS.HMSToSecondsOnly(TryActiveTimestamp('start')) || configParams.start;
+                configParams.end = UTILS.HMSToSecondsOnly(TryActiveTimestamp('end')) || configParams.end;
+            }
 
         return record.player = new window.YT.Player(newId, playerConfig(configParams));
     }
@@ -2757,19 +2762,19 @@ async function onPlayerReady(event)
 
 
 
-    // 10. well well well - pause if user doesn't intents to watch
-    if (!parent.hasAttribute('play-right-away')) // 🍝
-        HumanInteraction_AutopalyFreeze(); // this being the last one, does matter
-    else 
+    // 10. well well well 
+    if (map.hasOwnProperty('play-right-away') && map.hasOwnProperty('updateTime'))
     {
-        if (parent.hasAttribute('seekTo')) // 🍝
-        {
-            while (document.body.contains(iframe) && !t?.getCurrentTime())
-                await RAP.sleep(500);
-            seekToUpdatedTime(parent.getAttribute('seekTo'));
-            togglePlay(true);
-            isSoundingFine(!parent.hasAttribute('yt-mute'));
-        }
+        while (document.body.contains(iframe) && !t?.getCurrentTime?.())
+            await RAP.sleep(500);
+        seekToUpdatedTime(map.updateTime ?? map.start);
+        togglePlay(true);
+        isSoundingFine(!map.mute);
+    }
+    else
+    {
+        // pause if user doesn't intents to watch
+        HumanInteraction_FreezeAutoplay(); // this being the last one, does matter
     }
 
 
@@ -3164,7 +3169,24 @@ async function onPlayerReady(event)
             {
                 t.destroy();
 
-                console.count('Destroyed! ' + key);
+                // roam research displace blocks and the YT player api doesn't catch up...
+                const previousIframe = document.querySelector('#' + key);
+                if (document.body.contains(previousIframe))
+                {
+                    const previousParent = getParent(previousIframe);
+                    if (!document.body.contains(previousParent))
+                        return destroyMssg();
+
+                    const observerTargetEl = UTILS.div([rm_components.state.currentClassesToObserver?.[0]]);
+                    previousParent.parentNode.replaceChild(observerTargetEl, previousParent);
+                }
+                else
+                    destroyMssg();
+
+                function destroyMssg()
+                {
+                    // console.count('Destroyed! ' + key);
+                }
             }
         }
     }
@@ -3195,7 +3217,7 @@ async function onPlayerReady(event)
 
 
     //#region 10. last - let me watch would you
-    function HumanInteraction_AutopalyFreeze()
+    function HumanInteraction_FreezeAutoplay()
     {
         const autoplayParent = iframe.closest('.rm-alias-tooltip__content') || //tooltip
             iframe.closest('.bp3-card') || //card
@@ -3808,7 +3830,7 @@ async function getLastComponentInHierarchy(tempUID, _Config = {}, includeOrigin 
 {
     const original = await RAP.getBlockInfoByUID(tempUID);
     const ParentHierarchy = await RAP.getBlockParentUids_custom(tempUID);
-    if (!ParentHierarchy && !original) { debugger; return {}; }
+    if (!ParentHierarchy && !original) { return {}; }
     const originalStr = original[0]?.[0]?.string || '';
 
 
