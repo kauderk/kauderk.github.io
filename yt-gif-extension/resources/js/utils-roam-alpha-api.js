@@ -194,6 +194,19 @@ kauderk.rap = ((rap) =>
             return '';
         }
     }
+    rap.getBlockParentUids_custom = async (uid) =>
+    {
+        try
+        {
+            var parentUIDs = await window.roamAlphaAPI.q(`[:find (pull ?block [{:block/parents [:block/uid]}]) :in $ [?block-uid ...] :where [?block :block/uid ?block-uid]]`, [uid])[0][0];
+            var UIDS = parentUIDs?.parents?.map(e => e.uid)
+            return rap.getPageNamesFromBlockUidList(UIDS)
+        }
+        catch (e) 
+        {
+            return [];
+        }
+    }
     rap.getPageNamesFromBlockUidList = async (blockUidList) =>
     {
         //blockUidList ex ['sdfsd', 'ewfawef']
