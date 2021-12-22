@@ -204,7 +204,7 @@ const attrData = {
     initialize_bg: 'initialize-bg',
     initialize_loop: 'initialize-loop',
     iframe_buffer: 'iframe_buffer', // ok "_" and "-" is causing confusion... fix this later
-    //timestamp_experience: 'timestamp-experience',
+    timestamp_experience: 'timestamp-experience',
 }
 const attrInfo = {
     url: {
@@ -1619,13 +1619,7 @@ async function Ready()
                         wrapper?.dispatchEvent(UTILS.simHoverOut());
                 });
             // play this
-            const mute = UI?.timestamps?.timestamp_mute_when_seeking?.checked && UI?.display?.simulate_roam_research_timestamps?.checked;
-
-            targetWrapper?.dispatchEvent(new CustomEvent('customPlayerReady',
-                {
-                    bubbles: true,
-                    detail: { mute },
-                }));
+            targetWrapper?.dispatchEvent(new CustomEvent('customPlayerReady', { bubbles: true }));
 
             const targetBlockID = [...recordedIDs.keys()].reverse().find(k => k?.startsWith(closestYTGIFparentID(targetWrapper)));
             const record = recordedIDs.get(targetBlockID);
@@ -1658,40 +1652,37 @@ async function Ready()
             // 🍝 useful once... man...
             targetWrapper?.setAttribute('play-right-away', true);
             targetWrapper?.setAttribute('seekTo', seekTo);
+            const mute = UI?.timestamps?.timestamp_mute_when_seeking?.checked && UI?.display?.simulate_roam_research_timestamps?.checked;
             UTILS.toggleAttribute(mute, 'yt-mute', targetWrapper);
 
             function seekingTo_cb()
             {
                 record?.player?.playVideo?.()
-                const seekTo = seekToTime();
-
-                if (seekTo != currentTime)
-                    record?.player?.seekTo?.(seekTo)
+                record?.player?.seekTo?.(seekToTime())
 
                 if (UI?.display?.simulate_roam_research_timestamps?.checked)
                     if (UI?.timestamps?.timestamp_mute_when_seeking?.checked)
                         record?.player?.mute?.()
                     else
                         record?.player?.unMute?.()
-
             }
             function seekToTime()
             {
-                const seekToBoundary = (sec("end") || seekToMessage == 'last-active') ? true : false;
-
                 // semantics...
-                if (!wasLastActive && targetNodePpts.pears)
-                    return seekTo
-                else if (seekToMessage == 'currentTime')
-                    return currentTime
-                else if (seekToBoundary)
-                    return seekTo
-                else if (UI.timestamps?.timestamp_recovery_strict?.checked)
-                    return seekTo
-                else if (UI.timestamps?.timestamp_recovery_soft?.checked)
-                    return currentTime
+                if (UI.timestamps?.timestamp_recovery?.checked)
+                {
+                    if (UI.timestamps?.timestamp_recovery_strict?.checked)
+                        return seekTo
+                    else if (UI.timestamps?.timestamp_recovery_soft?.checked)
+                        return currentTime
+                }
+                else
+                {
+                    if (sec("end") || seekToMessage == 'seekTo-strict') // seekToBoundary
+                        return seekTo
+                }
 
-                return seekTo
+                return currentTime
             }
             async function ReloadRecordBoundaries_Smart(record, startSec, endSec, callback)
             {
@@ -2453,7 +2444,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 'detail': {
                     currentTarget: targetTimestamp,
                     which: 1,
-                    seekToMessage: UI.timestamps?.timestamp_recovery_soft?.checked ? 'currentTime' : 'last-active',
+                    seekToMessage: UI.timestamps?.timestamp_recovery_soft?.checked ? 'seekTo-soft' : 'seekTo-strict',
                     mute: UI.timestamps?.timestamp_mute_when_seeking?.checked
                 },
             }))
@@ -3816,7 +3807,7 @@ function ElementsPerBlock(block, selector)
 async function getLastComponentInHierarchy(tempUID, _Config = {}, includeOrigin = true)
 {
     const original = await RAP.getBlockInfoByUID(tempUID);
-    const ParentHierarchy = await RAP.getBlockParentUids(tempUID);
+    const ParentHierarchy = await RAP.getBlockParentUids_custom(tempUID);
     if (!ParentHierarchy && !original) { debugger; return {}; }
     const originalStr = original[0]?.[0]?.string || '';
 
