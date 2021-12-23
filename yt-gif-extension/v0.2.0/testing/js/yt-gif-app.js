@@ -2714,8 +2714,10 @@ async function onPlayerReady(event)
 
 
     // 3. Mouse over the frame functionality
-    parent.addEventListener('mouseenter', InAndOutHoverStatesDDMO);
-    parent.addEventListener('mouseleave', InAndOutHoverStatesDDMO);
+    parent.addEventListener('mouseenter', InState);
+    //parent.addEventListener('customMouseleave', StopAllOtherPlayers);
+    //parent.addEventListener('mouseleave', StopAllOtherPlayers);
+    parent.addEventListener('mouseleave', OutState);
 
 
 
@@ -2885,58 +2887,79 @@ async function onPlayerReady(event)
 
 
     //#region 3. hover over the frame - mute | pause
-    function InAndOutHoverStatesDDMO(e)
+    function OutState(e)
     {
-        //🌿
-        if (e.type == 'mouseenter')
+        StopAllOtherPlayers(e);
+
+        t.__proto__.newVol = t.getVolume(); // spaguetti isSoundingFine unMute
+        t.__proto__.globalHumanInteraction = false;
+
+        //ﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠ//the same as: if it's true, then the other posibilities are false
+        if (anyValidInAndOutKey(e) && !UI.muteStyle.muted_on_any_mouse_interaction.checked)
         {
-            t.__proto__.globalHumanInteraction = true; // I'm afraid this event is slower to get attached than 200ms intervals... well 
-
-            togglePlay(true);
-
-
-            if (UI.muteStyle.strict_mute_everything_except_current.checked)
-            {
-                if (anyValidInAndOutKey(e))
-                {
-                    MuteEveryPlayer_Visibly();
-                }
-            }
-            if (UI.playStyle.strict_play_current_on_mouse_over.checked)
-            {
-                PauseAllOthersPlaying_Visibly();
-            }
-
-
-            if (CanUnmute())
-            {
-                isSoundingFine();
-            }
-            else if (UI.muteStyle.muted_on_mouse_over.checked)
-            {
-                isSoundingFine(false);
-            }
+            toogleActive(true)
+            videoIsPlayingWithSound()
         }
-        else if (e.type == 'mouseleave')
+        else
         {
-            t.__proto__.newVol = t.getVolume(); // spaguetti isSoundingFine unMute
-            t.__proto__.globalHumanInteraction = false;
-
-            //ﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠ//the same as: if it's true, then the other posibilities are false
-            if (anyValidInAndOutKey(e) && !UI.muteStyle.muted_on_any_mouse_interaction.checked)
-            {
-                videoIsPlayingWithSound();
-            }
-            else
-            {
-                //ﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠ// playing
-                togglePlay(!AnyPlayOnHover() && (t.getPlayerState() === 1));
-                isSoundingFine(false);
-            }
+            toogleActive(false)
+            //ﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠ// playing
+            togglePlay(!AnyPlayOnHover() && (t.getPlayerState() === 1))
+            isSoundingFine(false)
         }
     }
+
+    function InState(e)
+    {
+        if (UI.playStyle.play_last_active_player_off_intersection.checked)
+            ToogleAllOthers(false, true)
+
+        t.__proto__.globalHumanInteraction = true; // I'm afraid this event is slower to get attached than 200ms intervals... well 
+        togglePlay(true)
+
+        if (CanUnmute())
+        {
+            isSoundingFine()
+        }
+        else if (UI.muteStyle.muted_on_mouse_over.checked)
+        {
+            isSoundingFine(false)
+        }
+    }
+
+    function StopAllOtherPlayers(e)
+    {
+        toogleAllActivePlayers(false, true)
+
+        if (UI.muteStyle.strict_mute_everything_except_current.checked)
+        {
+            if (anyValidInAndOutKey(e))
+                MuteAllOtherPlayers()
+        }
+        if (UI.playStyle.strict_play_current_on_mouse_over.checked)
+        {
+            PauseAllOthersPlaying()
+        }
+    }
+
     /* ************************************************* */
-    function MuteEveryPlayer_Visibly()
+    function toogleAllActivePlayers(bol, ignoreSelf = false)
+    {
+        const attr = 'yt-active';
+        [...document.querySelectorAll(`[${attr}]`)]
+            .forEach(el =>
+            {
+                if (ignoreSelf && el == iframe)
+                    return
+                UTILS.toggleAttribute(bol, attr, el)
+            })
+    }
+    function toogleActive(bol)
+    {
+        UTILS.toggleAttribute(bol, 'yt-active', iframe)
+    }
+    /* ********************** */
+    function MuteAllOtherPlayers()
     {
         function muteWithBlock(id, el)
         {
@@ -2946,13 +2969,13 @@ async function onPlayerReady(event)
 
         const config = {
             styleQuery: ytGifAttr.sound.unMute,
-            self_callback: (id, el) => muteWithBlock(id, el),
+            //self_callback: (id, el) => muteWithBlock(id, el),
             others_callback: (id, el) => muteWithBlock(id, el)
         };
 
-        LoopTroughVisibleYTGIFs(config);
+        LoopTroughYTGIFs(config);
     }
-    function PauseAllOthersPlaying_Visibly()
+    function PauseAllOthersPlaying()
     {
         const config = {
             styleQuery: ytGifAttr.play.playing,
@@ -2962,21 +2985,21 @@ async function onPlayerReady(event)
                 recordedIDs.get(id)?.target?.pauseVideo();
             }
         };
-        LoopTroughVisibleYTGIFs(config);
+        LoopTroughYTGIFs(config);
     }
     /* ********************** */
-    function LoopTroughVisibleYTGIFs(config = { styleQuery, others_callback: () => { }, self_callback: () => { } })
+    function LoopTroughYTGIFs(config = { styleQuery, others_callback: () => { }, self_callback: () => { } })
     {
-        const ytGifs = UTILS.inViewportElsHard(UTILS.allIframeStyle(config?.styleQuery));
-        for (const i of ytGifs) // loop through all the iframes within the viewport, not just an instance
+        const ytGifs = document.querySelectorAll(`[${config?.styleQuery}]`);
+        for (const i of ytGifs)
         {
             if (i != iframe)
             {
-                config?.others_callback(getBlockID(i), i);
+                config?.others_callback?.(getBlockID(i), i);
             }
             else if (config.self_callback)
             {
-                config?.self_callback(getBlockID(i), i);
+                config?.self_callback?.(getBlockID(i), i);
             }
         }
     }
@@ -3104,7 +3127,7 @@ async function onPlayerReady(event)
     {
         if (document.fullscreenElement)
         {
-            PauseAllOthersPlaying_Visibly();
+            PauseAllOthersPlaying();
         }
         else if (UI.playStyle.visible_clips_start_to_play_unmuted.checked)
         {
@@ -3203,16 +3226,33 @@ async function onPlayerReady(event)
 
         if (tick() > updateStartTime + loadingMarginOfError && !t.__proto__.globalHumanInteraction) // and the interval function 'OneFrame' to prevent the loading black screen
         {
-            if (UI.playStyle.visible_clips_start_to_play_unmuted.checked)
-            {
-                togglePlay(entries[0]?.isIntersecting);
-            }
+            if (!UI.playStyle.visible_clips_start_to_play_unmuted.checked)
+                return stopIfInactive()
+
+            if (entries[0].isIntersecting)
+                togglePlay(true)
             else
-            {
-                togglePlay(false);
-            }
+                stopIfInactive()
+        }
+
+        function stopIfInactive()
+        {
+            if (
+                !iframe.hasAttribute('yt-active') ||
+                !UI.playStyle.play_last_active_player_off_intersection.checked
+            )
+                return togglePlay(false)
+
+            ToogleAllOthers(false, true)
         }
     }
+    function ToogleAllOthers(all, self)
+    {
+        toogleAllActivePlayers(all, self)
+        MuteAllOtherPlayers()
+        PauseAllOthersPlaying()
+    }
+
     //#endregion
 
 
