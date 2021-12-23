@@ -1,18 +1,18 @@
 :root {
-  --dropdown--bg: #fff;
+  --dropdown-main-btn-bg-h: rgb(14 118 199 / 30%);
   --dropdown-shadow: rgb(105 119 131);
   --dropdown-c: black;
 
   --yt-gif-icon-bg: #5c7080;
 
-  --dropdown-main-btn-bg-h: rgb(14 118 199 / 24%);
+  --drop-menu-btn-h: var(--dropdown-main-btn-bg-h);
   --drop-menu-btn-f: rgb(148 161 171 / 10%);
-  --dropdown-btns-h: var(--dropdown-main-btn-bg-h);
+  --dropdown--bg: #fff;
 
-  --submenu-message-bg: rgb(48 108 159 / 24%);
+  --submenu-message-bg: #a2c2df;
 
-  --submenu-styles-content-bg: #e3e5e7;
   --submenu-styles-item-bg-h: #c5daef;
+  --submenu-styles-content-bg: #e3e5e7;
 
   --submenu-info-btn-bg: #2e7d32;
   --submenu-info-btn-bg-h: #4caf50;
@@ -41,7 +41,7 @@
   --awaiting-player-pulse-anim-box-shadow-end: rgba(204, 169, 44, 0);
 
   --ddm-tooltip-c: #202b33;
-  --ddm-tooltip-bg: #b4c9db;
+  --ddm-tooltip-bg: #76a1c3;
 
   --tut-awaiting-input-contour: #0bb9a963;
   --info-ms-focus-contour: #37b4c5;
