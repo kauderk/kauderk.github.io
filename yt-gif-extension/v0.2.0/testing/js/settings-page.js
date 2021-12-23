@@ -156,7 +156,7 @@ window.YT_GIF_SETTINGS_PAGE = {
     },
     dropdownMenu: {
         baseKey: BaseSetting(),
-        yt_gif_update_visual_feedback: dom('1', chk),
+        //yt_gif_update_visual_feedback: dom('1', chk),
     },
     LogStatus: {
         baseKey: BasePmt(`Everything looks alright :D`),
