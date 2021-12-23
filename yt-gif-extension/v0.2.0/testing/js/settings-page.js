@@ -83,13 +83,13 @@ window.YT_GIF_SETTINGS_PAGE = {
         strict_mute_everything_except_current: dom('1'),
         muted_on_mouse_over: dom(),
         muted_on_any_mouse_interaction: dom(),
-        muted_active_player_on_intersection: dom(),
     },
     playStyle: {
         baseKey: BaseSetting(chk),
         strict_play_current_on_mouse_over: dom('1'),
         play_on_mouse_over: dom(),
         visible_clips_start_to_play_unmuted: dom(),
+        play_last_active_player_off_intersection: dom(),
     },
     range: {
         baseKey: BaseSetting(rng),
