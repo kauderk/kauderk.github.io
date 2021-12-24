@@ -3972,7 +3972,7 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
 
     const orderObj = {
         order: -1,
-        incrementIf: function (condition) { return condition ? Number(++this.order) : 'ﾠ' },
+        incrementIf: function (condition) { return condition ? Number(++this.order) : null },
         condition: (x) => false,
     };
     const results = {
@@ -4031,14 +4031,21 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
         function assertUniqueKey_while(uid, indent, isKey, order)
         {
             uidMagazine = PushIfNewEntry(uidMagazine, uid); // clunky, but it works
+
             const similarCount = uidMagazine.filter(x => x === uid).length; // uniqueKey among non siblings
             return {
-                indent, uid, isKey, similarCount,
-                keyIsToolip: results['is tooltip card'].incrementIf(isKey === 'is tooltip card'),
-                keyIsAlias: results['is alias'].incrementIf(isKey === 'is alias'),
-                keyIsComponent: results['is component'].incrementIf(isKey === 'is component'),
-                keyIsBlockRef: results['is block reference'].incrementIf(isKey === 'is block reference'),
-                order
+                indent, uid, similarCount,
+                isKey, isKeyOrder: isCount(),
+                order,
+            }
+
+            function isCount()
+            {
+                const keys = ['is tooltip card', 'is alias', 'is component', 'is block reference'];
+                for (const is of keys)
+                    results[isKey].incrementIf(isKey === is)
+
+                return results[isKey].order;
             }
         }
         function cleanIndentedBlock()
