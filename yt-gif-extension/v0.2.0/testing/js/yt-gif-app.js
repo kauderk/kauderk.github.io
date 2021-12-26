@@ -1397,7 +1397,7 @@ async function Ready()
             const key = Object.keys(timestampObj).find(key => targetNodeParent.classList.contains(timestampObj[key]?.targetClass)); // find timestampObj key that is included in targetNode classlist
             const page = timestampObj[key]?.page || 'timestamp';
 
-            targetNodeParent.attributes.forEach(attr => targetNodeParent.removeAttribute(attr.name));
+            targetNodeParent.attributes?.forEach?.(attr => targetNodeParent.removeAttribute(attr.name));
             targetNodeParent = UTILS.ChangeElementType(targetNodeParent, 'div');
             targetNodeParent.className = timestampObj.parent.className;
             targetNodeParent.innerHTML = '';
