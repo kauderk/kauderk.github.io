@@ -56,6 +56,8 @@ YT GIF EXTENSION v0.2.0 {{[[roam/js]]}}
   - ![image](https://user-images.githubusercontent.com/65237382/147398953-a5723293-c812-4e84-9325-968ee063233a.png)
 4. Keep playing even off screen
   - ![image](https://user-images.githubusercontent.com/65237382/147398778-f26bf264-a8d8-411a-b184-a1359037931d.png)
+5. Customize each YT GIF, even multiple ones within the same block
+  - ![image](https://user-images.githubusercontent.com/65237382/147406576-0bac7a67-dad0-441b-9836-c6eeaef93d23.png)
 
 
 ## Extra
