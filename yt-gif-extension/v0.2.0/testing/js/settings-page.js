@@ -141,10 +141,6 @@ window.YT_GIF_SETTINGS_PAGE = {
     },
     defaultValues: {
         baseKey: BaseSetting(),
-        css_theme: {
-            baseKey: BaseInitSetting('dark', str),
-            ct_opt: InlinePmt(`"dark" or "light"`),
-        },
         override_roam_video_component: {
             baseKey: BaseInitSetting('', [bol, str]),
             orvc_opt: InlinePmt('distinguish between `{{[[video]]:}}` from `{{[[yt-gif]]:}}` or "both" which is also valid'),
@@ -157,6 +153,10 @@ window.YT_GIF_SETTINGS_PAGE = {
     dropdownMenu: {
         baseKey: BaseSetting(),
         //yt_gif_update_visual_feedback: dom('1', chk),
+        ddm_css_theme_input: {
+            baseKey: BaseInitSetting('', chk),
+            ct_opt: InlinePmt(`"dark" == "false" or "light" == "true"`),
+        },
     },
     LogStatus: {
         baseKey: BasePmt(`Everything looks alright :D`),
