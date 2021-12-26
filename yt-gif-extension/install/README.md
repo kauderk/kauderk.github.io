@@ -48,12 +48,12 @@ YT GIF EXTENSION v0.2.0 {{[[roam/js]]}}
 ![Snag_e41c464](https://user-images.githubusercontent.com/65237382/141892053-ef42814f-8fbb-4717-92f9-0348b8b0750b.png)
 
 # Significant changes
-1. Toogle on and off `Timestamp Emulation`:
+1. Toogle on and off `Timestamp Emulation` - [more...](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/install/components/README.md#workflow)
   - ![image](https://user-images.githubusercontent.com/65237382/147398656-9d6f5c07-e861-4087-8c2c-751d0025ecf6.png)
 2. You decide how to initialize your YT GIFs
   - ![image](https://user-images.githubusercontent.com/65237382/147398689-d223832c-afcd-435f-be1d-f5cf1d76cbd9.png)
 3. Lightweight iframes, faster graph - set a limit and unload the oldest ones
-  - ![image](https://user-images.githubusercontent.com/65237382/147398754-dbba2f4e-2d5a-4ded-8dc0-9cfc66276102.png)
+  - ![image](https://user-images.githubusercontent.com/65237382/147398953-a5723293-c812-4e84-9325-968ee063233a.png)
 4. Keep playing even off screen
   - ![image](https://user-images.githubusercontent.com/65237382/147398778-f26bf264-a8d8-411a-b184-a1359037931d.png)
 
