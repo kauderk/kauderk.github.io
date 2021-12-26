@@ -155,7 +155,7 @@ window.YT_GIF_SETTINGS_PAGE = {
         //yt_gif_update_visual_feedback: dom('1', chk),
         ddm_css_theme_input: {
             baseKey: BaseInitSetting('', chk),
-            ct_opt: InlinePmt(`"dark" == "false" or "light" == "true"`),
+            ct_opt: InlinePmt(`"dark" == "true" or "light" == "false"`),
         },
     },
     LogStatus: {
