@@ -467,3 +467,7 @@ a.rm-video-timestamp[timestamp-style="end"] {
 .dropdown-show-info input{
   margin: 0 !important;
 }
+.dropdown input[type=checkbox], input[type=radio] {
+  aspect-ratio: 1 / 1;
+  min-width: 20px;
+}
