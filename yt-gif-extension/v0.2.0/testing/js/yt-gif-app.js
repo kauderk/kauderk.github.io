@@ -133,8 +133,10 @@ const links = {
         dropDownMenuStyle: urlFolder_css('drop-down-menu.css'),
         playerStyle: urlFolder_css('player.css'),
         themes: {
-            dark_dropDownMenu: urlFolder_css('themes/dark-drop-down-menu.css'),
-            light_dropDownMenu: urlFolder_css('themes/light-drop-down-menu.css'),
+            dark: urlFolder_css('themes/dark-drop-down-menu.css'),
+            light: urlFolder_css('themes/light-drop-down-menu.css'),
+            get: function (i) { return this.toogle(!UTILS.isTrue(i)) },
+            toogle: function (t) { return UTILS.isTrue(t) ? this.dark : this.light },
         }
     },
     html: {
@@ -198,6 +200,8 @@ const cssData = {
 
     id: {
         navigate_btn: '#navigate-to-yt-gif-settings-page',
+        toogle_theme: '#yt-gif-ddm-theme',
+        ddm_main_theme: '#yt-gif-ddm-main-theme',
     }
 }
 const attrData = {
@@ -398,17 +402,18 @@ async function Ready()
 
     // 1. set up looks
     //#region relevant variables
-    const { css_theme, player_span } = Object.fromEntries(window.YT_GIF_DIRECT_SETTINGS);
+    const { ddm_css_theme_input: ddm_css_theme_stt, player_span: player_span_stt } = Object.fromEntries(window.YT_GIF_DIRECT_SETTINGS);
     const { themes, playerStyle, dropDownMenuStyle } = links.css;
     const { playerControls, dropDownMenu } = links.html;
     const { yt_gif } = cssData; // CssThemes_UCS
+    const { ddm_main_theme: ddm_main_theme_id } = cssData.id;
     //#endregion
 
     await smart_LoadCSS(dropDownMenuStyle, `${yt_gif}-dropDownMenuStyle`);
     await smart_LoadCSS(playerStyle, `${yt_gif}-playerStyle`);
 
-    await smart_CssThemes_UCS(css_theme.sessionValue, themes, yt_gif); // UCS - user customizations
-    await smart_CssPlayer_UCS(player_span.sessionValue);
+    await smart_LoadCSS(themes.get(ddm_css_theme_stt.sessionValue), ddm_main_theme_id);
+    await smart_CssPlayer_UCS(player_span_stt.sessionValue); // UCS - user customizations
 
     links.html.fetched.playerControls = await PlayerHtml_UCS(playerControls);
 
@@ -429,8 +434,9 @@ async function Ready()
     const { rangeValue, loop_volume_displayed, iframe_buffer_label } = UI.label;
     const { awaiting_with_video_thumnail_as_bg } = UI.experience;
     const { iframe_buffer_stack, awaiting_for_user_input_to_initialize, try_to_load_on_intersection_beta } = UI.experience;
+    const { ddm_css_theme_input } = UI.dropdownMenu;
     const { dwp_message, stt_allow } = cssData;
-    const { navigate_btn } = cssData.id;
+    const { navigate_btn: navigate_btn_id } = cssData.id;
     //#endregion
 
     DDM_IconFocusBlurEvents(ddm_icon, ddm_focus, ddm_info_message_selector);
@@ -443,7 +449,8 @@ async function Ready()
 
     TogglePlayerThumbnails_DDM_RTM(awaiting_with_video_thumnail_as_bg, awaitng_input_with_thumbnail);
 
-    navigateToSettingsPageInSidebar(navigate_btn, dwp_message, stt_allow);
+    navigateToSettingsPageInSidebar(navigate_btn_id, dwp_message, stt_allow);
+    ToggleTheme_DDM_RTM(ddm_css_theme_input, themes, ddm_css_theme_stt, ddm_main_theme_id);
 
     IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_user_input_to_initialize, iframe_buffer_slider, try_to_load_on_intersection_beta);
 
@@ -550,15 +557,7 @@ async function Ready()
 
         return new Promise(function (resolve, reject)
         {
-            const stylesAlready = document.querySelectorAll(`[id='${id}']`);
-            if (stylesAlready?.length > 0) // well well well - we don't like duplicates
-            {
-                SytleSheetExistAlready(cssURL);
-                for (const el of stylesAlready)
-                {
-                    el.parentElement.removeChild(el);
-                }
-            }
+            DeleteDOM_Els(id, cssURL);
             const link = document.createElement('link');
             link.rel = 'stylesheet';
             link.href = UTILS.NoCash(cssURL);
@@ -568,12 +567,17 @@ async function Ready()
             link.onload = () => resolve();
         });
     }
-    async function smart_CssThemes_UCS(currentTheme, CSSThemes, prefixID)
+    function DeleteDOM_Els(id, cssURL)
     {
-        const themToLoad = (currentTheme === 'dark') ?
-            'dark_dropDownMenu' : 'light_dropDownMenu';
-
-        await smart_LoadCSS(CSSThemes[themToLoad], `${prefixID}-main-theme`);
+        const stylesAlready = document.querySelectorAll(`[id='${id}']`);
+        if (stylesAlready?.length > 0) // well well well - we don't like duplicates
+        {
+            SytleSheetExistAlready(cssURL);
+            for (const el of stylesAlready)
+            {
+                el.parentElement.removeChild(el);
+            }
+        }
     }
     function smart_CssPlayer_UCS(player_span)
     {
@@ -648,7 +652,7 @@ async function Ready()
                         default:
                             const binaryInput = parentObj[childKey];
                             binaryInput.checked = UTILS.isTrue(sessionValue);
-                            UTILS.linkClickPreviousElement(binaryInput);
+                            binaryInput.previousElementSibling?.setAttribute('for', binaryInput.id);
                     }
                 }
                 else
@@ -682,6 +686,7 @@ async function Ready()
                     case 'InAndOutKeys':
                     case 'defaultPlayerValues':
                     case 'defaultValues':
+                    case 'referenced':
                         continue;
                     case 'deploymentStyle': // special case...
                         child.addEventListener('change', function (e) { updateOverrideComponentSettingBlock(e, this, childKey, siblingKeys) }, true);
@@ -867,6 +872,24 @@ async function Ready()
             }
         }
     }
+    /* ************* */
+    function ToggleTheme_DDM_RTM(ddm_css_theme_input, themes, ddm_css_theme_stt, ddm_main_theme_id)
+    {
+        const icons = ['bp3-icon-flash', 'bp3-icon-moon'];
+
+        ToogleThemeCombo(ddm_css_theme_input);
+
+        ddm_css_theme_input.addEventListener('change', async (e) => await ToogleThemeCombo(e.currentTarget));
+
+        async function ToogleThemeCombo(tEl)
+        {
+            const previousIcons = [...tEl?.classList]?.filter(el => el.startsWith('bp3-icon-'));
+            UTILS.toggleClasses(false, previousIcons, tEl);
+
+            UTILS.toggleClasses(true, [!tEl.checked ? icons[0] : icons[1]], tEl);
+            await smart_LoadCSS(themes.toogle(ddm_css_theme_stt.sessionValue), ddm_main_theme_id);
+        }
+    }
     async function navigateToSettingsPageInSidebar(settingsBtnID, dwp_message, stt_allow)
     {
         // ⚠️
@@ -913,6 +936,7 @@ async function Ready()
             UTILS.toggleClasses(open, [stt_allow], settingsBtnWrapper);
         }
     }
+    /* ************* */
     function IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_user_input_to_initialize, iframe_buffer_slider, try_to_load_on_intersection_beta)
     {
         initialCheck_awaitngBtn = awaiting_for_user_input_to_initialize.checked;
@@ -2118,6 +2142,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         wrapper = UTILS.ChangeElementType(wrapper, 'div');
     wrapper.parentElement.classList.add(`${cssData.yt_gif_wrapper}-parent`);
     wrapper.className = `${cssData.yt_gif_wrapper} dont-focus-block`;
+    wrapper.style.setProperty('--yt-gif-player-span', Number(configParams.sp) + "%");
     wrapper.setAttribute(attrInfo.target, targetClass);
     wrapper.setAttribute(attrInfo.creation.name, dataCreation);
     wrapper.setAttribute(attrInfo.url.path, url);
@@ -2347,6 +2372,9 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
             media.hl = new RegExp(/(hl=)((?:\w+))/, 'gm').exec(url)?.[2];
             media.cc = new RegExp(/(cc=|cc_lang_pref=)((?:\w+))/, 'gm').exec(url)?.[2];
+
+            media.sp = new RegExp(/(sp=|span=)((?:\w+))/, 'gm').exec(url)?.[2];
+            media.sp = media.sp ?? document.documentElement.style.getPropertyValue('--yt-gif-player-span');
 
             media.src = url;
             media.type = 'youtube';
