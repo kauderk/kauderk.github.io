@@ -140,7 +140,7 @@ const links = {
         }
     },
     html: {
-        dropDownMenu: self_urlFolder('html/drop-down-menu.html'),
+        dropDownMenu: self_urlFolder('html/drop-down-menu-2.html'),
         playerControls: urlFolder_html('player-controls.html'),
         fetched: {
             playerControls: '',
