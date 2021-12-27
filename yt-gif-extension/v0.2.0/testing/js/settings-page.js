@@ -38,6 +38,7 @@ window.YT_GIF_SETTINGS_PAGE = {
         baseKey: BaseSetting(chk),
         clip_life_span_format: dom('1'),
         simulate_roam_research_timestamps: dom(),
+        simulate_inline_url_to_video_component: dom('1'),
     },
     timestamps: {
         baseKey: BaseSetting(chk),
