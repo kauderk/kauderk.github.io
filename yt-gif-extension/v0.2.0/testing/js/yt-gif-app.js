@@ -552,7 +552,7 @@ async function Ready()
 
     const urlObserver = new MutationObserver(InlineUrlBtnMutations_cb);
 
-    ToogleUrlBtnObserver(true, urlObserver);
+    ToogleUrlBtnObserver(simulate_inline_url_to_video_component.checked, urlObserver);
     simulate_inline_url_to_video_component.addEventListener('change', (e) => ToogleUrlBtnObserver(e.currentTarget.checked, urlObserver));
 
 
@@ -2030,27 +2030,32 @@ async function Ready()
         });
     }
 
-    function NodesRecord(Nodes, attr)
+    function NodesRecord(Nodes, sel)
     {
         if (!Nodes || Nodes.length == 0)
             return null;
 
-        return [...Array.from(Nodes)]
+        const arr = [...Array.from(Nodes)]
             .filter(el => !!el.tagName)
             .map(x =>
             {
-                if (x.hasAttribute(attr))
+                if (x.classList.contains(sel))
                     return x
                 else
-                    return [...x.querySelectorAll(`[${attr}]`)]
+                    return [...x.querySelectorAll(`.${sel}`)]
             })
             .flat(Infinity)
-            .map(el => closestBlock(el))
-            .filter((v, i, a) => a.indexOf(v) === i)// remove duplicates
-            .map(el => 
+            .filter((v, i, a) =>
             {
-                el
+                return !!v &&
+                    !v.classList.contains('yt-gif-inline-url-btn') &&
+                    v.classList.contains(sel) &&
+                    a.indexOf(v) === i &&
+                    document.body.contains(v);
             });
+        if (arr.some(x => typeof x == 'object' || !!!x))
+            debugger;
+        return arr;
     }
     function ToogleUrlBtnObserver(bol, obs)
     {
