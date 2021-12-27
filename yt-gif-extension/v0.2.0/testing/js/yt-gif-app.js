@@ -542,6 +542,21 @@ async function Ready()
     timestamp_shortcuts_enabled.addEventListener('change', e => ToogleTimestampShortcuts(e.target.checked));
 
 
+
+    // 7. simulate inline url btn
+    //#region relevant variables
+    const urlBtnClasses = 'bp3-button bp3-minimal bp3-icon-video bp3-small dont-focus-block yt-gif-inline-url-btn';
+    const urlBtnClassesArr = urlBtnClasses.split(' ');
+    const { simulate_inline_url_to_video_component } = UI.display;
+    //#endregion
+
+    const urlObserver = new MutationObserver(InlineUrlBtnMutations_cb);
+
+    ToogleUrlBtnObserver(true, urlObserver);
+    simulate_inline_url_to_video_component.addEventListener('change', (e) => ToogleUrlBtnObserver(e.currentTarget.checked, urlObserver));
+
+
+
     console.log('YT GIF extension activated');
 
 
@@ -1990,6 +2005,69 @@ async function Ready()
     }
     //#endregion
 
+
+    //#region 7. url btn emulation
+    async function InlineUrlBtnMutations_cb(mutationsList)
+    {
+        let added = [];
+        for (const { addedNodes } of mutationsList)
+            added = [...added, NodesRecord(addedNodes, 'bp3-icon-video')];
+
+        ReadyUrlBtns(added);
+    }
+    function ReadyUrlBtns(added)
+    {
+        added.forEach(rm_btn =>
+        {
+            const urlBtn = UTILS.elm(urlBtnClassesArr, 'span');
+            rm_btn.appendChild(urlBtn);
+            urlBtn.onclick = async function (e)
+            {
+                e.stopPropagation();
+                e.preventDefault();
+                console.log("hello");
+            };
+        });
+    }
+
+    function NodesRecord(Nodes, attr)
+    {
+        if (!Nodes || Nodes.length == 0)
+            return null;
+
+        return [...Array.from(Nodes)]
+            .filter(el => !!el.tagName)
+            .map(x =>
+            {
+                if (x.hasAttribute(attr))
+                    return x
+                else
+                    return [...x.querySelectorAll(`[${attr}]`)]
+            })
+            .flat(Infinity)
+            .map(el => closestBlock(el))
+            .filter((v, i, a) => a.indexOf(v) === i)// remove duplicates
+            .map(el => 
+            {
+                el
+            });
+    }
+    function ToogleUrlBtnObserver(bol, obs)
+    {
+        obs.disconnect();
+        const allUrlBtns = document.querySelectorAll(urlBtnClasses);
+
+        if (bol)
+        {
+            ReadyUrlBtns(allUrlBtns);
+            obs.observe(targetNode, config);
+        }
+        else
+        {
+            allUrlBtns.forEach(el => el.remove());
+        }
+    }
+    //#endregion
 
     //#region local utils
     function DDM_Els()
@@ -3887,6 +3965,11 @@ function DeactivateTimestampsInHierarchy(container)
 function ElementsPerBlock(block, selector)
 {
     return [...block?.querySelectorAll(selector)]?.filter(b => closestBlock(b).id == block.id) || [];
+}
+/* ***************** */
+function awaitingAtrr(bol, el)
+{
+    return UTILS.toggleAttribute(bol, 'awaiting', el);
 }
 //#endregion
 
