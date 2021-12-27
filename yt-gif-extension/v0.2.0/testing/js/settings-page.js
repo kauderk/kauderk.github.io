@@ -119,7 +119,7 @@ window.YT_GIF_SETTINGS_PAGE = {
         player_span: {
             baseKey: BaseInitSetting('50%', str),
             ps_opt: InlinePmt(`empty means 50% - only valid css units like px  %  vw`),
-            pv_opt: InlinePmt("each block's url parameter `&sp=` has priority over this"),
+            pv_opt_2: InlinePmt("each block's url parameter `&sp=` has priority over this"),
         },
         player_volume: {
             baseKey: BaseInitSetting(40, int),
