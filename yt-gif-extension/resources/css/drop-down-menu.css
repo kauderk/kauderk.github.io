@@ -471,3 +471,6 @@ a.rm-video-timestamp[timestamp-style="end"] {
   aspect-ratio: 1 / 1;
   min-width: 20px;
 }
+.yt-gif-style-player-settings > .dropdown-content{
+  --dropdown--bg: var(--dropdown--bg-secondary);
+}
