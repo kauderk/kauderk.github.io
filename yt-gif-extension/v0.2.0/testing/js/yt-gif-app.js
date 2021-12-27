@@ -2017,17 +2017,28 @@ async function Ready()
     }
     function ReadyUrlBtns(added)
     {
-        added.forEach(rm_btn =>
+        debugger;
+        added?.filter?.((v, i, a) =>
         {
-            const urlBtn = UTILS.elm(urlBtnClassesArr, 'span');
-            rm_btn.appendChild(urlBtn);
-            urlBtn.onclick = async function (e)
+            debugger;
+            return !!v &&
+                !v.classList?.contains('yt-gif-inline-url-btn') &&
+                v.classList?.contains('bp3-icon-video') &&
+                a.indexOf(v) === i &&
+                document.body.contains(v);
+        })
+            .forEach((rm_btn, i, a) =>
             {
-                e.stopPropagation();
-                e.preventDefault();
-                console.log("hello");
-            };
-        });
+                if (!rm_btn) debugger;
+                const urlBtn = UTILS.elm(urlBtnClassesArr, 'span');
+                rm_btn.appendChild(urlBtn);
+                urlBtn.onclick = async function (e)
+                {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    console.log("hello");
+                };
+            });
     }
 
     function NodesRecord(Nodes, sel)
