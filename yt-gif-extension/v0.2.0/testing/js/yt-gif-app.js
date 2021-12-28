@@ -412,7 +412,7 @@ async function Ready()
     await smart_LoadCSS(dropDownMenuStyle, `${yt_gif}-dropDownMenuStyle`);
     await smart_LoadCSS(playerStyle, `${yt_gif}-playerStyle`);
 
-    await smart_LoadCSS(themes.get(ddm_css_theme_stt.sessionValue), ddm_main_theme_id);
+    //await smart_LoadCSS(themes.get(ddm_css_theme_stt.sessionValue), ddm_main_theme_id);
     await smart_CssPlayer_UCS(player_span_stt.sessionValue); // UCS - user customizations
 
     links.html.fetched.playerControls = await PlayerHtml_UCS(playerControls);
@@ -552,8 +552,8 @@ async function Ready()
 
     const urlObserver = new MutationObserver(InlineUrlBtnMutations_cb);
 
-    ToogleUrlBtnObserver(simulate_inline_url_to_video_component.checked, urlObserver);
-    simulate_inline_url_to_video_component.addEventListener('change', (e) => ToogleUrlBtnObserver(e.currentTarget.checked, urlObserver));
+    //ToogleUrlBtnObserver(simulate_inline_url_to_video_component.checked, urlObserver);
+    //simulate_inline_url_to_video_component.addEventListener('change', (e) => ToogleUrlBtnObserver(e.currentTarget.checked, urlObserver));
 
 
 
