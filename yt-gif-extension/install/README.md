@@ -48,6 +48,8 @@ YT GIF EXTENSION v0.2.0 {{[[roam/js]]}}
 ![Snag_e41c464](https://user-images.githubusercontent.com/65237382/141892053-ef42814f-8fbb-4717-92f9-0348b8b0750b.png)
 
 # Significant changes
+The [base features are here](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension#features), these on the other hand, are being tested; if you wish to try them out, replace the source to `extension.src = "https://kauderk.github.io/yt-gif-extension/v0.2.0/testing/js/yt-gif-main.js";` [like this...](https://user-images.githubusercontent.com/65237382/147715001-58694a2d-5826-4835-b9d6-6156a055b0e6.png)
+
 1. Toogle on and off `Timestamp Emulation` - [more...](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/install/components/README.md#workflow)
   - ![image](https://user-images.githubusercontent.com/65237382/147398656-9d6f5c07-e861-4087-8c2c-751d0025ecf6.png)
 2. You decide how to initialize your YT GIFs
