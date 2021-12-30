@@ -2643,7 +2643,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             {
                 configParams.start = e.detail.start ?? configParams.start;
                 configParams.end = e.detail.end ?? configParams.end;
-                configParams.updateTime = e.detail.currentTime ?? configParams.updateTime;
+                configParams.updateTime = e.detail.updateTime ?? configParams.updateTime;
                 configParams.mute = e.detail.mute ?? configParams.mute;
                 configParams['play-right-away'] = e.detail['play-right-away'] ?? configParams['play-right-away'];
             }
