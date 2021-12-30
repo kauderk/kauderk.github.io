@@ -474,3 +474,10 @@ a.rm-video-timestamp[timestamp-style="end"] {
 .yt-gif-style-player-settings > .dropdown-content{
   --dropdown--bg: var(--dropdown--bg-secondary);
 }
+a.rm-video-timestamp[last-active-timestamp] {
+  text-decoration: underline;
+  text-underline-position: from-font;
+}
+a.rm-video-timestamp[last-active-timestamp]:hover {
+  text-underline-position: unset;
+}
