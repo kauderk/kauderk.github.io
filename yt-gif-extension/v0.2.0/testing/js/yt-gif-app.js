@@ -1705,11 +1705,12 @@ async function Ready()
 
             function seekingTo_cb()
             {
+                const bounded = ((tm = currentTime) => tm >= startSec && tm <= endSec)();
                 record?.player?.playVideo?.()
 
-                if (seekToMessage == 'seekTo-soft')
+                if (seekToMessage == 'seekTo-soft' && bounded)
                     record?.player?.seekTo?.(currentTime)
-                else if (sec("end") || seekToMessage == 'seekTo-strict' || !wasLastActive) // seekToBoundary
+                else if (sec("end") || seekToMessage == 'seekTo-strict' || !wasLastActive || !bounded) // seekToBoundary
                     record?.player?.seekTo?.(seekTo)
 
                 if (UI?.display?.simulate_roam_research_timestamps?.checked)
@@ -1724,11 +1725,6 @@ async function Ready()
                 {
                     const vars = record.player.i.h;
                     const map = allVideoParameters.get(record.player.h.id);
-
-                    if (UI.timestamps?.timestamp_seek_and_load_less_offten?.checked)
-                        if (vars.playerVars.start == startSec)
-                            if (vars.playerVars.end == endSec)
-                                return callback();
 
                     vars.playerVars.start = map.start = startSec;
                     vars.playerVars.end = map.end = endSec;
@@ -4472,6 +4468,14 @@ Bugs
     should happen only when there are yt-gif componenst whitin the block hierarchy
         open/show the slash menu
         paint/link them visually
+
+    timestamps
+        recovery off
+            empty recordID
+                with a peer, clicking on start then end then start
+                when it reaches the boundary it doesn't go back to the NEW start
+
+                    Turns out that "Try to load less offten" is the cause of the problem
 
 Fixed
      videoParams ☑ ☑
