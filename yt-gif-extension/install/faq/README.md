@@ -20,7 +20,7 @@ They can vary depending on the `Play Style` or `Sound Sytle` you choose.
 
 ---
 ### Why the playbox is so small? Can the playbox of GIf be resized?
-- Append `&sp=100` [url parameter]() to the youtube video url within a YTGIF you should be able to override the playbox/player span.
+- Append `&sp=100` [url parameter](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#what-are-url-parameters-how-do-i-use-them) to the youtube video url within a YTGIF you should be able to override the playbox/player span.
 If this doesn't work, most likely you're using a custom css rules that conflicts with the YT GIF extension, downwards the `rm-block__input` elemeent.
 
 
@@ -36,12 +36,12 @@ If this doesn't work, most likely you're using a custom css rules that conflicts
 
 ---
 ### How do I change the volume?
-- Append `&vl=50` [url parameter]() to the youtube video url within a YTGIF. Keep in mind this is custom parameter, and it's not supported by YouTube.
+- Append `&vl=50` [url parameter](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#what-are-url-parameters-how-do-i-use-them) to the youtube video url within a YTGIF. Keep in mind this is custom parameter, and it's not supported by YouTube.
 
 
 ---
 ### Can I set a custom playback speed?
-- Append `&s=2` [url parameter]() to the youtube video url within a YTGIF. Keep in mind this is custom parameter, and it's not supported by YouTube.
+- Append `&s=2` [url parameter](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#what-are-url-parameters-how-do-i-use-them) to the youtube video url within a YTGIF. Keep in mind this is custom parameter, and it's not supported by YouTube.
 
 
 ---
