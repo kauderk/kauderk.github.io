@@ -37,9 +37,6 @@
 
   --ddm-tooltip-traslate-y: calc(-100% - var(--ddm-tooltip-arrow-size));
 }
-.ddm-tooltip-line:is([data-tooltip])::before{
-  inline-size: initial;
-}
 
 .dropdown :is([data-tooltip]):hover::before,
 .dropdown :is([data-tooltip]):hover::after {
@@ -480,4 +477,7 @@ a.rm-video-timestamp[last-active-timestamp] {
 }
 a.rm-video-timestamp[last-active-timestamp]:hover {
   text-underline-position: unset;
+}
+.ddm-tooltip-shortcuts:is([data-tooltip])::before{
+  max-width: 25ch;
 }
