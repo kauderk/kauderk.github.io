@@ -61,33 +61,32 @@
                                 GIF timestamps</span>
                             <div class="dropdown-content dropdown-info-box">
                                 <span class="dropdown-item">
-                                    <label for="" class="dropdown-item-description"
-                                        data-tooltip="Remember active
-                                    timestamps boundaries after editing YT GIF Blocks - per Hierarchy, else deactivate them">
-                                        Timestamp Boundaries Recovery
+                                    <label for="" class="dropdown-item-description" data-tooltip="After editing YT GIF Blocks remember active
+                                    timestamps boundaries else deactivate them">
+                                        Timestamp Recovery
                                     </label>
                                     <input type="checkbox" name="" data-main="timestamp-experience"
                                         id="timestamp_recovery" checked>
                                 </span>
                                 <span class="dropdown-item" data-bind="timestamp-experience-item">
                                     <label for="" class="dropdown-item-description"
-                                        data-tooltip="Recovers the most valid timestamps">Seek to
-                                        last active timestamp - strict
+                                        data-tooltip="Strict - Either start or end">Seek
+                                        to last active timestamp
                                     </label>
                                     <input type="radio" name="timestamp_recovery_styles" id="timestamp_recovery_strict"
                                         checked>
                                 </span>
                                 <span class="dropdown-item" data-bind="timestamp-experience-item">
                                     <label for="" class="dropdown-item-description"
-                                        data-tooltip="Recovers the most valid timestamps">Maintain current
-                                        time - soft
+                                        data-tooltip="If it is within the boundaries else rely on the strict mode">Maintain
+                                        current time
                                     </label>
                                     <input type="radio" name="timestamp_recovery_styles" id="timestamp_recovery_soft">
                                 </span>
 
                                 <span class="dropdown-item-separator"></span>
                                 <span class="dropdown-item">
-                                    <label for="" class="dropdown-item-description ddm-tooltip-line"
+                                    <label for="" class="dropdown-item-description ddm-tooltip-shortcuts"
                                         data-tooltip="Start: Ctrl + Alt + s End: Ctrl + Alt + d">Enable
                                         Shortcuts to grab timestamp components
                                     </label>
