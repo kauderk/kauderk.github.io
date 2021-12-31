@@ -2743,13 +2743,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     }
     function DeployYT_IFRAME()
     {
-        if (UI.display.simulate_roam_research_timestamps.checked)
-            if (UI.timestamps.timestamp_recovery.checked)
-            {
-                const TryActiveTimestamp = (p) => closest_rm_container(grandParentBlock)?.querySelector(`.rm-video-timestamp[timestamp-style="${p}"][active-timestamp]`)?.getAttribute('timestamp') || '';
-                configParams.start = UTILS.HMSToSecondsOnly(TryActiveTimestamp('start')) || configParams.start;
-                configParams.end = UTILS.HMSToSecondsOnly(TryActiveTimestamp('end')) || configParams.end;
-            }
+        AssertYTvarsFromTimestamps(closest_rm_container(grandParentBlock), configParams);
 
         return record.player = new window.YT.Player(newId, playerConfig(configParams));
     }
@@ -3986,6 +3980,17 @@ function ElementsPerBlock(block, selector)
 function awaitingAtrr(bol, el)
 {
     return UTILS.toggleAttribute(bol, 'awaiting', el);
+}
+/* ***************** */
+function AssertYTvarsFromTimestamps(rm_container, configParams)
+{
+    if (UI.display.simulate_roam_research_timestamps.checked)
+        if (UI.timestamps.timestamp_recovery.checked)
+        {
+            const TryActiveTimestamp = (p) => rm_container?.querySelector(`.rm-video-timestamp[timestamp-style="${p}"][active-timestamp]`)?.getAttribute('timestamp') || '';
+            configParams.start = UTILS.HMSToSecondsOnly(TryActiveTimestamp('start')) || configParams.start;
+            configParams.end = UTILS.HMSToSecondsOnly(TryActiveTimestamp('end')) || configParams.end;
+        }
 }
 //#endregion
 
