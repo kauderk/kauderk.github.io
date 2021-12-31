@@ -3579,7 +3579,7 @@ async function onPlayerReady(event)
 /*↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓*/
 /*↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓*/
 //loops between 'start' and 'end' boundaries
-function onStateChange(state)
+async function onStateChange(state)
 {
     const t = state.target;
     const map = allVideoParameters.get(t.h.id);
@@ -3589,12 +3589,14 @@ function onStateChange(state)
         const startSec = map?.start || 0;
         const endSec = map?.end || t.getDuration();
 
-        t.i.h.playerVars.start = startSec;
-        t.i.h.playerVars.end = endSec;
+        await t.loadVideoById({
+            'videoId': t.i.h.videoId,
+            'startSeconds': startSec,
+            'endSeconds': endSec,
+        });
 
-        t.seekTo(startSec);
-
-
+        while (document.body.contains(t?.getIframe()) && !t?.getCurrentTime())
+            await RAP.sleep(50);
 
         const soundSrc = validSoundURL();
         if (soundSrc)
