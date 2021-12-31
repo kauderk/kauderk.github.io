@@ -2081,6 +2081,7 @@ async function Ready()
     }
     //#endregion
 
+
     //#region local utils
     function DDM_Els()
     {
@@ -2257,6 +2258,8 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
             const observer = new MutationObserver(async (mutationsList) =>
             {
+                const awaiting = (bol) => awaitingAtrr(bol, childrenBlock);
+
                 if (!timestamp_recovery.checked)
                     return awaiting(false);
 
@@ -2265,11 +2268,6 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
                 await TimestampsInHierarchyMutation_cb(mutationsList, MutationObj);
                 awaiting(false);
-
-                function awaiting(bol)
-                {
-                    return awaitingAtrr(bol, childrenBlock);
-                }
             })
 
             observer.observe(childrenBlock, { childList: true, subtree: true });
@@ -3270,15 +3268,17 @@ async function onPlayerReady(event)
     async function ResetBoundaries_smart(e)
     {
         const tEl = e.currentTarget;
+        const awaiting = (bol) => awaitingAtrr(bol, tEl);
+
         if (tEl.hasAttribute('awaiting'))
             return;
 
-        awaitingAtrr(true, tEl);
+        awaiting(true);
 
         DeactivateTimestampsInHierarchy(closest_rm_container(tEl));
         await ReloadYTVideo({ t, start: map.defaultStart ?? 0, end: map.defaultEnd ?? t.getDuration() });
 
-        awaitingAtrr(false, tEl);
+        awaiting(false);
     }
     //#endregion
 
