@@ -51,7 +51,7 @@ If this doesn't work, most likely you're using a custom css rules that conflicts
 
 ---
 ### What is a "Timestamp Display"?
-Because the main feature of the YT GIF extension is to use the timestamps boundaries, you might be interested to see the duration of a small section, or the position relative to the entire video.
+Because the main feature of the YT GIF extension is to use timestamps as boundaries, you might be interested to see the duration of a small section, or the position relative to the entire video.
 
 
 ---
