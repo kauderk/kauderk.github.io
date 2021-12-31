@@ -2232,7 +2232,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         wrapper = UTILS.ChangeElementType(wrapper, 'div');
     wrapper.parentElement.classList.add(`${cssData.yt_gif_wrapper}-parent`);
     wrapper.className = `${cssData.yt_gif_wrapper} dont-focus-block`;
-    wrapper.style.setProperty('--yt-gif-player-span', Number(configParams.sp) + "%");
+    wrapper.style.setProperty('--yt-gif-player-span', parseFloat(configParams.sp) + "%");
     wrapper.setAttribute(attrInfo.target, targetClass);
     wrapper.setAttribute(attrInfo.creation.name, dataCreation);
     wrapper.setAttribute(attrInfo.url.path, url);
