@@ -51,13 +51,13 @@ If this doesn't work, most likely you're using a custom css rules that conflicts
 
 ---
 ### What is a "Timestamp Display"?
-Because the main fueature of the YT GIF extension is to use the timestamps boundaries, you might be interested see the duration of a small section or the position releative to the entire video.
+Because the main feature of the YT GIF extension is to use the timestamps boundaries, you might be interested to see the duration of a small section, or the position relative to the entire video.
 
 
 ---
 ### What is "roam/js/kauderk/yt-gif/settings" really doing in my graph?
 - The main and only purpose of this file is to store settings for the extension. Because Roam Research can be accesed from any device with a browser, it's wiser to store users data within their own graphs. Now, so far it stores numeric values, on and off switches, and strings.
-It is a [javascript file](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/v0.2.0/testing/js/settings-page.js) that uses the `Roam Alpah API` to read and write the settings in form of blocks, with following structure: 
+It is a [javascript file](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/v0.2.0/testing/js/settings-page.js) that uses the `Roam Alpha API` to read and write the settings in the form of blocks, with the following structure: 
     -  `(xxxuidxxx)` : `yt_gif_settings_key` : `<value>`
 
 ---
