@@ -3945,21 +3945,23 @@ async function getTimestampObj_smart(pageRefSufx)
 {
     const openInputBlock = getCurrentInputBlock();
     const uid = openInputBlock?.id?.slice(-9);
+    const failObj = { fmtSecHMS: '' };
+
     if (!pageRefSufx || !uid || !openInputBlock)
-        return { pageRefSufx: '' };
+        return failObj;
     return await getTimestampObj(pageRefSufx, uid);
 
     async function getTimestampObj(pageRefSufx, uid)
     {
         const { secHMS, foundBlock, targetBlock } = await getLastComponentInHierarchy(uid, YTGIF_Config);
-        if (!foundBlock) return {};
+        if (!foundBlock) return failObj;
 
         const { start, end, uid: tUid } = targetBlock; // bulky and clunky... because there only two options
         const boundaries = (pageRefSufx == 'start') ? start : end;
         const targetSecHMS = secHMS.includes('NaN') ? boundaries : secHMS;
         const fmtSecHMS = `{{[[yt-gif/${pageRefSufx}]]: ${targetSecHMS}}}`;
 
-        return { fmtSecHMS, uid: tUid, }
+        return { fmtSecHMS, uid: tUid }
     }
 }
 function getCurrentInputBlock()
