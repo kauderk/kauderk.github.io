@@ -1537,56 +1537,26 @@ async function Ready()
         tEl.setAttribute('awaiting', true);
 
 
-        const { foundBlock } = await getLastComponentInHierarchy(uid, YTGIF_Config);
-        if (!foundBlock?.uid) console.warn(`YT GIF Timestamps: couldn't find YT GIFs within the Hierarchy: ((${uid}))`);
-        const { uid: f_uid } = foundBlock || { uid: '' };
-
         const baseAnim = ['yt-timestamp-pulse-text-anim'];
         const greenAnim = [...baseAnim, 'yt-timestamp-success'];
         const redAnim = [...baseAnim, 'yt-timestamp-warn'];
         const blueAnim = [...baseAnim, 'yt-timestamp-opening'];
         const allAnim = [...greenAnim, ...redAnim, ...blueAnim].filter((v, i, a) => a.indexOf(v) === i); // remove duplicates on allAnim
-        const pulse = (anim) =>
-        {
-            UTILS.toggleClasses(false, allAnim, tEl);
-            UTILS.toggleClasses(true, anim, tEl);
-            setTimeout(() => UTILS.toggleClasses(false, anim, tEl), 500);
-        }
 
         const click = which == 1;
         const mdlclick = which == 2;
         const rghtclick = which == 3;
 
 
-
-        const barObj = {
-            condition: function () { return tEl.closest(`.${this.root}`) },
-        }
-        const PagesObj = {
-            main: {
-                root: 'roam-article',
-                crossRoot: 'rm-sidebar-outline',
-            },
-            side: {
-                root: 'rm-sidebar-outline',
-                crossRoot: 'roam-article',
-            },
-            pageRef: {
-                root: 'rm-reference-main',
-                crossRoot: 'rm-sidebar-outline',
-            },
-        };
-
-        Object.keys(PagesObj).forEach(key => Object.assign(PagesObj[key], barObj));
-        const key = Object.keys(PagesObj).find(x => PagesObj[x].condition());
-        const { root, crossRoot } = PagesObj[key];
-        const blockExist = document.querySelector(`.${root} [id$="${f_uid}"]`);
+        const {
+            lastWrapperInBlock,
+            WrappersInBlock,
+            f_uid,
+            blockExist,
+            root, crossRoot,
+        } = await getYTwrapperRootObj(uid, tEl);
 
 
-
-        // root -> roam-article || rm-sidebar-outline
-        const WrappersInBlock = (root) => [...document.querySelectorAll(`.${root} [id$="${f_uid}"] .yt-gif-wrapper`)];
-        const lastWrapperInBlock = (r) => [...WrappersInBlock(r)]?.pop();
         // disable context menu
         tEl.addEventListener("contextmenu", e => e.preventDefault()); //https://codinhood.com/nano/dom/disable-context-menu-right-click-javascript
 
@@ -1759,6 +1729,12 @@ async function Ready()
         {
             //lastWrapperInBlock(r)?.setAttribute('play-right-away', false);
             lastWrapperInBlock(r)?.dispatchEvent(UTILS.simHoverOut()); // hover out -> videoIsPlayingWithSound(false)
+        }
+        function pulse(anim)
+        {
+            UTILS.toggleClasses(false, allAnim, tEl);
+            UTILS.toggleClasses(true, anim, tEl);
+            setTimeout(() => UTILS.toggleClasses(false, anim, tEl), 500);
         }
         function NoLongerAwaiting()
         {
@@ -2249,7 +2225,6 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     if (rm_container)
     {
         const MutationObj = { removed: [] };
-        const { timestamp_recovery } = UI.timestamps;
         const childrenBlock = rm_container?.querySelector('.rm-block-children');
 
         if (childrenBlock || !childrenBlock?.hasAttribute('active-timestamp-observer'))
@@ -2260,13 +2235,13 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             {
                 const awaiting = (bol) => awaitingAtrr(bol, childrenBlock);
 
-                if (!timestamp_recovery.checked)
+                if (!UI.display.simulate_roam_research_timestamps.checked)
                     return awaiting(false);
 
-                if (childrenBlock.hasAttribute('awaiting')) return;
                 awaiting(true);
 
                 await TimestampsInHierarchyMutation_cb(mutationsList, MutationObj);
+
                 awaiting(false);
             })
 
@@ -2532,8 +2507,17 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         MutationObj.removed = MutationObj.removed.flat(Infinity).filter(x => !!x);
         added = added.flat(Infinity).filter(x => !!x);
 
+        const removedActiveObj = MutationObj.removed.find(rO => rO?.target?.timestamp && !document.getElementById(rO.blockID));
+        if (removedActiveObj && UI.timestamps.timestamp_reset_on_last_active_container_removed.checked)
+        {
+            MutationObj.removed.length = 0;
+            const lastWrapper = [...grandParentBlock.querySelectorAll('.yt-gif-wrapper')]?.pop();
+            lastWrapper?.querySelector?.('.yt-gif-reset-boundaries').click();
+            return;
+        }
+
         const commonObj = MutationObj.removed.find(aO => [...added].map(o => o.blockID).includes(aO.blockID));
-        if (commonObj)
+        if (commonObj && UI.timestamps.timestamp_recovery.checked)
         {
             MutationObj.removed.length = 0;
             await TryToRecoverActiveTimestamp(commonObj);
@@ -4032,6 +4016,52 @@ async function ReloadYTVideo({ t, start, end })
 
     while (document.body.contains(t?.getIframe()) && !t?.getCurrentTime())
         await RAP.sleep(50);
+}
+/* *********************************** */
+async function getYTwrapperRootObj(uid, tEl)
+{
+    const { foundBlock } = await getLastComponentInHierarchy(uid, YTGIF_Config);
+    if (!foundBlock?.uid) console.warn(`YT GIF Timestamps: couldn't find YT GIFs within the Hierarchy: ((${uid}))`);
+    const { uid: f_uid } = foundBlock || { uid: '' };
+
+
+    const barObj = {
+        condition: function () { return tEl.closest(`.${this.root}`) },
+    }
+    const PagesObj = {
+        main: {
+            root: 'roam-article',
+            crossRoot: 'rm-sidebar-outline',
+        },
+        side: {
+            root: 'rm-sidebar-outline',
+            crossRoot: 'roam-article',
+        },
+        pageRef: {
+            root: 'rm-reference-main',
+            crossRoot: 'rm-sidebar-outline',
+        },
+    };
+
+
+    Object.keys(PagesObj).forEach(key => Object.assign(PagesObj[key], barObj));
+    const key = Object.keys(PagesObj).find(x => PagesObj[x].condition());
+    const { root, crossRoot } = PagesObj[key];
+    const blockExist = document.querySelector(`.${root} [id$="${f_uid}"]`);
+
+
+
+    // root -> roam-article || rm-sidebar-outline
+    const WrappersInBlock = (r) => [...document.querySelectorAll(`.${r} [id$="${f_uid}"] .yt-gif-wrapper`)];
+    const lastWrapperInBlock = (r = root) => [...WrappersInBlock(r)]?.pop();
+
+    return {
+        lastWrapperInBlock,
+        WrappersInBlock,
+        f_uid,
+        blockExist,
+        root, crossRoot,
+    }
 }
 //#endregion
 
