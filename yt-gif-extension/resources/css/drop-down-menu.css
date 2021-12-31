@@ -484,7 +484,7 @@ a.rm-video-timestamp[last-active-timestamp]:hover {
 [class*="yt-gif"] .m-0{
   margin: 0 !important;
 }
-.yt-gif-rest-boundaries {
+.yt-gif-reset-boundaries {
   position: relative;
   display: flex;
 
