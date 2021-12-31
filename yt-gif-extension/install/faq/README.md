@@ -26,12 +26,12 @@ If this doesn't work, most likely you're using a custom css rules that conflicts
 
 ---
 ### What is the difference between [[video]] and [[yt-gif]]?
-- `{{[[video]]}}` is a native component by Roam Research that supports multiple video types and `{{[[yt-gif]]}}` is a component made by me that supports only Youtube videos (urls).
+- `{{[[video]]}}` is a native component by Roam Research that supports multiple video types, and `{{[[yt-gif]]}}` is a component made by me that supports only Youtube videos (urls).
 
 
 ---
 ### What does "Iframe/Player Buffer" do?
-- The nature of Roam Research makes it so you can open multiples pages with multiple blocks within them and YT GIFs, ultimately iframes, are way too expensive to have them loaded in the background all the time. The solution is to use a buffer, those oldest ones will be unloaded and ready to be played once you interact with them.
+- The nature of Roam Research makes it so you can open multiple pages with multiple blocks within them; YT GIFs, ultimately iframes, are way too expensive to have them loaded in the background all the time. The solution is to use a buffer; those oldest ones will be unloaded and ready to be played once you interact with them.
 
 
 ---
