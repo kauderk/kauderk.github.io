@@ -47,6 +47,7 @@ window.YT_GIF_SETTINGS_PAGE = {
         timestamp_recovery_soft: dom('1', rad),
         timestamp_shortcuts_enabled: dom(),
         timestamp_mute_when_seeking: dom(),
+        timestamp_reset_on_last_active_container_removed: dom('1'),
     },
     previousTimestamp: {
         baseKey: BaseSetting(rad),
