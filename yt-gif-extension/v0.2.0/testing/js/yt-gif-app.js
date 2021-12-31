@@ -2268,7 +2268,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
                 function awaiting(bol)
                 {
-                    return UTILS.toggleAttribute(bol, 'awaiting', childrenBlock);
+                    return awaitingAtrr(bol, childrenBlock);
                 }
             })
 
@@ -2453,8 +2453,8 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         {
             media.id = YouTubeGetID(url);
 
-            media.start = ExtractFromURL('int', /(t=|start=)(?:\d+)/g);
-            media.end = ExtractFromURL('int', /(end=)(?:\d+)/g);
+            media.start = media.defaultStart = ExtractFromURL('int', /(t=|start=)(?:\d+)/g);
+            media.end = media.defaultEnd = ExtractFromURL('int', /(end=)(?:\d+)/g);
 
             media.speed = ExtractFromURL('float', /(s=|speed=)([-+]?\d*\.\d+|\d+)/g);
 
@@ -2808,6 +2808,7 @@ async function onPlayerReady(event)
     const timeDisplay = parent.querySelector('div.' + cssData.yt_gif_timestamp);
     const timeDisplayStart = timeDisplay.querySelector('.yt-gif-timestamp-start');
     const timeDisplayEnd = timeDisplay.querySelector('.yt-gif-timestamp-end');
+    const resetBoundariesBtn = parent.querySelector('.yt-gif-reset-boundaries');
 
 
     // 1. previous parameters if available
@@ -2848,12 +2849,17 @@ async function onPlayerReady(event)
 
 
 
-    // 6. store relevant elements with event event listeners to clean them later
+    // 6. Reload bounaries
+    resetBoundariesBtn.addEventListener('click', ResetBoundaries_smart);
+
+
+
+    // 7. store relevant elements with event event listeners to clean them later
     const withEventListeners = [parent, parent.parentNode, timeDisplay, iframe]; // ready to be cleaned
 
 
 
-    // 7. clean data and ready 'previous' paramaters for next sesion with IframeRemmovedFromDom_callback
+    // 8. clean data and ready 'previous' paramaters for next sesion with IframeRemmovedFromDom_callback
     const options = {
         el: iframe,
         OnRemmovedFromDom_cb: IframeRemmovedFromDom_callback,
@@ -2862,7 +2868,7 @@ async function onPlayerReady(event)
 
 
 
-    // 8. Performance Mode - Iframe Buffer & Initalize on interaction - synergy
+    // 9. Performance Mode - Iframe Buffer & Initalize on interaction - synergy
     if (canBeCleanedByBuffer && parent) // sometimes the parent is already gone - while loading iframes
     {
         const parentCssPath = UTILS.getUniqueSelectorSmart(parent);
@@ -2871,14 +2877,14 @@ async function onPlayerReady(event)
 
 
 
-    // 9. 'auto pause' when an iframe goes out the viewport... stop playing and mute
+    // 10. 'auto pause' when an iframe goes out the viewport... stop playing and mute
     const yConfig = { threshold: [0] };
     const ViewportObserver = new IntersectionObserver(PauseOffscreen_callback, yConfig);
     ViewportObserver.observe(iframe);
 
 
 
-    // 10. well well well 
+    // 11. well well well 
     if (map.hasOwnProperty('play-right-away') && map.hasOwnProperty('updateTime'))
     {
         while (document.body.contains(iframe) && !t?.getCurrentTime?.())
@@ -3260,7 +3266,24 @@ async function onPlayerReady(event)
     //#endregion
 
 
-    //#region 7. on destroyed - clean up and ready next session
+    //#region 6. reload boundaries
+    async function ResetBoundaries_smart(e)
+    {
+        const tEl = e.currentTarget;
+        if (tEl.hasAttribute('awaiting'))
+            return;
+
+        awaitingAtrr(true, tEl);
+
+        DeactivateTimestampsInHierarchy(closest_rm_container(tEl));
+        await ReloadYTVideo({ t, start: map.defaultStart ?? 0, end: map.defaultEnd ?? t.getDuration() });
+
+        awaitingAtrr(false, tEl);
+    }
+    //#endregion
+
+
+    //#region 8. on destroyed - clean up and ready next session
     function IframeRemmovedFromDom_callback(observer)
     {
         // expensive for sure 🙋
@@ -3339,7 +3362,7 @@ async function onPlayerReady(event)
     //#endregion
 
 
-    //#region 9. pause on off screen
+    //#region 10. pause on off screen
     function PauseOffscreen_callback(entries)
     {
         if (!entries[0])
@@ -3379,7 +3402,7 @@ async function onPlayerReady(event)
     //#endregion
 
 
-    //#region 10. last - let me watch would you
+    //#region 11. last - let me watch would you
     function HumanInteraction_FreezeAutoplay()
     {
         const autoplayParent = iframe.closest('.rm-alias-tooltip__content') || //tooltip
@@ -3591,17 +3614,7 @@ async function onStateChange(state)
 
     if (state.data === YT.PlayerState.ENDED)
     {
-        const startSec = map?.start || 0;
-        const endSec = map?.end || t.getDuration();
-
-        await t.loadVideoById({
-            'videoId': t.i.h.videoId,
-            'startSeconds': startSec,
-            'endSeconds': endSec,
-        });
-
-        while (document.body.contains(t?.getIframe()) && !t?.getCurrentTime())
-            await RAP.sleep(50);
+        await ReloadYTVideo({ t, start: map?.start, end: map?.end });
 
         const soundSrc = validSoundURL();
         if (soundSrc)
@@ -3664,6 +3677,8 @@ async function onStateChange(state)
         return null
     }
 }
+
+
 
 
 
@@ -4002,6 +4017,21 @@ function AssertYTvarsFromTimestamps(rm_container, configParams)
             configParams.start = UTILS.HMSToSecondsOnly(TryActiveTimestamp('start')) || configParams.start;
             configParams.end = UTILS.HMSToSecondsOnly(TryActiveTimestamp('end')) || configParams.end;
         }
+}
+/* ***************** */
+async function ReloadYTVideo({ t, start, end })
+{
+    const startSec = start || 0;
+    const endSec = end || t.getDuration();
+
+    await t.loadVideoById({
+        'videoId': t.i.h.videoId,
+        'startSeconds': startSec,
+        'endSeconds': endSec,
+    });
+
+    while (document.body.contains(t?.getIframe()) && !t?.getCurrentTime())
+        await RAP.sleep(50);
 }
 //#endregion
 
