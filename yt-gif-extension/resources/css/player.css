@@ -100,7 +100,11 @@
 
 /*---------------------------------------------*/
 .yt-gif-invisible-element {
+  opacity: 0;
   color: transparent;
+}
+.yt-gif-invisible-element:hover {
+  opacity: 1;
 }
 
 /* initialize_yt_gif_on_mouseenter feature */
