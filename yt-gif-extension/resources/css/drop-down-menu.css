@@ -8,8 +8,8 @@
   /*https://youtu.be/ujlpzTyJp-M*/
 }
 
-.dropdown :is([data-tooltip])::before,
-.dropdown :is([data-tooltip])::after {
+:is([class*="yt-gif"]) :is([data-tooltip])::before,
+:is([class*="yt-gif"]) :is([data-tooltip])::after {
   color: var(--ddm-tooltip-c);
 
   font-size: .8em;
@@ -29,7 +29,7 @@
   transform-origin: bottom center;
 }
 
-.dropdown :is([data-tooltip])::before {
+:is([class*="yt-gif"]) :is([data-tooltip])::before {
   content: attr(data-tooltip);
   background-color: var(--ddm-tooltip-bg);
   border-radius: .7em;
@@ -38,8 +38,8 @@
   --ddm-tooltip-traslate-y: calc(-100% - var(--ddm-tooltip-arrow-size));
 }
 
-.dropdown :is([data-tooltip]):hover::before,
-.dropdown :is([data-tooltip]):hover::after {
+:is([class*="yt-gif"]) :is([data-tooltip]):hover::before,
+:is([class*="yt-gif"]) :is([data-tooltip]):hover::after {
   --ddm-scale-tooltip: 1;
 }
 [data-tooltip]:hover + [data-tooltip]:hover::before{ /* avoid tooltip overlapping - label + input*/
@@ -481,3 +481,22 @@ a.rm-video-timestamp[last-active-timestamp]:hover {
 :is(.ddm-transparent-btn-h):hover {
   --dropdown-main-btn-bg-h: transparent;
 }
+[class*="yt-gif"] .m-0{
+  margin: 0 !important;
+}
+.yt-gif-reset-boundaries {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  border-radius: 20%;
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bolder;
+  cursor: pointer;
+}
+.yt-gif-controls :is([data-tooltip])::before,
+.yt-gif-controls :is([data-tooltip])::after{
+  max-width: fit-content;
+} 
