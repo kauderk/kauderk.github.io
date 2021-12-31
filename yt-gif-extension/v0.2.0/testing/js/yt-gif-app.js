@@ -1725,6 +1725,51 @@ async function Ready()
                 return UTILS.HMSToSecondsOnly(targetNodePpts.pears?.find(o => o != targetNodePpts.self)?.timestamp || '')
             }
         }
+        async function getYTwrapperRootObj(uid, tEl)
+        {
+            const { foundBlock } = await getLastComponentInHierarchy(uid, YTGIF_Config);
+            if (!foundBlock?.uid) console.warn(`YT GIF Timestamps: couldn't find YT GIFs within the Hierarchy: ((${uid}))`);
+            const { uid: f_uid } = foundBlock || { uid: '' };
+
+
+            const barObj = {
+                condition: function () { return tEl.closest(`.${this.root}`) },
+            }
+            const PagesObj = {
+                main: {
+                    root: 'roam-article',
+                    crossRoot: 'rm-sidebar-outline',
+                },
+                side: {
+                    root: 'rm-sidebar-outline',
+                    crossRoot: 'roam-article',
+                },
+                pageRef: {
+                    root: 'rm-reference-main',
+                    crossRoot: 'rm-sidebar-outline',
+                },
+            };
+
+
+            Object.keys(PagesObj).forEach(key => Object.assign(PagesObj[key], barObj));
+            const key = Object.keys(PagesObj).find(x => PagesObj[x].condition());
+            const { root, crossRoot } = PagesObj[key];
+            const blockExist = document.querySelector(`.${root} [id$="${f_uid}"]`);
+
+
+
+            // root -> roam-article || rm-sidebar-outline
+            const WrappersInBlock = (r) => [...document.querySelectorAll(`.${r} [id$="${f_uid}"] .yt-gif-wrapper`)];
+            const lastWrapperInBlock = (r = root) => [...WrappersInBlock(r)]?.pop();
+
+            return {
+                lastWrapperInBlock,
+                WrappersInBlock,
+                f_uid,
+                blockExist,
+                root, crossRoot,
+            }
+        }
         async function pauseLastBlock_SimHoverOut(r)
         {
             //lastWrapperInBlock(r)?.setAttribute('play-right-away', false);
@@ -4016,52 +4061,6 @@ async function ReloadYTVideo({ t, start, end })
 
     while (document.body.contains(t?.getIframe()) && !t?.getCurrentTime())
         await RAP.sleep(50);
-}
-/* *********************************** */
-async function getYTwrapperRootObj(uid, tEl)
-{
-    const { foundBlock } = await getLastComponentInHierarchy(uid, YTGIF_Config);
-    if (!foundBlock?.uid) console.warn(`YT GIF Timestamps: couldn't find YT GIFs within the Hierarchy: ((${uid}))`);
-    const { uid: f_uid } = foundBlock || { uid: '' };
-
-
-    const barObj = {
-        condition: function () { return tEl.closest(`.${this.root}`) },
-    }
-    const PagesObj = {
-        main: {
-            root: 'roam-article',
-            crossRoot: 'rm-sidebar-outline',
-        },
-        side: {
-            root: 'rm-sidebar-outline',
-            crossRoot: 'roam-article',
-        },
-        pageRef: {
-            root: 'rm-reference-main',
-            crossRoot: 'rm-sidebar-outline',
-        },
-    };
-
-
-    Object.keys(PagesObj).forEach(key => Object.assign(PagesObj[key], barObj));
-    const key = Object.keys(PagesObj).find(x => PagesObj[x].condition());
-    const { root, crossRoot } = PagesObj[key];
-    const blockExist = document.querySelector(`.${root} [id$="${f_uid}"]`);
-
-
-
-    // root -> roam-article || rm-sidebar-outline
-    const WrappersInBlock = (r) => [...document.querySelectorAll(`.${r} [id$="${f_uid}"] .yt-gif-wrapper`)];
-    const lastWrapperInBlock = (r = root) => [...WrappersInBlock(r)]?.pop();
-
-    return {
-        lastWrapperInBlock,
-        WrappersInBlock,
-        f_uid,
-        blockExist,
-        root, crossRoot,
-    }
 }
 //#endregion
 
