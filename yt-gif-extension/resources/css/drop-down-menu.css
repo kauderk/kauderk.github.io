@@ -484,19 +484,14 @@ a.rm-video-timestamp[last-active-timestamp]:hover {
 [class*="yt-gif"] .m-0{
   margin: 0 !important;
 }
-.yt-gif-reset-boundaries {
+.yt-gif-rest-boundaries {
   position: relative;
-  width: 24px;
-  height: 24px;
-  border-radius: 20%;
-  
   display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bolder;
-  cursor: pointer;
+
+  width: 24px;
+  aspect-ratio: 1 / 1;
 }
 .yt-gif-controls :is([data-tooltip])::before,
 .yt-gif-controls :is([data-tooltip])::after{
-  max-width: fit-content;
-} 
+max-width: fit-content;
+}
