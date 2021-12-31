@@ -141,7 +141,7 @@ const links = {
     },
     html: {
         dropDownMenu: self_urlFolder('html/drop-down-menu-2.html'),
-        playerControls: urlFolder_html('player-controls.html'),
+        playerControls: self_urlFolder('html/player-controls-2.html'),
         fetched: {
             playerControls: '',
         },
@@ -2806,6 +2806,8 @@ async function onPlayerReady(event)
 
 
     const timeDisplay = parent.querySelector('div.' + cssData.yt_gif_timestamp);
+    const timeDisplayStart = timeDisplay.querySelector('.yt-gif-timestamp-start');
+    const timeDisplayEnd = timeDisplay.querySelector('.yt-gif-timestamp-end');
 
 
     // 1. previous parameters if available
@@ -3143,16 +3145,25 @@ async function onPlayerReady(event)
     }
     function UpdateTimeDisplay()
     {
-        const sec = Math.abs(clipSpan() - (map.end - tick()));
+        const _clipSpan = clipSpan();
+        const offsetClip = _clipSpan < 0;
 
-        //timeDisplay.innerHTML = '00:00/00:00'
-        if (UI.display.clip_life_span_format.checked) 
+        UTILS.toggleAttribute(tick() > map.end, 'tick-offset', timeDisplayStart);
+        UTILS.toggleAttribute(offsetClip, 'offset', timeDisplayEnd);
+
+        // timeDisplay.innerHTML = '00:00/00:00'
+        if (UI.display.clip_life_span_format.checked) // 'bounded tick'/'clip end'
         {
-            timeDisplay.innerHTML = `${fmtMSS(sec)}/${fmtMSS(clipSpan())}`; //'sec':'clip end'
+            const boundedTick = Math.abs(_clipSpan - (map.end - tick()));
+            const validEnd = offsetClip ? map.end : _clipSpan;
+
+            timeDisplayStart.innerHTML = fmtMSS(boundedTick);
+            timeDisplayEnd.innerHTML = fmtMSS(validEnd);
         }
-        else
+        else // 'update'/'end'
         {
-            timeDisplay.innerHTML = `${fmtMSS(tick())}/${fmtMSS(map.end)}`; //'update':'end'
+            timeDisplayStart.innerHTML = fmtMSS(tick());
+            timeDisplayEnd.innerHTML = fmtMSS(map.end);
         }
 
 
