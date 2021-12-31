@@ -77,6 +77,13 @@
   text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000,
     1px 1px 0 #000;
 }
+/* offset feedback colors */
+.yt-gif-timestamp:hover :is([offset]) {
+  color: red;
+}
+.yt-gif-timestamp:hover :is([tick-offset]) {
+  color: orange;
+}
 
 /*---------------------------------------------*/
 
