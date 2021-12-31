@@ -1,11 +1,11 @@
 ### Can't they be like `{{[[video]]}}` components and it's features?
-- I believe Roam Research does not expose their components, thus YT GIFs have to be their own separate extension, and for that matter they work exclusively with Youtube videos.
+- I believe Roam Research does not expose their components; thus YT GIFs have to be their own separate extension, and for that matter they work exclusively with Youtube videos.
 
 
 ---
 ### What are "InAndOutKeys"?
 Whenever you exit a frame/iframe/player/playbox/YTGIF hold down either Alt - Ctrl - Shift or the Middle Mouse Button to unmute and or keep playing the video.
-They can vary depending on the `Play Style` or `Sound Sytle` you choose.
+They can vary depending on the `Play Style` or `Sound Style` you choose.
 
 
 ---
@@ -13,15 +13,15 @@ They can vary depending on the `Play Style` or `Sound Sytle` you choose.
 - `{{[[video]]}}` and `{{[[yt-gif]]}}` components will use their own timestamps. They do not share logic, nor functionality.
 
 #### The capture shortcuts don't work
-- I'm affraid it's a Javascript cross Browers compatibility issue.
+- I'm afraid it's a Javascript cross Browser compatibility issue.
 #### The capture smartblocks don't work
 - There are `Smartblocks` and `SmartblocksV2`, the YT GIF extension uses the latest version of Smartblocks.
 
 
 ---
-### Why the playbox is so small? Can the playbox of GIf be resized?
+### Why is the playbox is so small? Can the playbox of GIf be resized?
 - Append `&sp=100` [url parameter](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#what-are-url-parameters-how-do-i-use-them) to the youtube video url within a YTGIF you should be able to override the playbox/player span.
-If this doesn't work, most likely you're using a custom css rules that conflicts with the YT GIF extension, downwards the `rm-block__input` elemeent.
+If this doesn't work, most likely you're using a custom css rules that conflicts with the YT GIF extension; downwards the `rm-block__input` element.
 
 
 ---
