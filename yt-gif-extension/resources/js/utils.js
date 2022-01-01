@@ -3,7 +3,7 @@ var kauderk = window.kauderk || {};
 kauderk.util = ((util) =>
 {
     util.fetchTextTrimed = (str) =>
-    {
+    {// https://stackoverflow.com/questions/27841112/how-to-remove-white-space-between-html-tags-using-javascript#:~:text=Ignoring%20%3C%20and%20%3E%20chars%20inside%20text%20nodes%3A
         str = await util.FetchText(str);
         return util.trimHtml(str);
     }
