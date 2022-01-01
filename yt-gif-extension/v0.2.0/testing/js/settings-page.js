@@ -80,17 +80,17 @@ window.YT_GIF_SETTINGS_PAGE = {
         pause_on_exit_fullscreenchange: dom(),
     },
     muteStyle: {
-        baseKey: BaseSetting(chk),
+        baseKey: BaseSetting(rad),
         strict_mute_everything_except_current: dom('1'),
         muted_on_mouse_over: dom(),
         muted_on_any_mouse_interaction: dom(),
     },
     playStyle: {
-        baseKey: BaseSetting(chk),
+        baseKey: BaseSetting(rad),
         strict_play_current_on_mouse_over: dom('1'),
         play_on_mouse_over: dom(),
         visible_clips_start_to_play_unmuted: dom(),
-        play_last_active_player_off_intersection: dom('1'),
+        play_last_active_player_off_intersection: dom('1', chk),
     },
     range: {
         baseKey: BaseSetting(rng),
