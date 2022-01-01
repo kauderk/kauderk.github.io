@@ -142,8 +142,10 @@ const links = {
     html: {
         dropDownMenu: self_urlFolder('html/drop-down-menu-2.html'),
         playerControls: self_urlFolder('html/player-controls-2.html'),
+        urlBtn: self_urlFolder('html/url-btn.html'),
         fetched: {
             playerControls: '',
+            urlBtn: '',
         },
     },
     js: {
@@ -545,15 +547,16 @@ async function Ready()
 
     // 7. simulate inline url btn
     //#region relevant variables
-    const urlBtnClasses = 'bp3-button bp3-minimal bp3-icon-video bp3-small dont-focus-block yt-gif-inline-url-btn';
+    const urlBtnClasses = 'bp3-button bp3-minimal bp3-icon-video bp3-small dont-focus-block';
     const urlBtnClassesArr = urlBtnClasses.split(' ');
     const { simulate_inline_url_to_video_component } = UI.display;
+    links.html.fetched.urlBtn = await UTILS.fetchTextTrimed(links.html.urlBtn);
     //#endregion
 
     const urlObserver = new MutationObserver(InlineUrlBtnMutations_cb);
 
-    //ToogleUrlBtnObserver(simulate_inline_url_to_video_component.checked, urlObserver);
-    //simulate_inline_url_to_video_component.addEventListener('change', (e) => ToogleUrlBtnObserver(e.currentTarget.checked, urlObserver));
+    ToogleUrlBtnObserver(simulate_inline_url_to_video_component.checked, urlObserver);
+    simulate_inline_url_to_video_component.addEventListener('change', (e) => ToogleUrlBtnObserver(e.currentTarget.checked, urlObserver));
 
 
 
@@ -2028,42 +2031,34 @@ async function Ready()
     {
         let added = [];
         for (const { addedNodes } of mutationsList)
-            added = [...added, NodesRecord(addedNodes, 'bp3-icon-video')];
+            added = [...added, ...NodesRecord(addedNodes, 'bp3-icon-video')];
 
         ReadyUrlBtns(added);
     }
     function ReadyUrlBtns(added)
     {
-        debugger;
-        added?.filter?.((v, i, a) =>
+        added.forEach((rm_btn, i, a) =>
         {
-            debugger;
-            return !!v &&
-                !v.classList?.contains('yt-gif-inline-url-btn') &&
-                v.classList?.contains('bp3-icon-video') &&
-                a.indexOf(v) === i &&
-                document.body.contains(v);
-        })
-            .forEach((rm_btn, i, a) =>
+            console.log(rm_btn);
+
+            UTILS.toggleClasses(true, ['yt-gif'], rm_btn);
+            rm_btn.insertAdjacentHTML('afterbegin', links.html.fetched.urlBtn);
+
+            rm_btn.querySelector('[yt-gif-url-btn]').onclick = async function (e)
             {
-                if (!rm_btn) debugger;
-                const urlBtn = UTILS.elm(urlBtnClassesArr, 'span');
-                rm_btn.appendChild(urlBtn);
-                urlBtn.onclick = async function (e)
-                {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    console.log("hello");
-                };
-            });
+                e.stopPropagation();
+                e.preventDefault();
+                console.log("hello");
+            };
+        });
     }
 
     function NodesRecord(Nodes, sel)
     {
         if (!Nodes || Nodes.length == 0)
-            return null;
+            return [];
 
-        const arr = [...Array.from(Nodes)]
+        return [...Array.from(Nodes)]
             .filter(el => !!el.tagName)
             .map(x =>
             {
@@ -2076,30 +2071,50 @@ async function Ready()
             .filter((v, i, a) =>
             {
                 return !!v &&
-                    !v.classList.contains('yt-gif-inline-url-btn') &&
+                    !hasYTGifAttr(v) &&
+                    !hasYTGifClass(v) &&
                     v.classList.contains(sel) &&
                     a.indexOf(v) === i &&
                     document.body.contains(v);
-            });
-        if (arr.some(x => typeof x == 'object' || !!!x))
-            debugger;
-        return arr;
+            })
     }
     function ToogleUrlBtnObserver(bol, obs)
     {
         obs.disconnect();
-        const allUrlBtns = document.querySelectorAll(urlBtnClasses);
 
         if (bol)
         {
+            const allUrlBtns = [...document.querySelectorAll('.bp3-icon-video')]
+                .filter(b =>
+                {
+                    // those that do not have yt-gif customization
+                    return !hasYTGifAttr(b) && !hasYTGifClass(b);
+                });
+
             ReadyUrlBtns(allUrlBtns);
             obs.observe(targetNode, config);
         }
         else
         {
-            allUrlBtns.forEach(el => el.remove());
+            const allUrlBtns = [...document.querySelectorAll(`.yt-gif-url-btn-wrapper`)]
+                .forEach(el => el.remove());
+            const allUrlBtns_rm = [...document.querySelectorAll('.bp3-icon-video')]
+                .forEach(el => el.classList.remove('yt-gif'));
         }
     }
+    function hasYTGifClass(b)
+    {
+        return [...b.classList]
+            .some(x => x.includes('yt-gif'));
+    }
+
+    function hasYTGifAttr(b)
+    {
+        return [...b.attributes]
+            .map(a => a.name)
+            .some(x => x.includes('yt-gif'));
+    }
+
     //#endregion
 
 
