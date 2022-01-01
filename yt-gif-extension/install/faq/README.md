@@ -59,6 +59,9 @@ Because the main feature of the YT GIF extension is to use timestamps as boundar
 - The main and only purpose of this file is to store settings for the extension. Because Roam Research can be accesed from any device with a browser, it's wiser to store users data within their own graphs. Now, so far it stores numeric values, on and off switches, and strings.
 It is a [javascript file](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/v0.2.0/testing/js/settings-page.js) that uses the `Roam Alpha API` to read and write the settings in the form of blocks, with the following structure: 
     -  `(xxxuidxxx)` : `yt_gif_settings_key` : `<value>`
+    
+### I change the `<values>` but nothing happens
+Any manual change done to `"roam/js/kauderk/yt-gif/settings"` block's values will be reflected **once you reload your graph** (with the extension running).
 
 ---
 ### What are the URL parameters? How do I use them?
