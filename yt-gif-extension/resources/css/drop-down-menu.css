@@ -495,3 +495,39 @@ a.rm-video-timestamp[last-active-timestamp]:hover {
 .yt-gif-controls :is([data-tooltip])::after{
 max-width: fit-content;
 }
+
+/* ************************************ */
+/* simulate empty selector */
+.bp3-icon-video.yt-gif{
+  padding: 0 !important;
+  position: relative;
+}
+.bp3-icon-video.yt-gif::before{
+  margin: 0 !important;
+}
+
+/* accomodate for tooltips */
+.bp3-icon-video.yt-gif:hover 
+.yt-gif-url-btn-wrapper{
+ opacity: 1;
+}
+.yt-gif-max-tooltip::before{
+  width: max-content !important;
+  max-width: max-content !important;
+}
+
+/* style */
+.yt-gif-url-btn-wrapper{
+  position: absolute;
+  left: 24px;
+  opacity: 0;
+}
+
+[yt-gif-url-btn] {
+  --btn-comment: #860000;
+  background-color: var(--btn-comment) !important;
+}
+
+[yt-gif-url-btn]:hover{
+  --btn-comment: #282828;
+}
