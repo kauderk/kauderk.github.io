@@ -2039,8 +2039,6 @@ async function Ready()
     {
         added.forEach((rm_btn, i, a) =>
         {
-            console.log(rm_btn);
-
             UTILS.toggleClasses(true, ['yt-gif'], rm_btn);
             rm_btn.insertAdjacentHTML('afterbegin', links.html.fetched.urlBtn);
 
@@ -2048,7 +2046,32 @@ async function Ready()
             {
                 e.stopPropagation();
                 e.preventDefault();
-                console.log("hello");
+
+                const block = closestBlock(rm_btn);
+                const uid = block?.id?.slice(-9);
+                const ytUrlEl = rm_btn?.nextSibling;
+                const url = ytUrlEl?.href;
+
+                if (!uid || !url)
+                    return console.warn(`YT GIF Url Button: couldn't find url within the block: ((${uid}))`);
+
+                awaitingEl(rm_btn, async () =>
+                {
+                    const blockReq = await RAP.getBlockInfoByUIDM(uid);
+                    const info = blockReq[0]?.[0];
+                    if (!info) return;
+
+                    const index = ElementsPerBlock(block, `.bp3-icon-video + a[href]`).indexOf(ytUrlEl);
+
+                    let componentsSubIndex = [];
+                    let codeBlocksSubIndex = [];
+                    let tooltipsContentSubIndex = [];
+
+                    let string = replace_nth(info.string.replace(/\?/g, ''), url, `{{[[yt-gif]]: ${url} }}`, index + 1);
+
+                    console.log('YT GIF Url Button: in development');
+                    //await RAP.updateBlock(uid, string, info.open);
+                });
             };
         });
     }
@@ -2084,14 +2107,14 @@ async function Ready()
 
         if (bol)
         {
-            const allUrlBtns = [...document.querySelectorAll('.bp3-icon-video')]
+            const allUrlBtns_rm = [...document.querySelectorAll('.bp3-icon-video')]
                 .filter(b =>
                 {
                     // those that do not have yt-gif customization
                     return !hasYTGifAttr(b) && !hasYTGifClass(b);
                 });
 
-            ReadyUrlBtns(allUrlBtns);
+            ReadyUrlBtns(allUrlBtns_rm);
             obs.observe(targetNode, config);
         }
         else
@@ -4047,6 +4070,19 @@ function ElementsPerBlock(block, selector)
     return [...block?.querySelectorAll(selector)]?.filter(b => closestBlock(b).id == block.id) || [];
 }
 /* ***************** */
+async function awaitingEl(el, callback)
+{
+    const awaiting = (bol) => awaitingAtrr(bol, el);
+
+    if (el.hasAttribute('awaiting'))
+        return awaiting(false);
+
+    awaiting(true);
+
+    await callback();
+
+    awaiting(false);
+}
 function awaitingAtrr(bol, el)
 {
     return UTILS.toggleAttribute(bol, 'awaiting', el);
@@ -4076,6 +4112,13 @@ async function ReloadYTVideo({ t, start, end })
 
     while (document.body.contains(t?.getIframe()) && !t?.getCurrentTime())
         await RAP.sleep(50);
+}
+/* ***************** */
+function replace_nth(str = '', subStr = '', repStr = '', n = 1)
+{// https://stackoverflow.com/questions/35499498/replace-nth-occurrence-of-string#:~:text=with%20RegExp%20constructor-,const%20replace_nth%20%3D%20function%20(s%2C%20f%2C%20r%2C%20n)%20%7B,-//%20From%20the%20given
+    // From the given string s, replace f with r of nth occurrence
+    return str.replace(RegExp("^(?:.*?" + subStr + "){" + n + "}")
+        , x => x.replace(RegExp(subStr + "$"), repStr));
 }
 //#endregion
 
@@ -4531,6 +4574,20 @@ Discarted
         already exist in the DB, a promt message will
             I see... but that's too intrusive though, even If I know exactly what's going on...
                 it's the same as navegateToUIpage on a brand new installation.
+
+
+Potention errors
+    btn url
+        matching url will be overwritten inside
+            components
+            code blocks
+            tooltip hidden content
+    ok so here's the plan
+        match every rm component and render stuff
+        then store those substrings boundaries
+        then search every instance of url (match)
+        then check if the url is NOT inside the boundaries
+        then replace substring with the yt-gif componenent
 
 
 Bugs
