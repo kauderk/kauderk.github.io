@@ -2,6 +2,16 @@ var kauderk = window.kauderk || {};
 
 kauderk.util = ((util) =>
 {
+    util.fetchTextTrimed = (str) =>
+    {
+        str = await util.FetchText(str);
+        return util.trimHtml(str);
+    }
+    util.trimHtml = (str) =>
+    {
+        const rexp = new RegExp(">[\t\s\n ]*<", "g");
+        return str.replace(rexp, "><");
+    }
     util.isNotZoomPath = (el) =>
     {
         return !el.closest("[class*='rm-zoom']");
