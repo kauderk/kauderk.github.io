@@ -103,7 +103,7 @@ YT GIF's Url Buttons will try to find the one the user requested (clicked on).
     - The browser on which you accept to simulate the feature.
     - Once accepted, the confirmation prompt won't appear again, unless you clear your `localStorage`.
 - Graph Key
-    - Search within your graph "simulate_url_to_video_component" under your `roam/js/kauderk/yt-gif/settings` page.
+    - Within your graph, search `simulate_url_to_video_component` under your `roam/js/kauderk/yt-gif/settings` page.
 
 ### How do I use it?
 - With the simulation running
