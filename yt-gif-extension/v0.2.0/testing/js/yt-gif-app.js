@@ -549,14 +549,14 @@ async function Ready()
     //#region relevant variables
     const urlBtnClasses = 'bp3-button bp3-minimal bp3-icon-video bp3-small dont-focus-block';
     const urlBtnClassesArr = urlBtnClasses.split(' ');
-    const { simulate_inline_url_to_video_component } = UI.display;
+    const { simulate_url_to_video_component } = UI.display;
     links.html.fetched.urlBtn = await UTILS.fetchTextTrimed(links.html.urlBtn);
     //#endregion
 
     const urlObserver = new MutationObserver(InlineUrlBtnMutations_cb);
 
-    ToogleUrlBtnObserver(simulate_inline_url_to_video_component.checked, urlObserver);
-    simulate_inline_url_to_video_component.addEventListener('change', (e) => ToogleUrlBtnObserver(e.currentTarget.checked, urlObserver));
+    ToogleUrlBtnObserver(simulate_url_to_video_component.checked, urlObserver);
+    simulate_url_to_video_component.addEventListener('change', (e) => ToogleUrlBtnObserver(e.currentTarget.checked, urlObserver));
 
 
 
