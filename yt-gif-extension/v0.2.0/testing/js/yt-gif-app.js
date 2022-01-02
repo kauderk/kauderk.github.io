@@ -2428,6 +2428,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             },
         }
         Object.keys(uidResults).forEach(key => Object.assign(uidResults[key], tempUrlObj));
+        Object.assign(uidResults['is component'], { urlComponents: function () { return ElementsPerBlock(this.grandParentBlock(), this.targetSelector) } }); // such a curious emebed predicament...
         const key = Object.keys(uidResults).find(x => uidResults[x].condition());
         if (!key) return {};
 
