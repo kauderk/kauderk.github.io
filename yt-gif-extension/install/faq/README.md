@@ -91,8 +91,13 @@ Now, most YTGIFs users are used to `https://youtu.be/videoID?t=0&end=100` for ex
 
 ---
 ### Simulate url button to video component
-Currently, Roam Research's video buttons will format every single link; they will not respect current components `{{[[video]]}}` or any other.
-YT GIF's Url Buttons will try to find the one the user requested (clicked on). But I shall warn everybody who's reading this, it is using the function `window.roamAlphaAPI.updateBlock` to perform the changes (formatting), which means: that block on which you clicked on **will be updated [after it passes my standards](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#embracing-embed-and-xxxuidxxx-block-references)**. If Roam Research where to change: `css classes`, `uid's structure`, the `updateBlock` function itself, etc. People might lose information related to that particular block.
+
+### How do they differentiate from the native feature?
+- Currently, Roam Research's video buttons will format every single link; they will not respect current components `{{[[video]]}}` or any other.
+YT GIF's Url Buttons will try to find the one the user requested (clicked on).
+
+### Caution Prompt
+- But I shall warn everybody who's reading this, it is using the function `window.roamAlphaAPI.updateBlock` to perform the changes (formatting), which means: that block on which you clicked on **will be updated [after it passes my standards](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#embracing-embed-and-xxxuidxxx-block-references)**. If Roam Research where to change: `css classes`, `uid's structure`, the `updateBlock` function itself, etc. People might lose information related to that particular block.
 
 - LocalStorage Key
     - The browser on which you accept to simulate the feature.
@@ -100,12 +105,12 @@ YT GIF's Url Buttons will try to find the one the user requested (clicked on). B
 - Graph Key
     - Search within your graph "simulate_url_to_video_component" under your `roam/js/kauderk/yt-gif/settings` page.
 
-- How do I use it?
-    - With the simulation running
-    - Create blocks and paste urls such as this one `https://www.youtube.com/watch?v=loK7BWFdwlc`
-    - Hover over the play ▶️ button next to the url
-    - It's YT GIF version will pop up to the right
-    - Click on it to format it like this: `{{[[yt-gif]]: https://www.youtube.com/watch?v=loK7BWFdwlc }}`
+### How do I use it?
+- With the simulation running
+- Create blocks and paste urls such as this one `https://www.youtube.com/watch?v=loK7BWFdwlc`
+- Hover over the play ▶️ button next to the url
+- It's YT GIF version will pop up to the right
+- Click on it to format it like this: `{{[[yt-gif]]: https://www.youtube.com/watch?v=loK7BWFdwlc }}`
 
 
 
