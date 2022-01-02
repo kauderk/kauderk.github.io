@@ -2116,14 +2116,14 @@ async function Ready()
                     UIDtoURLInstancesMapMap.delete(uid);
                     await RAP.updateBlock(uid, string, info.open);
                 });
+                function logUrlBtnWarning()
+                {
+                    console.warn(`YT GIF Url Button: couldn't find url within the block: ((${uid}))`);
+                }
             };
         });
 
 
-        function logUrlBtnWarning()
-        {
-            console.warn(`YT GIF Url Button: couldn't find url within the block: ((${uid}))`);
-        }
         function indexPairObj(regex, str, type)
         {// https://www.designcise.com/web/tutorial/how-to-return-the-position-of-a-regular-expression-match-in-javascript#:~:text=matchArr%5B1%5D.length%5D)%3B%0A%7D-,console.log(indexPairs)%3B%20//%20output%3A%20%5B8%2C%2025%5D%2C%20%5B27%2C%2035%5D,-The%20exec()%20method
             const matches = [...str.matchAll(regex)];
