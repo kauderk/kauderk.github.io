@@ -556,6 +556,7 @@ async function Ready()
     const urlObserver = new MutationObserver(InlineUrlBtnMutations_cb);
 
     ToogleUrlBtnObserver(simulate_url_to_video_component.checked, urlObserver);
+    simulate_url_to_video_component.addEventListener('change', (e) => confirmUrlBtnUsage(e.currentTarget.checked, e));
     simulate_url_to_video_component.addEventListener('change', (e) => ToogleUrlBtnObserver(e.currentTarget.checked, urlObserver));
 
 
@@ -712,10 +713,17 @@ async function Ready()
                     case 'range': // special case...
                         child.addEventListener('wheel', function (e) { changeOnWeeel(e, this, childKey) }, true);
                 }
-                child.addEventListener('change', function (e) { updateSettingsPageBlock(e, this, childKey, siblingKeys) }, true);
+                function HandleSettingsPageBlockUpdate(e)
+                {
+                    return updateSettingsPageBlock(e, e.currentTarget, childKey, siblingKeys)
+                }
+
+                child.addEventListener('change', HandleSettingsPageBlockUpdate, true);
+                child.addEventListener('customChange', HandleSettingsPageBlockUpdate, true);
             }
         }
     }
+
     /* *************** */
     function updateSettingsPageBlock(e, el, keyObj, siblingKeys)
     {
@@ -2052,6 +2060,8 @@ async function Ready()
                 const ytUrlEl = rm_btn?.nextSibling;
                 const url = ytUrlEl?.href;
 
+                if (!ValidUrlBtnUsage())
+                    return console.warn('YT GIF Url Button: Invalid Simulation keys');
                 if (!uid || !url)
                     return logUrlBtnWarning();
 
@@ -2167,7 +2177,6 @@ async function Ready()
             return str.substring(0, start) + replace + str.substring(end);
         }
     }
-
     function NodesRecord(Nodes, sel)
     {
         if (!Nodes || Nodes.length == 0)
@@ -2193,6 +2202,7 @@ async function Ready()
                     document.body.contains(v);
             })
     }
+    /* ****************** */
     function ToogleUrlBtnObserver(bol, obs)
     {
         obs.disconnect();
@@ -2222,14 +2232,50 @@ async function Ready()
         return [...b.classList]
             .some(x => x.includes('yt-gif'));
     }
-
     function hasYTGifAttr(b)
     {
         return [...b.attributes]
             .map(a => a.name)
             .some(x => x.includes('yt-gif'));
     }
+    /* ****************** */
+    function confirmUrlBtnUsage(bol, e)
+    {
+        const canUse = ValidUrlBtnUsage();
+        if (!bol || canUse)
+            return;
 
+        const yesMessage = canUse ?
+            'Simulate because I have both graph and localStorage keys' :
+            'Simulate, but first take me to the caution prompt - localStorage key is missing';
+
+        const userMind = confirm(`YT GIF Url Button: Simulation Request\n\nYES: ${yesMessage} \n   -  https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/install/faq/README.md#simulate-url-button-to-video-component \n\nNO: Don't simulate`);
+
+        if (userMind)
+        {
+            if (!canUse)
+                window.open("https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#what-are-the-url-parameters-how-do-i-use-them", '_blank').focus();
+            localStorage.setItem('simulate_url_to_video_component', 'true');
+        }
+        else
+        {
+            if (e)
+            {
+                e.stopPropagation();
+                e.preventDefault();
+                e.currentTarget.checked = false;
+                e.currentTarget.value = "off";
+                e.currentTarget.dispatchEvent(new Event('customChange'));
+            }
+            localStorage.removeItem('simulate_url_to_video_component');
+        }
+        return userMind;
+    }
+    function ValidUrlBtnUsage()
+    {
+        return UTILS.isTrue(localStorage.getItem('simulate_url_to_video_component')) &&
+            UTILS.isTrue(window.YT_GIF_DIRECT_SETTINGS?.get('simulate_url_to_video_component')?.sessionValue);
+    }
     //#endregion
 
 
