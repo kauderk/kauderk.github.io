@@ -2254,7 +2254,7 @@ async function Ready()
         if (userMind)
         {
             if (!canUse)
-                window.open("https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#what-are-the-url-parameters-how-do-i-use-them", '_blank').focus();
+                window.open("https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#simulate-url-button-to-video-component", '_blank').focus();
             localStorage.setItem('simulate_url_to_video_component', 'true');
         }
         else
