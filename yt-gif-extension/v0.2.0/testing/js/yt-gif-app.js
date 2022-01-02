@@ -2065,118 +2065,107 @@ async function Ready()
                     if (index == -1)
                         return logUrlBtnWarning();
 
+
                     const IndexObj = (rgx, type) => indexPairObj(rgx, info.string, type);
-
-                    const inlindeCodeRgx = /(`.+?`)|(`([\s\S]*?)`)/gm;
-                    const urlsMatches = IndexObj(new RegExp(`(${url.replace(/[?\\]/g, '\\$&')})`, 'gm'), 'urlsMatch');
-                    const codeBlocks = IndexObj(inlindeCodeRgx, 'codeBlocks');
-                    const components = filterOutCode(IndexObj(/({{.+})/gm, 'components'));
-                    const tooltipPrompt = filterOutCode(IndexObj(/{{=:(.+?)\|(.+)}}/gm, 'tooltipPrompt'))
-                        .map(op =>
-                        {
-                            const y = { ...op };
-                            y.start = op.start + 4; // 4 = {{=:
-                            y.end = op.end - (1 + op.groups[2]?.length + 2); // 1 = |     +    [2].length = hiidden content   +    2 = }}
-                            y.match = op.groups[1]; // prompt
-                            return y;
-                        });
-
                     const BadIndexMatches = [
-                        ...codeBlocks,
-                        ...tooltipPrompt,
-                        ...components,
+                        ...IndexObj(/(`.+?`)|(`([\s\S]*?)`)/gm, 'codeBlocks'), // codeBlocks
+
+                        ...filterOutCode(IndexObj(/{{=:(.+?)\|(.+)}}/gm, 'tooltipPrompt'))
+                            .map(op =>
+                            {
+                                const y = { ...op };
+                                y.start = op.start + 4; // 4 = {{=:
+                                y.end = op.end - (1 + op.groups[2]?.length + 2); // 1 = |     +    [2].length = hiidden content   +    2 = }}
+                                y.match = op.groups[1]; // prompt
+                                return y;
+                            }), // tooltipPrompt
+
+                        ...filterOutCode(IndexObj(/({{.+})/gm, 'components')), // components
                     ];
 
+
+                    const urlsMatches = IndexObj(new RegExp(`(${url.replace(/[?\\]/g, '\\$&')})`, 'gm'), 'urlsMatch');
                     const freeUrls = urlsMatches.filter(uo =>
                     {
                         let specialCase = false;
-                        const isBadIndex = BadIndexMatches
+                        const badIndex = BadIndexMatches
                             .some(bio =>
                             {
                                 const bounded = uo.start >= bio.start && uo.end <= bio.end;
                                 specialCase = bio.type == 'tooltipPrompt';
                                 return bounded;
                             });
+
                         if (specialCase)
                             return true;
-                        return !isBadIndex;
-
-                        //.some(bio => uo.start <= bio.start && uo.end >= bio.end);
+                        return !badIndex;
                     })
 
-                    const string = replaceString(info.string, freeUrls[index].start, freeUrls[index].end, `{{[[yt-gif]]: ${url} }}`);
 
-                    console.log(findDiff(info.string, string));
+                    let string;
+                    try
+                    {
+                        string = replaceString(info.string, freeUrls[index].start, freeUrls[index].end, `{{[[yt-gif]]: ${url} }}`);
+                    }
+                    catch (error)
+                    {
+                        logUrlBtnWarning();
+                        return;
+                    }
 
-                    debugger;
-
-                    // (`.+?`)|(`([\s\S]*?)`)|{{.+}|(http[s]?:)?\/\/(www\.)?(youtu(be.com\/watch|.be\/\w+))?(.*?(?=\s|\}|\]|\)))
-                    // (https:\/\/youtu\.be\/bBC-nXj3Ng4)|(`.+?`)|(`([\s\S]*?)`)|{{.+}|(.)
-                    // (https:\/\/youtu\.be\/bBC-nXj3Ng4)|(`.+?`)|(`([\s\S]*?)`)|{{=:(.+?)\|(.+)}}|{{.+}|(.)
-
-                    //let string = replace_nth(info.string.replace(/\?/g, ''), url, `{{[[yt-gif]]: ${url} }}`, index + 1);
-
-                    console.log('YT GIF Url Button: in development');
-                    //await RAP.updateBlock(uid, string, info.open);
+                    UIDtoURLInstancesMapMap.delete(uid);
+                    await RAP.updateBlock(uid, string, info.open);
                 });
-                function logUrlBtnWarning()
-                {
-                    console.warn(`YT GIF Url Button: couldn't find url within the block: ((${uid}))`);
-                }
-                function indexPairObj(regex, str, type)
-                {// https://www.designcise.com/web/tutorial/how-to-return-the-position-of-a-regular-expression-match-in-javascript#:~:text=matchArr%5B1%5D.length%5D)%3B%0A%7D-,console.log(indexPairs)%3B%20//%20output%3A%20%5B8%2C%2025%5D%2C%20%5B27%2C%2035%5D,-The%20exec()%20method
-                    const matches = [...str.matchAll(regex)];
-
-                    const indexPairs = [];
-
-                    for (const matchArr of matches)
-                    {
-                        indexPairs.push(
-                            [
-                                matchArr.index,
-                                matchArr.index + matchArr[0]?.length,
-                                matchArr[0],
-                                matchArr
-                            ]
-                        );
-                    }
-                    return [...indexPairs].map(mp => ({
-                        type,
-                        start: mp[0],
-                        end: mp[1],
-                        match: mp[2],
-                        groups: mp[3],
-                    }));
-                }
-                function filterOutCode(indexObj)
-                {
-                    const inlindeCodeRgx = /(`.+?`)|(`([\s\S]*?)`)/gm;
-                    return [...indexObj].filter(x => !inlindeCodeRgx.test(x.match))
-                }
-                function replaceString(str, start, end, replace)
-                {
-                    if (start < 0 || start > str.length)
-                    {
-                        throw new RangeError(`start index ${start} is out of the range 0~${str.length}`);
-                    }
-                    if (end > str.length || end < start)
-                    {
-                        throw new RangeError(`end index ${end} is out of the range ${start}~${str.length}`);
-                    }
-                    return str.substring(0, start) + replace + str.substring(end);
-                }
-                function findDiff(str1, str2)
-                {
-                    let diff = "";
-                    str2.split('').forEach(function (val, i)
-                    {
-                        if (val != str1.charAt(i))
-                            diff += val;
-                    });
-                    return diff;
-                }
             };
         });
+
+
+        function logUrlBtnWarning()
+        {
+            console.warn(`YT GIF Url Button: couldn't find url within the block: ((${uid}))`);
+        }
+        function indexPairObj(regex, str, type)
+        {// https://www.designcise.com/web/tutorial/how-to-return-the-position-of-a-regular-expression-match-in-javascript#:~:text=matchArr%5B1%5D.length%5D)%3B%0A%7D-,console.log(indexPairs)%3B%20//%20output%3A%20%5B8%2C%2025%5D%2C%20%5B27%2C%2035%5D,-The%20exec()%20method
+            const matches = [...str.matchAll(regex)];
+
+            const indexPairs = [];
+
+            for (const matchArr of matches)
+            {
+                indexPairs.push(
+                    [
+                        matchArr.index,
+                        matchArr.index + matchArr[0]?.length,
+                        matchArr[0],
+                        matchArr
+                    ]
+                );
+            }
+            return [...indexPairs].map(mp => ({
+                type,
+                start: mp[0],
+                end: mp[1],
+                match: mp[2],
+                groups: mp[3],
+            }));
+        }
+        function filterOutCode(indexObj)
+        {
+            const inlindeCodeRgx = /(`.+?`)|(`([\s\S]*?)`)/gm;
+            return [...indexObj].filter(x => !inlindeCodeRgx.test(x.match))
+        }
+        function replaceString(str, start, end, replace)
+        {
+            if (start < 0 || start > str.length)
+            {
+                throw new RangeError(`start index ${start} is out of the range 0~${str.length}`);
+            }
+            if (end > str.length || end < start)
+            {
+                throw new RangeError(`end index ${end} is out of the range ${start}~${str.length}`);
+            }
+            return str.substring(0, start) + replace + str.substring(end);
+        }
     }
 
     function NodesRecord(Nodes, sel)
