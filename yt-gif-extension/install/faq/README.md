@@ -102,7 +102,7 @@ YT GIF's Url Buttons will try to find the one the user requested (clicked on). B
 
 - How do I use it?
     - With the simulation running
-    - Create a blocks and paste urls such as this one `https://www.youtube.com/watch?v=loK7BWFdwlc`
+    - Create blocks and paste urls such as this one `https://www.youtube.com/watch?v=loK7BWFdwlc`
     - Hover over the play ▶️ button next to the url
     - It's YT GIF version will pop up to the right
     - Click on it to format it like this: `{{[[yt-gif]]: https://www.youtube.com/watch?v=loK7BWFdwlc }}`
