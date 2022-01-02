@@ -62,7 +62,7 @@ Because the main feature of the YT GIF extension is to use timestamps as boundar
 YT GIFs, YT GIFs Timestamps & YT GIF Url Buttons will be rendered along with Roam Research's nesting block system. I encourage people to not hold back form exploding this `feature`; after all, it is what Roam Research users find more exciting about the software.
 
 ### Limitations
-- They will **sometimes** not work with **expanded** `{{=:|}}` tooltip cards. Why? [Because I can't find a way to retrieve their `uid` of origin.](https://roamresearch.slack.com/archives/CTAE9JC2K/p1638578496037700)
+- **Sometimes** they will not work with **expanded** `{{=:|}}` tooltip cards. Why? [Because I can't find a way to retrieve their `uid` of origin.](https://roamresearch.slack.com/archives/CTAE9JC2K/p1638578496037700)
 
 
 
