@@ -29,9 +29,11 @@ If this doesn't work, most likely you're using a custom css rules that conflicts
 - `{{[[video]]}}` is a native component by Roam Research that supports multiple video types, and `{{[[yt-gif]]}}` is a component made by me that supports only Youtube videos (urls).
 
 
+
 ---
 ### What does "Iframe/Player Buffer" do?
 - The nature of Roam Research makes it so you can open multiple pages with multiple blocks within them; YT GIFs, ultimately iframes, are way too expensive to have them loaded in the background all the time. The solution is to use a buffer; those oldest ones will be unloaded and ready to be played once you interact with them.
+
 
 
 ---
@@ -54,6 +56,21 @@ If this doesn't work, most likely you're using a custom css rules that conflicts
 Because the main feature of the YT GIF extension is to use timestamps as boundaries, you might be interested to see the duration of a small section, or the position relative to the entire video.
 
 
+
+---
+### Embracing `{{[[embed]]}}` and `((xxxuidxxx))` block references
+YT GIFs, YT GIFs Timestamps & YT GIF Url Buttons will be rendered along with Roam Research's nesting block system. I encourage people to not hold back form exploding this `feature`; after all, it is what Roam Research users find more exciting about the software.
+
+### Limitations
+- They will **sometimes** not work with **expanded** `{{=:|}}` tooltip cards. Why? [Because I can't find a way to retrieve their `uid` of origin.](https://roamresearch.slack.com/archives/CTAE9JC2K/p1638578496037700)
+
+
+
+---
+
+
+
+
 ---
 ### What is "roam/js/kauderk/yt-gif/settings" really doing in my graph?
 - The main and only purpose of this file is to store settings for the extension. Because Roam Research can be accesed from any device with a browser, it's wiser to store users data within their own graphs. Now, so far it stores numeric values, on and off switches, and strings.
@@ -71,7 +88,18 @@ But after any of them you'd like to use - **every single one must be chained** w
 Now, most YTGIFs users are used to `https://youtu.be/videoID?t=0&end=100` for example. Starting form there, YT GIF supports additional parameters like `&s=` speed, ` &vl=` volume and [more...](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install#:~:text=Customize%20each%20YT%20GIF%2C%20even%20multiple%20ones%20within%20the%20same%20block)
 
 
+
 ---
+### What is "Simulate inline url button to video component"? How they different themselves form Roam Reserach's?
+Currently, Roam Research's video buttons will format every single link; they will not respect current components `{{[[video]]}}` or any other.
+YT GIF's Url Buttons will try to find the one the user requested (clicked on). But I shall warn everybody who's reading this, it is using the function `window.roamAlphaAPI.updateBlock` to perform the changes (formatting), which means: that block on which you clicked on **will be updated [after it passes my standards](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#embracing-embed-and-xxxuidxxx-block-references)**. If Roam Research where to change: `css classes`, `uid's structure`, the `updateBlock` function itself, etc. People might lose information related to that particular block.
+
+
+
+---
+
+
+
 
 > I can't find what I'm looking for.
 
