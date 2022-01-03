@@ -119,7 +119,8 @@ const StartEnd_Config = {
 }
 const YTGIF_Config = {
     componentPage: 'yt-gif|video',
-    targetStringRgx: /(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(.*?(?=\s|\}|\]|\)))/,
+    targetStringRgx: /https\:\/\/(www\.)?(youtu(be.com\/watch|.be\/))?(.*?(?=\s|$|\}|\]|\)))/,
+    guardClause: (url) => typeof url === 'string' && url.match('https://(www.)?youtube|youtu\.be'),
 }
 const UIDtoURLInstancesMapMap = new Map(); // since it store recursive maps, once per instance it's enough
 /*-----------------------------------*/
@@ -1738,7 +1739,7 @@ async function Ready()
         }
         async function getYTwrapperRootObj(uid, tEl)
         {
-            const { foundBlock } = await getLastComponentInHierarchy(uid, YTGIF_Config);
+            const { foundBlock } = await getLastComponentInHierarchy(uid);
             if (!foundBlock?.uid) console.warn(`YT GIF Timestamps: couldn't find YT GIFs within the Hierarchy: ((${uid}))`);
             const { uid: f_uid } = foundBlock || { uid: '' };
 
@@ -2057,8 +2058,7 @@ async function Ready()
 
                 const block = closestBlock(rm_btn);
                 const uid = block?.id?.slice(-9);
-                const ytUrlEl = rm_btn?.nextSibling;
-                const url = ytUrlEl?.href;
+                const { url, ytUrlEl } = getYTUrlObj(rm_btn);
 
                 if (!ValidUrlBtnUsage())
                     return console.warn('YT GIF Url Button: Invalid Simulation keys');
@@ -2177,6 +2177,17 @@ async function Ready()
             return str.substring(0, start) + replace + str.substring(end);
         }
     }
+    function getYTUrlObj(rm_btn)
+    {
+        const ytUrlEl = rm_btn?.nextSibling;
+        let url = ytUrlEl?.href;
+
+        if (!YTGIF_Config.guardClause(url))
+            url = null;
+
+        return { url, ytUrlEl };
+    }
+
     function NodesRecord(Nodes, sel)
     {
         if (!Nodes || Nodes.length == 0)
@@ -2195,6 +2206,7 @@ async function Ready()
             .filter((v, i, a) =>
             {
                 return !!v &&
+                    getYTUrlObj(v).url &&
                     !hasYTGifAttr(v) &&
                     !hasYTGifClass(v) &&
                     v.classList.contains(sel) &&
@@ -2405,8 +2417,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     if (!url || accUrlIndex < 0 || !uid)
     {
         UIDtoURLInstancesMapMap.delete(uid);
-        console.log(`YT GIF - Couldn't find ${accUrlIndex}th yt-gif component within the block ((${uid}))`);
-        return;
+        return console.log(`YT GIF: Couldn't find yt-gif component number ${accUrlIndex + 1} within the block ((${uid}))`);
     }
     const newId = iframeIDprfx + Number(++window.YT_GIF_OBSERVERS.creationCounter);
 
@@ -2620,7 +2631,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
         resObj.url = MapAtIndex_Value(resObj.nestedComponentMap, resObj.preUrlIndex, 'is component');
         resObj.accUrlIndex += resObj.preUrlIndex;
-        if (!resObj?.url?.includes?.('http'))
+        if (!YTGIF_Config.guardClause(resObj?.url))
             resObj.url = null;
         return resObj;
 
@@ -2644,7 +2655,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     {
         let success = false;
         const media = JSON.parse(JSON.stringify(videoParams));
-        if (url.match('https://(www.)?youtube|youtu\.be'))
+        if (YTGIF_Config.guardClause(url))
         {
             media.id = YouTubeGetID(url);
 
@@ -4179,7 +4190,7 @@ async function getTimestampObj_smart(pageRefSufx)
 
     async function getTimestampObj(pageRefSufx, uid)
     {
-        const { secHMS, foundBlock, targetBlock } = await getLastComponentInHierarchy(uid, YTGIF_Config);
+        const { secHMS, foundBlock, targetBlock } = await getLastComponentInHierarchy(uid);
         if (!foundBlock) return failObj;
 
         const { start, end, uid: tUid } = targetBlock; // bulky and clunky... because there only two options
@@ -4265,7 +4276,7 @@ function replace_nth(str = '', subStr = '', repStr = '', n = 1)
 
 
 //#region  backend/frontend communication - XXX_Config = {...}
-async function getLastComponentInHierarchy(tempUID, _Config = {}, includeOrigin = true)
+async function getLastComponentInHierarchy(tempUID, _Config = YTGIF_Config, includeOrigin = true)
 {
     const original = await RAP.getBlockInfoByUID(tempUID);
     const ParentHierarchy = await RAP.getBlockParentUids_custom(tempUID);
@@ -4303,7 +4314,7 @@ async function getLastComponentInHierarchy(tempUID, _Config = {}, includeOrigin 
         const componentMap = await getComponentMap(uid, _Config);
         const reverseValues = [...componentMap.values()].reverse();
 
-        const lastUrl = reverseValues?.find(v => typeof v === 'string' && v?.includes('https'));
+        const lastUrl = reverseValues?.find(v => _Config.guardClause(v));
         if (!lastUrl) continue;
 
         const lastUrlIndex = reverseValues.indexOf(lastUrl);
