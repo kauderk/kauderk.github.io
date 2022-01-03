@@ -2225,7 +2225,7 @@ async function Ready()
                 .filter(b =>
                 {
                     // those that do not have yt-gif customization
-                    return !hasYTGifAttr(b) && !hasYTGifClass(b);
+                    return !hasYTGifAttr(b) && !hasYTGifClass(b) && getYTUrlObj(b).url;
                 });
 
             ReadyUrlBtns(allUrlBtns_rm);
