@@ -1664,12 +1664,15 @@ async function Ready()
 
 
             // 4.
-            const startSec = sec("start") ? secondsOnly : (pearSec() || 0);
-            const endSec = sec("end") ? secondsOnly : pearSec() || record?.player?.getDuration?.();
+            const start = sec("start") ? secondsOnly : (pearSec() || 0);
+            const end = sec("end") ? secondsOnly : pearSec() || record?.player?.getDuration?.();
             const seekTo = sec("end") ? secondsOnly + 1 : secondsOnly;
             const currentTime = record?.player?.getCurrentTime?.();
 
-            await ReloadRecordBoundaries_Smart(record, startSec, endSec, seekingTo_cb);
+
+            // 5.
+            await ReloadYTVideo({ t: record?.player, start, end });
+            seekingTo_cb();
 
 
             // 6. play this
@@ -1677,17 +1680,18 @@ async function Ready()
                 {
                     bubbles: true,
                     detail: {
-                        start: startSec,
-                        end: endSec,
+                        start,
+                        end,
                         updateTime: currentTime ?? seekTo,
                         ['play-right-away']: true,
                         mute: UI?.timestamps?.timestamp_mute_when_seeking?.checked && UI?.display?.simulate_roam_research_timestamps?.checked,
                     },
                 }));
 
+
             function seekingTo_cb()
             {
-                const bounded = ((tm = currentTime) => tm >= startSec && tm <= endSec)();
+                const bounded = ((tm = currentTime) => tm >= start && tm <= end)();
                 record?.player?.playVideo?.()
 
                 if (seekToMessage == 'seekTo-soft' && bounded)
@@ -1700,28 +1704,6 @@ async function Ready()
                         record?.player?.mute?.()
                     else
                         record?.player?.unMute?.()
-            }
-            async function ReloadRecordBoundaries_Smart(record, startSec, endSec, callback)
-            {
-                if (record?.player?.loadVideoById)
-                {
-                    const vars = record.player.i.h;
-                    const map = allVideoParameters.get(record.player.h.id);
-
-                    vars.playerVars.start = map.start = startSec;
-                    vars.playerVars.end = map.end = endSec;
-                    const iframe = record.player.getIframe();
-
-                    await record.player.loadVideoById({
-                        'videoId': vars.videoId,
-                        'startSeconds': startSec,
-                        'endSeconds': endSec,
-                    });
-
-                    while (document.body.contains(iframe) && !record?.player?.getCurrentTime())
-                        await RAP.sleep(50);
-                    callback();
-                }
             }
             function toogleActiveAttr(bol, el)
             {
@@ -3493,7 +3475,7 @@ async function onPlayerReady(event)
         awaiting(true);
 
         DeactivateTimestampsInHierarchy(closest_rm_container(tEl));
-        await ReloadYTVideo({ t, start: map.defaultStart ?? 0, end: map.defaultEnd ?? t.getDuration() });
+        await ReloadYTVideo({ t, start: map.defaultStart, end: map.defaultEnd });
 
         awaiting(false);
     }
@@ -4251,17 +4233,35 @@ function AssertYTvarsFromTimestamps(rm_container, configParams)
 /* ***************** */
 async function ReloadYTVideo({ t, start, end })
 {
-    const startSec = start || 0;
-    const endSec = end || t.getDuration();
+    if (!t)
+        return; //console.log(`YT GIF : Couldn't reload a video. Internal target is missing.`);
 
-    await t.loadVideoById({
+    const vars = t.i.h;
+    const map = allVideoParameters.get(t.h.id);
+    const iframe = t.getIframe();
+
+    start = start || 0;
+    end = end || t.getDuration();
+
+    vars.playerVars.start = map.start = start;
+    vars.playerVars.end = map.end = end;
+
+    // https://stackoverflow.com/questions/60409231/why-does-my-youtube-react-component-fire-the-playerstate-ended-event-twice-befor
+    // t.l.h[5] = async () => { }; // the craziet shinanigans EVER!
+    t.seekTo(start); // not only it was preserving it's state
+    t.pauseVideo(); // and performing it's onStateChange func twice
+    // though I'm waiting to see what bugs it's going to cause
+
+    await t.loadVideoById({ // but it requieres you to load the video again to set "endSeconds" once again
         'videoId': t.i.h.videoId,
-        'startSeconds': startSec,
-        'endSeconds': endSec,
+        'startSeconds': start,
+        'endSeconds': end,
     });
 
-    while (document.body.contains(t?.getIframe()) && !t?.getCurrentTime())
+    while (document.body.contains(iframe) && !t?.getCurrentTime?.())
         await RAP.sleep(50);
+
+    // t.l.h[5] = onStateChange; // javascript is crazy
 }
 /* ***************** */
 function replace_nth(str = '', subStr = '', repStr = '', n = 1)
