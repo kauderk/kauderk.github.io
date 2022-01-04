@@ -43,7 +43,7 @@ YT GIF EXTENSION v0.2.0 {{[[roam/js]]}}
 # Significant changes
 The [base features are here](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension#features), these on the other hand, are being tested; if you wish to try them out, replace the source to `extension.src = "https://kauderk.github.io/yt-gif-extension/v0.2.0/testing/js/yt-gif-main.js";` [like this...](https://user-images.githubusercontent.com/65237382/147715001-58694a2d-5826-4835-b9d6-6156a055b0e6.png)
 
-1. Embracing `{{[[embed]]}}` and `((xxxuidxxx))` block references - [more...](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#embracing-embed-and-xxxuidxxx-block-references)
+1. Embracing `{{[[embed]]}}` and `((xxxuidxxx))` block references - [more...](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#embracing-embed-and-xxxuidxxx-block-references) - [click events...](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#click-events)
   - ![Snag_35eb7770](https://user-images.githubusercontent.com/65237382/148071646-f238d0a7-9598-45fe-b6d7-c2cdace68351.png)
 2. Toogle on and off `Timestamp Emulation` - [more...](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/install/components/README.md#workflow)
   - ![image](https://user-images.githubusercontent.com/65237382/147398656-9d6f5c07-e861-4087-8c2c-751d0025ecf6.png)
