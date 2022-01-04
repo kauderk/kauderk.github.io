@@ -87,6 +87,15 @@ Customize each YT GIF, even multiple ones within the same block
 #### Does it support multiple languages?
 - Only the video player interface does. You will find more information within your own graph: `player_captions_on_load `, `player_captions_language` and `player_interface_language`.
 
+#### How did you make your YouTube Player look like that?
+- ![image](https://user-images.githubusercontent.com/65237382/148123731-b5b585e7-0d57-49a4-a2a4-c808aabddb06.png) VS. ![image](https://user-images.githubusercontent.com/65237382/148123710-ecbd8a30-766f-4035-b6ad-e0e07e607240.png)
+
+> Where are the controls? Do you really use that?
+
+- Well, they are centered at the bottom, and they appear once I hover over them. It's easier on the eyes, if you know where/what to look for, you don't know need see them all the time.
+- [You can follow these steps...](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/css/Beautiful%20YT%20iframe%20controls)
+
+
 
 ---
 ### What is a "Timestamp Display"?
@@ -94,7 +103,8 @@ Customize each YT GIF, even multiple ones within the same block
     - ![image](https://user-images.githubusercontent.com/65237382/148078182-9a7d4189-a9d2-4488-b787-0e678a94b25b.png)
     - Scroll inside the actual `Timestamp` to back and forward (player).
 
-Because the main feature of the YT GIF extension is to use timestamps as boundaries, you might be interested to see the duration of a small section, or the position relative to the entire video.
+- `YT GIF icon > Miscellaneous > Clip lifespan format`
+    - Because the main feature of the YT GIF extension is to use timestamps as boundaries, you might be interested to see the duration of a small section, or the position relative to the entire video.
 
 
 
