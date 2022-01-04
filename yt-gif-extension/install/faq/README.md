@@ -105,10 +105,10 @@ It is a [javascript file](https://github.com/kauderk/kauderk.github.io/blob/main
     
 ### I change the `<values>` but nothing happens
 - Any manual change done to `"roam/js/kauderk/yt-gif/settings"` block's values will be reflected **once you reload your graph** (with the extension running).
-    - If you don't see `_opt` blocks nested along with a particular setting, most likekly it is a bynary input.
+    - If you don't see `_opt` blocks nested along with a particular setting, most likely it is a binary input.
         - `<1>` or `<true>` means `on`
         - `<>` or `<false>` means `off`
-    - Now, if you see `<>` or `<1>`, it means they were never been updated within your graph - you never interacted with them - factory settings.
+    - Now, if you see `<>` or `<1>`, it means they have never been updated within your graph - you never interacted with them - factory settings.
 
 
 
