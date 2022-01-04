@@ -2267,8 +2267,11 @@ async function Ready()
     }
     function ValidUrlBtnUsage()
     {
-        return UTILS.isTrue(localStorage.getItem('simulate_url_to_video_component')) &&
-            UTILS.isTrue(window.YT_GIF_DIRECT_SETTINGS?.get('simulate_url_to_video_component')?.sessionValue);
+        const key = 'simulate_url_to_video_component';
+        const binarySessionVal = (k) => UTILS.isTrue(window.YT_GIF_DIRECT_SETTINGS?.get(k)?.sessionValue);
+        const usageKey = binarySessionVal('override_' + key) || UTILS.isTrue(localStorage.getItem(key));
+
+        return usageKey && binarySessionVal(key)
     }
     //#endregion
 

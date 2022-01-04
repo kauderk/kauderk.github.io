@@ -151,6 +151,10 @@ window.YT_GIF_SETTINGS_PAGE = {
             baseKey: BaseInitSetting('https://freesound.org/data/previews/256/256113_3263906-lq.mp3', url),
             elss_opt: InlinePmt(`src sound when yt gif makes a loop, empty if unwanted`),
         },
+        override_simulate_url_to_video_component: {
+            baseKey: BaseInitSetting('', bol),
+            orvc_opt: InlinePmt(`Because of browsers' external problems, I'd like to set this as the "usage key" replacement`),
+        },
     },
     dropdownMenu: {
         baseKey: BaseSetting(),
