@@ -40,13 +40,13 @@ They can vary depending on the `Play Style` or `Sound Style` you choose.
 - You know which one you are currently using, because they change their style, based on if they are active.
 
 ### CLICK EVENTS!
-- Based on `root` and `cross root` concept - `main/side` and `side/main` sidebars (for example)
+- Based on `root` and `cross root` concept - `side/main` and `main/side` bars (for example)
 - Right click
-    - Play and SeekTo timestamp on your root
+    - Play and SeekTo timestamp on your `root`
 - Left Click
-    - Pause and Mute on your root
+    - Pause and Mute on your `root`
 - Middle click
-    - Pause and Mute on your root, Open current YT GIF Block on your cross root, Play and SeekTo timestamp
+    - Pause and Mute on your `root`, Open current YT GIF Block on your `cross root`, Play and SeekTo timestamp on your new `root`
 
 
 #### The capture shortcuts don't work
