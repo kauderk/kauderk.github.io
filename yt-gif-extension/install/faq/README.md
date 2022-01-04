@@ -53,22 +53,26 @@ If this doesn't work, most likely you're using a custom css rules that conflicts
 
 
 ---
-### How do I change the volume?
+### Player Customizations
+Customize each YT GIF, even multiple ones within the same block
+  - ![image](https://user-images.githubusercontent.com/65237382/147406576-0bac7a67-dad0-441b-9836-c6eeaef93d23.png)
+
+#### How do I change the volume?
 - Append `&vl=50` [url parameter](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#what-are-url-parameters-how-do-i-use-them) to the youtube video url within a YTGIF. Keep in mind this is a custom parameter, and it's not supported by YouTube.
 
-
----
-### Can I set a custom playback speed?
+#### Can I set a custom playback speed?
 - Append `&s=2` [url parameter](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#what-are-url-parameters-how-do-i-use-them) to the youtube video url within a YTGIF. Keep in mind this is a custom parameter, and it's not supported by YouTube.
 
-
----
-### Does it support multiple languages?
+#### Does it support multiple languages?
 - Only the video player interface does. You will find more information within your own graph: `player_captions_on_load `, `player_captions_language` and `player_interface_language`.
 
 
 ---
 ### What is a "Timestamp Display"?
+- Invisible anlong with the custom `YT GIF Controls`, hover over the *mid area* to reveal them.
+    - ![image](https://user-images.githubusercontent.com/65237382/148078182-9a7d4189-a9d2-4488-b787-0e678a94b25b.png)
+    - Scroll inside the actual `Timestamp` to back and forward (player).
+
 Because the main feature of the YT GIF extension is to use timestamps as boundaries, you might be interested to see the duration of a small section, or the position relative to the entire video.
 
 
