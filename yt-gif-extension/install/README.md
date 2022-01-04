@@ -47,13 +47,15 @@ The [base features are here](https://github.com/kauderk/kauderk.github.io/tree/m
   - ![Snag_35eb7770](https://user-images.githubusercontent.com/65237382/148071646-f238d0a7-9598-45fe-b6d7-c2cdace68351.png)
 2. Toogle on and off `Timestamp Emulation` - [more...](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/install/components/README.md#workflow) - [click events...](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#click-events)
   - ![image](https://user-images.githubusercontent.com/65237382/147398656-9d6f5c07-e861-4087-8c2c-751d0025ecf6.png)
-3. You decide how to initialize your YT GIFs
+3. Click on YouTube URLs and format them to `{{[[yt-gif]]}}` components - [more...](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#simulate-url-button-to-video-component)
+  - ![Snag_3587bd78](https://user-images.githubusercontent.com/65237382/148058480-a1f3f175-590c-45fd-baf2-5cc97d14fe56.png)
+4. You decide how to initialize your YT GIFs
   - ![image](https://user-images.githubusercontent.com/65237382/147398689-d223832c-afcd-435f-be1d-f5cf1d76cbd9.png)
-4. Lightweight iframes, faster graph - set a limit and unload the oldest ones
+5. Lightweight iframes, faster graph - set a limit and unload the oldest ones
   - ![image](https://user-images.githubusercontent.com/65237382/147398953-a5723293-c812-4e84-9325-968ee063233a.png)
-5. Keep playing even off screen
+6. Keep playing even off screen
   - ![image](https://user-images.githubusercontent.com/65237382/147398778-f26bf264-a8d8-411a-b184-a1359037931d.png)
-6. Customize each YT GIF, even multiple ones within the same block
+7. Customize each YT GIF, even multiple ones within the same block
   - ![image](https://user-images.githubusercontent.com/65237382/147406576-0bac7a67-dad0-441b-9836-c6eeaef93d23.png)
 
 
