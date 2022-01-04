@@ -39,6 +39,15 @@ They can vary depending on the `Play Style` or `Sound Style` you choose.
     - `YT GIF icon > YT GIF timestamps > Reset boundaries on last active timestamp container removed` will do the oposite.
 - You know which one you are currently using, because they change their style, based on if they are active.
 
+### CLICK EVENTS!
+- Based on `root` and `cross root` concept - `main/side` and `side/main` sidebars (for example)
+- Right click
+    - Play and SeekTo timestamp on your root
+- Left Click
+    - Pause and Mute on your root
+- Middle click
+    - Pause and Mute on your root, Open current YT GIF Block on your cross root, Play and SeekTo timestamp
+
 
 #### The capture shortcuts don't work
 - I'm afraid it's a Javascript cross Browser compatibility issue.
