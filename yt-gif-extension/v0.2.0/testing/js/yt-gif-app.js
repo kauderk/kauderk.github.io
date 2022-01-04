@@ -1566,6 +1566,7 @@ async function Ready()
             f_uid,
             blockExist,
             root, crossRoot,
+            mainRoot,
         } = await getYTwrapperRootObj(uid, tEl);
 
 
@@ -1615,7 +1616,7 @@ async function Ready()
             pulse(blueAnim);
             if (WrappersInBlock(crossRoot).length == 0) // 0 instances on crossRoot
             {
-                await RAP.navigateToUiOrCreate(f_uid, (root == PagesObj.main.root), 'block');
+                await RAP.navigateToUiOrCreate(f_uid, (root == mainRoot), 'block');
             }
 
             const prevWrapper = lastWrapperInBlock(crossRoot);
@@ -1762,6 +1763,7 @@ async function Ready()
                 f_uid,
                 blockExist,
                 root, crossRoot,
+                mainRoot: PagesObj.main.root,
             }
         }
         async function pauseLastBlock_SimHoverOut(r)
