@@ -111,7 +111,7 @@ YT GIF's Url Buttons will try to find the one the user requested (clicked on).
 - Hover over the play ▶️ button next to the url
 - It's YT GIF version will pop up to the right
 - Click on it to format it like this: `{{[[yt-gif]]: https://www.youtube.com/watch?v=loK7BWFdwlc }}`
-
+    - ![Snag_3587bd78](https://user-images.githubusercontent.com/65237382/148058480-a1f3f175-590c-45fd-baf2-5cc97d14fe56.png)
 
 
 ---
