@@ -21,13 +21,7 @@ YT GIF EXTENSION v0.2.0 {{[[roam/js]]}}
       /*
         roam/js/kauderk/yt-gif/settings -> store session values | YT GIF Extension updates
 
-        core funcionality: while exiting the frame, hold down the 
-        middle mouse button ("InAndOutKeys") to unmute videos
-
-        ?t=                   - start timestamp boundary - get the most out the extension - optional
-        &end=                 - end timestamp boundary   - get the most out the extension - optional
-        &s=                   - playback speed up to 2   - optional 
-        &vl=                  - volume form 0 to 100     - optional
+        How do I use it? -> https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/install/faq/README.md#how-do-i-use-it
 
         Example ⬇️
         {{[[yt-gif]]: https://youtu.be/sFFwvr6l2mM?t=60&end=120 }}
