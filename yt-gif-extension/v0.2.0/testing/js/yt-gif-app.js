@@ -556,7 +556,7 @@ async function Ready()
 
     const urlObserver = new MutationObserver(InlineUrlBtnMutations_cb);
 
-    ToogleUrlBtnObserver(simulate_url_to_video_component.checked, urlObserver);
+    ToogleUrlBtnObserver(simulate_url_to_video_component.checked && ValidUrlBtnUsage(), urlObserver);
     simulate_url_to_video_component.addEventListener('change', (e) => confirmUrlBtnUsage(e.currentTarget.checked, e));
     simulate_url_to_video_component.addEventListener('change', (e) => ToogleUrlBtnObserver(e.currentTarget.checked, urlObserver));
 
