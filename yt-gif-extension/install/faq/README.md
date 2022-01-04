@@ -97,7 +97,7 @@ Now, most YTGIFs users are used to `https://youtu.be/videoID?t=0&end=100` for ex
 YT GIF's Url Buttons will try to find the one the user requested (clicked on).
 
 ### Caution Prompt
-- But I shall warn everybody who's reading this, it is using the function `window.roamAlphaAPI.updateBlock` to perform the changes (formatting), which means: that block on which you clicked on **will be updated [after it passes my standards](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#embracing-embed-and-xxxuidxxx-block-references)**. If Roam Research where to change: `css classes`, `uid's structure`, the `updateBlock` function itself, etc. People might lose information related to that particular block.
+- But I shall warn everybody who's reading this, it is using the function `window.roamAlphaAPI.updateBlock` to perform the changes (formatting), which means: that block on which you clicked on **will be updated [after it passes my standards](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#embracing-embed-and-xxxuidxxx-block-references)**. If Roam Research where to change: `css classes`, `uid's structure` or the `updateBlock` function itself. People might lose information related to that particular block.
 
 - LocalStorage Key
     - The browser on which you accept to simulate the feature.
