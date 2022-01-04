@@ -11,6 +11,7 @@
     - [v0.1.0](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/v0.1.0) - [announced](https://twitter.com/kauDerk_/status/1448886800798343206?s=20) on [Twitter](https://twitter.com/fbgallet/status/1449490195968110592?s=20) and many other social media platforms, is a stable version and it works, but v0.2.0 comes with more quality of life features and has potential for scalability and maintainability.
 
 ---
+# [This is how it should look like](https://user-images.githubusercontent.com/65237382/141892053-ef42814f-8fbb-4717-92f9-0348b8b0750b.png)
 
 ```javascript
 YT GIF EXTENSION v0.2.0 {{[[roam/js]]}}
@@ -44,8 +45,6 @@ YT GIF EXTENSION v0.2.0 {{[[roam/js]]}}
       }
      ```
 
-# This is how it should look like
-![Snag_e41c464](https://user-images.githubusercontent.com/65237382/141892053-ef42814f-8fbb-4717-92f9-0348b8b0750b.png)
 
 # Significant changes
 The [base features are here](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension#features), these on the other hand, are being tested; if you wish to try them out, replace the source to `extension.src = "https://kauderk.github.io/yt-gif-extension/v0.2.0/testing/js/yt-gif-main.js";` [like this...](https://user-images.githubusercontent.com/65237382/147715001-58694a2d-5826-4835-b9d6-6156a055b0e6.png)
