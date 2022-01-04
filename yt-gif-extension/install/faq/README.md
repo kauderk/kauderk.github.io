@@ -20,9 +20,9 @@
 
 ---
 ### What are "InAndOutKeys"?
-**While you exit** a frame/iframe/player/playbox/YTGIF **HOLD DOWN** either Alt - Ctrl - Shift or the Middle Mouse Button to unmute and or keep playing the video.
+- **While you exit** a frame/iframe/player/playbox/YTGIF **HOLD DOWN** either Alt - Ctrl - Shift or the Middle Mouse Button to unmute and or keep playing the video.
 They can vary depending on the `Play Style` or `Sound Style` you choose.
-    - Search `: InAndOutKeys` within your graph and enable the ones you'd like to use.
+    - Search `: InAndOutKeys` within your graph and [enable the ones you'd like to use](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/install/faq/README.md#i-change-the-values-but-nothing-happens).
 
 
 ---
