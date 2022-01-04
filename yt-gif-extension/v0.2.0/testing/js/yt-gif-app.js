@@ -2247,9 +2247,9 @@ async function Ready()
 
         if (userMind)
         {
+            localStorage.setItem('simulate_url_to_video_component', 'true');
             if (!canUse)
                 window.open("https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#simulate-url-button-to-video-component", '_blank').focus();
-            localStorage.setItem('simulate_url_to_video_component', 'true');
         }
         else
         {
