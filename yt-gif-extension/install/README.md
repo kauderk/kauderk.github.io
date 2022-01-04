@@ -49,15 +49,17 @@ YT GIF EXTENSION v0.2.0 {{[[roam/js]]}}
 # Significant changes
 The [base features are here](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension#features), these on the other hand, are being tested; if you wish to try them out, replace the source to `extension.src = "https://kauderk.github.io/yt-gif-extension/v0.2.0/testing/js/yt-gif-main.js";` [like this...](https://user-images.githubusercontent.com/65237382/147715001-58694a2d-5826-4835-b9d6-6156a055b0e6.png)
 
-1. Toogle on and off `Timestamp Emulation` - [more...](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/install/components/README.md#workflow)
+1. Embracing `{{[[embed]]}}` and `((xxxuidxxx))` block references - [more...](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#embracing-embed-and-xxxuidxxx-block-references)
+  - ![Snag_35eb7770](https://user-images.githubusercontent.com/65237382/148071646-f238d0a7-9598-45fe-b6d7-c2cdace68351.png)
+2. Toogle on and off `Timestamp Emulation` - [more...](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/install/components/README.md#workflow)
   - ![image](https://user-images.githubusercontent.com/65237382/147398656-9d6f5c07-e861-4087-8c2c-751d0025ecf6.png)
-2. You decide how to initialize your YT GIFs
+3. You decide how to initialize your YT GIFs
   - ![image](https://user-images.githubusercontent.com/65237382/147398689-d223832c-afcd-435f-be1d-f5cf1d76cbd9.png)
-3. Lightweight iframes, faster graph - set a limit and unload the oldest ones
+4. Lightweight iframes, faster graph - set a limit and unload the oldest ones
   - ![image](https://user-images.githubusercontent.com/65237382/147398953-a5723293-c812-4e84-9325-968ee063233a.png)
-4. Keep playing even off screen
+5. Keep playing even off screen
   - ![image](https://user-images.githubusercontent.com/65237382/147398778-f26bf264-a8d8-411a-b184-a1359037931d.png)
-5. Customize each YT GIF, even multiple ones within the same block
+6. Customize each YT GIF, even multiple ones within the same block
   - ![image](https://user-images.githubusercontent.com/65237382/147406576-0bac7a67-dad0-441b-9836-c6eeaef93d23.png)
 
 
