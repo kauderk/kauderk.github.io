@@ -4604,6 +4604,7 @@ function clean_rm_string(rawText)
 
 
 /*
+>Why so many grammatical errors? Well Because I write them while they come to mind. "OH that's cool, BUT WAIT!", type of deal.<
 
 user requested ☐ ☑
 
@@ -4614,51 +4615,12 @@ I want to add ☐ ☑
         a litle bit earlier, a litle bit after...
         and inplement the changes, when the user the user enter the real edit block mode
             🙋
+    
+    an inline timeline under YT GIFs to show any related idea taken form there
+        just like sound clouds timestamp/comment timeline
+            https://soundcloud.com/codytxr0kr/the-joe-rogan-experience-279
 
-    replace with awaiting for input/thumbnails
-        when the frame gets lost while scrolling
-        offer a margin of error / slider / how far away
-            though the same functionallity can be achieved
-            using the buffer, if you set it to 1 max
-
-    the ability to let only one frame to keep playing with sound
-        while exiting the frame
-        the usage of two InAndOutKeys will do the trick
-
-
-    relative and strict timestamps, specially when using nested references
-
-
-    timestamps
-        when folding a block or when the current active timestamp disappears
-            add an observer with the uid and block id
-            to activate them when they get rendered
-                add strict and soft boundaries recoveries
-                    keep the current time
-                    seek to recoverd start
-
-    https://chrome.google.com/webstore/detail/video-annotation-bookmark/apoimieffgakgcbagednnmdhgaiedbea
-    https://www.designcise.com/web/tutorial/how-to-return-the-position-of-a-regular-expression-match-in-javascript#:~:text=football%27%3B%0A%0Aconst%20indexPairs%20%3D%20%5B%5D%3B-,while%20(null%20!%3D%3D%20(matchArr%20%3D%20regex.exec(str)))%20%7B,-indexPairs.push(%5BmatchArr
-    while (null !== (matchArr = regex.exec(str))) {
-        indexPairs.push([matchArr.index, regex.lastIndex]);
-    }
-    indexPairs.reduce((acc, v,i,a)=> [...acc, sb(a[i-1]?.[0],v[0]), sb(v[0],v[1]), sb(v[1], a[i+1]?.[1]) ], [])
-    (`.+?`)|({{.+?}})
-
-    var regex = /(`.+?`)|({{.+?}})/gm;
-    var indexPairs = [];
-
-    while (null !== (matchArr = regex.exec(str3))) {
-        indexPairs.push([matchArr.index, regex.lastIndex]);
-    }
-
-    console.log(indexPairs);
-
-    https://stackoverflow.com/questions/4514144/js-string-split-without-removing-the-delimiters#:~:text=%22abcdeabcde%22.split(-,/(%3F%3Dd)/g,-)%20//%2D%3E%20%5B%22abc%22%2C%20%22deabc%22%2C%20%22de
-    /(?=d)/g
-
-
-    added
+added
     visible_clips_start_to_play_unmuted synergy with fullscreenStyle ☑ ☑
         each does what they're suposed be doing
             when entering fullscreen mode
@@ -4681,37 +4643,54 @@ I want to add ☐ ☑
     yt iframe customizable ui language ☑ ☑
         add yt_api customizable settings ✘
 
-TODO ☐ ☑
+    the ability to let only one frame to keep playing with sound
+        while exiting the frame
+        the usage of two InAndOutKeys will do the trick
 
+    relative and strict timestamps, specially when using nested references
 
+    timestamps
+        when folding a block or when the current active timestamp disappears
+            add an observer with the uid and block id
+            to activate them when they get rendered
+                add strict and soft boundaries recoveries
+                    keep the current time
+                    seek to recoverd start
 
-features on hold btn at the bottom ☑ ☑
     focus & blus for sub ddm ☑ ☑
     an util class ☑ ☑
     click the item checks the btn ☑ ☑
     radios : mute pause when document is inactive ☑ ✘
-
+    
     use only one audio?? ☑ ☑ url so is customizable by nature
     loop sound adjusment with slider hidden inside sub menu | ohhhh bind main checkbox to hidde it's "for"
     deploy on mouse enter ☑ ☑
     scrolwheel is broke, fix ☑ ☑
-
+    
     to apply volume on end loop audio ☑ ☑
     http vs https ☑ ☑
     coding train shifman mouse inside div, top, left ✘ ☑ ☑
-
+    
     bind thumbnail input element hiddeness to initialize checkbox ☑ . what? jaja
-
+    
     play a sound to indicate the current gif makes loop ☑ ☑
     https://freesound.org/people/candy299p/sounds/250091/          * film ejected *
     https://freesound.org/data/previews/250/250091_4586102-lq.mp3
-
+    
     https://freesound.org/people/nckn/sounds/256113/               * param ram *
     https://freesound.org/data/previews/256/256113_3263906-lq.mp3
-
+    
     https://freesound.org/data/previews/35/35631_18799-lq.mp3 - roam research pomodoro * ding! *
+    
+    pause or mute when video plays with while using the inAndOutKeys ☑
 
-    pause or mute when video plays with while using the inAndOutKeys ☐
+
+TODO ☐ ☑
+when changing the url on a yt gif compoenent, if it has rendered block references
+        they don't update the url ☐
+
+
+Features on hold ☐ ☐
 
 
 Discarted
@@ -4730,19 +4709,45 @@ Discarted
             I see... but that's too intrusive though, even If I know exactly what's going on...
                 it's the same as navegateToUIpage on a brand new installation.
 
+    replace with awaiting for input/thumbnails
+        when the frame gets lost while scrolling
+        offer a margin of error / slider / how far away
+            though the same functionallity can be achieved
+            using the buffer, if you set it to 1 max
 
-Potention errors
+    should happen only when there are yt-gif componenst whitin the block hierarchy
+        open/show the slash menu
+        paint/link them visually
+
+    Scroll over timestamp and change it accordingly (currently doable because of url btns functionality)
+        https://chrome.google.com/webstore/detail/video-annotation-bookmark/apoimieffgakgcbagednnmdhgaiedbea
+        https://www.designcise.com/web/tutorial/how-to-return-the-position-of-a-regular-expression-match-in-javascript#:~:text=football%27%3B%0A%0Aconst%20indexPairs%20%3D%20%5B%5D%3B-,while%20(null%20!%3D%3D%20(matchArr%20%3D%20regex.exec(str)))%20%7B,-indexPairs.push(%5BmatchArr
+        while (null !== (matchArr = regex.exec(str))) {
+            indexPairs.push([matchArr.index, regex.lastIndex]);
+        }
+        indexPairs.reduce((acc, v,i,a)=> [...acc, sb(a[i-1]?.[0],v[0]), sb(v[0],v[1]), sb(v[1], a[i+1]?.[1]) ], [])
+        (`.+?`)|({{.+?}})
+
+        var regex = /(`.+?`)|({{.+?}})/gm;
+        var indexPairs = [];
+
+        while (null !== (matchArr = regex.exec(str3))) {
+            indexPairs.push([matchArr.index, regex.lastIndex]);
+        }
+
+        console.log(indexPairs);
+
+        https://stackoverflow.com/questions/4514144/js-string-split-without-removing-the-delimiters#:~:text=%22abcdeabcde%22.split(-,/(%3F%3Dd)/g,-)%20//%2D%3E%20%5B%22abc%22%2C%20%22deabc%22%2C%20%22de
+        /(?=d)/g
+
+
+Potential errors
     btn url
         matching url will be overwritten inside
             components
             code blocks
             tooltip hidden content
-    ok so here's the plan
-        match every rm component and render stuff
-        then store those substrings boundaries
-        then search every instance of url (match)
-        then check if the url is NOT inside the boundaries
-        then replace substring with the yt-gif componenent
+    
 
 
 Bugs
@@ -4764,29 +4769,29 @@ Bugs
             Which means it's so hard to catch why and where it happens
             Is very annoying
 
-    the weird recursive func doesn't work on block references - uids ((0UN_kefSF))
-        plus the persistent timestamp doen't work as expected
-
-
-    when changing the url on a yt gif compoenent, if it has rendered block references
-        they don't update the url ☐
-
-    should happen only when there are yt-gif componenst whitin the block hierarchy
-        open/show the slash menu
-        paint/link them visually
-
-    timestamps
-        recovery off
-            empty recordID
-                with a peer, clicking on start then end then start
-                when it reaches the boundary it doesn't go back to the NEW start
-
-                    Turns out that "Try to load less offten" is the cause of the problem
+    
 
 Fixed
      videoParams ☑ ☑
         default volume is mistaken as string ☑ ☑
             it should be an integer
+
+    the weird recursive func doesn't work on block references - uids ((0UN_kefSF))
+        plus the persistent timestamp doen't work as expected
+
+    Turns out that "Try to load less offten" is the cause of the problem
+        timestamps
+        recovery off
+        empty recordID
+            with a peer, clicking on start then end then start
+            when it reaches the boundary it doesn't go back to the NEW start
+
+    ok so here's the plan // url btns
+        match every rm component and render stuff
+        then store those substrings boundaries
+        then search every instance of url (match)
+        then check if the url is NOT inside the boundaries
+        then replace substring with the yt-gif componenent
 
 
 bugs that fixed themselves
