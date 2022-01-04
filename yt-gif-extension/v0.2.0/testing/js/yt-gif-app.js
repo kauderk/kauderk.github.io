@@ -115,7 +115,7 @@ const sesionIDs = {
 /*-----------------------------------*/
 const StartEnd_Config = {
     componentPage: 'yt-gif\\/(start|end)',
-    targetStringRgx: /((\d{1,2}):)?((\d{1,2}):)((\d{1,2}))|((?<=\s)\d+(?=\s|\}))/,
+    targetStringRgx: /((\d{1,2}):)?((\d{1,2}):)?(\d{1,2})/,
 }
 const YTGIF_Config = {
     componentPage: 'yt-gif|video',
