@@ -33,6 +33,12 @@ They can vary depending on the `Play Style` or `Sound Style` you choose.
 - [How to enable them...](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/install/components/README.md#workflow)
 - ![image](https://user-images.githubusercontent.com/65237382/147398656-9d6f5c07-e861-4087-8c2c-751d0025ecf6.png)
 
+### How do they differentiate from the native feature?
+- You have the ability to set boundaries, meaning you can play section by section and they will loop. `{{[[video-timestamp]]}}` will `seekTo` a value and that's all.
+- `YT GIF icon > YT GIF timestamps > Timestamp Recovery` after you edit a block with YT GIF timestamp components, they will update their YT GIF Player accordingly.
+    - `YT GIF icon > YT GIF timestamps > Reset boundaries on last active timestamp container removed` will do the oposite.
+- You know which one you are currently using, because they change their style, based on if they are active.
+
 
 #### The capture shortcuts don't work
 - I'm afraid it's a Javascript cross Browser compatibility issue.
