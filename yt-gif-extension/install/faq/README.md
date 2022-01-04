@@ -1,6 +1,22 @@
 ### Can't they be like `{{[[video]]}}` components and it's features?
 - I believe Roam Research does not expose their components; thus YT GIFs have to be their own separate extension, and for that matter they work exclusively with Youtube videos.
 
+---
+### How do i use it?
+- Core funcionality: while exiting the frame, hold down the middle mouse button ("InAndOutKeys") to unmute videos
+
+| [URL parameters](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#what-are-url-parameters-how-do-i-use-them) |                          |                                           |
+|----------------|--------------------------|-------------------------------------------|
+| ?t=            | start timestamp boundary | get the most out the extension - optional |
+| &end=          | end timestamp boundary   | get the most out the extension - optional |
+| &s=            | playback speed up to 2   | optional                                  |
+| &vl=           | volume form 0 to 100     | optional                                  |
+
+- Create `{{[[yt-gif]]}}` components
+    - {{[[yt-gif]]: https://youtu.be/sFFwvr6l2mM?t=60&end=120 }}
+- Or simply paste a `YouTube url` and format it with [Simulate url button to video component](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#simulate-url-button-to-video-component) enabled.
+    - https://youtu.be/sFFwvr6l2mM?t=60 
+
 
 ---
 ### What are "InAndOutKeys"?
@@ -106,7 +122,7 @@ YT GIF's Url Buttons will try to find the one the user requested (clicked on).
     - Within your graph, search `simulate_url_to_video_component` under your `roam/js/kauderk/yt-gif/settings` page.
 
 ### How do I use it?
-- With the simulation running
+- With the simulation running `YT GIF Icon > Miscellaneous > Simulate url button to video component`
 - Create blocks and paste urls such as this one `https://www.youtube.com/watch?v=loK7BWFdwlc`
 - Hover over the play ▶️ button next to the url
 - It's YT GIF version will pop up to the right
