@@ -140,6 +140,11 @@ YT GIF's Url Buttons will try to find the one the user requested (clicked on).
 - Click on it to format it like this: `{{[[yt-gif]]: https://www.youtube.com/watch?v=loK7BWFdwlc }}`
     - ![Snag_3587bd78](https://user-images.githubusercontent.com/65237382/148058480-a1f3f175-590c-45fd-baf2-5cc97d14fe56.png)
 
+### Trubleshooting
+- Particularly for safary users
+    - It seems that `localStorage` [is stopping users form using the feature](https://www.reddit.com/r/learnprogramming/comments/8x5keq/javascript_localstorage_not_working_on_safari/).
+    - You can search `override_simulate_url_to_video_component` within your graph and enable it to overcome this issue.
+
 
 ---
 
