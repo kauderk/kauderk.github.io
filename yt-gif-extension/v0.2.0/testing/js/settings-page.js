@@ -153,7 +153,7 @@ window.YT_GIF_SETTINGS_PAGE = {
         },
         override_simulate_url_to_video_component: {
             baseKey: BaseInitSetting('', bol),
-            orvc_opt: InlinePmt(`Because of browsers' external problems, I'd like to set this as the "usage key" replacement`),
+            orsuvc_opt: InlinePmt(`Because of browsers' external problems, I'd like to set this as the "usage key" replacement`),
         },
     },
     dropdownMenu: {
