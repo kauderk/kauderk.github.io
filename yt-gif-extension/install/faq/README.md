@@ -29,6 +29,11 @@ They can vary depending on the `Play Style` or `Sound Style` you choose.
 ### Timestamps
 - `{{[[video]]}}` and `{{[[yt-gif]]}}` components will use their own timestamps. They do not share logic, nor functionality.
 
+### Hod do I use them?
+- [How to enable them...](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/install/components/README.md#workflow)
+- ![image](https://user-images.githubusercontent.com/65237382/147398656-9d6f5c07-e861-4087-8c2c-751d0025ecf6.png)
+
+
 #### The capture shortcuts don't work
 - I'm afraid it's a Javascript cross Browser compatibility issue.
 #### The capture smartblocks don't work
