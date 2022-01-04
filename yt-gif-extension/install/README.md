@@ -45,7 +45,7 @@ The [base features are here](https://github.com/kauderk/kauderk.github.io/tree/m
 
 1. Embracing `{{[[embed]]}}` and `((xxxuidxxx))` block references - [more...](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#embracing-embed-and-xxxuidxxx-block-references)
   - ![Snag_35eb7770](https://user-images.githubusercontent.com/65237382/148071646-f238d0a7-9598-45fe-b6d7-c2cdace68351.png)
-2. Toogle on and off `Timestamp Emulation` - [more...](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/install/components/README.md#workflow)
+2. Toogle on and off `Timestamp Emulation` - [more...](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/install/components/README.md#workflow) - [click events...](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#click-events)
   - ![image](https://user-images.githubusercontent.com/65237382/147398656-9d6f5c07-e861-4087-8c2c-751d0025ecf6.png)
 3. You decide how to initialize your YT GIFs
   - ![image](https://user-images.githubusercontent.com/65237382/147398689-d223832c-afcd-435f-be1d-f5cf1d76cbd9.png)
