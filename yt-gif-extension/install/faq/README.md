@@ -20,8 +20,9 @@
 
 ---
 ### What are "InAndOutKeys"?
-Whenever you exit a frame/iframe/player/playbox/YTGIF hold down either Alt - Ctrl - Shift or the Middle Mouse Button to unmute and or keep playing the video.
+**While you exit** a frame/iframe/player/playbox/YTGIF **HOLD DOWN** either Alt - Ctrl - Shift or the Middle Mouse Button to unmute and or keep playing the video.
 They can vary depending on the `Play Style` or `Sound Style` you choose.
+    - Search `: InAndOutKeys` within your graph and enable the ones you'd like to use.
 
 
 ---
@@ -98,7 +99,13 @@ It is a [javascript file](https://github.com/kauderk/kauderk.github.io/blob/main
     -  `(xxxuidxxx)` : `yt_gif_settings_key` : `<value>`
     
 ### I change the `<values>` but nothing happens
-Any manual change done to `"roam/js/kauderk/yt-gif/settings"` block's values will be reflected **once you reload your graph** (with the extension running).
+- Any manual change done to `"roam/js/kauderk/yt-gif/settings"` block's values will be reflected **once you reload your graph** (with the extension running).
+    - If you don't see `_opt` blocks nested along with a particular setting, most likekly it is a bynary input.
+        - `<1>` or `<true>` means `on`
+        - `<>` or `<false>` means `off`
+    - Now, if you see `<>` or `<1>`, it means they were never been updated within your graph - you never interacted with them - factory settings.
+
+
 
 ---
 ### What are the URL parameters? How do I use them?
