@@ -1,8 +1,16 @@
 ### Can't they be like `{{[[video]]}}` components and it's features?
 - I believe Roam Research does not expose their components; thus YT GIFs have to be their own separate extension, and for that matter they work exclusively with Youtube videos.
+- What is the difference between `{{[[video]]}}` and `{{[[yt-gif]]}}` components?
+    - `{{[[video]]}}` is a native component by Roam Research that supports multiple video types, and `{{[[yt-gif]]}}` is a component made by me that supports only Youtube videos (urls).
+
+
 
 ---
-### How do i use it?
+---
+
+
+
+# How do i use it?
 - Core funcionality: while exiting the frame, hold down the middle mouse button ("InAndOutKeys") to unmute videos
 
 | [URL parameters](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#what-are-url-parameters-how-do-i-use-them) |                          |                                           |
@@ -25,8 +33,13 @@ They can vary depending on the `Play Style` or `Sound Style` you choose.
     - Search `: InAndOutKeys` within your graph and [enable the ones you'd like to use](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/install/faq/README.md#i-change-the-values-but-nothing-happens).
 
 
+
 ---
-### Timestamps
+---
+
+
+
+# Timestamps
 - `{{[[video]]}}` and `{{[[yt-gif]]}}` components will use their own timestamps. They do not share logic, nor functionality.
 
 ### Hod do I use them?
@@ -55,26 +68,13 @@ They can vary depending on the `Play Style` or `Sound Style` you choose.
 - There are `Smartblocks` and `SmartblocksV2`, the YT GIF extension uses the latest version of Smartblocks.
 
 
----
-### Why is the playbox is so small? Can the playbox of GIf be resized?
-- Append `&sp=100` [url parameter](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#what-are-url-parameters-how-do-i-use-them) to the youtube video url within a YTGIF you should be able to override the playbox/player span.
-If this doesn't work, most likely you're using a custom css rules that conflicts with the YT GIF extension; downwards the `rm-block__input` element.
-
 
 ---
-### What is the difference between [[video]] and [[yt-gif]]?
-- `{{[[video]]}}` is a native component by Roam Research that supports multiple video types, and `{{[[yt-gif]]}}` is a component made by me that supports only Youtube videos (urls).
-
-
-
 ---
-### What does "Iframe/Player Buffer" do?
-- The nature of Roam Research makes it so you can open multiple pages with multiple blocks within them; YT GIFs, ultimately iframes, are way too expensive to have them loaded in the background all the time. The solution is to use a buffer; those oldest ones will be unloaded and ready to be played once you interact with them.
 
 
 
----
-### Player Customizations
+# Player Customizations
 Customize each YT GIF, even multiple ones within the same block
   - ![image](https://user-images.githubusercontent.com/65237382/147406576-0bac7a67-dad0-441b-9836-c6eeaef93d23.png)
 
@@ -98,6 +98,7 @@ Customize each YT GIF, even multiple ones within the same block
 
 
 ---
+
 ### What is a "Timestamp Display"?
 - Invisible anlong with the custom `YT GIF Controls`, hover over the *mid area* to reveal them.
     - ![image](https://user-images.githubusercontent.com/65237382/148078182-9a7d4189-a9d2-4488-b787-0e678a94b25b.png)
@@ -107,47 +108,23 @@ Customize each YT GIF, even multiple ones within the same block
     - Because the main feature of the YT GIF extension is to use timestamps as boundaries, you might be interested to see the duration of a small section, or the position relative to the entire video.
 
 
-
----
-### Embracing `{{[[embed]]}}` and `((xxxuidxxx))` block references
-YT GIFs, YT GIFs Timestamps & YT GIF Url Buttons will be rendered along with Roam Research's nesting block system. I encourage people to not hold back form exploding this `feature`; after all, it is what Roam Research users find more exciting about the software.
-
-### Limitations
-- **Sometimes** they will not work with **expanded** `{{=:|}}` tooltip cards. Why? [Because I can't find a way to retrieve their `uid` of origin.](https://roamresearch.slack.com/archives/CTAE9JC2K/p1638578496037700)
+### What does "Iframe/Player Buffer" do?
+- The nature of Roam Research makes it so you can open multiple pages with multiple blocks within them; YT GIFs, ultimately iframes, are way too expensive to have them loaded in the background all the time. The solution is to use a buffer; those oldest ones will be unloaded and ready to be played once you interact with them.
 
 
-
----
-
+### Why is the playbox is so small? Can the playbox of GIf be resized?
+- Append `&sp=100` [url parameter](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#what-are-url-parameters-how-do-i-use-them) to the youtube video url within a YTGIF you should be able to override the playbox/player span.
+If this doesn't work, most likely you're using a custom css rules that conflicts with the YT GIF extension; downwards the `rm-block__input` element.
 
 
 
 ---
-### What is "roam/js/kauderk/yt-gif/settings" really doing in my graph?
-- The main and only purpose of this file is to store settings for the extension. Because Roam Research can be accesed from any device with a browser, it's wiser to store users data within their own graphs. Now, so far it stores numeric values, on and off switches, and strings.
-It is a [javascript file](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/v0.2.0/testing/js/settings-page.js) that uses the `Roam Alpha API` to read and write the settings in the form of blocks, with the following structure: 
-    -  `(xxxuidxxx)` : `yt_gif_settings_key` : `<value>`
-    
-### I change the `<values>` but nothing happens
-- Any manual change done to `"roam/js/kauderk/yt-gif/settings"` block's values will be reflected **once you reload your graph** (with the extension running).
-    - If you don't see `_opt` blocks nested along with a particular setting, most likely it is a binary input.
-        - `<1>` or `<true>` means `on`
-        - `<>` or `<false>` means `off`
-    - Now, if you see `<>` or `<1>`, it means they have never been updated within your graph - you never interacted with them - factory settings.
-
-
-
 ---
-### What are the URL parameters? How do I use them?
-- Well, it depends, the way url parameters work:
-In this case, youtube video urls, `https://youtu.be/videoID?` notice the `?` question mark, the first parameter will be anything supported, like `t=` start and `end=` etc.
-But after any of them you'd like to use - **every single one must be chained** with a `&` before the actual parameter, like `&t=` start or `&end` end.
-Now, most YTGIFs users are used to `https://youtu.be/videoID?t=0&end=100` for example. Starting form there, YT GIF supports additional parameters like `&s=` speed, ` &vl=` volume and [more...](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install#:~:text=Customize%20each%20YT%20GIF%2C%20even%20multiple%20ones%20within%20the%20same%20block)
 
 
 
----
-### Simulate url button to video component
+
+# Simulate url button to video component
 
 ### How do they differentiate from the native feature?
 - Currently, Roam Research's video buttons will format every single link; they will not respect current components `{{[[video]]}}` or any other.
@@ -178,7 +155,47 @@ YT GIF's Url Buttons will try to find the one the user requested (clicked on).
             - As explained above on the Caution Prompt, I'm very serious about functions that write on people's graphs; this is a script (and automated workflow) and it is susceptible to changes from the source - `Roam Research`.
 
 
+
+
 ---
+---
+
+
+
+# Embracing `{{[[embed]]}}` and `((xxxuidxxx))` block references
+YT GIFs, YT GIFs Timestamps & YT GIF Url Buttons will be rendered along with Roam Research's nesting block system. I encourage people to not hold back form exploding this `feature`; after all, it is what Roam Research users find more exciting about the software.
+
+### Limitations
+- **Sometimes** they will not work with **expanded** `{{=:|}}` tooltip cards. Why? [Because I can't find a way to retrieve their `uid` of origin.](https://roamresearch.slack.com/archives/CTAE9JC2K/p1638578496037700)
+
+
+
+---
+---
+
+
+
+### What is "roam/js/kauderk/yt-gif/settings" really doing in my graph?
+- The main and only purpose of this file is to store settings for the extension. Because Roam Research can be accesed from any device with a browser, it's wiser to store users data within their own graphs. Now, so far it stores numeric values, on and off switches, and strings.
+It is a [javascript file](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/v0.2.0/testing/js/settings-page.js) that uses the `Roam Alpha API` to read and write the settings in the form of blocks, with the following structure: 
+    -  `(xxxuidxxx)` : `yt_gif_settings_key` : `<value>`
+    
+### I change the `<values>` but nothing happens
+- Any manual change done to `"roam/js/kauderk/yt-gif/settings"` block's values will be reflected **once you reload your graph** (with the extension running).
+    - If you don't see `_opt` blocks nested along with a particular setting, most likely it is a binary input.
+        - `<1>` or `<true>` means `on`
+        - `<>` or `<false>` means `off`
+    - Now, if you see `<>` or `<1>`, it means they have never been updated within your graph - you never interacted with them - factory settings.
+
+
+
+---
+### What are the URL parameters? How do I use them?
+- Well, it depends, the way url parameters work:
+In this case, youtube video urls, `https://youtu.be/videoID?` notice the `?` question mark, the first parameter will be anything supported, like `t=` start and `end=` etc.
+But after any of them you'd like to use - **every single one must be chained** with a `&` before the actual parameter, like `&t=` start or `&end` end.
+Now, most YTGIFs users are used to `https://youtu.be/videoID?t=0&end=100` for example. Starting form there, YT GIF supports additional parameters like `&s=` speed, ` &vl=` volume and [more...](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install#:~:text=Customize%20each%20YT%20GIF%2C%20even%20multiple%20ones%20within%20the%20same%20block)
+
 
 
 
