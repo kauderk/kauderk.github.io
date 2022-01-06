@@ -2626,9 +2626,8 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
         function updateUrlIndexInsideAlias()
         {
-            uidResults['is component'].grandParentBlock = () => PopOverParent(uidResults[key].from); // once there (abstract enough to borrow functionalities)
             resObj.accUrlIndex += resObj.preUrlIndex;
-            resObj.preUrlIndex = uidResults['is component'].getUrlIndex();  // it also needs it's own urlIndex
+            resObj.preUrlIndex = uidResults[key].getUrlIndex();  // it also needs it's own urlIndex
         }
 
         async function getUrlMap_smart(uid)
