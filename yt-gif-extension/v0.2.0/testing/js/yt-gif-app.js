@@ -2971,6 +2971,9 @@ async function onPlayerReady(event)
     map.end = map?.end || t.getDuration();
     const clipSpan = () => map.end - map.start;
 
+    const loadingMarginOfError = 1; //seconds
+    let updateStartTime = map.start;
+
     const speed = map?.speed || 1;
     const entryVolume = validVolumeURL();
     const tickOffset = 1000 / speed;
@@ -2984,9 +2987,18 @@ async function onPlayerReady(event)
         rocording.target = t;
         rocording.seekToUpdatedTime = seekToUpdatedTime; // 🍝
     }
-
-    const loadingMarginOfError = 1; //seconds
-    let updateStartTime = map.start;
+    if (parent.hasAttribute('loaded'))
+    {
+        const sesion = lastBlockIDParameters.get(blockID);
+        if (sesion && typeof t.__proto__.previousTick == 'number')
+        {
+            sesion.updateTime = t.__proto__.previousTick;
+            t.__proto__.previousTick = null;
+        }
+        RunWithPreviousParamsONiframeLoad(); // The YT API reloads the iframe onload, it disorients the users, this a counter-measurement
+        HumanInteraction_FreezeAutoplay();
+        return;
+    }
 
 
     // javascript is crazy
@@ -3013,14 +3025,7 @@ async function onPlayerReady(event)
 
 
     // 1. previous parameters if available
-    const { previousTimestamp, previousVolume } = UI; // still inner objects
-    if (lastBlockIDParameters.has(blockID))
-    {
-        // 🚧? because, this object/functionalities are only relevant when it's iframe destroyed ≡ or when the script goes full cricle... Hmmmm?
-        const sesion = lastBlockIDParameters.get(blockID);
-        RunWithPrevious_TimestampStyle(sesion, previousTimestamp);
-        RunWithPrevious_VolumeStyle(sesion, previousVolume);
-    }
+    RunWithPreviousParamsONiframeLoad();
 
 
 
@@ -3102,7 +3107,24 @@ async function onPlayerReady(event)
 
 
 
+    // 12. Guard clause - onPlayerReady executed
+    parent.setAttribute('loaded', '');
+    iframe.addEventListener('load', () => t.__proto__.previousTick = tick(t));
+
+
+
     //#region 1. previous parameters
+    function RunWithPreviousParamsONiframeLoad()
+    {
+        const { previousTimestamp, previousVolume } = UI; // still inner objects
+        if (lastBlockIDParameters.has(blockID))
+        {
+            const sesion = lastBlockIDParameters.get(blockID);
+            RunWithPrevious_TimestampStyle(sesion, previousTimestamp);
+            RunWithPrevious_VolumeStyle(sesion, previousVolume);
+        }
+    }
+    /* ******************* */
     function RunWithPrevious_VolumeStyle(sesion, { strict_start_volume, start_volume, fixed_start_volume })
     {
         if (strict_start_volume.checked)
