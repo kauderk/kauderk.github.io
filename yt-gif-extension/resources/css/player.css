@@ -141,3 +141,11 @@
       var(--awaiting-player-pulse-anim-box-shadow-end);
   }
 }
+
+/* Hmmm yes go on */
+.yt-gif-wrapper.dont-focus-block {
+  margin: 2px;
+}
+.yt-gif-wrapper-parent {
+  cursor: initial;
+}
