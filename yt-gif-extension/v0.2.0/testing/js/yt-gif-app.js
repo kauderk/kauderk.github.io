@@ -4346,7 +4346,7 @@ async function getLastComponentInHierarchy(tempUID, _Config = YTGIF_Config, incl
 
 
     const baseObj = {
-        blockID: null, start: 0, end: 0, secHMS: 000, crrTime: null,
+        blockID: null, start: 0, end: 0, HMS: 000, crrTime: null,
     }
     const iframeMaps = {
         targets: {
@@ -4383,9 +4383,13 @@ async function getLastComponentInHierarchy(tempUID, _Config = YTGIF_Config, incl
 
         const key = Object.keys(iframeMaps).find(x => iframeMaps[x].condition(possibleBlockIDSufix));
 
+        const crrTime = iframeMaps[key]?.crrTime;
+        const startObj = boundaryObj(lastUrl.match(/(t=|start=)(?:(\d+))/)?.[2] || 0);
+        const endObj = boundaryObj(lastUrl.match(/(end=)(?:(\d+))/)?.[2] || 0);
+
         return {
-            secHMS: UTILS.convertHMS(iframeMaps[key]?.crrTime),
-            secondsOnly: iframeMaps[key]?.crrTime,
+            HMS: UTILS.convertHMS(crrTime),
+            S: crrTime,
             foundBlock: {
                 string,
                 uid,
@@ -4395,10 +4399,18 @@ async function getLastComponentInHierarchy(tempUID, _Config = YTGIF_Config, incl
             targetBlock: {
                 string: originalStr,
                 uid: tempUID,
-                start: UTILS.convertHMS(lastUrl.match(/(t=|start=)(?:(\d+))/)?.[2] || 0),
-                end: UTILS.convertHMS(lastUrl.match(/(end=)(?:(\d+))/)?.[2] || 0),
+                start: startObj,
+                end: endObj,
             },
         };
+
+        function boundaryObj(value)
+        {
+            return {
+                S: value,
+                HMS: UTILS.convertHMS(value)
+            }
+        }
     }
     return {};
 }
