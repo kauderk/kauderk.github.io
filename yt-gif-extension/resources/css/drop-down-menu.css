@@ -536,21 +536,11 @@ max-width: fit-content;
 }
 
 [yt-gif-url-btn] {
-  --btn-comment: #860000;
+  --btn-comment: var(--url-btn-bg);
   background-color: var(--btn-comment) !important;
 }
-[yt-gif-url-btn="start"]{
-  --c: #308d9f;
-}
-[yt-gif-url-btn="end"] {
-  --c: #30649f;
-}
-:is([yt-gif-url-btn="start"],[yt-gif-url-btn="end"]){
-  --btn-comment: var(--c);
-}
-
 [yt-gif-url-btn]:hover{
-  --btn-comment: #282828;
+  --btn-comment: var(--url-btn-bg);
 }
 
 
