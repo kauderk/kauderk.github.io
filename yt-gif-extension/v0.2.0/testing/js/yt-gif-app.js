@@ -1692,6 +1692,11 @@ async function Ready()
                 }));
 
 
+            // 7.
+            if (e['ctrlKey'])
+                ScrollToTargetWrapper(r);
+
+
             function seekingTo_cb()
             {
                 const bounded = ((tm = currentTime) => tm >= start && tm <= end)();
