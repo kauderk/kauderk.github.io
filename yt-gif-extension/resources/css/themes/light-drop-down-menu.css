@@ -37,9 +37,9 @@
   --awaiting-player-bg: rgba(85, 85, 185, 0.561);
   --awaiting-player-box-shadow: rgb(79 94 107);
 
-  --awaiting-player-pulse-anim-box-shadow-start: rgba(204, 169, 44, 0.4);
-  --awaiting-player-pulse-anim-box-shadow-mid: rgba(204, 169, 44, 0);
-  --awaiting-player-pulse-anim-box-shadow-end: rgba(204, 169, 44, 0);
+  --awaiting-player-pulse-anim-box-shadow-start: rgb(183 222 253 / 80%);
+  --awaiting-player-pulse-anim-box-shadow-mid: rgb(183 222 253 / 100%);
+  --awaiting-player-pulse-anim-box-shadow-end: rgb(183 222 253 / 80%);
 
   --ddm-tooltip-c: #202b33;
   --ddm-tooltip-bg: #76a1c3;
@@ -54,6 +54,6 @@
 
   --dropdown--bg-secondary: #e4f2ff;
 
-  --url-btn-bg: #282828;
-  --url-btn-bg-h: #213c4d;
+  --url-btn-bg: #e4e9ed;
+  --url-btn-bg-h: #bee0fc;
 }

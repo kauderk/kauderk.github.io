@@ -540,7 +540,7 @@ max-width: fit-content;
   background-color: var(--btn-comment) !important;
 }
 [yt-gif-url-btn]:hover{
-  --btn-comment: var(--url-btn-bg);
+  --btn-comment: var(--url-btn-bg-h);
 }
 
 
