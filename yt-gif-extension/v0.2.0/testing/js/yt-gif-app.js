@@ -1643,13 +1643,14 @@ async function Ready()
 
 
             // 1. pause everthing but this
-            [...document.querySelectorAll('.yt-gif-wrapper')]
+            const deactivateAll = [...document.querySelectorAll('.yt-gif-wrapper')]
                 .forEach(wrapper =>
                 {
                     UTILS.toggleAttribute(false, 'yt-active', wrapper);
                     if (wrapper != targetWrapper)
                         wrapper?.dispatchEvent(UTILS.simHoverOut());
                 });
+
 
             // 2. 
             const targetBlockID = [...recordedIDs.keys()].reverse().find(k => k?.startsWith(closestYTGIFparentID(targetWrapper)));
@@ -4721,7 +4722,7 @@ I want to add ☐ ☑
         add option - more buttons to the right
         to format start/end timestamp, if the url has those parameters
 
-    Timestamps
+    Timestamps TODO:
         option to display 
             formated MSH 00:00:00
             seconds only
