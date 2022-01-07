@@ -4206,27 +4206,42 @@ window.YTGIF = {
     // TODO: 
     getTimestampObj: getTimestampObj_smart
 }
-async function getTimestampObj_smart(pageRefSufx)
+async function getTimestampObj_smart(page)
 {
     const openInputBlock = getCurrentInputBlock();
     const uid = openInputBlock?.id?.slice(-9);
-    const failObj = { fmtSecHMS: '' };
+    const failObj = { S: null, HMS: null, };
 
-    if (!pageRefSufx || !uid || !openInputBlock)
+    if (!page || !uid || !openInputBlock)
         return failObj;
-    return await getTimestampObj(pageRefSufx, uid);
+    return await getTimestampObj(page, uid);
 
-    async function getTimestampObj(pageRefSufx, uid)
+    async function getTimestampObj(page, uid)
     {
-        const { secHMS, foundBlock, targetBlock } = await getLastComponentInHierarchy(uid);
+        let { HMS, S, foundBlock, targetBlock } = await getLastComponentInHierarchy(uid);
         if (!foundBlock) return failObj;
 
-        const { start, end, uid: tUid } = targetBlock; // bulky and clunky... because there only two options
-        const boundaries = (pageRefSufx == 'start') ? start : end;
-        const targetSecHMS = secHMS.includes('NaN') ? boundaries : secHMS;
-        const fmtSecHMS = `{{[[yt-gif/${pageRefSufx}]]: ${targetSecHMS}}}`;
+        const { uid: tUid } = targetBlock; // bulky and clunky... because there only two options
 
-        return { fmtSecHMS, uid: tUid }
+        HMS = (!HMS || HMS.includes('NaN')) ? targetBlock[page].HMS : HMS;
+        S = (!S) ? targetBlock[page].S : S;
+
+        return {
+            S: {
+                value: parseInt(S),
+                fmt: fmtCmpnt(S),
+            },
+            HMS: {
+                value: HMS,
+                fmt: fmtCmpnt(HMS),
+            },
+            uid: tUid,
+        }
+
+        function fmtCmpnt(select)
+        {
+            return `{{[[yt-gif/${page}]]: ${select} }}`;
+        }
     }
 }
 function getCurrentInputBlock()
