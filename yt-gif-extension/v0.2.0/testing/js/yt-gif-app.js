@@ -669,6 +669,10 @@ async function Ready()
                         case 'label':
                             parentObj[childKey].innerHTML = sessionValue;
                             break;
+                        case 'select':
+                            const select = parentObj[childKey];
+                            select.value = sessionValue.toString();
+                            select.previousElementSibling?.setAttribute('for', select.id);
                         default:
                             const binaryInput = parentObj[childKey];
                             binaryInput.checked = UTILS.isTrue(sessionValue);
@@ -729,7 +733,7 @@ async function Ready()
     function updateSettingsPageBlock(e, el, keyObj, siblingKeys)
     {
         const { type, checked, value } = el;
-        let replaceWith = (value).toString(); // range - checkbox - radio - label
+        let replaceWith = (value).toString(); // range - checkbox - radio - label - select
 
         if (type == 'checkbox' || type == 'radio')
         {
@@ -2046,7 +2050,7 @@ async function Ready()
             UTILS.toggleClasses(true, ['yt-gif'], rm_btn);
             rm_btn.insertAdjacentHTML('afterbegin', links.html.fetched.urlBtn);
 
-            rm_btn.querySelector('[yt-gif-url-btn]').onclick = async function (e)
+            rm_btn.querySelector('[yt-gif-url-btn="yt-gif"]').onclick = async function (e)
             {
                 e.stopPropagation();
                 e.preventDefault();
@@ -2228,7 +2232,7 @@ async function Ready()
         }
         else
         {
-            const allUrlBtns = [...document.querySelectorAll(`.yt-gif-url-btn-wrapper`)]
+            const allUrlBtns = [...document.querySelectorAll(`.yt-gif-url-btns,.yt-gif-url-btn-wrapper`)]
                 .forEach(el => el.remove());
             const allUrlBtns_rm = [...document.querySelectorAll('.bp3-icon-video')]
                 .forEach(el => el.classList.remove('yt-gif'));
@@ -4196,6 +4200,7 @@ function properBlockIDSufix(url, urlIndex)
 
 //#region Timestamp
 window.YTGIF = {
+    // TODO: 
     getTimestampObj: getTimestampObj_smart
 }
 async function getTimestampObj_smart(pageRefSufx)
