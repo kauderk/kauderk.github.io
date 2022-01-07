@@ -539,7 +539,7 @@ max-width: fit-content;
   --btn-comment: #860000;
   background-color: var(--btn-comment) !important;
 }
-[yt-gif-url-btn]:is([timestamp-style="start"],[timestamp-style="end"]){
+[yt-gif-url-btn]:is([yt-gif-url-btn="start"],[yt-gif-url-btn="end"]){
   --btn-comment: var(--c);
 }
 
