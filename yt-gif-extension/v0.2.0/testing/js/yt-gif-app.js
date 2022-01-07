@@ -4653,7 +4653,25 @@ I want to add ☐ ☑
         just like sound clouds timestamp/comment timeline
             https://soundcloud.com/codytxr0kr/the-joe-rogan-experience-279
 
+
+    Url Btn formatter + Timestamps
+        add option - more buttons to the right
+        to format start/end timestamp, if the url has those parameters
+
+    Timestamps
+        option to display 
+            formated MSH 00:00:00
+            seconds only
+            original or formated MSH 00:00:00
+
+    controls
+        brake down url into start/end timestamps
+            on the start component, append the remainings of the yt gif component hidden text
+
 added
+    InAndOutKeys + Click Events (Timestamps) 
+        Play (focus on player) Ctrl ☑ ☑
+    
     visible_clips_start_to_play_unmuted synergy with fullscreenStyle ☑ ☑
         each does what they're suposed be doing
             when entering fullscreen mode
@@ -4825,6 +4843,12 @@ Fixed
         then search every instance of url (match)
         then check if the url is NOT inside the boundaries
         then replace substring with the yt-gif componenent
+
+    url btn + click events
+        middle click
+            will open on cross root, 
+            but if on your current root you have videos playing OFF SCREEN
+            they will be ignored
 
 
 bugs that fixed themselves
