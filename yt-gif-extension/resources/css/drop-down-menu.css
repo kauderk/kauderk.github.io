@@ -420,10 +420,10 @@ a.rm-video-timestamp[active-timestamp]
   box-shadow: inset 0 0 2px 0px var(--c);
   border-radius: 5px;
 }
-a.rm-video-timestamp[timestamp-style="start"]{
+[timestamp-style="start"]{
   --c: #308d9f;
 }
-a.rm-video-timestamp[timestamp-style="end"] {
+[timestamp-style="end"] {
   --c: #30649f;
 }
 
@@ -507,25 +507,32 @@ max-width: fit-content;
 }
 
 /* accomodate for tooltips */
-.bp3-icon-video.yt-gif:hover 
-.yt-gif-url-btn-wrapper{
- opacity: 1;
-}
 .yt-gif-max-tooltip::before{
   width: max-content !important;
   max-width: max-content !important;
 }
 
-/* style */
-.yt-gif-url-btn-wrapper{
+/* row of url btns */
+.bp3-icon-video.yt-gif:hover 
+.yt-gif-url-btns{
+ display: flex;
+}
+.yt-gif-url-btns{
   position: absolute;
   left: 24px;
-  opacity: 0;
+  display: flex;
+  gap: .1ch;
+}
+.yt-gif-url-btns {
+  display: none;
 }
 
 [yt-gif-url-btn] {
   --btn-comment: #860000;
   background-color: var(--btn-comment) !important;
+}
+[yt-gif-url-btn]:is([timestamp-style="start"],[timestamp-style="end"]){
+  --btn-comment: var(--c);
 }
 
 [yt-gif-url-btn]:hover{
