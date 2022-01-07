@@ -1856,10 +1856,12 @@ async function Ready()
     // 6.3.1
     async function addBlockTimestamp_smart_local(pageRefSufx)
     {
-        const { fmtSecHMS, uid } = await getTimestampObj_smart(pageRefSufx);
+        const timestampObj = await getTimestampObj_smart(pageRefSufx);
+        const uid = timestampObj.uid;
+        const component = timestampObj[UI.select.timestamp_workflow_grab.value]?.fmt ?? '';
         if (!uid) return;
 
-        const { updatedString, el } = concatStringAtCaret(getCurrentInputBlock(), fmtSecHMS);
+        const { updatedString, el } = concatStringAtCaret(getCurrentInputBlock(), component);
 
         await RAP.updateBlock(uid, updatedString);
         await RAP.sleep(50);
