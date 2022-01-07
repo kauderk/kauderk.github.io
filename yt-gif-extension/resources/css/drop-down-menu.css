@@ -497,6 +497,14 @@ max-width: fit-content;
 }
 
 /* ************************************ */
+/* edit blocks near yt-gifs */
+.yt-gif-wrapper.dont-focus-block {
+  margin: 2px;
+}
+.yt-gif-wrapper-parent {
+  cursor: initial;
+}
+
 /* simulate empty selector */
 .bp3-icon-video.yt-gif{
   padding: 0 !important;
