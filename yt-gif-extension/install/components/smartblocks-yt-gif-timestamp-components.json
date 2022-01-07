@@ -7,13 +7,13 @@
         },
         "children": [
             {
-                "edit-time": 1639793705265,
+                "edit-time": 1639794089585,
                 "children": [
                     {
-                        "string": "<%JA:```javascript\nconst obj = await window.YTGIF?.getTimestampObj?.(\"start\");\nreturn obj?.fmtSecHMS || '';```%>",
+                        "string": "<%JA:```javascript\nconst obj = await window.YTGIF?.getTimestampObj?.(\"start\");\nconst select = UI?.select?.timestamp_workflow_grab?.value;\nreturn obj?.[select]?.fmt ?? '';```%>",
                         "create-time": 1639730540368,
                         "uid": "4FkQaNVBP",
-                        "edit-time": 1639733605742,
+                        "edit-time": 1641559952147,
                         ":create/user": {
                             ":user/uid": "HO1iZa5FjjQw6q3hLDx2bOSJewJ2"
                         },
@@ -27,7 +27,7 @@
                         "uid": "Ms9z4jEq9"
                     }
                 ],
-                "uid": "a3xiisTfh",
+                "uid": "fBC0TjR9P",
                 ":block/refs": [
                     {
                         ":block/uid": "Ms9z4jEq9"
@@ -37,7 +37,7 @@
                 ":create/user": {
                     ":user/uid": "HO1iZa5FjjQw6q3hLDx2bOSJewJ2"
                 },
-                "create-time": 1639793367955,
+                "create-time": 1639794047104,
                 ":edit/user": {
                     ":user/uid": "HO1iZa5FjjQw6q3hLDx2bOSJewJ2"
                 }
@@ -46,10 +46,10 @@
                 "edit-time": 1639732110284,
                 "children": [
                     {
-                        "string": "<%JA:```javascript\nconst obj = await window.YTGIF?.getTimestampObj?.(\"end\");\nreturn obj?.fmtSecHMS || '';```%>",
+                        "string": "<%JA:```javascript\nconst obj = await window.YTGIF?.getTimestampObj?.(\"end\");\nconst select = UI?.select?.timestamp_workflow_grab?.value;\nreturn obj?.[select]?.fmt ?? '';```%>",
                         "create-time": 1639730577119,
                         "uid": "DYsYiyT01",
-                        "edit-time": 1639733787761,
+                        "edit-time": 1641559960228,
                         ":create/user": {
                             ":user/uid": "HO1iZa5FjjQw6q3hLDx2bOSJewJ2"
                         },
