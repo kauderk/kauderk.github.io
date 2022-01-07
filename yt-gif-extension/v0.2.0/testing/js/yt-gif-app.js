@@ -3101,9 +3101,12 @@ async function onPlayerReady(event)
     {
         while (document.body.contains(iframe) && !t?.getCurrentTime?.())
             await RAP.sleep(500);
+
         seekToUpdatedTime(map.updateTime ?? map.start);
         togglePlay(true);
         isSoundingFine(!map.mute);
+
+        delete map['play-right-away'];
     }
     else
     {
