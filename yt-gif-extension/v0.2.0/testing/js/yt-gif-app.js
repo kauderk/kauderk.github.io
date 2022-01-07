@@ -527,6 +527,7 @@ async function Ready()
 
     const { simulate_roam_research_timestamps } = UI.display;
     const { timestamp_shortcuts_enabled } = UI.timestamps;
+    const { timestamp_workflow_display } = UI.select;
 
     let { timestampObserver, keyupEventHanlder } = window.YT_GIF_OBSERVERS;
     timestampObserver?.disconnect();
@@ -544,6 +545,7 @@ async function Ready()
     simulate_roam_research_timestamps.addEventListener('change', (e) => toggleTimestampEmulation(e.currentTarget.checked));
     timestamp_shortcuts_enabled.addEventListener('change', e => ToogleTimestampShortcuts(e.target.checked));
 
+    timestamp_workflow_display.addEventListener('change', e => ChangeTimestamapsDisplay(e.currentTarget.value));
 
 
     // 7. simulate inline url btn
@@ -1456,14 +1458,17 @@ async function Ready()
             targetNodeParent = UTILS.ChangeElementType(targetNodeParent, 'div');
             targetNodeParent.className = timestampObj.parent.className;
             targetNodeParent.innerHTML = '';
-            const targetNode = UTILS.elm('', 'a');
-            targetNodeParent.appendChild(targetNode);
 
+            const targetNode = UTILS.elm('', 'a');
             targetNode.setAttribute(timestampObj.attr.timestampStyle, page);
             targetNode.setAttribute(timestampObj.attr.emulation, '');
             targetNode.setAttribute(timestampObj.attr.timestamp, timestampContent);
             targetNode.className = timestampObj.roamClassName;
             targetNode.innerHTML = timestampContent;
+            targetNode.innerHTML = fmtTimestamp(timestamp_workflow_display.value)(targetNode); // javascript is crazy!
+
+            targetNodeParent.appendChild(targetNode);
+
 
             const targetNodePpts = {
                 fromUniqueUid: fromUid + similarCountButRoot,
@@ -2033,6 +2038,27 @@ async function Ready()
 
         await cleanAndSetUp_TimestampEmulation(found);
     }
+
+
+    // 7.0 display
+    function ChangeTimestamapsDisplay(value)
+    {
+        const fmt = fmtTimestamp(value);
+
+        document.querySelectorAll('[yt-gif-timestamp-emulation]')
+            .forEach(tms => tms.innerHTML = fmt(tms));
+    }
+    function fmtTimestamp(value)
+    {
+        let fmt = (tms) => tms.getAttribute('timestamp');
+
+        if (value == 'HMS')
+            fmt = (tms) => UTILS.convertHMS(UTILS.HMSToSecondsOnly(tms.innerHTML));
+        else if (value == 'S')
+            fmt = (tms) => UTILS.HMSToSecondsOnly(tms.innerHTML);
+        return fmt;
+    }
+
     //#endregion
 
 
