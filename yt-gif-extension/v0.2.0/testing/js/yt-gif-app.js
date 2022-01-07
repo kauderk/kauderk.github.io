@@ -1665,7 +1665,7 @@ async function Ready()
             UTILS.toggleAttribute(true, 'last-active-timestamp', targetNodePpts.self.targetNode);
             UTILS.toggleAttribute(true, 'yt-active', targetWrapper);
 
-            
+
             // 4.
             const start = sec("start") ? secondsOnly : (pearSec() || 0);
             const end = sec("end") ? secondsOnly : pearSec() || record?.player?.getDuration?.();
@@ -3047,8 +3047,6 @@ async function onPlayerReady(event)
 
     // 3. Mouse over the frame functionality
     parent.addEventListener('mouseenter', InState);
-    //parent.addEventListener('customMouseleave', StopAllOtherPlayers);
-    //parent.addEventListener('mouseleave', StopAllOtherPlayers);
     parent.addEventListener('mouseleave', OutState);
 
 
@@ -4721,8 +4719,8 @@ added
 
 
 TODO ☐ ☑
-when changing the url on a yt gif compoenent, if it has rendered block references
-        they don't update the url ☐
+    when changing the url on a yt gif compoenent, if it has rendered block references
+            they don't update the url ☐
 
 
 Features on hold ☐ ☐
