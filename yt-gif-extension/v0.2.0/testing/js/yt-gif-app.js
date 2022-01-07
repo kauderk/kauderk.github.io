@@ -2050,7 +2050,10 @@ async function Ready()
             UTILS.toggleClasses(true, ['yt-gif'], rm_btn);
             rm_btn.insertAdjacentHTML('afterbegin', links.html.fetched.urlBtn);
 
-            rm_btn.querySelector('[yt-gif-url-btn="yt-gif"]').onclick = async function (e)
+            [...rm_btn.querySelectorAll('[yt-gif-url-btn]')]
+                .forEach(btn => btn.onclick = OnYtGifUrlBtn)
+
+            async function OnYtGifUrlBtn(e)
             {
                 e.stopPropagation();
                 e.preventDefault();
