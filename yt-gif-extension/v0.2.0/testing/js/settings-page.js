@@ -108,6 +108,7 @@ window.YT_GIF_SETTINGS_PAGE = {
         },
     },
     select: {
+        baseKey: BaseSetting(),
         timestamp_workflow_display: {
             baseKey: BaseInitSetting('HMS', chk),
             twd_opt: InlinePmt(`default -> HMS - Hours, Minutes, Seconds or S - seconds only`),
