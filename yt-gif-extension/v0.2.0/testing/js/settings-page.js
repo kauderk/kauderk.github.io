@@ -107,6 +107,16 @@ window.YT_GIF_SETTINGS_PAGE = {
             ibs_opt: InlinePmt(`integers from 1 to 30`),
         },
     },
+    select: {
+        timestamp_workflow_display: {
+            baseKey: BaseInitSetting('HMS', chk),
+            twd_opt: InlinePmt(`default -> HMS - Hours, Minutes, Seconds or S - seconds only`),
+        },
+        timestamp_workflow_grab: {
+            baseKey: BaseInitSetting('HMS', chk),
+            twg_opt: InlinePmt(`default -> HMS - Hours, Minutes, Seconds or S - seconds only`),
+        },
+    },
     InAndOutKeys: {
         baseKey: BaseSetting(chk),
         ctrlKey: dom('1'),
