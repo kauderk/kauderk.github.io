@@ -550,8 +550,6 @@ async function Ready()
 
     // 7. simulate inline url btn
     //#region relevant variables
-    const urlBtnClasses = 'bp3-button bp3-minimal bp3-icon-video bp3-small dont-focus-block';
-    const urlBtnClassesArr = urlBtnClasses.split(' ');
     const { simulate_url_to_video_component } = UI.display;
     links.html.fetched.urlBtn = await UTILS.fetchTextTrimed(links.html.urlBtn);
     //#endregion
@@ -2074,19 +2072,34 @@ async function Ready()
     }
     function ReadyUrlBtns(added)
     {
-        added.forEach((rm_btn, i, a) =>
+        for (const rm_btn of added)
         {
             UTILS.toggleClasses(true, ['yt-gif'], rm_btn);
             rm_btn.insertAdjacentHTML('afterbegin', links.html.fetched.urlBtn);
 
-            [...rm_btn.querySelectorAll('[yt-gif-url-btn]')]
-                .forEach(btn => btn.onclick = OnYtGifUrlBtn)
 
-            async function OnYtGifUrlBtn(e)
+            const grabS = () => UI.select.timestamp_workflow_grab.value == 'S';
+            const floatParam = (p, url) => new RegExp(`((?:${p})=)((\\d+)?[.]?\\d+)`, 'gm')?.exec(url)?.[2] || '0';
+            const startParam = (url) => grabS() ? floatParam('t|start', url) : UTILS.convertHMS(floatParam('t|start', url));
+            const endParam = (url) => grabS() ? floatParam('end', url) : UTILS.convertHMS(floatParam('end', url));
+
+
+            urlBtn('yt-gif').onclick = async (e) => await OnYtGifUrlBtn(e, (url) => `{{[[yt-gif]]: ${url} }}`);
+            urlBtn('start').onclick = async (e) => await OnYtGifUrlBtn(e, (url) => `{{[[yt-gif/start]]: ${startParam(url)} }}`);
+            urlBtn('end').onclick = async (e) => await OnYtGifUrlBtn(e, (url) => `{{[[yt-gif/end]]: ${endParam(url)} }}`);
+            urlBtn('start|end').onclick = async (e) => await OnYtGifUrlBtn(e, (url) => `{{[[yt-gif/start]]: ${startParam(url)} }} {{[[yt-gif/end]]: ${endParam(url)} }}`);
+
+
+
+            async function OnYtGifUrlBtn(e, fmtCmpnt_cb)
             {
+                // 0.
+                const tEl = e.currentTarget;
                 e.stopPropagation();
                 e.preventDefault();
 
+
+                // 1. execute further if the user has valid keys
                 const block = closestBlock(rm_btn);
                 const uid = block?.id?.slice(-9);
                 const { url, ytUrlEl } = getYTUrlObj(rm_btn);
@@ -2096,73 +2109,95 @@ async function Ready()
                 if (!uid || !url)
                     return logUrlBtnWarning();
 
-                awaitingEl(rm_btn, async () =>
+
+                // 2. protect against spamming clicks
+                const awaiting = (bol) => awaitingAtrr(bol, rm_btn) && awaitingAtrr(bol, tEl);
+
+                if (rm_btn.hasAttribute('awaiting'))
+                    return;
+
+                awaiting(true);
+
+
+                // 3. execute further if the block and the urlBtn exist
+                const blockReq = await RAP.getBlockInfoByUIDM(uid);
+                const info = blockReq[0]?.[0];
+                if (!info) return;
+
+                const index = ElementsPerBlock(block, `.bp3-icon-video + a[href="${url}"]`).indexOf(ytUrlEl);
+                if (index == -1)
+                    return logUrlBtnWarning();
+
+
+                // 4. gather spots/boundaries where roam does NOT render information
+                const IndexObj = (rgx, type) => indexPairObj(rgx, info.string, type);
+                const BadIndexMatches = [
+                    ...IndexObj(/(`.+?`)|(`([\s\S]*?)`)/gm, 'codeBlocks'), // codeBlocks
+
+                    ...filterOutCode(IndexObj(/{{=:(.+?)\|(.+)}}/gm, 'tooltipPrompt'))
+                        .map(op =>
+                        {
+                            const y = { ...op };
+                            y.start = op.start + 4; // 4 = {{=:
+                            y.end = op.end - (1 + op.groups[2]?.length + 2); // 1 = |     +    [2].length = hiidden content   +    2 = }}
+                            y.match = op.groups[1]; // prompt
+                            return y;
+                        }), // tooltipPrompt
+
+                    ...filterOutCode(IndexObj(/({{.+})/gm, 'components')), // components
+                ];
+
+
+                // 5. valid spots where you can insert fmt components - user requests
+                const urlsMatches = IndexObj(new RegExp(`(${url.replace(/[?\\]/g, '\\$&')})`, 'gm'), 'urlsMatch');
+                const freeUrls = urlsMatches.filter(uo =>
                 {
-                    const blockReq = await RAP.getBlockInfoByUIDM(uid);
-                    const info = blockReq[0]?.[0];
-                    if (!info) return;
+                    let specialCase = false;
+                    const badIndex = BadIndexMatches
+                        .some(bio =>
+                        {
+                            const bounded = uo.start >= bio.start && uo.end <= bio.end;
+                            specialCase = bio.type == 'tooltipPrompt';
+                            return bounded;
+                        });
 
-                    const index = ElementsPerBlock(block, `.bp3-icon-video + a[href="${url}"]`).indexOf(ytUrlEl);
-                    if (index == -1)
-                        return logUrlBtnWarning();
-
-
-                    const IndexObj = (rgx, type) => indexPairObj(rgx, info.string, type);
-                    const BadIndexMatches = [
-                        ...IndexObj(/(`.+?`)|(`([\s\S]*?)`)/gm, 'codeBlocks'), // codeBlocks
-
-                        ...filterOutCode(IndexObj(/{{=:(.+?)\|(.+)}}/gm, 'tooltipPrompt'))
-                            .map(op =>
-                            {
-                                const y = { ...op };
-                                y.start = op.start + 4; // 4 = {{=:
-                                y.end = op.end - (1 + op.groups[2]?.length + 2); // 1 = |     +    [2].length = hiidden content   +    2 = }}
-                                y.match = op.groups[1]; // prompt
-                                return y;
-                            }), // tooltipPrompt
-
-                        ...filterOutCode(IndexObj(/({{.+})/gm, 'components')), // components
-                    ];
+                    if (specialCase)
+                        return true;
+                    return !badIndex;
+                })
 
 
-                    const urlsMatches = IndexObj(new RegExp(`(${url.replace(/[?\\]/g, '\\$&')})`, 'gm'), 'urlsMatch');
-                    const freeUrls = urlsMatches.filter(uo =>
-                    {
-                        let specialCase = false;
-                        const badIndex = BadIndexMatches
-                            .some(bio =>
-                            {
-                                const bounded = uo.start >= bio.start && uo.end <= bio.end;
-                                specialCase = bio.type == 'tooltipPrompt';
-                                return bounded;
-                            });
-
-                        if (specialCase)
-                            return true;
-                        return !badIndex;
-                    })
+                // 6. return if any errors
+                let string;
+                try
+                {
+                    string = replaceString(info.string, freeUrls[index].start, freeUrls[index].end, fmtCmpnt_cb(url));
+                }
+                catch (error)
+                {
+                    return logUrlBtnWarning();
+                }
 
 
-                    let string;
-                    try
-                    {
-                        string = replaceString(info.string, freeUrls[index].start, freeUrls[index].end, `{{[[yt-gif]]: ${url} }}`);
-                    }
-                    catch (error)
-                    {
-                        logUrlBtnWarning();
-                        return;
-                    }
+                // 7. FINALLY! update the block
+                UIDtoURLInstancesMapMap.delete(uid);
+                await RAP.updateBlock(uid, string, info.open);
 
-                    UIDtoURLInstancesMapMap.delete(uid);
-                    await RAP.updateBlock(uid, string, info.open);
-                });
+
+                // 8. set free for any possible future clicks
+                awaiting(false);
+
+
                 function logUrlBtnWarning()
                 {
                     console.warn(`YT GIF Url Button: couldn't find url within the block: ((${uid}))`);
                 }
-            };
-        });
+            }
+            function urlBtn(page)
+            {
+                return rm_btn.querySelector(`[yt-gif-url-btn="${page}"]`);
+            }
+        }
 
 
         function indexPairObj(regex, str, type)
@@ -2206,6 +2241,19 @@ async function Ready()
                 throw new RangeError(`end index ${end} is out of the range ${start}~${str.length}`);
             }
             return str.substring(0, start) + replace + str.substring(end);
+        }
+        async function awaitingEl(el, callback)
+        {
+            const awaiting = (bol) => awaitingAtrr(bol, el);
+
+            if (el.hasAttribute('awaiting'))
+                return awaiting(false);
+
+            awaiting(true);
+
+            await callback();
+
+            awaiting(false);
         }
     }
     function getYTUrlObj(rm_btn)
@@ -4254,6 +4302,7 @@ async function getTimestampObj_smart(page)
 
         HMS = (!HMS || HMS.includes('NaN')) ? targetBlock[page].HMS : HMS;
         S = (!S) ? targetBlock[page].S : S;
+        S = parseInt(S);
 
         return {
             S: {
@@ -4292,19 +4341,6 @@ function ElementsPerBlock(block, selector)
     return [...block?.querySelectorAll(selector)]?.filter(b => closestBlock(b).id == block.id) || [];
 }
 /* ***************** */
-async function awaitingEl(el, callback)
-{
-    const awaiting = (bol) => awaitingAtrr(bol, el);
-
-    if (el.hasAttribute('awaiting'))
-        return awaiting(false);
-
-    awaiting(true);
-
-    await callback();
-
-    awaiting(false);
-}
 function awaitingAtrr(bol, el)
 {
     return UTILS.toggleAttribute(bol, 'awaiting', el);
