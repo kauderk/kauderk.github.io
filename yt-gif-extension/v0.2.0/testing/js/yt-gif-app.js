@@ -1623,7 +1623,7 @@ async function Ready()
             const isRendered = prevWrapper instanceof Element && UTILS.isElementVisible(prevWrapper);
             await RAP.sleep(isRendered ? 50 : 500); // visible? then quicker
 
-            lastWrapperInBlock(crossRoot)?.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+            ScrollToTargetWrapper(crossRoot);
 
             await playLastBlockOnly_SimHover(crossRoot);
             return NoLongerAwaiting();
@@ -1634,9 +1634,10 @@ async function Ready()
 
 
             // 1. pause everthing but this
-            UTILS.inViewportElsHard([...document.querySelectorAll('.yt-gif-wrapper')])
+            [...document.querySelectorAll('.yt-gif-wrapper')]
                 .forEach(wrapper =>
                 {
+                    UTILS.toggleAttribute(false, 'yt-active', wrapper);
                     if (wrapper != targetWrapper)
                         wrapper?.dispatchEvent(UTILS.simHoverOut());
                 });
@@ -1662,8 +1663,9 @@ async function Ready()
                 toogleActiveAttr(true, targetNodePpts.self.targetNode);
 
             UTILS.toggleAttribute(true, 'last-active-timestamp', targetNodePpts.self.targetNode);
+            UTILS.toggleAttribute(true, 'yt-active', targetWrapper);
 
-
+            
             // 4.
             const start = sec("start") ? secondsOnly : (pearSec() || 0);
             const end = sec("end") ? secondsOnly : pearSec() || record?.player?.getDuration?.();
@@ -1770,6 +1772,10 @@ async function Ready()
         {
             //lastWrapperInBlock(r)?.setAttribute('play-right-away', false);
             lastWrapperInBlock(r)?.dispatchEvent(UTILS.simHoverOut()); // hover out -> videoIsPlayingWithSound(false)
+        }
+        function ScrollToTargetWrapper(r)
+        {
+            lastWrapperInBlock(r)?.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
         }
         function pulse(anim)
         {
@@ -3292,14 +3298,14 @@ async function onPlayerReady(event)
         [...document.querySelectorAll(`[${attr}]`)]
             .forEach(el =>
             {
-                if (ignoreSelf && el == iframe)
+                if (ignoreSelf && el == parent)
                     return
                 UTILS.toggleAttribute(bol, attr, el)
             })
     }
     function toogleActive(bol)
     {
-        UTILS.toggleAttribute(bol, 'yt-active', iframe)
+        UTILS.toggleAttribute(bol, 'yt-active', parent)
     }
     /* ********************** */
     function MuteAllOtherPlayers()
@@ -3609,7 +3615,7 @@ async function onPlayerReady(event)
         function stopIfInactive()
         {
             if (
-                !iframe.hasAttribute('yt-active') ||
+                !parent.hasAttribute('yt-active') ||
                 !UI.playStyle.play_last_active_player_off_intersection.checked
             )
                 return togglePlay(false)
