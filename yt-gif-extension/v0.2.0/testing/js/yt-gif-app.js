@@ -614,7 +614,7 @@ async function Ready()
     }
     async function smart_Load_DDM_onTopbar(dropDownMenu)
     {
-        //⚠️
+        // caution:
         const rm_moreIcon = document.querySelector('.bp3-icon-more').closest('.rm-topbar .rm-topbar__spacer-sm + .bp3-popover-wrapper');
         const htmlText = await UTILS.FetchText(dropDownMenu);
         const previousList = DDM_Els();
@@ -769,7 +769,7 @@ async function Ready()
     //#region 3. events pre observers
     function DDM_IconFocusBlurEvents(ddm_icon, ddm_focus, ddm_info_message_selector)
     {
-        // 1. ⚠️ special case
+        // 1. caution: special case
         const { icon, mainDDM } = GetMainYTGIFicon(ddm_icon);
         const classNames = [ddm_focus]; // used inside two local func
 
@@ -923,7 +923,7 @@ async function Ready()
     }
     async function navigateToSettingsPageInSidebar(settingsBtnID, dwp_message, stt_allow)
     {
-        // ⚠️
+        // caution:
         const SttPages = () => UTILS.innerElsContains('.rm-sidebar-outline .rm-title-display span', TARGET_PAGE);
         const anySidebarInstance = () => SttPages().length >= 1;
 
@@ -936,7 +936,7 @@ async function Ready()
 
         settingsBtn.addEventListener('click', async function (e)
         {
-            // ⚠️⚠️⚠️ how do you communicate with the other scripts? Interfaces? Events? WindowEvents?
+            // caution: how do you communicate with the other scripts? Interfaces? Events? WindowEvents?
             await RAP.setSideBarState(3);
             await RAP.sleep(50); // an observer is the safest option though
 
@@ -3333,7 +3333,7 @@ async function onPlayerReady(event)
         t.__proto__.newVol = t.getVolume(); // spaguetti isSoundingFine unMute
         t.__proto__.globalHumanInteraction = false;
 
-        //ﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠ//the same as: if it's true, then the other posibilities are false
+        //                            the same as: if it's true, then the other posibilities are false
         if (anyValidInAndOutKey(e) && !UI.muteStyle.muted_on_any_mouse_interaction.checked)
         {
             toogleActive(true)
@@ -3342,7 +3342,7 @@ async function onPlayerReady(event)
         else
         {
             toogleActive(false)
-            //ﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠ// playing
+            //                                                playing
             togglePlay(!AnyPlayOnHover() && (t.getPlayerState() === 1))
             isSoundingFine(false)
         }
@@ -4280,7 +4280,6 @@ function properBlockIDSufix(url, urlIndex)
 
 //#region Timestamp
 window.YTGIF = {
-    // TODO: 
     getTimestampObj: getTimestampObj_smart
 }
 async function getTimestampObj_smart(page)
@@ -4753,22 +4752,13 @@ I want to add ☐ ☑
         just like sound clouds timestamp/comment timeline
             https://soundcloud.com/codytxr0kr/the-joe-rogan-experience-279
 
-
-    Url Btn formatter + Timestamps
-        add option - more buttons to the right
-        to format start/end timestamp, if the url has those parameters
-
-    Timestamps TODO:
+added
+    Timestamps
         option to display 
             formated MSH 00:00:00
             seconds only
             original or formated MSH 00:00:00
 
-    controls
-        brake down url into start/end timestamps
-            on the start component, append the remainings of the yt gif component hidden text
-
-added
     InAndOutKeys + Click Events (Timestamps) 
         Play (focus on player) Ctrl ☑ ☑
     
@@ -4842,9 +4832,15 @@ TODO ☐ ☑
 
 
 Features on hold ☐ ☐
-
+    controls (can't add <select> tags under rm_input-block)
+        brake down url into start/end timestamps
+            on the start component, append the remainings of the yt gif component hidden text
 
 Discarted
+    Url Btn formatter + Timestamps (display all anyways)
+        add option - more buttons to the right
+        to format start/end timestamp, if the url has those parameters
+
     shortcuts for any btn ✘
     all hoverable actions, after 500ms the item it's checked // and this feature own btn ofcourse ✘
 
