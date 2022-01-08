@@ -66,6 +66,26 @@ They can vary depending on the `Play Style` or `Sound Style` you choose.
 - I'm afraid it's a Javascript cross Browser compatibility issue.
 #### The capture smartblocks don't work
 - There are `Smartblocks` and `SmartblocksV2`, the YT GIF extension uses the latest version of Smartblocks.
+- Copy and paste them from here, or [import the smartblocks again](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/components).
+
+    - 
+        ``` 
+        #42SmartBlock YTGIF start timestamp 
+        ```
+        -   ``` 
+            const obj = await window.YTGIF?.getTimestampObj?.("start");
+            const select = UI?.select?.timestamp_workflow_grab?.value;
+            return obj?.[select]?.fmt ?? ''; 
+            ```
+    - 
+        ``` 
+        #42SmartBlock YTGIF end timestamp 
+        ```
+        -   ``` 
+            const obj = await window.YTGIF?.getTimestampObj?.("start");
+            const select = UI?.select?.timestamp_workflow_grab?.value;
+            return obj?.[select]?.fmt ?? ''; 
+            ```
 
 
 
