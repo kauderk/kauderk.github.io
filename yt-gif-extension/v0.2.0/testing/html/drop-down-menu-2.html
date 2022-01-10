@@ -83,6 +83,13 @@
                                     </label>
                                     <input type="radio" name="timestamp_recovery_styles" id="timestamp_recovery_soft">
                                 </span>
+                                <span class="dropdown-item" data-bind="timestamp-experience-item">
+                                    <label for="" class="dropdown-item-description"
+                                        data-tooltip="Once the timestamp is created/rendered">Restore last active
+                                        timestamp</label>
+                                    <input type="checkbox" name="timestamp_recovery_styles"
+                                        id="timestamp_restore_last_active">
+                                </span>
 
                                 <span class="dropdown-item-separator"></span>
                                 <span class="dropdown-item">
@@ -107,6 +114,14 @@
                                     <input type="checkbox" name="timestamp_checkbox"
                                         id="timestamp_reset_on_last_active_container_removed">
                                 </span>
+                                <span class="dropdown-item">
+                                    <label for="" class="dropdown-item-description"
+                                        data-tooltip="Finish a set of timestamp boundaries, then move to the next one">Loop
+                                        through rendered timestamps
+                                    </label>
+                                    <input type="checkbox" name="timestamp_checkbox" id="timestamp_loop_hierarchy">
+                                </span>
+
 
                                 <span class="dropdown-item-separator"></span>
                                 <div class="dropdown yt-gif-style yt-gif-style-mid yt-gif-style-row">
