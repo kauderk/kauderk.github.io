@@ -1683,7 +1683,7 @@ async function Ready()
 
             // 5.
             await ReloadYTVideo({ t: record?.player, start, end });
-            seekingTo_cb();
+            seekingTo_cb(currentTime ?? lastBlockIDParameters.get(targetBlockID)?.updateTime ?? start);
 
 
             // 6. play this
@@ -1705,7 +1705,7 @@ async function Ready()
                 ScrollToTargetWrapper(r);
 
 
-            function seekingTo_cb()
+            function seekingTo_cb(currentTime)
             {
                 const bounded = ((tm = currentTime) => tm >= start && tm <= end)();
                 record?.player?.playVideo?.()
