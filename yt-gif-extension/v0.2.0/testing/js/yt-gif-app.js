@@ -2242,19 +2242,6 @@ async function Ready()
             }
             return str.substring(0, start) + replace + str.substring(end);
         }
-        async function awaitingEl(el, callback)
-        {
-            const awaiting = (bol) => awaitingAtrr(bol, el);
-
-            if (el.hasAttribute('awaiting'))
-                return awaiting(false);
-
-            awaiting(true);
-
-            await callback();
-
-            awaiting(false);
-        }
     }
     function getYTUrlObj(rm_btn)
     {
