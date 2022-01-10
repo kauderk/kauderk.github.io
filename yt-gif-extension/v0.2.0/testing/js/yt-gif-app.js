@@ -4363,7 +4363,7 @@ async function ReloadYTVideo({ t, start, end })
 
     const vars = t.i.h;
     const map = allVideoParameters.get(t.h.id);
-    const iframe = t.getIframe();
+    const iframe = t?.getIframe?.();
 
     start = start || 0;
     end = end || t.getDuration();
@@ -4371,13 +4371,16 @@ async function ReloadYTVideo({ t, start, end })
     vars.playerVars.start = map.start = start;
     vars.playerVars.end = map.end = end;
 
+    while (document.body.contains(iframe) && !t?.seekTo)
+        await RAP.sleep(50);
+
     // https://stackoverflow.com/questions/60409231/why-does-my-youtube-react-component-fire-the-playerstate-ended-event-twice-befor
     // t.l.h[5] = async () => { }; // the craziet shinanigans EVER!
-    t.seekTo(start); // not only it was preserving it's state
-    t.pauseVideo(); // and performing it's onStateChange func twice
+    t.seekTo?.(start); // not only it was preserving it's state
+    t.pauseVideo?.(); // and performing it's onStateChange func twice
     // though I'm waiting to see what bugs it's going to cause
 
-    await t.loadVideoById({ // but it requieres you to load the video again to set "endSeconds" once again
+    await t?.loadVideoById?.({ // but it requieres you to load the video again to set "endSeconds" once again
         'videoId': t.i.h.videoId,
         'startSeconds': start,
         'endSeconds': end,
@@ -4386,6 +4389,7 @@ async function ReloadYTVideo({ t, start, end })
     while (document.body.contains(iframe) && !t?.getCurrentTime?.())
         await RAP.sleep(50);
 
+    return t?.getCurrentTime?.();
     // t.l.h[5] = onStateChange; // javascript is crazy
 }
 /* ***************** */
