@@ -2539,18 +2539,17 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     if (rm_container)
     {
         const MutationObj = { removed: [] };
-        const childrenBlock = rm_container?.querySelector('.rm-block-children');
 
-        if (childrenBlock || !childrenBlock?.hasAttribute('active-timestamp-observer'))
+        if (rm_container || !rm_container?.hasAttribute('active-timestamp-observer'))
         {
-            childrenBlock.setAttribute('active-timestamp-observer', '');
+            rm_container.setAttribute('active-timestamp-observer', '');
 
             const observer = new MutationObserver(async (mutationsList) =>
             {
-                const awaiting = (bol) => awaitingAtrr(bol, childrenBlock);
+                const awaiting = (bol) => awaitingAtrr(bol, rm_container);
 
-                if (!UI.display.simulate_roam_research_timestamps.checked)
-                    return awaiting(false);
+                if (rm_container.hasAttribute('awaiting') || !UI.display.simulate_roam_research_timestamps.checked)
+                    return;
 
                 awaiting(true);
 
@@ -2559,7 +2558,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 awaiting(false);
             })
 
-            observer.observe(childrenBlock, { childList: true, subtree: true });
+            observer.observe(rm_container, { childList: true, subtree: true });
         }
     }
 
