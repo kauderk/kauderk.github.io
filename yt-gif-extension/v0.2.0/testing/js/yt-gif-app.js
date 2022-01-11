@@ -1514,6 +1514,8 @@ async function Ready()
                             o.targetNode.style.filter = `brightness(${100 + (5 * i)}%)`;
                         else
                             o.targetNode.style.filter = `brightness(85%)`;
+
+                        UTILS.toggleAttribute(true, 'timestamp-set', o.targetNode);
                     }
                     else
                     {
@@ -1712,7 +1714,7 @@ async function Ready()
 
                 if (seekToMessage == 'seekTo-soft' && bounded)
                     record?.player?.seekTo?.(currentTime)
-                else if (sec("end") || seekToMessage == 'seekTo-strict' || !wasLastActive || !bounded) // seekToBoundary
+                else if (seekTo != start) // ReloadYTVideo already seeks to start
                     record?.player?.seekTo?.(seekTo)
 
                 if (UI?.display?.simulate_roam_research_timestamps?.checked)
@@ -1769,7 +1771,11 @@ async function Ready()
 
 
             // root -> roam-article || rm-sidebar-outline
-            const WrappersInBlock = (r) => [...document.querySelectorAll(`.${r} [id$="${f_uid}"] .yt-gif-wrapper`)];
+            const WrappersInBlock = (r) => [...document.querySelectorAll(`.${r} [id$="${f_uid}"] .yt-gif-wrapper`)]
+                .map(pw => closest_rm_container(pw))
+                .filter(pc => pc.contains(tEl))
+                .map(c => [...c.querySelectorAll(`[id$="${f_uid}"] .yt-gif-wrapper`)])
+                .flat(Infinity);
             const lastWrapperInBlock = (r = root) => [...WrappersInBlock(r)]?.pop();
 
             return {
