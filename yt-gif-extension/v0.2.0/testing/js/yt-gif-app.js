@@ -1578,7 +1578,7 @@ async function Ready()
 
 
         // disable context menu
-        tEl.addEventListener("contextmenu", e => e.preventDefault()); //https://codinhood.com/nano/dom/disable-context-menu-right-click-javascript
+        tEl.oncontextmenu = e => e.preventDefault(); //https://codinhood.com/nano/dom/disable-context-menu-right-click-javascript
 
 
 
@@ -4442,7 +4442,7 @@ async function getLastComponentInHierarchy(tempUID, _Config = YTGIF_Config, incl
     }
     Object.keys(iframeMaps).forEach(key => Object.assign(iframeMaps[key], baseObj));
 
-    const Hierarchy = !includeOrigin ? ParentHierarchy : UTILS.unshiftSame([...ParentHierarchy], [{ uid: tempUID, string: originalStr }, { title: 'made-up', uid: 'invalid' }]);
+    const Hierarchy = !includeOrigin ? ParentHierarchy : [...ParentHierarchy, [{ uid: tempUID, string: originalStr }, { title: 'made-up', uid: 'invalid' }]];
     const blockStrings = Hierarchy.map(arr => arr[0]).map(o => res = { string: clean_rm_string(o.string), uid: o.uid });
 
 
