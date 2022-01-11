@@ -85,23 +85,32 @@
                                 </span>
                                 <span class="dropdown-item" data-bind="timestamp-experience-item">
                                     <label for="" class="dropdown-item-description"
-                                        data-tooltip="Once the timestamp is created/rendered">Restore last active
-                                        timestamp</label>
+                                        data-tooltip="Once last timestamp is created/rendered">Restore last active
+                                        timestamp
+                                    </label>
                                     <input type="checkbox" name="timestamp_recovery_styles"
                                         id="timestamp_restore_last_active">
+                                </span>
+                                <span class="dropdown-item">
+                                    <label class="dropdown-item-description"
+                                        data-tooltip="Reset yt-gif player once it's active timestamp-set is removed from DOM/Destroyed/Deleted">Reset
+                                        when removed
+                                    </label>
+                                    <input type="checkbox" name="timestamp_checkbox"
+                                        id="timestamp_reset_on_last_active_container_removed">
                                 </span>
 
                                 <span class="dropdown-item-separator"></span>
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description ddm-tooltip-shortcuts"
-                                        data-tooltip="Start: Ctrl + Alt + s End: Ctrl + Alt + d">Enable
-                                        Shortcuts to grab timestamp components
+                                        data-tooltip="Start: Ctrl + Alt + s End: Ctrl + Alt + d">Grab timestamps using
+                                        shortcuts
                                     </label>
                                     <input type="checkbox" name="timestamp_checkbox" id="timestamp_shortcuts_enabled">
                                 </span>
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description"
-                                        data-tooltip="Recommended when recovering them">Mute YT GIFs when
+                                        data-tooltip="Recommended when recovery/restore mode is on">Mute YT GIFs when
                                         seeking
                                     </label>
                                     <input type="checkbox" name="timestamp_checkbox" id="timestamp_mute_when_seeking">
@@ -113,15 +122,6 @@
                                     </label>
                                     <input type="checkbox" name="timestamp_checkbox" id="timestamp_loop_hierarchy">
                                 </span>
-                                <span class="dropdown-item">
-                                    <label for="" class="dropdown-item-description"
-                                        data-tooltip="Removed from DOM - Destroyed - Deleted">Reset boundaries on last
-                                        active timestamp container removed
-                                    </label>
-                                    <input type="checkbox" name="timestamp_checkbox"
-                                        id="timestamp_reset_on_last_active_container_removed">
-                                </span>
-
 
                                 <span class="dropdown-item-separator"></span>
                                 <div class="dropdown yt-gif-style yt-gif-style-mid yt-gif-style-row">
@@ -141,14 +141,10 @@
                                 </div>
 
                                 <span class="dropdown-item-separator"></span>
-                                <span class="dropdown-info-message dropdown-info-message--aditional"
-                                    data-tooltip="{{[[yt-gif/start]]: 00:01:00}} {{[[yt-gif/end]]: 00:02:00}}">Create
-                                    timestamp components, under YT GIF Blocks; click on them and set new
-                                    boundaries.</span>
                                 <span class="dropdown-info-message dropdown-info-message--aditional"><a
                                         href="https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/components"
-                                        data-tooltip="kauderk.github.io/yt-gif-components">Grab start & end timestamp
-                                        components using smartblocks</a>
+                                        data-tooltip="kauderk.github.io/yt-gif-components">Grab timestamps using
+                                        smartblocks</a>
                                 </span>
                             </div>
                         </div>
