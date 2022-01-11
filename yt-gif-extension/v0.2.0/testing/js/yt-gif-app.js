@@ -2816,9 +2816,9 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         const removedActiveObj = MutationObj.removed.find(rO => rO?.target?.timestamp && !document.getElementById(rO.blockID));
         if (removedActiveObj && UI.timestamps.timestamp_reset_on_last_active_container_removed.checked)
         {
-            MutationObj.removed.length = 0;
-            const lastWrapper = [...grandParentBlock.querySelectorAll('.yt-gif-wrapper')]?.pop();
-            return lastWrapper?.querySelector?.('.yt-gif-reset-boundaries').click();
+            const reset = [...grandParentBlock.querySelectorAll('.yt-gif-wrapper .yt-gif-reset-boundaries')]?.pop();
+            await reset?.dispatchEvent(new Event('click'));
+            return;
         }
 
 
