@@ -1711,9 +1711,10 @@ async function Ready()
             function seekingTo_cb(currentTime)
             {
                 const bounded = ((tm = currentTime) => tm >= start && tm <= end)();
+                const farEnough = ((tm = currentTime) => tm > (seekTo + 1))();
                 record?.player?.playVideo?.()
 
-                if (seekToMessage == 'seekTo-soft' && bounded)
+                if (seekToMessage == 'seekTo-soft' && bounded && farEnough)
                     record?.player?.seekTo?.(currentTime)
                 else if (seekTo != start) // ReloadYTVideo already seeks to start
                     record?.player?.seekTo?.(seekTo)
