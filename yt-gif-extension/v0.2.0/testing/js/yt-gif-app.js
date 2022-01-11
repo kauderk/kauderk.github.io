@@ -3910,7 +3910,14 @@ async function onStateChange(state)
 
     if (state.data === YT.PlayerState.ENDED)
     {
-        await ReloadYTVideo({ t, start: map?.start, end: map?.end });
+        if (UI.timestamps.timestamp_loop_hierarchy.checked)
+        {
+            await TryToLoadNextTimestampSet();
+        }
+        else
+        {
+            await RealoadThis();
+        }
 
         const soundSrc = validSoundURL();
         if (soundSrc)
@@ -3949,6 +3956,43 @@ async function onStateChange(state)
     }
 
 
+    async function RealoadThis()
+    {
+        await ReloadYTVideo({ t, start: map?.start, end: map?.end });
+    }
+
+    async function TryToLoadNextTimestampSet()
+    {
+        const iframe = t?.getIframe?.();
+        if (!iframe)
+            return await RealoadThis();
+
+        const lastStartSel = `[timestamp-set][timestamp-style="start"]`;
+        const targetWrapper = iframe.closest('.yt-gif-wrapper');
+        const rm_container = closest_rm_container(iframe);
+
+
+        const lastActive = TimestampsInHierarchy(rm_container, targetWrapper, '[last-active-timestamp]')?.[0];
+        const tmps = TimestampsInHierarchy(rm_container, targetWrapper, lastStartSel);
+
+
+        const active = closestBlock(lastActive)?.querySelector(lastStartSel);
+
+
+        const index = tmps.indexOf(active);
+        const nextIndex = (index + 1) % tmps.length;
+
+
+        DeactivateTimestampsInHierarchy(rm_container, targetWrapper);
+
+
+        const targetTimestamp = tmps[nextIndex];
+
+        if (isRendered(targetTimestamp))
+            await ClickOnTimestamp(targetTimestamp);
+        else
+            await RealoadThis();
+    }
     function PlayEndSound(url)
     {
         return new Promise(function (resolve, reject)
