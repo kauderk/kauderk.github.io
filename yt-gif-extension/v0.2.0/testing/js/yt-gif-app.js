@@ -1529,6 +1529,7 @@ async function Ready()
 
                     o.targetNode.addEventListener('customMousedown', OnClicks);
                     o.targetNode.onmousedown = OnClicks;
+                    o.targetNode.OnClicks = OnClicks;
                 })
             })
         }
@@ -2837,7 +2838,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         const timestamps = ElementsPerBlock(activeBlock, '[yt-gif-timestamp-emulation]') || [];
         const targetTimestamp = timestamps[commonObj.target.index] || timestamps[commonObj.start.index] || timestamps[commonObj.end.index] || timestamps[timestamps.length - 1];
 
-        ClickOnTimestamp(targetTimestamp);
+        await ClickOnTimestamp(targetTimestamp);
     }
     function NodesRecord(Nodes, attr)
     {
@@ -4377,20 +4378,17 @@ function TimestampsInHierarchy(rm_container, targetWrapper, allSelector)
     return actives;
 }
 /* ***************** */
-async function ClickOnTimestamp(targetTimestamp)
+async function ClickOnTimestamp(target)
 {
-    await targetTimestamp?.dispatchEvent(new CustomEvent('customMousedown',
-        {
-            'view': window,
-            'bubbles': true,
-            'cancelable': true,
-            'detail': {
-                currentTarget: targetTimestamp,
-                which: 1,
-                seekToMessage: UI.timestamps?.timestamp_recovery_soft?.checked ? 'seekTo-soft' : 'seekTo-strict',
-                mute: UI.timestamps?.timestamp_mute_when_seeking?.checked
-            },
-        }));
+    // how do you resolve/return a promise using a CustomEvent handler?
+    await target?.OnClicks?.(
+        { // cringe event object
+            currentTarget: target,
+            which: 1,
+            seekToMessage: UI.timestamps?.timestamp_recovery_soft?.checked ? 'seekTo-soft' : 'seekTo-strict',
+            mute: UI.timestamps?.timestamp_mute_when_seeking?.checked
+        },
+    )
 }
 /* ***************** */
 function ElementsPerBlock(block, selector)
