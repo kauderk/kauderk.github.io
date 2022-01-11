@@ -2812,15 +2812,15 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         {
             MutationObj.removed.length = 0;
             const lastWrapper = [...grandParentBlock.querySelectorAll('.yt-gif-wrapper')]?.pop();
-            lastWrapper?.querySelector?.('.yt-gif-reset-boundaries').click();
-            return;
+            return lastWrapper?.querySelector?.('.yt-gif-reset-boundaries').click();
         }
+
 
         const commonObj = MutationObj.removed.find(aO => [...added].map(o => o.blockID).includes(aO.blockID));
         if (commonObj && UI.timestamps.timestamp_recovery.checked)
         {
             MutationObj.removed.length = 0;
-            await TryToRecoverActiveTimestamp(commonObj);
+            return await TryToRecoverActiveTimestamp(commonObj);
         }
     }
     async function TryToRecoverActiveTimestamp(commonObj)
@@ -2831,18 +2831,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         const timestamps = ElementsPerBlock(activeBlock, '[yt-gif-timestamp-emulation]') || [];
         const targetTimestamp = timestamps[commonObj.target.index] || timestamps[commonObj.start.index] || timestamps[commonObj.end.index] || timestamps[timestamps.length - 1];
 
-        targetTimestamp?.dispatchEvent(new CustomEvent('customMousedown',
-            {
-                'view': window,
-                'bubbles': true,
-                'cancelable': true,
-                'detail': {
-                    currentTarget: targetTimestamp,
-                    which: 1,
-                    seekToMessage: UI.timestamps?.timestamp_recovery_soft?.checked ? 'seekTo-soft' : 'seekTo-strict',
-                    mute: UI.timestamps?.timestamp_mute_when_seeking?.checked
-                },
-            }))
+        ClickOnTimestamp(targetTimestamp);
     }
     function NodesRecord(Nodes, attr)
     {
@@ -4337,6 +4326,23 @@ function TimestampsInHierarchy(rm_container, targetWrapper, allSelector)
         .filter(tm => !badSets.includes(tm));
     return actives;
 }
+/* ***************** */
+async function ClickOnTimestamp(targetTimestamp)
+{
+    await targetTimestamp?.dispatchEvent(new CustomEvent('customMousedown',
+        {
+            'view': window,
+            'bubbles': true,
+            'cancelable': true,
+            'detail': {
+                currentTarget: targetTimestamp,
+                which: 1,
+                seekToMessage: UI.timestamps?.timestamp_recovery_soft?.checked ? 'seekTo-soft' : 'seekTo-strict',
+                mute: UI.timestamps?.timestamp_mute_when_seeking?.checked
+            },
+        }));
+}
+/* ***************** */
 function ElementsPerBlock(block, selector)
 {
     return [...block?.querySelectorAll(selector)]?.filter(b => closestBlock(b).id == block.id) || [];
