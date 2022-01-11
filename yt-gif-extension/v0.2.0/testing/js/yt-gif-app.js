@@ -1412,7 +1412,7 @@ async function Ready()
         const isKey = 'is component';
 
 
-        const renderedComponents = found.filter(node1 => document.body.contains(node1)).filter(node2 => UTILS.isNotZoomPath(node2));
+        const renderedComponents = found.filter(node1 => isRendered(node1)).filter(node2 => UTILS.isNotZoomPath(node2));
         for (const node of renderedComponents)
         {
             const block = closestBlock(node);
@@ -2277,7 +2277,7 @@ async function Ready()
                     !hasYTGifClass(v) &&
                     v.classList.contains(sel) &&
                     a.indexOf(v) === i &&
-                    document.body.contains(v);
+                    isRendered(v);
             })
     }
     /* ****************** */
@@ -2893,13 +2893,13 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
         function changeToMousedown(e)
         {
-            if (!document.body.contains(e.currentTarget))
+            if (!isRendered(e.currentTarget))
                 return RemoveAllListeners();
             ReplaceInteractionEventListener('mousedown')
         }
         function changeToMouseenter(e)
         {
-            if (!document.body.contains(e.currentTarget))
+            if (!isRendered(e.currentTarget))
                 return RemoveAllListeners();
             ReplaceInteractionEventListener('mouseenter')
         }
@@ -3172,7 +3172,7 @@ async function onPlayerReady(event)
     // 11. well well well 
     if (map.hasOwnProperty('play-right-away') && map.hasOwnProperty('updateTime'))
     {
-        while (document.body.contains(iframe) && !t?.getCurrentTime?.())
+        while (isRendered(iframe) && !t?.getCurrentTime?.())
             await RAP.sleep(500);
 
         seekToUpdatedTime(map.updateTime ?? map.start);
@@ -3647,10 +3647,10 @@ async function onPlayerReady(event)
 
                 // roam research displace blocks and the YT player api doesn't catch up...
                 const previousIframe = document.querySelector('#' + key);
-                if (document.body.contains(previousIframe))
+                if (isRendered(previousIframe))
                 {
                     const previousParent = getParent(previousIframe);
-                    if (!document.body.contains(previousParent))
+                    if (!isRendered(previousParent))
                         return destroyMssg();
 
                     const observerTargetEl = UTILS.div([rm_components.state.currentClassesToObserver?.[0]]);
@@ -4259,6 +4259,10 @@ function properBlockIDSufix(url, urlIndex)
 {
     return '_' + [url, urlIndex].join('_');
 }
+function isRendered(el)
+{
+    return document.body.contains(el);
+}
 //#endregion
 
 
@@ -4357,7 +4361,7 @@ async function ReloadYTVideo({ t, start, end })
     vars.playerVars.start = map.start = start;
     vars.playerVars.end = map.end = end;
 
-    while (document.body.contains(iframe) && !t?.seekTo)
+    while (isRendered(iframe) && !t?.seekTo)
         await RAP.sleep(50);
 
     // https://stackoverflow.com/questions/60409231/why-does-my-youtube-react-component-fire-the-playerstate-ended-event-twice-befor
@@ -4372,7 +4376,7 @@ async function ReloadYTVideo({ t, start, end })
         'endSeconds': end,
     });
 
-    while (document.body.contains(iframe) && !t?.getCurrentTime?.())
+    while (isRendered(iframe) && !t?.getCurrentTime?.())
         await RAP.sleep(50);
 
     return t?.getCurrentTime?.();
