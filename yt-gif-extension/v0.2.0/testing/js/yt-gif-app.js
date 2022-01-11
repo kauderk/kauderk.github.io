@@ -1663,7 +1663,7 @@ async function Ready()
 
             // 3.
             const wasLastActive = targetNodePpts.self.targetNode.hasAttribute('last-active-timestamp');
-            DeactivateTimestampsInHierarchy(closest_rm_container(targetWrapper));
+            DeactivateTimestampsInHierarchy(closest_rm_container(targetWrapper), targetWrapper);
 
             if (targetNodePpts.pears)
                 targetNodePpts.pears.forEach(o => toogleActiveAttr(true, o.targetNode));
@@ -2558,7 +2558,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         {
             UIDtoURLInstancesMapMap.delete(uid);
             if (!UI.timestamps.timestamp_recovery.checked)
-                DeactivateTimestampsInHierarchy(rm_container);
+                DeactivateTimestampsInHierarchy(rm_container, wrapper);
         },
     }
     UTILS.ObserveRemovedEl_Smart(options);
@@ -3582,7 +3582,7 @@ async function onPlayerReady(event)
 
         awaiting(true);
 
-        DeactivateTimestampsInHierarchy(closest_rm_container(tEl));
+        DeactivateTimestampsInHierarchy(closest_rm_container(tEl), parent);
         await ReloadYTVideo({ t, start: map.defaultStart, end: map.defaultEnd });
 
         awaiting(false);
@@ -4315,15 +4315,27 @@ function getCurrentInputBlock()
 {
     return document.querySelector(".rm-block__input--active.rm-block-text")
 }
-function DeactivateTimestampsInHierarchy(container)
+function DeactivateTimestampsInHierarchy(rm_container, targetWrapper)
 {
-    if (!container) return;
-    [...container.querySelectorAll('a.rm-video-timestamp[yt-gif-timestamp-emulation]')]
-        .forEach(el =>
-        {
-            UTILS.toggleAttribute(false, 'active-timestamp', el);
-            UTILS.toggleAttribute(false, 'last-active-timestamp', el);
-        });
+    if (!rm_container) return;
+    const sel = '[yt-gif-timestamp-emulation]';
+    const all = TimestampsInHierarchy(rm_container, targetWrapper, sel);
+    all.forEach(el =>
+    {
+        UTILS.toggleAttribute(false, 'active-timestamp', el);
+        UTILS.toggleAttribute(false, 'last-active-timestamp', el);
+    });
+}
+function TimestampsInHierarchy(rm_container, targetWrapper, allSelector)
+{
+    const badSets = [...rm_container.querySelectorAll('.yt-gif-wrapper')]
+        .filter(w => w != targetWrapper)
+        .map(w => [...closest_rm_container(w).querySelectorAll(allSelector)])
+        .flat(Infinity);
+
+    const actives = [...rm_container.querySelectorAll(allSelector)]
+        .filter(tm => !badSets.includes(tm));
+    return actives;
 }
 function ElementsPerBlock(block, selector)
 {
