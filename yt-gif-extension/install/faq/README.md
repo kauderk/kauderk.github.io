@@ -125,7 +125,7 @@ Customize each YT GIF, even multiple ones within the same block
 ---
 
 ### What is a "Timestamp Display"?
-- Invisible anlong with the custom `YT GIF Controls`, hover over the *mid area* to reveal them.
+- Invisible within the `YT GIF Controls`. *hover over the *mid area* to reveal them*
     - ![image](https://user-images.githubusercontent.com/65237382/148078182-9a7d4189-a9d2-4488-b787-0e678a94b25b.png)
     - Scroll inside the actual `Timestamp` to back and forward (player).
 
