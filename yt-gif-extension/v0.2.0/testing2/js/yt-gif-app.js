@@ -3301,18 +3301,18 @@ async function onPlayerReady(event)
     //#region 1. previous parameters
     function RunWithPreviousParamsONiframeLoad()
     {
-        const { previousTimestamp, previousVolume } = UI; // still inner objects
-        if (lastBlockIDParameters.has(blockID))
+        const sesion = lastBlockIDParameters.get(blockID);
+        if (sesion)
         {
-            const sesion = lastBlockIDParameters.get(blockID);
-            RunWithPrevious_TimestampStyle(sesion, previousTimestamp);
-            RunWithPrevious_VolumeStyle(sesion, previousVolume);
+            const { url_boundaries, url_volume } = UI.playerSettings;
+            RunWithPrevious_TimestampStyle(sesion, url_boundaries);
+            RunWithPrevious_VolumeStyle(sesion, url_volume);
         }
     }
     /* ******************* */
-    function RunWithPrevious_VolumeStyle(sesion, { strict_start_volume, start_volume, fixed_start_volume })
+    function RunWithPrevious_VolumeStyle(sesion, { value })
     {
-        if (strict_start_volume.checked)
+        if (value == 'strict')
         {
             const vl_Hist = sesion.volumeURLmapHistory;
             if (vl_Hist[vl_Hist.length - 1] != entryVolume) // new entry is valid ≡ user updated "&vl="
@@ -3325,19 +3325,19 @@ async function onPlayerReady(event)
                 t.__proto__.newVol = sesion.updateVolume;
             }
         }
-        else if (start_volume.checked)
+        else if (value == 'soft')
         {
             t.__proto__.newVol = sesion.updateVolume;
         }
-        else if (fixed_start_volume.checked)
+        else if (value == 'start-only')
         {
             t.__proto__.newVol = validVolumeURL();
         }
     }
 
-    function RunWithPrevious_TimestampStyle(sesion, { strict_start_timestamp, start_timestamp, fixed_start_timestamp })
+    function RunWithPrevious_TimestampStyle(sesion, { value })
     {
-        if (strict_start_timestamp.checked)
+        if (value == 'strict')
         {
             const timeHist = sesion.timeURLmapHistory;
             if (timeHist[timeHist.length - 1] != map.start) // new entry is valid ≡ user updated "?t="
@@ -3350,11 +3350,11 @@ async function onPlayerReady(event)
                 seekToUpdatedTime(sesion.updateTime);
             }
         }
-        else if (start_timestamp.checked && isBounded(sesion.updateTime))
+        else if (value == 'soft' && isBounded(sesion.updateTime))
         {
             seekToUpdatedTime(sesion.updateTime);
         }
-        else if (fixed_start_timestamp.checked)
+        else if (value == 'start-only')
         {
             // don't seek you are already there, it's just semantics and a null option
         }
@@ -3365,18 +3365,11 @@ async function onPlayerReady(event)
     //#region 2. play/mute styles
     function ToggleStyles_EventListeners(bol = false)
     {
-        // hmmmm... Mainly because of CleanLoadedWrappers... UI is window.YT_GIF_OBSERVERS.UI | timestamps persist this way
-        for (const p in UI.playStyle)
-        {
-            UI.playStyle[p] = Flip(UI.playStyle[p], playStyleDDMO);
-        }
-        for (const m in UI.muteStyle)
-        {
-            UI.muteStyle[m] = Flip(UI.muteStyle[m], muteStyleDDMO);
-        }
+        UI.playerSettings.play_style = Flip(UI.playerSettings.play_style, playStyleDDMO);
+        UI.playerSettings.mute_style = Flip(UI.playerSettings.mute_style, muteStyleDDMO);
         function Flip(binaryInput, styleDDMO = () => { })
         {
-            if (binaryInput.tagName)
+            if (binaryInput?.tagName)
             {
                 if (bol)
                     binaryInput.addEventListener('change', styleDDMO);
@@ -3392,7 +3385,7 @@ async function onPlayerReady(event)
     {
         if (!UTILS.isElementVisible(iframe)) return; //play all VISIBLE Players, this will be called on all visible iframes
 
-        if (UI.playStyle.visible_clips_start_to_play_unmuted.checked)
+        if (UI.playerSettings.play_style.value == 'all-visible')
         {
             togglePlay(true);
             isSoundingFine(false);
@@ -3406,7 +3399,7 @@ async function onPlayerReady(event)
     {
         if (!UTILS.isElementVisible(iframe)) return; //mute all VISIBLE Players, this will be called on all visible iframes
 
-        if (UI.muteStyle.strict_mute_everything_except_current.checked || UI.muteStyle.muted_on_any_mouse_interaction.checked)
+        if (UI.playerSettings.mute_style.value == 'strict' || UI.playerSettings.mute_style.value == 'all-muted')
         {
             isSoundingFine(false);
         }
@@ -3423,7 +3416,7 @@ async function onPlayerReady(event)
         t.__proto__.globalHumanInteraction = false;
 
         //                            the same as: if it's true, then the other posibilities are false
-        if (anyValidInAndOutKey(e) && !UI.muteStyle.muted_on_any_mouse_interaction.checked)
+        if (anyValidInAndOutKey(e) && UI.playerSettings.mute_style.value != 'all-muted')
         {
             toogleActive(true)
             videoIsPlayingWithSound()
@@ -3439,7 +3432,7 @@ async function onPlayerReady(event)
 
     function InState(e)
     {
-        if (UI.playStyle.play_last_active_player_off_intersection.checked)
+        if (UI.playerSettings.play_last_active_player_off_intersection.checked)
             ToogleAllOthers(false, true)
 
         t.__proto__.globalHumanInteraction = true; // I'm afraid this event is slower to get attached than 200ms intervals... well 
@@ -3449,7 +3442,7 @@ async function onPlayerReady(event)
         {
             isSoundingFine()
         }
-        else if (UI.muteStyle.muted_on_mouse_over.checked)
+        else if (UI.playerSettings.mute_style.value == 'soft')
         {
             isSoundingFine(false)
         }
@@ -3459,12 +3452,12 @@ async function onPlayerReady(event)
     {
         toogleAllActivePlayers(false, true)
 
-        if (UI.muteStyle.strict_mute_everything_except_current.checked)
+        if (UI.playerSettings.mute_style.value == 'strict')
         {
             if (anyValidInAndOutKey(e))
                 MuteAllOtherPlayers()
         }
-        if (UI.playStyle.strict_play_current_on_mouse_over.checked)
+        if (UI.playerSettings.play_style.value == 'soft')
         {
             PauseAllOthersPlaying()
         }
@@ -3666,9 +3659,9 @@ async function onPlayerReady(event)
         {
             PauseAllOthersPlaying();
         }
-        else if (UI.playStyle.visible_clips_start_to_play_unmuted.checked)
+        else if (UI.playerSettings.play_style.value == 'all-visible')
         {
-            UI.playStyle.visible_clips_start_to_play_unmuted.dispatchEvent(new Event('change'));
+            UI.playerSettings.play_style.visible_clips_start_to_play_unmuted.dispatchEvent(new Event('change'));
         }
     }
     //#endregion
@@ -3782,7 +3775,7 @@ async function onPlayerReady(event)
 
         if (tick() > updateStartTime + loadingMarginOfError && !t.__proto__.globalHumanInteraction) // and the interval function 'OneFrame' to prevent the loading black screen
         {
-            if (!UI.playStyle.visible_clips_start_to_play_unmuted.checked)
+            if (UI.playerSettings.play_style.value != 'all-visible')
                 return stopIfInactive()
 
             if (entries[0].isIntersecting)
@@ -3795,7 +3788,7 @@ async function onPlayerReady(event)
         {
             if (
                 !parent.hasAttribute('yt-active') ||
-                !UI.playStyle.play_last_active_player_off_intersection.checked
+                !UI.playerSettings.play_last_active_player_off_intersection.checked
             )
                 return togglePlay(false)
 
@@ -3847,7 +3840,7 @@ async function onPlayerReady(event)
                     }
                     else if (UTILS.isElementVisible(iframe) && !t.__proto__.globalHumanInteraction)
                     {
-                        togglePlay(UI.playStyle.visible_clips_start_to_play_unmuted.checked); // pause?
+                        togglePlay(UI.playerSettings.play_style.value == 'all-visible'); // pause?
                     }
                     else if (!isParentHover())
                     {
@@ -3924,9 +3917,9 @@ async function onPlayerReady(event)
 
         return false;
     }
-    function CanUnmute()//NotMuteAnyHover
+    function CanUnmute() // NotMuteAnyHover
     {
-        return !UI.muteStyle.muted_on_mouse_over.checked && !UI.muteStyle.muted_on_any_mouse_interaction.checked
+        return UI.playerSettings.mute_style.value != 'soft' && UI.playerSettings.mute_style.value != 'all-muted';
     }
     //#endregion
 
@@ -3980,7 +3973,7 @@ async function onPlayerReady(event)
     }
     function AnyPlayOnHover()
     {
-        return UI.playStyle.play_on_mouse_over.checked || UI.playStyle.strict_play_current_on_mouse_over.checked
+        return UI.playerSettings.play_style.value == 'soft' || UI.playerSettings.play_style.value == 'strict'
     }
     function isParentHover()
     {
