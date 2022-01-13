@@ -66,7 +66,7 @@ They can vary depending on the `Play Style` or `Sound Style` you choose.
 - I'm afraid it's a Javascript cross Browser compatibility issue.
 #### The capture smartblocks don't work
 - There are `Smartblocks` and `SmartblocksV2`, the YT GIF extension uses the latest version of Smartblocks.
-- Copy and paste them from here, or [import the smartblocks again](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/components).
+- Update them from here or [re-import them](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/components).
 
     - 
         ``` 
@@ -110,7 +110,12 @@ Customize each YT GIF, even multiple ones within the same block
 #### How did you make your YouTube Player look like that?
 - ![image](https://user-images.githubusercontent.com/65237382/148123731-b5b585e7-0d57-49a4-a2a4-c808aabddb06.png) VS. ![image](https://user-images.githubusercontent.com/65237382/148123710-ecbd8a30-766f-4035-b6ad-e0e07e607240.png)
 
-> Where are the controls? Do you really use that?
+- Reasons Why
+    - I got used to holding down the middle mouse button to keep watching videos, but using any kind of click will focus the iframe/video/player, which is ultimately a website and once out of there, you can't unfocus it.
+        - Alternative
+            - Using `InAndOutkeys` - the keyboard won't focus the iframe from within. This solves the issue completely.
+
+> Where are the controls?
 
 - Well, they are centered at the bottom, and they appear once I hover over them. It's easier on the eyes, if you know where/what to look for, you don't know need see them all the time.
 - [You can follow these steps...](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/css/Beautiful%20YT%20iframe%20controls)
