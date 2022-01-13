@@ -84,6 +84,7 @@ const YT_GIF_OBSERVERS_TEMP = {
             CleanAndBrandNewWrapper(wrapper, attrInfo.creation.name, attrInfo.creation.cleaning); //wrapperParent -> nest new span
         }
     },
+    dmm_html: null,
 }
 window.YT_GIF_OBSERVERS = (!window.YT_GIF_OBSERVERS) ? YT_GIF_OBSERVERS_TEMP : window.YT_GIF_OBSERVERS;
 /*-----------------------------------*/
@@ -216,7 +217,7 @@ const attrData = {
     // [data-main] -> [data-bind]
     'initialize-bg': '',
     'initialize-loop': '',
-    'iframe_buffer': '',
+    'iframe-buffer': '',
     'timestamp-experience': '',
 }
 const attrInfo = {
@@ -621,7 +622,7 @@ async function Ready()
     {
         // caution:
         const rm_moreIcon = document.querySelector('.bp3-icon-more').closest('.rm-topbar .rm-topbar__spacer-sm + .bp3-popover-wrapper');
-        const htmlText = await UTILS.FetchText(dropDownMenu);
+        const htmlText = window.YT_GIF_OBSERVERS.dmm_html ?? await UTILS.FetchText(dropDownMenu);
         const previousList = DDM_Els();
         if (previousList?.length > 0)
         {
@@ -728,6 +729,7 @@ async function Ready()
                     return updateSettingsPageBlock(e, e.currentTarget, childKey, siblingKeys)
                 }
 
+                if (!child?.addEventListener) { debugger; continue; }
                 child.addEventListener('change', HandleSettingsPageBlockUpdate, true);
                 child.addEventListener('customChange', HandleSettingsPageBlockUpdate, true);
             }
