@@ -135,7 +135,8 @@ path.yt-gif-svg-bg {
 }
 span.dropdown-item,
 .yt-gif-style,
-.dropdown-info-message{
+.dropdown-info-message,
+.dropdown-item-select{
   border-radius: 5px;
 }
 .dropdown-info-message {
@@ -148,7 +149,7 @@ span.dropdown-info-message.dropdown-item-description{
   background-color: transparent;
 }
 
-:is(span.dropdown-item, .yt-gif-style, span[data-tooltip]):hover {
+:is(span.dropdown-item, .yt-gif-style, span[data-tooltip], div.dropdown-item-select):hover {
   background-color: var(--dropdown-main-btn-bg-h);
 }
 span.dropdown-item *,
@@ -223,6 +224,10 @@ span.dropdown-info-message {
   --dropdown-main-btn-bg-h: var(--submenu-styles-item-bg-h);
   --drop-menu-btn-h: var(--submenu-styles-item-bg-h-h);
   --dropdown--bg: var(--submenu-styles-content-bg);
+}
+.yt-gif-fullscreen-style{
+  align-self: end;
+  --m: 5px;
 }
 
 
@@ -468,9 +473,6 @@ a.rm-video-timestamp[active-timestamp]
   aspect-ratio: 1 / 1;
   min-width: 20px;
 }
-.yt-gif-style-player-settings > .dropdown-content{
-  --dropdown--bg: var(--dropdown--bg-secondary);
-}
 a.rm-video-timestamp[last-active-timestamp] {
   text-decoration: underline;
   text-underline-position: from-font;
@@ -553,10 +555,8 @@ max-width: fit-content;
   background-color: var(--submenu-message-bg);
   border-color: transparent;
   cursor: pointer;
-
   height: fit-content;
   margin: var(--m);
-
   align-self: center;
 }
 
@@ -569,12 +569,33 @@ max-width: fit-content;
 
   border-radius: var(--m);
 }
-.yt-gif-style-row{
-  display: flex;
-  gap: var(--m);
-  
-  width: -webkit-fill-available;
 
-  justify-content: center;
-  align-items: center;
+.ddm-select-w{
+  display: flex;
+  width: -webkit-fill-available;
+  justify-content: flex-end;
+}
+
+.dropdown-item-select{
+  display: grid;
+  width: auto;
+  grid-template-columns: fit-content(50%) fit-content(50%); /* https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns#:~:text=grid%2Dtemplate%2Dcolumns%3A-,fit%2Dcontent(40%25)%3B,-grid%2Dtemplate%2Dcolumns */
+  
+  padding-right: 10px;
+}
+
+.dropdown-item-select .ddm-info{
+  justify-self: end;
+  width: max-content;
+  margin: var(--m);
+}
+.dropdown-item-select .ddm-select-item{
+  justify-self: end;
+  width: max-content;
+}
+.yt-gif-style-player-settings .dropdown-item-select{
+  margin: 5px 0px;
+}
+select {
+  --m: 0px;
 }
