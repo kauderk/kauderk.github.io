@@ -67,22 +67,22 @@
                                     timestamps boundaries else deactivate them">
                                         Timestamp Recovery
                                     </label>
-                                    <input type="checkbox" name="" data-main="timestamp-experience"
-                                        id="timestamp_recovery" checked="">
+                                    <input type="checkbox" name="" data-main="timestamp-experience" id="tm_recovery"
+                                        checked="">
                                 </span>
                                 <div class="dropdown-item-select" data-bind="timestamp-experience">
                                     <span class="ddm-info" for="" data-tooltip="Move to a position in time">Seek
                                         To</span>
                                     <select class="ddm-select-item" id="tm_seek_to">
-                                        <option value="strict" data-tooltip="Strict - Either start or end">Boundary
+                                        <option value="strict" title="Strict - Either start or end">Boundary
                                         </option>
                                         <option value="soft"
-                                            data-tooltip="If it is within the boundaries else rely on boundary">
+                                            title="If it is within the boundaries else rely on boundary">
                                             Current time
                                         </option>
                                     </select>
                                 </div>
-                                <div class="dropdown-item-select" data-bind=="timestamp-experience-item">
+                                <div class="dropdown-item-select" data-bind="timestamp-experience">
                                     <span class="ddm-info" for=""
                                         data-tooltip="Once last timestamp is created/rendered">Restore</span>
                                     <select class="ddm-select-item" id="tm_restore">
@@ -112,20 +112,20 @@
                                         data-tooltip="Recommended when recovery/restore mode is on">Mute YT GIFs when
                                         seeking
                                     </label>
-                                    <input type="checkbox" name="timestamp_checkbox" id="timestamp_mute_when_seeking">
+                                    <input type="checkbox" name="timestamp_checkbox" id="tm_mute_when_seeking">
                                 </span>
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description"
                                         data-tooltip="Finish a set of timestamp boundaries, then move to the next one">Loop
                                         through rendered timestamps
                                     </label>
-                                    <input type="checkbox" name="timestamp_checkbox" id="timestamp_loop_hierarchy">
+                                    <input type="checkbox" name="timestamp_checkbox" id="tm_loop_hierarchy">
                                 </span>
 
                                 <span class="dropdown-item-separator"></span>
                                 <div class="dropdown-item-select">
                                     <span class="ddm-info" for="">Display</span>
-                                    <select class="ddm-select-item" id="timestamp_workflow_display">
+                                    <select class="ddm-select-item" id="tm_workflow_display">
                                         <option value="HMS">Formated HMS</option>
                                         <option value="S">Seconds Only</option>
                                         <option value="Default">Default</option>
@@ -133,7 +133,7 @@
                                 </div>
                                 <div class="dropdown-item-select">
                                     <span class="ddm-info" for="">Grab</span>
-                                    <select class="ddm-select-item" id="timestamp_workflow_grab">
+                                    <select class="ddm-select-item" id="tm_workflow_grab">
                                         <option value="HMS">Formated HMS</option>
                                         <option value="S">Seconds Only</option>
                                     </select>
@@ -160,7 +160,7 @@
                                     <input type="checkbox" name="" data-main="initialize-bg"
                                         id="awaiting_for_user_input_to_initialize" checked="">
                                 </span>
-                                <div class="dropdown-item-select">
+                                <div class="dropdown-item-select" data-bind="initialize-bg">
                                     <span class="ddm-info" for="">Input
                                         Type</span>
                                     <select class="ddm-select-item" id="awaiting_input_type">
@@ -168,8 +168,7 @@
                                         <option value="hover">Hovering</option>
                                     </select>
                                 </div>
-
-                                <span class="dropdown-item" data-bind="initialize-bg-item">
+                                <span class="dropdown-item" data-bind="initialize-bg">
                                     <label for="" class="dropdown-item-description"
                                         data-tooltip="Aesthetics - or - minimalism">Video thumbnail</label>
                                     <input type="checkbox" name="" id="awaiting_with_video_thumnail_as_bg" checked="">
@@ -183,8 +182,7 @@
                                     <input type="checkbox" name="iframe-buffer" data-main="iframe-buffer"
                                         id="iframe_buffer_stack" checked="">
                                 </span>
-                                <span class="dropdown-item dropdown-item_not-allowed_input"
-                                    data-bind="iframe_buffer_item">
+                                <span class="dropdown-item dropdown-item_not-allowed_input" data-bind="iframe-buffer">
                                     <label for="" class="dropdown-item-description"
                                         data-tooltip="Beta - Newly observed components will try to displace the oldest ones.">Try
                                         to load on intersection</label>
@@ -194,7 +192,7 @@
                                         disabled="">
                                 </span>
                                 <span class="dropdown-item rangeOffset sub-dropdown--range" name="iframe-buffer"
-                                    data-bind="iframe_buffer_item">
+                                    data-bind="iframe-buffer">
                                     <span class="dropdown-info-message dropdown-item-description">Loaded
                                         simultaneously</span>
                                     <div class="flex">
@@ -212,15 +210,15 @@
                             <div class="dropdown-content dropdown-info-box">
                                 <div class="dropdown-item-select">
                                     <span class="ddm-info" for="" data-tooltip="Play/Pause yt-gifs">Play Style</span>
-                                    <select class="ddm-select-item" id="">
+                                    <select class="ddm-select-item" id="play_style">
                                         <option value="strict"
-                                            data-tooltip="Strict &amp; Recomended - InandOutKeys or not, all get muted, except current">
+                                            title="Strict &amp; Recomended - InandOutKeys or not, all get muted, except current">
                                             Last Active Priority</option>
                                         <option value="soft"
-                                            data-tooltip="InandOutKeys have priority. You can play multiple videos with some control.">
+                                            title="InandOutKeys have priority. You can play multiple videos with some control.">
                                             Any on mouse enter</option>
                                         <option value="all-visible"
-                                            data-tooltip="Initialized yt-gifs will autoplay indefinitely">Play
+                                            title="Initialized yt-gifs will autoplay indefinitely">Play
                                             indefinitely</option>
                                     </select>
                                 </div>
@@ -234,14 +232,14 @@
                                 <span class="dropdown-item-separator"></span>
                                 <div class="dropdown-item-select">
                                     <span class="ddm-info" for="" data-tooltip="Mute/Unmute yt-gifs">Mute Style</span>
-                                    <select class="ddm-select-item" id="">
-                                        <option value="strict"
-                                            data-tooltip="Maximum of 1 YT GIF plays unmuted at a time">Last Active
+                                    <select class="ddm-select-item" id="mute_style">
+                                        <option value="strict" title="Maximum of 1 YT GIF plays unmuted at a time">Last
+                                            Active
                                             Priority</option>
-                                        <option value="soft"
-                                            data-tooltip="Play without sound - 'InAndOutKeys' can unmute it">Any on
+                                        <option value="soft" title="Play without sound - 'InAndOutKeys' can unmute it">
+                                            Any on
                                             mouse enter</option>
-                                        <option value="all-muted" data-tooltip="'InAndOutKeys' won't unmute any yt-gif">
+                                        <option value="all-muted" title="'InAndOutKeys' won't unmute any yt-gif">
                                             Either way</option>
                                     </select>
                                 </div>
@@ -250,29 +248,29 @@
                                 <div class="dropdown-item-select">
                                     <span class="ddm-info" for=""
                                         data-tooltip="Recover paremeters after editing blocks">URL Boundaries</span>
-                                    <select class="ddm-select-item" id="">
+                                    <select class="ddm-select-item" id="url_boundaries">
                                         <option value="strict"
-                                            data-tooltip="'&amp;s=' start has priority over previous timestamp tick">
+                                            title="'&amp;s=' start has priority over previous timestamp tick">
                                             Strict recovery</option>
                                         <option value="soft"
-                                            data-tooltip="Remember previous timestamp tick or rely on default">Soft
+                                            title="Remember previous timestamp tick or rely on default">Soft
                                             Recovery</option>
-                                        <option value="start-only"
-                                            data-tooltip="Initialize with '&amp;=s' start everytime">Start only</option>
+                                        <option value="start-only" title="Initialize with '&amp;=s' start everytime">
+                                            Start only</option>
                                     </select>
                                 </div>
                                 <div class="dropdown-item-select">
                                     <span class="ddm-info" for=""
                                         data-tooltip="Recover paremeters after editing blocks">URL Volume</span>
-                                    <select class="ddm-select-item" id="">
+                                    <select class="ddm-select-item" id="url_volume">
                                         <option value="strict"
-                                            data-tooltip="'&amp;v=' volume has priority over previous volume level">
+                                            title="'&amp;v=' volume has priority over previous volume level">
                                             Strict recovery</option>
-                                        <option value="soft"
-                                            data-tooltip="Remember previous volume level or rely on default">Soft
+                                        <option value="soft" title="Remember previous volume level or rely on default">
+                                            Soft
                                             Recovery</option>
                                         <option value="start-only"
-                                            data-tooltip="Initialize with '&amp;=v' volume everytime or rely on default">
+                                            title="Initialize with '&amp;=v' volume everytime or rely on default">
                                             Volume only</option>
                                     </select>
                                 </div>
@@ -339,7 +337,7 @@
                                         id="sound_when_video_loops" checked="">
                                 </span>
                                 <span class="dropdown-item rangeOffset sub-dropdown--range" name="end_loop_sound"
-                                    data-bind="initialize-loop-item">
+                                    data-bind="initialize-loop">
                                     <span class="dropdown-info-message dropdown-item-description">Volume - End loop
                                         sound</span>
                                     <div class="flex">
