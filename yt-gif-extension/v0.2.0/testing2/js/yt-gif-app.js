@@ -675,14 +675,15 @@ async function Ready()
                         case 'label':
                             parentObj[childKey].innerHTML = sessionValue;
                             break;
-                        case 'select':
-                            const select = parentObj[childKey];
-                            select.value = sessionValue.toString();
-                            select.previousElementSibling?.setAttribute('for', select.id);
                         default:
-                            const binaryInput = parentObj[childKey];
-                            binaryInput.checked = UTILS.isTrue(sessionValue);
-                            binaryInput.previousElementSibling?.setAttribute('for', binaryInput.id);
+                            const input = parentObj[childKey];
+
+                            if (domEl.tagName == 'SELECT')
+                                input.value = sessionValue.toString();
+                            else // checkbox
+                                input.checked = UTILS.isTrue(sessionValue);
+
+                            input.previousElementSibling?.setAttribute('for', input.id);
                     }
                 }
                 else
@@ -1453,7 +1454,7 @@ async function Ready()
             targetNode.setAttribute(timestampObj.attr.timestamp, timestampContent);
             targetNode.className = timestampObj.roamClassName;
             targetNode.innerHTML = timestampContent;
-            targetNode.innerHTML = fmtTimestamp(tm_workflow_display.value)(targetNode); // javascript is crazy!
+            targetNode.innerHTML = fmtTimestamp(UI.timestamps.tm_workflow_display.value)(targetNode); // javascript is crazy!
 
             targetNodeParent.appendChild(targetNode);
 
