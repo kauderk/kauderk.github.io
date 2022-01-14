@@ -4491,6 +4491,7 @@ async function ClickOnTimestamp(target, assignObj = {})
 /* ***************** */
 function ElementsPerBlock(block, selector)
 {
+    if (!block) return [];
     return [...block?.querySelectorAll(selector)]?.filter(b => closestBlock(b).id == block.id) || [];
 }
 /* ***************** */
