@@ -4018,7 +4018,7 @@ async function onStateChange(state)
 
     if (state.data === YT.PlayerState.ENDED)
     {
-        if (UI.timestamps.tm_loop_hierarchy.checked)
+        if (UI.timestamps.tm_loop_hierarchy.value != 'disabled')
         {
             await TryToLoadNextTimestampSet();
         }
@@ -4083,23 +4083,23 @@ async function onStateChange(state)
 
 
         const lastActive = TimestampsInHierarchy(rm_container, targetWrapper, '[last-active-timestamp]')?.[0];
-        const tmps = TimestampsInHierarchy(rm_container, targetWrapper, lastStartSel);
+        const starts = TimestampsInHierarchy(rm_container, targetWrapper, lastStartSel);
 
 
-        const active = closestBlock(lastActive)?.querySelector(lastStartSel);
+        const active = ElementsPerBlock(closestBlock(lastActive), lastStartSel)?.[0]; // go one level up and search for a "start" timestamp, bc does it makes sense to loop through "end" boundaries???
+        const index = starts.indexOf(active);
 
+        if (index === -1 && UI.timestamps.tm_loop_hierarchy.value == 'active')
+            return await RealoadThis();
+        // else value == 'auto'
 
-        const index = tmps.indexOf(active);
-        const nextIndex = (index + 1) % tmps.length;
+        const nextIndex = (index + 1) % starts.length;
+        DeactivateTimestampsInHierarchy(rm_container, targetWrapper); // might be redundant
 
+        const target = starts[nextIndex];
 
-        DeactivateTimestampsInHierarchy(rm_container, targetWrapper);
-
-
-        const targetTimestamp = tmps[nextIndex];
-
-        if (isRendered(targetTimestamp))
-            await ClickOnTimestamp(targetTimestamp);
+        if (isRendered(target))
+            await ClickOnTimestamp(target);
         else
             await RealoadThis();
     }
