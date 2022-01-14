@@ -2864,12 +2864,23 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         const commonObj = added.find(aO => aO?.blockID && aO.blockID == getObsTimestamp()?.blockID);
         if (commonObj && UI.timestamps.tm_recovery.checked)
         {
-            const assignObj = getObsTimestamp()?.target.timestamp == commonObj.target.timestamp ? { simMessage: 'visuals' } : {};
+            const block = document.getElementById(commonObj.blockID);
 
-            // if (UI.timestamps.timestamp_restore_last_active.checked)
-            setObsTimestamp(commonObj);
+            // wait until all timestamps are rendered
+            const rawComponents = ElementsPerBlock(block, '.rm-xparser-default-start, .rm-xparser-default-end');
+            if (rawComponents.length > 0)
+                return;
 
-            return await TryToRecoverActiveTimestamp(commonObj, assignObj);
+            const get = (k) => getObsTimestamp()?.target[k];
+            const equals = (k = 'timestamp') => get(k) == ElementsPerBlock(block, `[${k}]`)?.[get('index')]?.getAttribute?.(k);
+
+            // cleanup - since it's a rendered mismatch
+            if (UI.timestamps.tm_restore.value == 'match' && !equals())
+                return observedParameters.delete(blockID);
+
+            // value == 'any' - go ahead with anything in this position
+            const assignObj = equals() ? { simMessage: 'visuals' } : {};
+            return await TryToRecoverActiveTimestamp(getObsTimestamp(), assignObj);
         }
 
 
@@ -2900,17 +2911,18 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
         for (const record of mutationsList)
         {
-            if (record.target == rm_container)
+            const t = record.target;
+            if (t == rm_container)
                 continue;
             if (record.type == "attributes")
             {
-                lastActive = [...lastActive, NodesRecord(record.target, 'last-active-timestamp')];
+                lastActive = [...lastActive, NodesRecord(record.target, 'last-active-timestamp', t)];
                 continue;
             }
 
             const { removedNodes, addedNodes } = record;
-            MutationObj.removed = [...MutationObj.removed, NodesRecord(removedNodes, 'active-timestamp')];
-            added = [...added, NodesRecord(addedNodes, 'yt-gif-timestamp-emulation')];
+            MutationObj.removed = [...MutationObj.removed, NodesRecord(removedNodes, 'active-timestamp', t)];
+            added = [...added, NodesRecord(addedNodes, 'yt-gif-timestamp-emulation', t)];
         }
 
 
@@ -2921,7 +2933,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
         return { lastActive, added };
     }
-    function NodesRecord(Nodes, attr)
+    function NodesRecord(Nodes, attr, target)
     {
         if (!Nodes || Nodes.length == 0)
             return null;
@@ -2952,6 +2964,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
                 return {
                     blockID: block.id,
+                    node: target,
                     start: timestampPage(getActivePage("start")),
                     end: timestampPage(getActivePage("end")),
                     target: timestampPage(activeTimestamps.find(x => x.hasAttribute('last-active-timestamp') || x.hasAttribute(attr))),
