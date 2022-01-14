@@ -90,14 +90,18 @@
                                         <option value="any" data-tooltip="---">Any matches</option>
                                     </select>
                                 </div>
-                                <span class="dropdown-item">
-                                    <label class="dropdown-item-description"
-                                        data-tooltip="Reset yt-gif player once it's active timestamp-set is removed from DOM/Destroyed/Deleted"
-                                        for="">Reset
-                                        when removed
-                                    </label>
-                                    <input type="checkbox" name="timestamp_checkbox" id="tm_reset_on_removal">
-                                </span>
+                                <div class="dropdown-item-select">
+                                    <span class="ddm-info" for=""
+                                        data-tooltip="Reset yt-gif player once it's active timestamp-set is removed from DOM/Destroyed/Deleted">Reset
+                                        on removal</span>
+                                    <select class="ddm-select-item" id="tm_reset_on_removal">
+                                        <option value="container" title="When the container is removed">Container
+                                        </option>
+                                        <option value="block" title="When block content is removed/editing">Block
+                                        </option>
+                                        <option value="disabled" title="...">Disabled</option>
+                                    </select>
+                                </div>
 
                                 <span class="dropdown-item-separator"></span>
                                 <span class="dropdown-item">
@@ -107,13 +111,16 @@
                                     </label>
                                     <input type="checkbox" name="timestamp_checkbox" id="tm_shortcuts">
                                 </span>
-                                <span class="dropdown-item">
-                                    <label for="" class="dropdown-item-description"
-                                        data-tooltip="Recommended when recovery/restore mode is on">Mute YT GIFs when
-                                        seeking
-                                    </label>
-                                    <input type="checkbox" name="timestamp_checkbox" id="tm_mute_when_seeking">
-                                </span>
+                                <div class="dropdown-item-select">
+                                    <span class="ddm-info" for=""
+                                        data-tooltip="Recommended when recovery/restore mode is on">Seek To
+                                        Actions</span>
+                                    <select class="ddm-select-item" id="tm_seek_action">
+                                        <option value="mute">Mute</option>
+                                        <option value="pause">Pause</option>
+                                        <option value="disabled">None</option>
+                                    </select>
+                                </div>
                                 <div class="dropdown-item-select">
                                     <span class="ddm-info" for=""
                                         data-tooltip="Finish a set of timestamp boundaries, then move to the next one">Loop
