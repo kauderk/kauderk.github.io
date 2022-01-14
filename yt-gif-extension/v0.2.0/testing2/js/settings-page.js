@@ -47,11 +47,11 @@ window.YT_GIF_SETTINGS_PAGE = {
         tm_recovery: dom('1'),
         tm_seek_to: dom('strict', sel),
         tm_restore: dom('match', sel),
-        tm_reset_on_removal: dom('1'),
+        tm_reset_on_removal: dom('container', sel),
 
         tm_shortcuts: dom(),
         tm_loop_hierarchy: dom(),
-        tm_mute_when_seeking: dom(),
+        tm_seek_action: dom('disabled', sel),
 
         tm_workflow_display: {
             baseKey: BaseInitSetting('Default', sel),
@@ -68,7 +68,7 @@ window.YT_GIF_SETTINGS_PAGE = {
         sound_when_video_loops: dom('1'),
 
         awaiting_for_user_input_to_initialize: dom('', chk),
-        awaiting_input_type: dom('', str),
+        awaiting_input_type: dom('', sel),
         awaiting_with_video_thumnail_as_bg: dom('1'),
 
         iframe_buffer_stack: dom('1'),
