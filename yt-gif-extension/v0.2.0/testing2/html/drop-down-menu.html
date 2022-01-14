@@ -114,13 +114,18 @@
                                     </label>
                                     <input type="checkbox" name="timestamp_checkbox" id="tm_mute_when_seeking">
                                 </span>
-                                <span class="dropdown-item">
-                                    <label for="" class="dropdown-item-description"
+                                <div class="dropdown-item-select">
+                                    <span class="ddm-info" for=""
                                         data-tooltip="Finish a set of timestamp boundaries, then move to the next one">Loop
-                                        through rendered timestamps
-                                    </label>
-                                    <input type="checkbox" name="timestamp_checkbox" id="tm_loop_hierarchy">
-                                </span>
+                                        Timestamps</span>
+                                    <select class="ddm-select-item" id="tm_loop_hierarchy">
+                                        <option value="auto" title="Fire the next rendered timestamp">Automatically
+                                        </option>
+                                        <option value="active" title="Only if there is an active set playing">Last
+                                            Active</option>
+                                        <option value="disabled">Disabled</option>
+                                    </select>
+                                </div>
 
                                 <span class="dropdown-item-separator"></span>
                                 <div class="dropdown-item-select">
