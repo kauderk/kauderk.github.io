@@ -93,18 +93,17 @@
                                             matches</option>
                                     </select>
                                 </div>
-                                <div class="dropdown-item-select">
-                                    <span class="ddm-info" for=""
-                                        data-tooltip="Reset yt-gif player once it's active timestamp-set is removed from DOM/Destroyed/Deleted">Reset
-                                        on removal</span>
-                                    <select class="ddm-select-item" id="tm_reset_on_removal">
-                                        <option value="container" title="When the container is removed">Container
-                                        </option>
-                                        <option value="block" title="When block content is removed/editing">Block
-                                        </option>
-                                        <option value="disabled" title="...">Disabled</option>
-                                    </select>
-                                </div>
+                                <select class="ddm-select-item" id="tm_reset_on_removal">
+                                    <option value="container"
+                                        title="Recomended with recovery mode on | When the container is removed">
+                                        Container
+                                    </option>
+                                    <option value="block"
+                                        title="Recomended with recovery mode off | When block content is removed/editing">
+                                        Block
+                                    </option>
+                                    <option value="disabled" title="...">Disabled</option>
+                                </select>
 
                                 <span class="dropdown-item-separator"></span>
                                 <span class="dropdown-item">
@@ -141,18 +140,29 @@
                                 <div class="dropdown-item-select">
                                     <span class="ddm-info" for="">Display</span>
                                     <select class="ddm-select-item" id="tm_workflow_display">
-                                        <option value="lessHMS">Less HMS</option>
-                                        <option value="HMS">Formated HMS</option>
-                                        <option value="S">Seconds Only</option>
-                                        <option value="Default">Default</option>
+                                        <option value="lessHMS"
+                                            title="Show few digits as possible. E.g. 1s - 59s - 1:30 - 2:30:10">Less HMS
+                                        </option>
+                                        <option value="HMS" title="Show time with the HH:MM:SS format">Formated HMS
+                                        </option>
+                                        <option value="S" title="Show time as integers. E.g. 1s - 59s - 1000s">Seconds
+                                            Only
+                                        </option>
+                                        <option value="Default"
+                                            title="Show the exact value placed inside {{[[yt-gif/start|end]]}} components">
+                                            Default</option>
                                     </select>
                                 </div>
                                 <div class="dropdown-item-select">
                                     <span class="ddm-info" for="">Grab</span>
                                     <select class="ddm-select-item" id="tm_workflow_grab">
-                                        <option value="lessHMS">Less HMS</option>
-                                        <option value="HMS">Formated HMS</option>
-                                        <option value="S">Seconds Only</option>
+                                        <option value="lessHMS"
+                                            title="Grab few digits as possible. E.g. 1s - 59s - 1:30 - 2:30:10">Less HMS
+                                        </option>
+                                        <option value="HMS" title="Grab time with the HH:MM:SS format">Formated HMS
+                                        </option>
+                                        <option value="S" title="Grab time as integers. E.g. 1s - 59s - 1000s">Seconds
+                                            Only</option>
                                     </select>
                                 </div>
 
