@@ -1549,20 +1549,14 @@ async function Ready()
         if (tEl.hasAttribute('awaiting')) return;
         tEl.setAttribute('awaiting', true);
 
+
         const { redAnim, greenAnim, blueAnim, purpleAnim, allAnim } = getTimestampAnims();
-
-        const click = which == 1;
-        const mdlclick = which == 2;
-        const rghtclick = which == 3;
-
+        const { click, rghtclick, mdlclick } = getClicks();
 
         const {
-            lastWrapperInBlock,
-            WrappersInBlock,
-            f_uid,
-            blockExist,
-            root, crossRoot,
-            mainRoot,
+            lastWrapperInBlock, WrappersInBlock,
+            f_uid, blockExist,
+            root, crossRoot, mainRoot,
         } = await getYTwrapperRootObj(uid, tEl);
 
 
@@ -1822,6 +1816,14 @@ async function Ready()
             UTILS.toggleClasses(false, allAnim, tEl);
             UTILS.toggleClasses(true, anim, tEl);
             setTimeout(() => UTILS.toggleClasses(false, anim, tEl), 500);
+        }
+        function getClicks()
+        {
+            return {
+                click: which == 1,
+                rghtclick: which == 3,
+                mdlclick: which == 2,
+            }
         }
         function NoLongerAwaiting()
         {
