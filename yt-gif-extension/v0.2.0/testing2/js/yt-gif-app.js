@@ -2920,9 +2920,21 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     async function TryToRecoverActiveTimestamp(commonObj, assignObj)
     {
         await RAP.sleep(10);
-        const activeBlock = document.getElementById(commonObj.blockID);
 
-        const timestamps = ElementsPerBlock(activeBlock, '[yt-gif-timestamp-emulation]') || [];
+        const children = (sel, self) => !self ? rm_container?.querySelectorAll(sel) : [rm_container, ...rm_container?.querySelectorAll(sel)];
+        const atIndex = (siblings, index) => Array.from(siblings).flat(Infinity)[index];
+
+        const active_rm_container = atIndex(children('.roam-block-container', true), commonObj.containerIndex);
+        const active_block = atIndex(children('.roam-block'), commonObj.blockIndex);
+
+        const block = document.getElementById(commonObj.blockID);
+        if (block != active_block && commonObj.workflow == 'strict')
+        {
+            debugger;
+            return;
+        }
+
+        const timestamps = ElementsPerBlock(active_block, '[yt-gif-timestamp-emulation]') || [];
         const targetTimestamp = timestamps[commonObj.target.index] || timestamps[commonObj.start.index] || timestamps[commonObj.end.index] || timestamps[timestamps.length - 1];
 
         await ClickOnTimestamp(targetTimestamp, assignObj);
@@ -2986,8 +2998,15 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                     index: timestamps.indexOf(page),
                 });
 
+                const siblingIndex = (siblings, el) => Array.from(siblings).flat(Infinity).indexOf(el);
+                const children = (sel, self) => !self ? rm_container?.querySelectorAll(sel) : [rm_container, ...rm_container?.querySelectorAll(sel)];
+
                 return {
                     blockID: block.id,
+                    blockIndex: siblingIndex(children('.rm-block__input'), block),
+                    containerIndex: siblingIndex(children('.roam-block-container', true), rm_container),
+                    workflow: 'strict',
+
                     node: target,
                     start: timestampPage(getActivePage("start")),
                     end: timestampPage(getActivePage("end")),
@@ -2997,7 +3016,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     }
     function setObsTimestamp(commonObj)
     {
-        if (!commonObj)
+        if (!commonObj || !commonObj.blockID)
             return;
         const lastActive = observedParameters.get(blockID)?.lastActiveTimestamp;
 
@@ -3057,6 +3076,8 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 configParams.updateTime = e.detail.updateTime ?? configParams.updateTime;
                 configParams.mute = e.detail.mute ?? configParams.mute;
                 configParams['play-right-away'] = e.detail['play-right-away'] ?? configParams['play-right-away'];
+
+                setObsTimestamp(Object.assign(e.detail.obsTimestamp, { workflow: 'soft' }));
             }
 
             return await DeployYT_IFRAME();
@@ -3153,7 +3174,13 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     }
     async function DeployYT_IFRAME()
     {
-        await AssertActiveTimestamp(getObsTimestamp(), TryToRecoverActiveTimestamp);
+        const lastActive = getObsTimestamp();
+        if (UI.display.simulate_roam_research_timestamps.checked)
+            if (UI.timestamps.tm_recovery.checked && lastActive)
+            {
+                await TryToRecoverActiveTimestamp(lastActive);
+                await RAP.sleep(10);
+            }
 
         AssertYTvarsFromTimestamps(closest_rm_container(grandParentBlock), configParams);
 
@@ -4537,16 +4564,6 @@ function awaitingAtrr(bol, el)
     return UTILS.toggleAttribute(bol, 'awaiting', el);
 }
 /* ***************** */
-async function AssertActiveTimestamp(lastActive, TryToRecoverActiveTimestamp)
-{
-    if (lastActive)
-        if (UI.display.simulate_roam_research_timestamps.checked)
-            if (UI.timestamps.tm_recovery.checked)
-            {
-                await TryToRecoverActiveTimestamp(lastActive);
-                await RAP.sleep(10);
-            }
-}
 function AssertYTvarsFromTimestamps(rm_container, configParams)
 {
     if (UI.display.simulate_roam_research_timestamps.checked)
