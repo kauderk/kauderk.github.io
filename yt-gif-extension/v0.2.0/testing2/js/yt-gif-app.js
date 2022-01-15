@@ -2598,6 +2598,8 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             UIDtoURLInstancesMapMap.delete(uid);
             if (!UI.timestamps.tm_recovery.checked)
                 DeactivateTimestampsInHierarchy(rm_container, wrapper);
+            if (!isRendered(rm_container) && rm_container.closest('.rm-sidebar-outline'))
+                observedParameters.delete(blockID);
         },
     }
     UTILS.ObserveRemovedEl_Smart(options);
