@@ -4549,6 +4549,13 @@ async function ClickOnTimestamp(target, assignObj = {})
         },
     )
 }
+async function ClickResetWrapper(targetWrapper)
+{
+    if (!targetWrapper) return;
+
+    const reset = targetWrapper.querySelector('.yt-gif-reset-boundaries');
+    await reset?.dispatchEvent(new Event('click'));
+}
 /* ***************** */
 function ElementsPerBlock(block, selector)
 {
