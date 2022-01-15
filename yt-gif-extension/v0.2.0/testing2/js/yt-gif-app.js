@@ -4035,8 +4035,9 @@ async function onPlayerReady(event)
     {
         if (e.buttons == 4) return true;
 
-        for (const name in UI.InAndOutKeys)
-            if (e[name] && UTILS.isTrue(UI.InAndOutKeys[name]))
+        const keys = UI.InAndOutKeys.keysArray.split(',').map(s => s.trim()).filter(s => !!s);
+        for (const name of keys)
+            if (e[name] && UTILS.isTrue(name))
                 return true;
 
         return false;
