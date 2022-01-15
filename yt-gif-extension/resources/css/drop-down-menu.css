@@ -556,7 +556,7 @@ max-width: fit-content;
   border-color: transparent;
   cursor: pointer;
   height: fit-content;
-  margin: var(--m);
+  margin: 10px 0px;
   align-self: center;
 }
 
@@ -567,7 +567,7 @@ max-width: fit-content;
 
   padding: calc(var(--m) / 2);
 
-  border-radius: var(--m);
+  border-radius: 5px;
 }
 
 .ddm-select-w{
@@ -580,14 +580,15 @@ max-width: fit-content;
   display: grid;
   width: auto;
   grid-template-columns: fit-content(50%) fit-content(50%); /* https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns#:~:text=grid%2Dtemplate%2Dcolumns%3A-,fit%2Dcontent(40%25)%3B,-grid%2Dtemplate%2Dcolumns */
-  
   padding-right: 10px;
+  align-items: center;
 }
 
 .dropdown-item-select .ddm-info{
   justify-self: end;
   width: max-content;
-  margin: var(--m);
+  margin: 5px 10px;
+  padding: 3px 5px;
 }
 .dropdown-item-select .ddm-select-item{
   justify-self: end;
