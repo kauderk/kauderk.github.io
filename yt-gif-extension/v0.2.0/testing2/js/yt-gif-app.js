@@ -4446,12 +4446,12 @@ function closest_rm_container(el)
 {
     return el?.closest('.roam-block-container')
 }
-function getWrapperUrlSufix(wrapper)
+function getWrapperUrlSufix(wrapper, uid = '')
 {
     const url = wrapper.getAttribute(attrInfo.url.path);
     const urlIndex = wrapper.getAttribute(attrInfo.url.index);
     const urlSufix = properBlockIDSufix(url, urlIndex);
-    return urlSufix;
+    return uid + urlSufix;
 }
 function properBlockIDSufix(url, urlIndex)
 {
