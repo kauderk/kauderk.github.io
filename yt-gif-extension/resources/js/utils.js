@@ -46,6 +46,29 @@ kauderk.util = ((util) =>
 
         return s;
     }
+    util.seconds2time = (seconds) =>
+    {// https://stackoverflow.com/questions/6312993/javascript-seconds-to-time-string-with-format-hhmmss#:~:text=Variation%20on%20a%20theme.%20Handles%20single%20digit%20seconds%20a%20little%20differently
+        const hours = Math.floor(seconds / 3600);
+        let minutes = Math.floor((seconds - (hours * 3600)) / 60);
+        const _seconds = seconds - (hours * 3600) - (minutes * 60);
+        let time = "";
+
+        if (hours != 0)
+            time = hours + ":";
+
+        if (minutes != 0 || time !== "")
+        {
+            minutes = (minutes < 10 && time !== "") ? "0" + minutes : String(minutes);
+            time += minutes + ":";
+        }
+
+        if (time === "")
+            time = _seconds;
+        else
+            time += (_seconds < 10) ? "0" + _seconds : String(_seconds);
+
+        return time;
+    }
     util.simMouseEvent = (eventName) =>
     {
         return new MouseEvent(eventName,
