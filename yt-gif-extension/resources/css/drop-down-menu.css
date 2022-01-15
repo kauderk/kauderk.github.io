@@ -225,7 +225,7 @@ span.dropdown-info-message {
   --drop-menu-btn-h: var(--submenu-styles-item-bg-h-h);
   --dropdown--bg: var(--submenu-styles-content-bg);
 }
-.yt-gif-fullscreen-style{
+.ddm-inline{
   align-self: end;
   --m: 5px;
 }
