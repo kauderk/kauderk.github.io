@@ -1768,6 +1768,17 @@ async function Ready()
         }
 
 
+        function ToggleBoundarySet(targetWrapper, bol = true)
+        {
+            if (targetNodePpts.pears)
+                targetNodePpts.pears.forEach(o => toogleActiveAttr(bol, o.targetNode));
+
+            else
+                toogleActiveAttr(bol, targetNodePpts.self.targetNode);
+
+            UTILS.toggleAttribute(bol, 'last-active-timestamp', targetNodePpts.self.targetNode);
+            UTILS.toggleAttribute(bol, 'yt-active', targetWrapper);
+
             function toogleActiveAttr(bol, el)
             {
                 if (el)
