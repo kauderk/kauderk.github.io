@@ -4553,7 +4553,7 @@ async function ClickOnTimestamp(target, assignObj = {})
             currentTarget: target,
             which: 1,
             seekToMessage: UI.timestamps?.tm_seek_to?.value == 'soft' ? 'seekTo-soft' : 'seekTo-strict',
-            mute: UI.timestamps?.tm_mute_when_seeking?.checked,
+            mute: UI.timestamps.tm_seek_action.value == 'mute',
             ...assignObj
         },
     )
