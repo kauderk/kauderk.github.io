@@ -1630,19 +1630,16 @@ async function Ready()
 
             const boundaryObj = await validateTimestampToPlay(r);
 
+            const boundaryObj = await getBoundaryObj(r);
             if (!boundaryObj.success)
                 return;
-
             if (simMessage == 'visuals')
                 pulse(purpleAnim);
 
-            if (!simMessage || !boundaryObj.sameBoundaries || seekToMessage == 'seekTo-strict')
-                await RightClick(r, boundaryObj);
-        }
-        async function RightClick(r, boundaryObj)
-        {
+
             // 1.
-            const { secondsOnly, record, currentTimeAlternative, targetWrapper } = boundaryObj;
+            const { record, obsTimestamp, targetWrapper, timestampObj } = boundaryObj;
+            const { start, end, currentTime, seekTo, ok } = timestampObj;
 
 
             // 2.
