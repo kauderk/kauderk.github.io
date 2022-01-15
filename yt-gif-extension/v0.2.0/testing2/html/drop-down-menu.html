@@ -93,17 +93,22 @@
                                             matches</option>
                                     </select>
                                 </div>
-                                <select class="ddm-select-item" id="tm_reset_on_removal">
-                                    <option value="container"
-                                        title="Recomended with recovery mode on | When the container is removed">
-                                        Container
-                                    </option>
-                                    <option value="block"
-                                        title="Recomended with recovery mode off | When block content is removed/editing">
-                                        Block
-                                    </option>
-                                    <option value="disabled" title="...">Disabled</option>
-                                </select>
+                                <div class="dropdown-item-select" data-bind="timestamp-experience">
+                                    <span class="ddm-info" for=""
+                                        data-tooltip="Reset yt-gif player once it's active timestamp-set is removed from DOM/Destroyed/Deleted">Reset
+                                        on removal</span>
+                                    <select class="ddm-select-item" id="tm_reset_on_removal">
+                                        <option value="container"
+                                            title="Recomended with recovery mode on | When the container is removed">
+                                            Container
+                                        </option>
+                                        <option value="block"
+                                            title="Recomended with recovery mode off | When block content is removed/editing">
+                                            Block
+                                        </option>
+                                        <option value="disabled" title="...">Disabled</option>
+                                    </select>
+                                </div>
 
                                 <span class="dropdown-item-separator"></span>
                                 <span class="dropdown-item">
