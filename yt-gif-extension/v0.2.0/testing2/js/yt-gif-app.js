@@ -1513,6 +1513,8 @@ async function Ready()
                         o.targetNode.style.filter = `brightness(70%)`;
                     }
 
+                    o.targetNode.oncontextmenu = e => e.preventDefault(); //https://codinhood.com/nano/dom/disable-context-menu-right-click-javascript
+
                     async function OnClicks(e)
                     {
                         await PlayPauseOnClicks(e, o.tempUID, { self: o, pears: (isPear && completePears) ? lastArr : null });
@@ -1558,11 +1560,6 @@ async function Ready()
             f_uid, blockExist,
             root, crossRoot, mainRoot,
         } = await getYTwrapperRootObj(uid, tEl);
-
-
-        // disable context menu
-        tEl.oncontextmenu = e => e.preventDefault(); //https://codinhood.com/nano/dom/disable-context-menu-right-click-javascript
-
 
 
 
