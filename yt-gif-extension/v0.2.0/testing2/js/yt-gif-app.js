@@ -1658,16 +1658,15 @@ async function Ready()
             }
 
 
-            // 4. play this
+            // 5.
             targetWrapper?.dispatchEvent(new CustomEvent('customPlayerReady',
                 {
                     bubbles: true,
                     detail: {
-                        start,
-                        end,
-                        updateTime: currentTime ?? seekTo,
+                        start, end, updateTime: currentTime ?? seekTo,
                         ['play-right-away']: true,
-                        mute: UI?.timestamps?.tm_mute_when_seeking?.checked && UI?.display?.simulate_roam_research_timestamps?.checked,
+                        mute: UI.timestamps.tm_seek_action.value == 'mute' && UI.display.simulate_roam_research_timestamps.checked,
+                        obsTimestamp,
                     },
                 }));
 
