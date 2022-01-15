@@ -1786,6 +1786,39 @@ async function Ready()
             }
         }
 
+        async function pauseLastBlock_SimHoverOut(r)
+        {
+            //lastWrapperInBlock(r)?.setAttribute('play-right-away', false);
+            lastWrapperInBlock(r)?.dispatchEvent(UTILS.simHoverOut()); // hover out -> videoIsPlayingWithSound(false)
+        }
+
+
+        async function openingOnCrossRoot()
+        {
+            await RAP.setSideBarState(3);
+            await RAP.sleep(50);
+
+            pulse(blueAnim);
+            if (WrappersInBlock(crossRoot).length == 0) // 0 instances on crossRoot
+            {
+                await RAP.navigateToUiOrCreate(f_uid, (root == mainRoot), 'block');
+            }
+
+            const prevWrapper = lastWrapperInBlock(crossRoot);
+            const isRendered = prevWrapper instanceof Element && UTILS.isElementVisible(prevWrapper);
+            await RAP.sleep(isRendered ? 50 : 500); // visible? then quicker
+
+            ScrollToTargetWrapper(crossRoot);
+
+            await playLastBlockOnly_SimHover(crossRoot);
+            return NoLongerAwaiting();
+        }
+
+
+        function ScrollToTargetWrapper(r)
+        {
+            lastWrapperInBlock(r)?.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+        }
         async function getYTwrapperRootObj(uid, tEl)
         {
             const { foundBlock } = await getLastComponentInHierarchy(uid);
@@ -1820,31 +1853,30 @@ async function Ready()
 
 
             // root -> roam-article || rm-sidebar-outline
-            const WrappersInBlock = (r) => [...document.querySelectorAll(`.${r} [id$="${f_uid}"] .yt-gif-wrapper`)]
-                .map(pw => closest_rm_container(pw))
-                .filter(pc => pc.contains(tEl))
-                .map(c => [...c.querySelectorAll(`[id$="${f_uid}"] .yt-gif-wrapper`)])
-                .flat(Infinity);
+            const WrappersInBlock = (r) =>
+            {
+                const wrappers = [...document.querySelectorAll(`.${r} [id$="${f_uid}"] .yt-gif-wrapper`)];
+
+                if (r == PagesObj.main.crossRoot)
+                    return wrappers; // they don't have this tEl
+
+                return wrappers.map(pw => closest_rm_container(pw))
+                    .filter(pc => pc.contains(tEl))
+                    .map(c => [...c.querySelectorAll(`[id$="${f_uid}"] .yt-gif-wrapper`)])
+                    .flat(Infinity);
+            }
+
             const lastWrapperInBlock = (r = root) => [...WrappersInBlock(r)]?.pop();
 
+
             return {
-                lastWrapperInBlock,
-                WrappersInBlock,
-                f_uid,
-                blockExist,
-                root, crossRoot,
-                mainRoot: PagesObj.main.root,
+                lastWrapperInBlock, WrappersInBlock,
+                f_uid, blockExist,
+                root, crossRoot, mainRoot: PagesObj.main.root,
             }
         }
-        async function pauseLastBlock_SimHoverOut(r)
-        {
-            //lastWrapperInBlock(r)?.setAttribute('play-right-away', false);
-            lastWrapperInBlock(r)?.dispatchEvent(UTILS.simHoverOut()); // hover out -> videoIsPlayingWithSound(false)
-        }
-        function ScrollToTargetWrapper(r)
-        {
-            lastWrapperInBlock(r)?.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
-        }
+
+
         function pulse(anim)
         {
             UTILS.toggleClasses(false, allAnim, tEl);
