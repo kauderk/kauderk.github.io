@@ -2112,12 +2112,16 @@ async function Ready()
     }
     function fmtTimestamp(value)
     {
+        const str2sec = (str) => UTILS.HMSToSecondsOnly(str)
         let fmt = (tms) => tms.getAttribute('timestamp');
 
-        if (value == 'HMS')
-            fmt = (tms) => UTILS.convertHMS(UTILS.HMSToSecondsOnly(tms.innerHTML));
+        if (value == 'lessHMS')
+            fmt = (tms) => UTILS.seconds2time(str2sec(tms.innerHTML));
+        else if (value == 'HMS')
+            fmt = (tms) => UTILS.convertHMS(str2sec(tms.innerHTML));
         else if (value == 'S')
-            fmt = (tms) => UTILS.HMSToSecondsOnly(tms.innerHTML);
+            fmt = (tms) => str2sec(tms.innerHTML);
+
         return fmt;
     }
 
@@ -4491,30 +4495,28 @@ async function getTimestampObj_smart(page)
 
     async function getTimestampObj(page, uid)
     {
-        let { HMS, S, foundBlock, targetBlock } = await getLastComponentInHierarchy(uid);
+        const { formats, foundBlock, targetBlock } = await getLastComponentInHierarchy(uid);
         if (!foundBlock) return failObj;
 
-        const { uid: tUid } = targetBlock; // bulky and clunky... because there only two options
+        const { lestHMS, HMS, S } = formats;
 
-        HMS = (!HMS || HMS.includes('NaN')) ? targetBlock[page].HMS : HMS;
-        S = (!S) ? targetBlock[page].S : S;
-        S = parseInt(S);
+        const obj = (v) => ({
+            value: v,
+            fmt: `{{[[yt-gif/${page}]]: ${v} }}`,
+        });
 
         return {
-            S: {
-                value: parseInt(S),
-                fmt: fmtCmpnt(S),
-            },
-            HMS: {
-                value: HMS,
-                fmt: fmtCmpnt(HMS),
-            },
-            uid: tUid,
+            lessHMS: obj(fmt({ lestHMS })),
+            HMS: obj(fmt({ HMS })),
+            S: obj(parseInt(S ?? targetBlock[page].S)),
+            uid: targetBlock?.uid,
         }
 
-        function fmtCmpnt(select)
-        {
-            return `{{[[yt-gif/${page}]]: ${select} }}`;
+        function fmt(obj)
+        {// https://www.codegrepper.com/code-examples/javascript/get+var+name+javascript#:~:text=%E2%80%9Cget%20var%20name%20javascript%E2%80%9D%20Code%20Answer
+            const key = Object.keys(obj)[0];
+            const value = obj[key]; // Hmmm...
+            return (!value || value.includes('NaN')) ? targetBlock[page][key] : value;
         }
     }
 }
@@ -4693,8 +4695,7 @@ async function getLastComponentInHierarchy(tempUID, _Config = YTGIF_Config, incl
         const endObj = boundaryObj(lastUrl.match(/(end=)(?:(\d+))/)?.[2] || 0);
 
         return {
-            HMS: UTILS.convertHMS(crrTime),
-            S: crrTime,
+            formats: boundaryObj(crrTime),
             foundBlock: {
                 string,
                 uid,
@@ -4712,8 +4713,9 @@ async function getLastComponentInHierarchy(tempUID, _Config = YTGIF_Config, incl
         function boundaryObj(value)
         {
             return {
+                lestHMS: UTILS.seconds2time(parseInt(value)),
+                HMS: UTILS.convertHMS(value),
                 S: value,
-                HMS: UTILS.convertHMS(value)
             }
         }
     }
