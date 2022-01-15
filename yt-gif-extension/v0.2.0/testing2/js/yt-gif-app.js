@@ -2922,14 +2922,14 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
         function canReset(id)
         {
-            if (UI.timestamps.tm_reset_on_removal.value == 'container')
+            if ('block' == UI.timestamps.tm_reset_on_removal.value)
             {
-                if (!document.getElementById(id))
+                if (!document.querySelector('div.rm-block__input#' + id))
                     return true;
             }
-            else
+            else if ('container' == UI.timestamps.tm_reset_on_removal.value)
             {
-                if (!document.querySelector('.rm-block__input#' + id))
+                if (!document.getElementById(id))
                     return true;
             }
         }
@@ -4540,7 +4540,7 @@ async function getTimestampObj_smart(page)
         {// https://www.codegrepper.com/code-examples/javascript/get+var+name+javascript#:~:text=%E2%80%9Cget%20var%20name%20javascript%E2%80%9D%20Code%20Answer
             const key = Object.keys(obj)[0];
             const value = obj[key]; // Hmmm...
-            return (!value || value.includes('NaN')) ? targetBlock[page][key] : value;
+            return (!value || value?.includes?.('NaN')) ? targetBlock[page][key] : value;
         }
     }
 }
@@ -4601,17 +4601,6 @@ function ElementsPerBlock(block, selector)
 function awaitingAtrr(bol, el)
 {
     return UTILS.toggleAttribute(bol, 'awaiting', el);
-}
-/* ***************** */
-function AssertYTvarsFromTimestamps(rm_container, configParams)
-{
-    if (UI.display.simulate_roam_research_timestamps.checked)
-        if (UI.timestamps.tm_recovery.checked)
-        {
-            const TryActiveTimestamp = (p) => rm_container?.querySelector(`.rm-video-timestamp[timestamp-style="${p}"][active-timestamp]`)?.getAttribute('timestamp') || '';
-            configParams.start = UTILS.HMSToSecondsOnly(TryActiveTimestamp('start')) || configParams.start;
-            configParams.end = UTILS.HMSToSecondsOnly(TryActiveTimestamp('end')) || configParams.end;
-        }
 }
 /* ***************** */
 async function ReloadYTVideo({ t, start, end })
