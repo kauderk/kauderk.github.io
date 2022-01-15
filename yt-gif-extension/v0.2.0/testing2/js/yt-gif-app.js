@@ -1711,7 +1711,7 @@ async function Ready()
                 const currentTime = tm ?? currentTimeAlternative ?? start;
 
                 const bounded = ((tm = currentTime) => tm >= start && tm <= end)();
-                const farEnough = ((tm = currentTime) => tm > (seekTo + 1))();
+                const farEnough = ((tm = currentTime) => tm + 1 > seekTo)();
 
                 return {
                     start, end,
@@ -2876,7 +2876,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
         // 1. Reset when removed
-        const removedActiveObj = MutationObj.removed.find(rO => rO?.target?.timestamp && !document.getElementById(rO.blockID));
+        const removedActiveObj = MutationObj.removed.find(rO => rO?.target?.timestamp && canReset(rO.blockID));
         if (removedActiveObj && UI.timestamps.tm_reset_on_removal.value != 'disabled')
         {
             MutationObj.removed.length = 0;
@@ -2917,6 +2917,21 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             if (inactiveYetAdded)
                 MutationObj.removed.splice(MutationObj.removed.indexOf(inactiveYetAdded), 1);
         }
+
+
+        function canReset(id)
+        {
+            if (UI.timestamps.tm_reset_on_removal.value == 'container')
+            {
+                if (!document.getElementById(id))
+                    return true;
+            }
+            else
+            {
+                if (!document.querySelector('.rm-block__input#' + id))
+                    return true;
+            }
+        }
     }
     async function TryToRecoverActiveTimestamp(commonObj, assignObj)
     {
@@ -2925,14 +2940,15 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         const children = (sel, self) => !self ? rm_container?.querySelectorAll(sel) : [rm_container, ...rm_container?.querySelectorAll(sel)];
         const atIndex = (siblings, index) => Array.from(siblings).flat(Infinity)[index];
 
-        const active_rm_container = atIndex(children('.roam-block-container', true), commonObj.containerIndex);
-        const active_block = atIndex(children('.roam-block'), commonObj.blockIndex);
+        // const active_rm_container = atIndex(children('.roam-block-container', true), commonObj.containerIndex);
+        let active_block = atIndex(children('.roam-block'), commonObj.blockIndex);
 
         const block = document.getElementById(commonObj.blockID);
         if (block != active_block && commonObj.workflow == 'strict')
         {
-            debugger;
-            return;
+            if (!rm_container.contains(block))
+                return;
+            active_block = block; // Hmmm...
         }
 
         const timestamps = ElementsPerBlock(active_block, '[yt-gif-timestamp-emulation]') || [];
