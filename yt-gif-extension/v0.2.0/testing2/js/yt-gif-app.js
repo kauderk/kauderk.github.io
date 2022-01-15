@@ -1579,9 +1579,11 @@ async function Ready()
 
         if (click || rghtclick) // success
         {
-            if (click)
+            if (e['altKey'])
+                await ClickResetWrapper(lastWrapperInBlock(root));
+            else if (click)
                 await playLastBlockOnly_SimHover(root);
-            if (rghtclick)
+            else if (rghtclick)
                 pauseLastBlock_SimHoverOut(root);
 
             return NoLongerAwaiting();
@@ -1592,6 +1594,7 @@ async function Ready()
         {
             return await openingOnCrossRoot();
         }
+
 
 
         return NoLongerAwaiting();
