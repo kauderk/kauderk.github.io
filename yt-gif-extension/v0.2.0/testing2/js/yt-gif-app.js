@@ -1650,9 +1650,12 @@ async function Ready()
                 record?.player?.seekTo?.(seekTo);
 
 
-            // 3.
-            await ReloadYTVideo({ t: record?.player, start, end });
-            seekingTo_cb(currentTime ?? currentTimeAlternative ?? start);
+            // 4.1
+            if (UI.display.simulate_roam_research_timestamps.checked)
+            {
+                record?.isSoundingFine?.(!(UI.timestamps.tm_seek_action.value == 'mute'));
+                record?.togglePlay?.(!(UI.timestamps.tm_seek_action.value == 'pause'));
+            }
 
 
             // 4. play this
