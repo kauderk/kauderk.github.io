@@ -1636,11 +1636,18 @@ async function Ready()
             const { start, end, currentTime, seekTo, ok } = timestampObj;
 
 
-            // 2.
-            const start = sec("start") ? secondsOnly : (pearSec() || 0);
-            const end = sec("end") ? secondsOnly : pearSec() || record?.player?.getDuration?.();
-            const seekTo = sec("end") ? secondsOnly + 1 : secondsOnly;
-            const currentTime = record?.player?.getCurrentTime?.();
+            // 3.0
+            if (simMessage == 'visuals' && ok && seekToMessage != 'seekTo-strict')
+                return;
+            // 3.1
+            await ReloadYTVideo({ t: record?.player, start, end });
+
+
+            // 4.0
+            if (seekToMessage == 'seekTo-soft' && ok)
+                record?.player?.seekTo?.(currentTime);
+            else if (seekTo != start) // ReloadYTVideo already seeks to start
+                record?.player?.seekTo?.(seekTo);
 
 
             // 3.
@@ -1662,40 +1669,11 @@ async function Ready()
                 }));
 
 
-            // 5.
+            // 6.
             if (e['ctrlKey'])
                 ScrollToTargetWrapper(r);
-
-
-            function seekingTo_cb(currentTime)
-            {
-                const bounded = ((tm = currentTime) => tm >= start && tm <= end)();
-                const farEnough = ((tm = currentTime) => tm > (seekTo + 1))();
-                record?.player?.playVideo?.();
-
-                if (seekToMessage == 'seekTo-soft' && bounded && farEnough)
-                    record?.player?.seekTo?.(currentTime);
-                else if (seekTo != start) // ReloadYTVideo already seeks to start
-                    record?.player?.seekTo?.(seekTo);
-
-                if (UI?.display?.simulate_roam_research_timestamps?.checked)
-                    if (UI?.timestamps?.tm_mute_when_seeking?.checked)
-                        record?.player?.mute?.();
-
-                    else
-                        record?.player?.unMute?.();
-            }
-            function sec(p)
-            {
-                return targetNodePpts.self.page == p;
-            }
-            function pearSec()
-            {
-                return UTILS.HMSToSecondsOnly(targetNodePpts.pears?.find(o => o != targetNodePpts.self)?.timestamp || '');
-            }
         }
-
-        async function validateTimestampToPlay(r)
+        async function getBoundaryObj(r)
         {
             const targetWrapper = lastWrapperInBlock(r);
 
