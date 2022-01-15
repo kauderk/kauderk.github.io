@@ -2617,6 +2617,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     }
     else
     {
+        await AssertParamsClickTimestamp();
         return await DeployYT_IFRAME();
     }
 
@@ -3052,6 +3053,20 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         }
         return null;
     }
+    async function AssertParamsClickTimestamp()
+    {
+        const lastActive = getObsTimestamp();
+        if (UI.display.simulate_roam_research_timestamps.checked)
+            if (UI.timestamps.tm_recovery.checked && lastActive)
+            {
+                await TryToRecoverActiveTimestamp(lastActive);
+                await RAP.sleep(10);
+
+                const TryActiveTimestamp = (p) => rm_container?.querySelector(`.rm-video-timestamp[timestamp-style="${p}"][active-timestamp]`)?.getAttribute('timestamp') || '';
+                configParams.start = UTILS.HMSToSecondsOnly(TryActiveTimestamp('start')) || configParams.start;
+                configParams.end = UTILS.HMSToSecondsOnly(TryActiveTimestamp('end')) || configParams.end;
+            }
+    }
 
     // 7.0
     async function DeployYT_IFRAME_OnInteraction()
@@ -3085,7 +3100,10 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             RemoveAllListeners();
 
             if (!e.type.includes('custom'))
+            {
+                await AssertParamsClickTimestamp();
                 wrapper.dispatchEvent(UTILS.simHover());
+            }
             else if (typeof e.detail == 'object')
             {
                 configParams.start = e.detail.start ?? configParams.start;
@@ -3191,16 +3209,6 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     }
     async function DeployYT_IFRAME()
     {
-        const lastActive = getObsTimestamp();
-        if (UI.display.simulate_roam_research_timestamps.checked)
-            if (UI.timestamps.tm_recovery.checked && lastActive)
-            {
-                await TryToRecoverActiveTimestamp(lastActive);
-                await RAP.sleep(10);
-            }
-
-        AssertYTvarsFromTimestamps(closest_rm_container(grandParentBlock), configParams);
-
         return record.player = new window.YT.Player(newId, playerConfig(configParams));
     }
 }
