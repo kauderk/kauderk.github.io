@@ -3232,6 +3232,14 @@ async function onPlayerReady(event)
 
             return startM == start && endM == end;
         }
+        rocording.isSoundingFine = function (bol = true, el = iframe)
+        {
+            isSoundingFine(bol, el)
+        }
+        rocording.togglePlay = function (bol = true, el = iframe)
+        {
+            togglePlay(bol, el)
+        }
     }
     if (parent.hasAttribute('loaded'))
     {
