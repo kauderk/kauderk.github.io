@@ -1721,28 +1721,51 @@ async function Ready()
             }
 
 
+            // 2.1
+            const targetBlockID = [...recordedIDs.keys()].reverse().find(k => k?.startsWith(closestYTGIFparentID(targetWrapper)));
+            const record = recordedIDs.get(targetBlockID);
+            const obsBlockID = [...observedParameters.keys()].reverse().find(k => k?.endsWith(getWrapperUrlSufix(targetWrapper, f_uid)));
+            const obsTimestampOrg = observedParameters.get(obsBlockID)?.lastActiveTimestamp ?? {};
+            const obsTimestamp = { ...obsTimestampOrg };
+
+
             // 3.
-            const wasLastActive = targetNodePpts.self.targetNode.hasAttribute('last-active-timestamp');
             DeactivateTimestampsInHierarchy(closest_rm_container(targetWrapper), targetWrapper);
-
-            if (targetNodePpts.pears)
-                targetNodePpts.pears.forEach(o => toogleActiveAttr(true, o.targetNode));
-
-            else
-                toogleActiveAttr(true, targetNodePpts.self.targetNode);
-
-            UTILS.toggleAttribute(true, 'last-active-timestamp', targetNodePpts.self.targetNode);
-            UTILS.toggleAttribute(true, 'yt-active', targetWrapper);
+            ToggleBoundarySet(targetWrapper, true);
 
 
             return {
                 sameBoundaries: record?.sameBoundaries?.(),
                 success: true,
-                secondsOnly,
-                record,
-                currentTimeAlternative: lastBlockIDParameters.get(targetBlockID)?.updateTime,
-                targetWrapper
+
+                record, obsTimestamp, targetWrapper,
+
+                timestampObj: getSeconds(),
             }
+
+            function getSeconds()
+            {
+                const start = sec("start") ? secondsOnly : (pearSec() || 0);
+                const end = sec("end") ? secondsOnly : pearSec() || record?.player?.getDuration?.();
+                const seekTo = sec("end") ? secondsOnly + 1 : secondsOnly;
+
+                const tm = record?.player?.getCurrentTime?.();
+                const currentTimeAlternative = lastBlockIDParameters.get(targetBlockID)?.updateTime;
+                const currentTime = tm ?? currentTimeAlternative ?? start;
+
+                const bounded = ((tm = currentTime) => tm >= start && tm <= end)();
+                const farEnough = ((tm = currentTime) => tm > (seekTo + 1))();
+
+                return {
+                    start, end,
+                    seekTo, currentTime,
+                    ok: bounded && farEnough
+                }
+
+                function sec(p) { return targetNodePpts.self.page == p }
+                function pearSec() { return UTILS.HMSToSecondsOnly(targetNodePpts.pears?.find(o => o != targetNodePpts.self)?.timestamp || '') }
+            }
+        }
 
 
             function toogleActiveAttr(bol, el)
