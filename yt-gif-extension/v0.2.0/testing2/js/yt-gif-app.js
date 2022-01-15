@@ -2866,21 +2866,18 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
         // 0. set last active timestamp by attribute
-        const lastActiveTimestamp = UI.timestamps.tm_reset_on_removal.checked ? lastActive.find(aO => aO?.target?.timestamp && aO.blockID) : null;
+        const lastActiveTimestamp = lastActive.find(aO => aO?.target?.timestamp && aO.blockID);
         setObsTimestamp(lastActiveTimestamp);
 
 
 
         // 1. Reset when removed
         const removedActiveObj = MutationObj.removed.find(rO => rO?.target?.timestamp && !document.getElementById(rO.blockID));
-        if (removedActiveObj && UI.timestamps.tm_reset_on_removal.checked)
+        if (removedActiveObj && UI.timestamps.tm_reset_on_removal.value != 'disabled')
         {
             MutationObj.removed.length = 0;
 
-            observedParameters.delete(blockID);
-
-            const reset = [...grandParentBlock.querySelectorAll('.yt-gif-wrapper .yt-gif-reset-boundaries')]?.pop();
-            return await reset?.dispatchEvent(new Event('click'));
+            return await ClickResetWrapper([...grandParentBlock.querySelectorAll('.yt-gif-wrapper')]?.pop());
         }
 
 
