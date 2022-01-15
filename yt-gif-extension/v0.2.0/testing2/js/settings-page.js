@@ -43,24 +43,18 @@ window.YT_GIF_SETTINGS_PAGE = {
     },
 
     timestamps: {
-        baseKey: BaseSetting(chk),
-        tm_recovery: dom('1'),
-        tm_seek_to: dom('strict', sel),
-        tm_restore: dom('match', sel),
-        tm_reset_on_removal: dom('container', sel),
+        baseKey: BaseSetting(sel),
+        tm_recovery: dom('1', chk),
+        tm_seek_to: dom('strict'),
+        tm_restore: dom('match'),
+        tm_reset_on_removal: dom('container'),
 
-        tm_shortcuts: dom(),
-        tm_loop_hierarchy: dom(),
-        tm_seek_action: dom('disabled', sel),
+        tm_shortcuts: dom('', chk),
+        tm_loop_hierarchy: dom('disabled'),
+        tm_seek_action: dom('disabled'),
 
-        tm_workflow_display: {
-            baseKey: BaseInitSetting('Default', sel),
-            twd_opt: InlinePmt(`\nHMS -> Hours, Minutes, Seconds \nS -> seconds only \nDefault`),
-        },
-        tm_workflow_grab: {
-            baseKey: BaseInitSetting('HMS', sel),
-            twg_opt: InlinePmt(`\nHMS -> Hours, Minutes, Seconds \nS - seconds only `),
-        },
+        tm_workflow_display: dom('default'),
+        tm_workflow_grab: dom('HMS'),
     },
 
     experience: {
@@ -68,7 +62,7 @@ window.YT_GIF_SETTINGS_PAGE = {
         sound_when_video_loops: dom('1'),
 
         awaiting_for_user_input_to_initialize: dom('', chk),
-        awaiting_input_type: dom('', sel),
+        awaiting_input_type: dom('mouseenter', sel),
         awaiting_with_video_thumnail_as_bg: dom('1'),
 
         iframe_buffer_stack: dom('1'),
@@ -79,7 +73,6 @@ window.YT_GIF_SETTINGS_PAGE = {
         baseKey: BaseSetting(sel),
         play_style: dom('strict'),
         play_last_active_player_off_intersection: dom('1', chk),
-
 
         mute_style: dom('strict'),
 
@@ -110,10 +103,8 @@ window.YT_GIF_SETTINGS_PAGE = {
     },
     InAndOutKeys: {
         baseKey: BaseSetting(chk),
-        ctrlKey: dom('1'),
-        shiftKey: dom(),
-        altKey: dom(),
-        iaok_opt: InlinePmt(`middle mouse button is on by default`),
+        keysArray: dom('ctrlKey', str),
+        iaok_opt: InlinePmt(`Any permutation of: altKey, shiftKey, ctrlKey \nfollowed by a "," coma\n\nMiddle mouse button is on by default`),
     },
     defaultPlayerValues: {
         baseKey: BaseSetting(),
