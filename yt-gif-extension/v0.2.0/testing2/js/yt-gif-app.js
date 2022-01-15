@@ -1598,31 +1598,10 @@ async function Ready()
 
 
 
-        async function openingOnCrossRoot()
-        {
-            await RAP.setSideBarState(3);
-            await RAP.sleep(50);
-
-            pulse(blueAnim);
-            if (WrappersInBlock(crossRoot).length == 0) // 0 instances on crossRoot
-            {
-                await RAP.navigateToUiOrCreate(f_uid, (root == mainRoot), 'block');
-            }
-
-            const prevWrapper = lastWrapperInBlock(crossRoot);
-            const isRendered = prevWrapper instanceof Element && UTILS.isElementVisible(prevWrapper);
-            await RAP.sleep(isRendered ? 50 : 500); // visible? then quicker
-
-            ScrollToTargetWrapper(crossRoot);
-
-            await playLastBlockOnly_SimHover(crossRoot);
-            return NoLongerAwaiting();
-        }
         async function playLastBlockOnly_SimHover(r)
         {
             pulse(greenAnim);
 
-            const boundaryObj = await validateTimestampToPlay(r);
 
             const boundaryObj = await getBoundaryObj(r);
             if (!boundaryObj.success)
@@ -1691,8 +1670,6 @@ async function Ready()
 
 
             // 2. 
-            const targetBlockID = [...recordedIDs.keys()].reverse().find(k => k?.startsWith(closestYTGIFparentID(targetWrapper)));
-            const record = recordedIDs.get(targetBlockID);
             const validTimestamp = tEl.innerHTML.match(StartEnd_Config.targetStringRgx)?.[0];
             const secondsOnly = UTILS.HMSToSecondsOnly(validTimestamp);
             if (!validTimestamp || typeof secondsOnly !== 'number')
