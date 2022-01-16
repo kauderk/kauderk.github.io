@@ -359,7 +359,7 @@ div.settings-not-allowed > span.dropdown-info-message:hover{
   --dropdown-pulse-anim-box-shadow-end: transparent;
   --message-opacity: .7;
 }
-.dropdown:hover > .dropdown-info-message.drodown_item-pulse-animation{
+.dropdown:hover > .drodown_item-pulse-animation{
   animation: none !important;
 }
 
