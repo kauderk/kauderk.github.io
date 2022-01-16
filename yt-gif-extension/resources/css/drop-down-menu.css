@@ -446,7 +446,7 @@ span.dropdown-item.yt-gif-wrapper-parent .yt-gif-wrapper.dont-focus-block {
 .ddm-tut select{
   display: none;
 }
-.ddm-tut:hover select{
+:is(.ddm-tut:hover, .ddm-tut.w-full) select{
   display: block;
 }
 
