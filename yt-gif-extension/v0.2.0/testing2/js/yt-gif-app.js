@@ -459,7 +459,7 @@ async function Ready()
 
     TogglePlayerThumbnails_DDM_RTM(awaiting_with_video_thumnail_as_bg, awaitng_input_with_thumbnail);
 
-    navigateToSettingsPageInSidebar(navigate_btn_id, dwp_message, stt_allow);
+    // FIXME:navigateToSettingsPageInSidebar(navigate_btn_id, dwp_message, stt_allow);
     ToggleTheme_DDM_RTM(ddm_css_theme_input, themes, ddm_css_theme_stt, ddm_main_theme_id);
 
     IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_user_input_to_initialize, iframe_buffer_slider, try_to_load_on_intersection_beta);
@@ -487,7 +487,7 @@ async function Ready()
     // the ddm won't be closed until it losses focus,
     // conventionally clicking anything but the ddm/ddm-children
     mainDDMdisplay('none');
-    mainMenu.addEventListener('mouseenter', () => openMenu());
+    mainMenu.addEventListener('mouseenter', () => openCleanMenu());
     mainMenu.addEventListener('mouseleave', () => tryToCloseMenu());
     icon.addEventListener('blur', () => tryToCloseMenu());
 
