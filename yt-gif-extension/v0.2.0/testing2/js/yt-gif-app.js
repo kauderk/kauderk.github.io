@@ -459,7 +459,7 @@ async function Ready()
 
     TogglePlayerThumbnails_DDM_RTM(awaiting_with_video_thumnail_as_bg, awaitng_input_with_thumbnail);
 
-    // FIXME:navigateToSettingsPageInSidebar(navigate_btn_id, dwp_message, stt_allow);
+    navigateToSettingsPageInSidebar();
     ToggleTheme_DDM_RTM(ddm_css_theme_input, themes, ddm_css_theme_stt, ddm_main_theme_id);
 
     IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_user_input_to_initialize, iframe_buffer_slider, try_to_load_on_intersection_beta);
@@ -913,20 +913,25 @@ async function Ready()
             await smart_LoadCSS(themes.toogle(ddm_css_theme_stt.sessionValue), ddm_main_theme_id);
         }
     }
-    async function navigateToSettingsPageInSidebar(settingsBtnID, dwp_message, stt_allow)
+    async function navigateToSettingsPageInSidebar()
     {
         // caution:
         const SttPages = () => UTILS.innerElsContains('.rm-sidebar-outline .rm-title-display span', TARGET_PAGE);
         const anySidebarInstance = () => SttPages().length >= 1;
 
-        const settingsBtnWrapper = document.querySelector(settingsBtnID);
-        const settingsBtn = settingsBtnWrapper.querySelector(`.${dwp_message}[data-tooltip]`)
+        const wrapper = document.querySelector('#navigate-to-yt-gif-settings-page');
+        const tooltipObj = getTooltipFlipObj(wrapper.querySelector(`[data-tooltip]`))
+        const iconObj = getIconFlipObj(wrapper.querySelector(`input`));
 
-        const originalTooltip = settingsBtn.getAttribute('data-tooltip');
-        const clause = `YT GIF Settings page instance already open within the Sidebar. It's pourpouse is to check values. Change them using this menu.`;
+        const toogleVisuals = (bol) =>
+        {
+            toogleTooltips(bol, tooltipObj);
+            toogleIcons(bol, iconObj);
+        }
+        const toogleOnSidebar = () => toogleVisuals(anySidebarInstance())
 
 
-        settingsBtn.addEventListener('click', async function (e)
+        tooltipObj.el.addEventListener('click', async function (e)
         {
             // caution: how do you communicate with the other scripts? Interfaces? Events? WindowEvents?
             await RAP.setSideBarState(3);
@@ -934,30 +939,22 @@ async function Ready()
 
             if (!anySidebarInstance())
             {
-                UTILS.toggleClasses(true, [stt_allow], settingsBtnWrapper);
-                settingsBtn.setAttribute('data-tooltip', clause);
+                toogleVisuals(true);
                 await RAP.openBlockInSidebar(TARGET_UID); // backend execution... should it be here...? //https://stackoverflow.com/questions/12097381/communication-between-scripts-three-methods#:~:text=All%20JS%20scripts%20are%20run%20in%20the%20global%20scope.%20When%20the%20files%20are%20downloaded%20to%20the%20client%2C%20they%20are%20parsed%20in%20the%20global%20scope
             }
 
-            // firs settings page instance
+            // fires settings page instance
             await RAP.sleep(50);
             SttPages()?.[0]?.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
         });
 
-        settingsBtn.addEventListener('mouseenter', ToogleSettingBtnVisualFeedback);
-
-        const { icon, mainDDM } = GetMainYTGIFicon(ddm_icon);
-        icon.addEventListener('blur', ToogleSettingBtnVisualFeedback, true);
-        icon.addEventListener('mouseenter', ToogleSettingBtnVisualFeedback, true);
-        icon.addEventListener('mouseleave', ToogleSettingBtnVisualFeedback, true);
+        tooltipObj.el.addEventListener('mouseenter', toogleOnSidebar);
 
 
-        function ToogleSettingBtnVisualFeedback()
-        {
-            const open = anySidebarInstance();
-            settingsBtn.setAttribute('data-tooltip', (open) ? clause : originalTooltip);
-            UTILS.toggleClasses(open, [stt_allow], settingsBtnWrapper);
-        }
+        const { icon } = GetMainYTGIFicon(ddm_icon);
+        icon.addEventListener('blur', toogleOnSidebar, true);
+        icon.addEventListener('mouseenter', toogleOnSidebar, true);
+        icon.addEventListener('mouseleave', toogleOnSidebar, true);
     }
     /* ************* */
     function IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_user_input_to_initialize, iframe_buffer_slider, try_to_load_on_intersection_beta)
