@@ -1295,39 +1295,52 @@ async function Ready()
     }
     //#endregion
 
-        async function deployTutorialVideo(e)
+    async function DDM_DeployTutorial(parentTarget)
+    {
+        if (!parentTarget || parentTarget.querySelector('.yt-gif-wrapper')) // video already deployed
+            return;
+
+        const tutWrapper = parentTarget.querySelector('[data-video-url]');
+
+        // remove every attribute but data-video-url
+        for (const attr of [...tutWrapper.attributes].filter(attr => attr.name != 'data-video-url'))
+            tutWrapper.removeAttribute(attr.name); // fuck!
+
+        const awaitingWrapper = await onYouTubePlayerAPIReady(tutWrapper, 'yt-gif-ddm-tutorial', 'force-awaiting', 'testing manual ty gif tutorial');
+
+        icon.addEventListener('blur', localBlur);
+
+        awaitingWrapper.addEventListener('mouseenter', (e) =>
         {
-            if (e.currentTarget.querySelector('.yt-gif-wrapper')) // video already deployed
-                return;
+            icon.dispatchEvent(new Event('click'))
+            toggle_VisualFeedback(e.currentTarget, false);
+        })
+        awaitingWrapper.addEventListener('mouseleave', (e) =>
+        {
+            toggleFocusOnDMMsparents(true)
+            toggle_VisualFeedback(e.currentTarget, true)
+        })
 
-            const tutWrapper = e.currentTarget.querySelector('[data-target]');
 
-            tutWrapperAwaiting = await onYouTubePlayerAPIReady(tutWrapper, classToObserve, forceAwaiting, 'testing manual ty gif tutorial');
-
-            tutWrapperAwaiting.addEventListener('mouseenter', () => icon.dispatchEvent(new Event('click')));
-            tutWrapperAwaiting.addEventListener('mouseleave', () => toggleFocusOnDMMsparents(true));
-
-
-            tutWrapperAwaiting.addEventListener('mouseenter', (e) => toggle_VisualFeedback(e, false));
-            tutWrapperAwaiting.addEventListener('mouseleave', (e) => toggle_VisualFeedback(e, true));
+        function localBlur(e)
+        {
+            if (!isRendered(awaitingWrapper))
+                icon.removeEventListener('blur', localBlur);
+            else
+                toggleFocusOnDMMsparents(false);
         }
-
         function toggleFocusOnDMMsparents(toggle = true)
         {
+            const updateTutParents = [parentTarget?.closest('.dropdown-content'), mainDDM];
             for (const el of updateTutParents)
-            {
                 UTILS.toggleClasses(toggle, [ddm_focus], el);
-            }
 
             if (toggle)
-            {
                 icon.dispatchEvent(new Event('click'));
-            }
         }
-
-        function toggle_VisualFeedback(e, bol)
+        function toggle_VisualFeedback(el, bol)
         {
-            UTILS.toggleClasses(bol, [cssData.ddn_tut_awaiting], e.currentTarget);
+            UTILS.toggleClasses(bol, [cssData.ddn_tut_awaiting], el);
         }
     }
     function mainDDMstyle_cb(mutationList)
