@@ -637,3 +637,8 @@ max-width: fit-content;
 select {
   --m: 0px;
 }
+/* alright */
+.ddm-updt-h {
+  border: 2px #02665d solid;
+  border-style: dashed;
+}
