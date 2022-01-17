@@ -47,8 +47,6 @@ UI.playerSettings = { // 🧼
 /*-----------------------------------*/
 const iframeIDprfx = 'player_';
 let currentFullscreenPlayer = null;
-let initialCheck_awaitngBtn = undefined;
-let userActiveChoice_awaitingBtn = undefined;
 /*-----------------------------------*/
 const YT_GIF_OBSERVERS_TEMP = {
     masterMutationObservers: [],
@@ -126,16 +124,7 @@ const sesionIDs = {
     target: null,
     uid: '---------'
 }
-//
-const observedParameters = new Map();
-const obsParams = {
-    lastActiveTimestamp: null,
-}
 /*-----------------------------------*/
-const StartEnd_Config = {
-    componentPage: 'yt-gif\\/(start|end)',
-    targetStringRgx: /((\d{1,2}):)?((\d{1,2}):)((\d{1,2}))|(\d+(?:(\.\d{1})|(?=\s|\}|\w+|$)))/,
-}
 const YTGIF_Config = {
     componentPage: 'yt-gif|video',
     targetStringRgx: /https\:\/\/(www\.)?(youtu(be.com\/watch|.be\/))?(.*?(?=\s|$|\}|\]|\)))/,
@@ -448,17 +437,17 @@ async function Ready()
     // 2. assign direct values to the main object | UI - user inputs
     DDM_to_UI_variables(); // filtering baseKey & prompts and transforming them from objs to values or dom els - it is not generic and only serves for the first indent level (from parent to child keys)
     // ⛔ SaveSettingsOnChanges(); // the seetings page script is responsable for everything, these are just events
-
+    RESTRICT_FEATURES(); // ⛔ // 🧼 // ⛔ // 🧼 // ⛔ // 🧼 // ⛔ // 🧼
 
 
     // 3. set up events
     //#region relevant variables
     const { ddm_icon, ddm_focus, ddm_info_message_selector, dropdown__hidden, awaitng_input_with_thumbnail } = cssData;
-    const { timestamp_display_scroll_offset, end_loop_sound_volume, iframe_buffer_slider } = UI.range;
-    const { rangeValue, loop_volume_displayed, iframe_buffer_label } = UI.label;
+    // const { timestamp_display_scroll_offset, end_loop_sound_volume, iframe_buffer_slider } = UI.range;
+    // const { rangeValue, loop_volume_displayed, iframe_buffer_label } = UI.label;
     const { awaiting_with_video_thumnail_as_bg } = UI.experience;
-    const { iframe_buffer_stack, awaiting_for_user_input_to_initialize, try_to_load_on_intersection_beta } = UI.experience;
-    const { ddm_css_theme_input } = UI.dropdownMenu;
+    // const { iframe_buffer_stack, awaiting_for_user_input_to_initialize, try_to_load_on_intersection_beta } = UI.experience;
+    // const { ddm_css_theme_input } = UI.dropdownMenu;
     //#endregion
 
     DDM_IconFocusBlurEvents(ddm_icon, ddm_focus, ddm_info_message_selector);
@@ -514,47 +503,47 @@ async function Ready()
 
     // 6. Emulate -> slash menu, timestamps + shortcuts
     //#region relevant variables
-    const slashObj = {
-        targetClass: 'bp3-text-overflow-ellipsis',
-        emulationClass: 'slash-menu-emulation',
-        clone: null,
-    }
-    const componentClass = (page) => `bp3-button bp3-small dont-focus-block rm-xparser-default-${page}`;
-    const timestampObj = {
-        roamClassName: 'rm-video-timestamp dont-focus-block',
-        start: {
-            page: 'start',
-            targetClass: 'rm-xparser-default-start',
-            buttonClass: componentClass('start'),
-        },
-        end: {
-            page: 'end',
-            targetClass: 'rm-xparser-default-end',
-            buttonClass: componentClass('end'),
-        },
-        attr: {
-            emulation: 'yt-gif-timestamp-emulation',
-            timestampStyle: 'timestamp-style', // start or end
-            timestamp: 'timestamp',
-        },
-        timestamp: {
-            buttonClass: componentClass('timestamp'),
-        },
-        parent: {
-            className: 'yt-gif-timestamp-parent',
-        },
-    };
+    // const slashObj = {
+    //     targetClass: 'bp3-text-overflow-ellipsis',
+    //     emulationClass: 'slash-menu-emulation',
+    //     clone: null,
+    // }
+    // const componentClass = (page) => `bp3-button bp3-small dont-focus-block rm-xparser-default-${page}`;
+    // const timestampObj = {
+    //     roamClassName: 'rm-video-timestamp dont-focus-block',
+    //     start: {
+    //         page: 'start',
+    //         targetClass: 'rm-xparser-default-start',
+    //         buttonClass: componentClass('start'),
+    //     },
+    //     end: {
+    //         page: 'end',
+    //         targetClass: 'rm-xparser-default-end',
+    //         buttonClass: componentClass('end'),
+    //     },
+    //     attr: {
+    //         emulation: 'yt-gif-timestamp-emulation',
+    //         timestampStyle: 'timestamp-style', // start or end
+    //         timestamp: 'timestamp',
+    //     },
+    //     timestamp: {
+    //         buttonClass: componentClass('timestamp'),
+    //     },
+    //     parent: {
+    //         className: 'yt-gif-timestamp-parent',
+    //     },
+    // };
 
-    const { simulate_roam_research_timestamps } = UI.display;
+    // const { simulate_roam_research_timestamps } = UI.display;
     // ⛔ const { tm_shortcuts, tm_workflow_display } = UI.timestamps;
 
     let { timestampObserver, keyupEventHanlder } = window.YT_GIF_OBSERVERS;
     timestampObserver?.disconnect();
-    const targetNode = document.body;
-    const config = { childList: true, subtree: true };
+    // const targetNode = document.body;
+    // const config = { childList: true, subtree: true };
     //#endregion
 
-    timestampObserver = new MutationObserver(TimestampBtnsMutation_cb);
+    // timestampObserver = new MutationObserver(TimestampBtnsMutation_cb);
 
     // 6.1 cleanAndSetUp_TimestampEmulation -> PlayPauseOnClicks
     // 6.2 run timestampObserver
@@ -568,11 +557,11 @@ async function Ready()
 
     // 7. simulate inline url btn
     //#region relevant variables
-    const { simulate_url_to_video_component } = UI.display;
+    // const { simulate_url_to_video_component } = UI.display;
     links.html.fetched.urlBtn = await UTILS.fetchTextTrimed(links.html.urlBtn);
     //#endregion
 
-    const urlObserver = new MutationObserver(InlineUrlBtnMutations_cb);
+    // const urlObserver = new MutationObserver(InlineUrlBtnMutations_cb);
 
     // ⛔ ToogleUrlBtnObserver(simulate_url_to_video_component.checked && ValidUrlBtnUsage(), urlObserver);
     // ⛔ simulate_url_to_video_component.addEventListener('change', (e) => confirmUrlBtnUsage(e.currentTarget.checked, e));
@@ -718,77 +707,54 @@ async function Ready()
             }
         }
     }
-    function SaveSettingsOnChanges()
+    function RESTRICT_FEATURES()
     {
-        for (const parentKey in UI)
-        {
-            let siblingKeys = [];
-            const parentObj = UI[parentKey];
+        const ddm_tm = [
+            document.querySelector(".dropdown_timestamp-style > .dropdown-content"),
+            document.querySelector(".yt-gif-experience-style > .dropdown-content"),
+        ];
 
-            for (const childKey in parentObj)
+        const inputSel = [
+            'input',
+            'select',
+            'a[href]',
+        ].join(',');
+
+        const otherInputs = [
+            document.querySelector("#simulate_roam_research_timestamps"),
+            document.querySelector("#simulate_url_to_video_component"),
+            document.querySelector("#play_last_active_player_off_intersection"),
+            document.querySelector("#ddm_css_theme_input"),
+            document.querySelector("#navigate-to-yt-gif-settings-page > span > input")
+        ];
+
+
+        const badInputs = ddm_tm.map(cnt => [...cnt.querySelectorAll(`:is(${inputSel})`)]).flat(Infinity);
+
+        [...badInputs, ...otherInputs]
+            .filter(el => !!el && !el.closest('.ddm-tut'))
+            .forEach(el =>
             {
-                const child = parentObj[childKey];
-                siblingKeys = UTILS.pushSame(siblingKeys, childKey);
-                switch (parentKey)
-                {
-                    case 'label':
-                    case 'InAndOutKeys':
-                    case 'defaultPlayerValues':
-                    case 'defaultValues':
-                    case 'default':
-                    case 'referenced':
-                        continue;
-                    case 'deploymentStyle': // special case...
-                        child.addEventListener('change', function (e) { updateOverrideComponentSettingBlock(e, this, childKey, siblingKeys) }, true);
-                        continue;
-                    case 'range': // special case...
-                        child.addEventListener('wheel', function (e) { changeOnWeeel(e, this, childKey) }, true);
-                }
-                function HandleSettingsPageBlockUpdate(e)
-                {
-                    return updateSettingsPageBlock(e, e.currentTarget, childKey, siblingKeys)
-                }
+                el.classList.add('input-disabled');
 
-                if (!child?.addEventListener) { debugger; continue; }
-                child.addEventListener('change', HandleSettingsPageBlockUpdate, true);
-                child.addEventListener('customChange', HandleSettingsPageBlockUpdate, true);
-            }
-        }
-    }
+                if (el.tagName == 'INPUT')
+                    el.checked = el.disabled = true;
 
-    /* *************** */
-    function updateSettingsPageBlock(e, el, keyObj, siblingKeys)
-    {
-        const { type, checked, value } = el;
-        let replaceWith = (value).toString(); // range - checkbox - radio - label - select
+                el = (el.tagName == 'SELECT' || el.classList.contains('bp3-button')) ? el.parentNode : el;
 
-        if (type == 'checkbox' || type == 'radio')
-        {
-            replaceWith = (checked).toString();
-        }
-        if (type == 'radio') // special case...
-        {
-            [...siblingKeys]
-                .map(x => window.YT_GIF_DIRECT_SETTINGS.get(x))
-                .filter(y => y.inputType == 'radio')
-                .forEach(o => o.UpdateSettingsBlockValue('')) // to false
-        }
+                const org = el.getAttribute('original-tooltip');
+                if (!org)
+                    el.setAttribute('original-tooltip', (el.getAttribute('data-tooltip') ?? '') + ` Feature available on V0.2.0`)
 
-        window.YT_GIF_DIRECT_SETTINGS.get(keyObj)?.UpdateSettingsBlockValue(replaceWith);
-    }
-    function changeOnWeeel(e, el, keyObj)
-    {
-        // How do I check values in the future? This looks expensive...
-        el.dispatchEvent(new Event('change'));
-    }
-    function updateOverrideComponentSettingBlock(e, el, keyObj, siblingKeys)
-    {
-        const validOverride = rm_components.validOverrideComponentSettingBlock(el);
-        if (validOverride)
-        {
-            rm_components.assertCurrentKey(validOverride);
-            window.YT_GIF_DIRECT_SETTINGS.get('override_roam_video_component')?.UpdateSettingsBlockValue(validOverride);
-        }
+                el.setAttribute('data-tooltip', el.getAttribute('original-tooltip'))
+            });
+
+        const ddmConts = [
+            document.querySelector(".dropdown_timestamp-style > span"),
+            document.querySelector(".yt-gif-experience-style > span")
+        ]
+
+        ddmConts.forEach(el => el.classList.add('ddm-updt-h'))
     }
     //#endregion
 
@@ -869,29 +835,6 @@ async function Ready()
             }
         }
     }
-    function UpdateOnScroll_RTM(scroll, labelEl)
-    {
-        UptLabel(scroll);
-
-        // 📦
-        scroll.addEventListener('click', (e) => UptLabel(e.currentTarget), true);
-        scroll.addEventListener('wheel', (e) => UptLabel(SliderValue(e)), true);
-
-        function SliderValue(e)
-        {
-            const elScroll = e.currentTarget;
-            const dir = Math.sign(e.deltaY) * -1;
-            const parsed = parseInt(elScroll.value, 10);
-            elScroll.value = Number(dir + parsed);
-            return elScroll;
-        }
-        function UptLabel(elScroll)
-        {
-            labelEl.innerHTML = elScroll.value; // don't worry about overflowing the counter, html range takes care of it
-            elScroll.dispatchEvent(new Event('change'));
-        }
-    }
-
     function TogglePlayerThumbnails_DDM_RTM(awaiting_with_video_thumnail_as_bg, awaitng_input_with_thumbnail)
     {
         // BIND TO SETTINGS PAGE
@@ -910,121 +853,6 @@ async function Ready()
                 {
                     UTILS.removeIMGbg(el); // spaguetti
                 }
-            }
-        }
-    }
-    /* ************* */
-    function ToggleTheme_DDM_RTM(ddm_css_theme_input, themes, ddm_css_theme_stt, ddm_main_theme_id)
-    {
-        const icons = ['bp3-icon-flash', 'bp3-icon-moon'];
-
-        ToogleThemeCombo(ddm_css_theme_input);
-
-        ddm_css_theme_input.addEventListener('change', async (e) => await ToogleThemeCombo(e.currentTarget));
-
-        async function ToogleThemeCombo(tEl)
-        {
-            const previousIcons = [...tEl?.classList]?.filter(el => el.startsWith('bp3-icon-'));
-            UTILS.toggleClasses(false, previousIcons, tEl);
-
-            UTILS.toggleClasses(true, [!tEl.checked ? icons[0] : icons[1]], tEl);
-            await smart_LoadCSS(themes.toogle(ddm_css_theme_stt.sessionValue), ddm_main_theme_id);
-        }
-    }
-    async function navigateToSettingsPageInSidebar()
-    {
-        // caution:
-        const SttPages = () => UTILS.innerElsContains('.rm-sidebar-outline .rm-title-display span', TARGET_PAGE);
-        const anySidebarInstance = () => SttPages().length >= 1;
-
-        const wrapper = document.querySelector('#navigate-to-yt-gif-settings-page');
-        const tooltipObj = getTooltipFlipObj(wrapper.querySelector(`[data-tooltip]`))
-        const iconObj = getIconFlipObj(wrapper.querySelector(`input`));
-
-        const toogleVisuals = (bol) =>
-        {
-            toogleTooltips(bol, tooltipObj);
-            toogleIcons(bol, iconObj);
-        }
-        const toogleOnSidebar = () => toogleVisuals(anySidebarInstance())
-
-
-        tooltipObj.el.addEventListener('click', async function (e)
-        {
-            // caution: how do you communicate with the other scripts? Interfaces? Events? WindowEvents?
-            await RAP.setSideBarState(3);
-            await RAP.sleep(50); // an observer is the safest option though
-
-            if (!anySidebarInstance())
-            {
-                toogleVisuals(true);
-                await RAP.openBlockInSidebar(TARGET_UID); // backend execution... should it be here...? //https://stackoverflow.com/questions/12097381/communication-between-scripts-three-methods#:~:text=All%20JS%20scripts%20are%20run%20in%20the%20global%20scope.%20When%20the%20files%20are%20downloaded%20to%20the%20client%2C%20they%20are%20parsed%20in%20the%20global%20scope
-            }
-
-            // fires settings page instance
-            await RAP.sleep(50);
-            SttPages()?.[0]?.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
-        });
-
-        tooltipObj.el.addEventListener('mouseenter', toogleOnSidebar);
-
-
-        const { icon } = GetMainYTGIFicon(ddm_icon);
-        icon.addEventListener('blur', toogleOnSidebar, true);
-        icon.addEventListener('mouseenter', toogleOnSidebar, true);
-        icon.addEventListener('mouseleave', toogleOnSidebar, true);
-    }
-    /* ************* */
-    function IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_user_input_to_initialize, iframe_buffer_slider, try_to_load_on_intersection_beta)
-    {
-        initialCheck_awaitngBtn = awaiting_for_user_input_to_initialize.checked;
-
-        Initial_synergy_btns();
-
-        awaiting_for_user_input_to_initialize.addEventListener('change', function (e)
-        {
-            const { checked, parentNode } = e.currentTarget;
-            toggleBtn_VS(checked, TryingBtn_VisualFeedback);
-
-            if (parentNode.matches(":hover"))
-            {
-                userActiveChoice_awaitingBtn = checked;
-            }
-        });
-        try_to_load_on_intersection_beta.addEventListener('change', (e) =>
-        {
-            const { checked } = e.currentTarget;
-            toggleBtn_VS(checked, AwaitingBtn_VisualFeedback);
-        });
-
-
-        iframe_buffer_stack.addEventListener('change', function (e)
-        {
-            if (e.currentTarget.checked)
-            {
-                ifStack_ShiftAllOlder_IframeBuffer();
-            }
-            else
-            {
-                smart_AwaitingBtn_Dispatch_ActiveCheck();
-                AwaitingBtn_VisualFeedback(false, false);
-            }
-        });
-
-
-        iframe_buffer_slider.addEventListener('click', () => ifStack_ShiftAllOlder_IframeBuffer());
-        iframe_buffer_slider.addEventListener('wheel', () => ifStack_ShiftAllOlder_IframeBuffer());
-
-        function Initial_synergy_btns()
-        {
-            // one or the other bud, i dunno what to tell you
-            if (initialCheck_awaitngBtn)
-            {
-                toggleBtn_VS(true, TryingBtn_VisualFeedback);
-            }
-            else if (try_to_load_on_intersection_beta.checked)
-            {
-                toggleBtn_VS(true, AwaitingBtn_VisualFeedback);
             }
         }
     }
@@ -1412,1112 +1240,6 @@ async function Ready()
     {
         return mainDDMdisplay('flex')
     }
-    function iconIsPulsing(bol)
-    {
-        return UTILS.toggleClasses(bol, [cssData.dwn_pulse_anim], icon)
-    }
-    //#endregion
-
-
-    //#region 6. Emulate slash menu & timestamps
-    function toggleTimestampEmulation(bol)
-    {
-        if (bol)
-            RunEmulation();
-        else
-            StopEmulation();
-
-        UTILS.toggleClasses(!bol, [`${cssData.dropdown__hidden}`], document.querySelector('.dropdown_timestamp-style'));
-
-        function RunEmulation()
-        {
-            StopEmulation();
-            ToogleTimestampSetUp(true);
-            ToogleTimestampShortcuts(tm_shortcuts.checked);
-        }
-        function StopEmulation()
-        {
-            ToogleTimestampSetUp(false);
-            ToogleTimestampShortcuts(false);
-        }
-    }
-    function ToogleTimestampSetUp(bol)
-    {
-        timestampObserver.disconnect();
-
-        if (bol)
-        {
-            const found = [];
-            found.push(...targetNode.getElementsByClassName(timestampObj.start.targetClass));
-            found.push(...targetNode.getElementsByClassName(timestampObj.end.targetClass));
-            cleanAndSetUp_TimestampEmulation(found);
-            timestampObserver.observe(targetNode, config);
-        }
-        else
-        {
-            const foundToRemove = [...targetNode.querySelectorAll(`[${timestampObj.attr.emulation}]`)];
-            for (let i of foundToRemove)
-            {
-                const key = i.getAttribute(timestampObj.attr.timestampStyle) || 'timestamp';
-                i.innerHTML = key;
-                i = UTILS.ChangeElementType(i, 'button');
-                i.className = timestampObj[key].buttonClass;
-            }
-            // already disconnected
-        }
-    }
-    function ToogleTimestampShortcuts(bol)
-    {
-        // remove them anyway, avoid duplicates
-        document.removeEventListener('keydown', keyupEventHanlder);
-        if (bol)
-        {
-            keyupEventHanlder = registerKeyCombinations;
-            document.addEventListener('keydown', keyupEventHanlder);
-        }
-        else
-        {
-            // already removed
-        }
-    }
-
-
-    // 6.1 on valid dom nodes get last component and add timestamp + click events
-    async function cleanAndSetUp_TimestampEmulation(found)
-    {
-        let siblingsArr = [];
-        const previousSiblingsMap = new Map(); // block -> buttons
-
-        let startEndComponentMap = null;
-        const componentMapMap = new Map();
-
-        let emulationArr = [];
-        const succesfulEmulationMap = new Map();
-        const componenSel = `.${timestampObj.end.targetClass}, .${timestampObj.start.targetClass}, .rm-video-timestamp[${timestampObj.attr.emulation}]`;
-        const isKey = 'is component';
-
-
-        const renderedComponents = found.filter(node1 => isRendered(node1)).filter(node2 => UTILS.isNotZoomPath(node2));
-        for (const node of renderedComponents)
-        {
-            const block = closestBlock(node);
-            if (!block) continue;
-
-            const tempUID = block?.id?.slice(-9);
-            const mapsKEY = block.id;
-            const update_startEndComponentMap = async () => startEndComponentMap = await getMap_smart(mapsKEY, componentMapMap, getComponentMap, tempUID, StartEnd_Config);
-
-
-            // you are iterating through renderedComponents (mutation records), so you need to get the original siblings of each block
-            siblingsArr = ElementsPerBlock(block, `:is(${componenSel})`);
-            await update_startEndComponentMap();
-
-            if (!startEndComponentMap || ((startEndComponentMap.size !== siblingsArr.length) && !MapAtIndex_Value(startEndComponentMap, siblingsArr.indexOf(node), isKey)))
-            {
-                // console.count(`YT GIF Timestamps: updating block strings: ((${tempUID})) ...        ...       ...         ...`);
-                await RAP.sleep(800); // YIKES!!!
-                componentMapMap.set(mapsKEY, await getComponentMap(tempUID, StartEnd_Config));
-                await update_startEndComponentMap();
-            }
-
-
-            let targetNodeParent = siblingsArr.find(x => x === node);
-            const targetIndex = siblingsArr.indexOf(node);
-            if (targetIndex == -1 || !targetNodeParent || !targetNodeParent?.parentNode) continue;
-
-
-            const timestampContent = MapAtIndex_Value(startEndComponentMap, targetIndex, isKey);
-            if (!timestampContent) continue;
-            const ObjAsKey = MapAtIndex_ObjKey(startEndComponentMap, targetIndex, isKey);
-            const indent = parseInt(ObjAsKey.indent, 10);
-            const similarCount = ObjAsKey.similarCount;
-            const similarCountButRoot = indent == 0 ? 0 : similarCount;
-            const fromUid = ObjAsKey.uid;
-
-            const key = Object.keys(timestampObj).find(key => targetNodeParent.classList.contains(timestampObj[key]?.targetClass)); // find timestampObj key that is included in targetNode classlist
-            const page = timestampObj[key]?.page || 'timestamp';
-
-            targetNodeParent.attributes?.forEach?.(attr => targetNodeParent.removeAttribute(attr.name));
-            targetNodeParent = UTILS.ChangeElementType(targetNodeParent, 'div');
-            targetNodeParent.className = timestampObj.parent.className;
-            targetNodeParent.innerHTML = '';
-
-            const targetNode = UTILS.elm('', 'a');
-            targetNode.setAttribute(timestampObj.attr.timestampStyle, page);
-            targetNode.setAttribute(timestampObj.attr.emulation, '');
-            targetNode.setAttribute(timestampObj.attr.timestamp, timestampContent);
-            targetNode.className = timestampObj.roamClassName;
-            targetNode.innerHTML = timestampContent;
-            targetNode.innerHTML = fmtTimestamp(UI.timestamps.tm_workflow_display.value)(targetNode); // javascript is crazy!
-
-            targetNodeParent.appendChild(targetNode);
-
-
-            const targetNodePpts = {
-                fromUniqueUid: fromUid + similarCountButRoot,
-                similarCount: parseInt(similarCount, 10),
-                page, indent, targetIndex, tempUID, fromUid, targetNode,
-                timestamp: timestampContent,
-                color: window.getComputedStyle(targetNode).color,
-                ObjAsKey, blockUid: tempUID, blockID: mapsKEY, startEndComponentMap
-            }
-
-
-            emulationArr = await getMap_smart(mapsKEY, succesfulEmulationMap, () => []);
-            emulationArr = UTILS.pushSame(emulationArr, targetNodePpts);
-
-
-            //targetNode.addEventListener('mousedown', async (e) => await PlayPauseOnClicks(e, tempUID, targetNodePpts));
-            //targetNode.addEventListener('wheel', async (e) => await rawTimestampOnWheel(e, tempUID));
-            // targetNodeParent.addEventListener('mouseleave', async (e) => await updateTimestampOnMouseleave(e, tempUID, targetNodePpts));
-            // targetNodeParent.addEventListener('mouseenter', e => toogleDocumentScroll(e.currentTarget, true));
-        }
-
-
-
-        for (let [keys, values] of succesfulEmulationMap.entries())
-        {
-            values = values.sort((a, b) => a.indent - b.indent); // RAP utils
-            const sortedByUid = sortObjByKey('fromUniqueUid', values);
-            const targetObjsArr = sortedByUid.map((v, i, a) => a[i]['data']);
-
-
-            targetObjsArr.forEach((ArrObjs, i, a) =>
-            {
-                const findPage = (p) => [...ArrObjs].reverse().find(x => x.page == p);
-                const lastArr = [findPage('start'), findPage('end')];
-                const completePears = lastArr.every(el => !!el);
-
-                ArrObjs.forEach((o, i) =>
-                {
-                    if (!o?.targetNode)
-                        return;
-                    const isPear = lastArr.includes(o);
-                    if (isPear)
-                    {
-                        if (completePears)
-                            o.targetNode.style.filter = `brightness(${100 + (5 * i)}%)`;
-                        else
-                            o.targetNode.style.filter = `brightness(85%)`;
-
-                        UTILS.toggleAttribute(true, 'timestamp-set', o.targetNode);
-                    }
-                    else
-                    {
-                        o.targetNode.style.filter = `brightness(70%)`;
-                    }
-
-                    o.targetNode.oncontextmenu = e => e.preventDefault(); //https://codinhood.com/nano/dom/disable-context-menu-right-click-javascript
-
-                    async function OnClicks(e)
-                    {
-                        await PlayPauseOnClicks(e, o.tempUID, { self: o, pears: (isPear && completePears) ? lastArr : null });
-                    }
-
-                    o.targetNode.addEventListener('customMousedown', OnClicks);
-                    o.targetNode.onmousedown = OnClicks;
-                    o.targetNode.OnClicks = OnClicks;
-                })
-            })
-        }
-
-
-
-        function sortObjByKey(key, obj)
-        {// https://gist.github.com/JamieMason/0566f8412af9fe6a1d470aa1e089a752
-            const groupBy = key => array => array.reduce((objectsByKeyValue, obj) =>
-            {
-                const value = obj[key];
-                objectsByKeyValue[value] = (objectsByKeyValue[value] || []).concat(obj);
-                return objectsByKeyValue;
-            }, {});
-            const groupByKey = groupBy(key);
-            const objByKey = groupByKey(obj);
-            return Object.entries(objByKey).map(([title, data]) => ({ title, data }));
-        }
-    }
-    // 6.1.1
-    async function PlayPauseOnClicks(e, uid, targetNodePpts)
-    {
-        const { currentTarget: tEl } = e;
-        const { which, seekToMessage, simMessage } = typeof e.detail == 'object' ? e.detail : e;
-
-        if (tEl.hasAttribute('awaiting')) return;
-        tEl.setAttribute('awaiting', true);
-
-
-        const { redAnim, greenAnim, blueAnim, purpleAnim, allAnim } = getTimestampAnims();
-        const { click, rghtclick, mdlclick } = getClicks();
-
-        const {
-            lastWrapperInBlock, WrappersInBlock,
-            f_uid, blockExist,
-            root, crossRoot, mainRoot,
-        } = await getYTwrapperRootObj(uid, tEl);
-
-
-
-        if (!blockExist) // fail
-        {
-            if (click || rghtclick || !f_uid)
-                pulse(redAnim);
-            else if (mdlclick)
-                return await openingOnCrossRoot();
-
-            return NoLongerAwaiting();
-        }
-
-
-        if (click || rghtclick) // success
-        {
-            if (e['altKey'])
-                await ClickResetWrapper(lastWrapperInBlock(root));
-            else if (click)
-                await playLastBlockOnly_SimHover(root);
-            else if (rghtclick)
-                pauseLastBlock_SimHoverOut(root);
-
-            return NoLongerAwaiting();
-        }
-
-
-        if (mdlclick) // opening?
-        {
-            return await openingOnCrossRoot();
-        }
-
-
-
-        return NoLongerAwaiting();
-
-
-
-        async function playLastBlockOnly_SimHover(r)
-        {
-            pulse(greenAnim);
-
-
-            const boundaryObj = await getBoundaryObj(r);
-            if (!boundaryObj.success)
-                return;
-            if (simMessage == 'visuals')
-                pulse(purpleAnim);
-
-
-            // 1.
-            const { record, obsTimestamp, targetWrapper, timestampObj } = boundaryObj;
-            const { start, end, currentTime, seekTo, ok } = timestampObj;
-
-
-            // 3.0
-            if (simMessage == 'visuals' && ok && seekToMessage != 'seekTo-strict')
-                return;
-            // 3.1
-            await ReloadYTVideo({ t: record?.player, start, end });
-
-
-            // 4.0
-            if (seekToMessage == 'seekTo-soft' && ok)
-                record?.player?.seekTo?.(currentTime);
-            else if (seekTo != start) // ReloadYTVideo already seeks to start
-                record?.player?.seekTo?.(seekTo);
-
-
-            // 4.1
-            if (UI.display.simulate_roam_research_timestamps.checked)
-            {
-                record?.isSoundingFine?.(!(UI.timestamps.tm_seek_action.value == 'mute'));
-                record?.togglePlay?.(!(UI.timestamps.tm_seek_action.value == 'pause'));
-            }
-
-
-            // 5.
-            targetWrapper?.dispatchEvent(new CustomEvent('customPlayerReady',
-                {
-                    bubbles: true,
-                    detail: {
-                        start, end, updateTime: currentTime ?? seekTo,
-                        ['play-right-away']: true,
-                        mute: UI.timestamps.tm_seek_action.value == 'mute' && UI.display.simulate_roam_research_timestamps.checked,
-                        obsTimestamp,
-                    },
-                }));
-
-
-            // 6.
-            if (e['ctrlKey'])
-                ScrollToTargetWrapper(r);
-        }
-        async function getBoundaryObj(r)
-        {
-            const targetWrapper = lastWrapperInBlock(r);
-
-
-            // 1. pause everthing but this
-            const deactivateAll = [...document.querySelectorAll('.yt-gif-wrapper')]
-                .forEach(wrapper =>
-                {
-                    UTILS.toggleAttribute(false, 'yt-active', wrapper);
-                    if (wrapper != targetWrapper)
-                        wrapper?.dispatchEvent(UTILS.simHoverOut());
-                });
-
-
-            // 2. 
-            const validTimestamp = tEl.innerHTML.match(StartEnd_Config.targetStringRgx)?.[0];
-            const secondsOnly = UTILS.HMSToSecondsOnly(validTimestamp);
-            if (!validTimestamp || typeof secondsOnly !== 'number')
-            {
-                return { success: false };
-            }
-
-
-            // 2.1
-            const targetBlockID = [...recordedIDs.keys()].reverse().find(k => k?.startsWith(closestYTGIFparentID(targetWrapper)));
-            const record = recordedIDs.get(targetBlockID);
-            const obsBlockID = [...observedParameters.keys()].reverse().find(k => k?.endsWith(getWrapperUrlSufix(targetWrapper, f_uid)));
-            const obsTimestampOrg = observedParameters.get(obsBlockID)?.lastActiveTimestamp ?? {};
-            const obsTimestamp = { ...obsTimestampOrg };
-
-
-            // 3.
-            DeactivateTimestampsInHierarchy(closest_rm_container(targetWrapper), targetWrapper);
-            ToggleBoundarySet(targetWrapper, true);
-
-
-            return {
-                sameBoundaries: record?.sameBoundaries?.(),
-                success: true,
-
-                record, obsTimestamp, targetWrapper,
-
-                timestampObj: getSeconds(),
-            }
-
-            function getSeconds()
-            {
-                const start = sec("start") ? secondsOnly : (pearSec() || 0);
-                const end = sec("end") ? secondsOnly : pearSec() || record?.player?.getDuration?.();
-                const seekTo = sec("end") ? secondsOnly + 1 : secondsOnly;
-
-                const tm = record?.player?.getCurrentTime?.();
-                const currentTimeAlternative = lastBlockIDParameters.get(targetBlockID)?.updateTime;
-                const currentTime = tm ?? currentTimeAlternative ?? start;
-
-                const bounded = ((tm = currentTime) => tm >= start && tm <= end)();
-                const farEnough = ((tm = currentTime) => tm + 1 > seekTo)();
-
-                return {
-                    start, end,
-                    seekTo, currentTime,
-                    ok: bounded && farEnough
-                }
-
-                function sec(p) { return targetNodePpts.self.page == p }
-                function pearSec() { return UTILS.HMSToSecondsOnly(targetNodePpts.pears?.find(o => o != targetNodePpts.self)?.timestamp || '') }
-            }
-        }
-
-
-        function ToggleBoundarySet(targetWrapper, bol = true)
-        {
-            if (targetNodePpts.pears)
-                targetNodePpts.pears.forEach(o => toogleActiveAttr(bol, o.targetNode));
-
-            else
-                toogleActiveAttr(bol, targetNodePpts.self.targetNode);
-
-            UTILS.toggleAttribute(bol, 'last-active-timestamp', targetNodePpts.self.targetNode);
-            UTILS.toggleAttribute(bol, 'yt-active', targetWrapper);
-
-            function toogleActiveAttr(bol, el)
-            {
-                if (el)
-                    UTILS.toggleAttribute(bol, 'active-timestamp', el);
-            }
-        }
-
-        async function pauseLastBlock_SimHoverOut(r)
-        {
-            //lastWrapperInBlock(r)?.setAttribute('play-right-away', false);
-            lastWrapperInBlock(r)?.dispatchEvent(UTILS.simHoverOut()); // hover out -> videoIsPlayingWithSound(false)
-        }
-
-
-        async function openingOnCrossRoot()
-        {
-            await RAP.setSideBarState(3);
-            await RAP.sleep(50);
-
-            pulse(blueAnim);
-            if (WrappersInBlock(crossRoot).length == 0) // 0 instances on crossRoot
-            {
-                await RAP.navigateToUiOrCreate(f_uid, (root == mainRoot), 'block');
-            }
-
-            const prevWrapper = lastWrapperInBlock(crossRoot);
-            const isRendered = prevWrapper instanceof Element && UTILS.isElementVisible(prevWrapper);
-            await RAP.sleep(isRendered ? 50 : 500); // visible? then quicker
-
-            ScrollToTargetWrapper(crossRoot);
-
-            await playLastBlockOnly_SimHover(crossRoot);
-            return NoLongerAwaiting();
-        }
-
-
-        function ScrollToTargetWrapper(r)
-        {
-            lastWrapperInBlock(r)?.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
-        }
-        async function getYTwrapperRootObj(uid, tEl)
-        {
-            const { foundBlock } = await getLastComponentInHierarchy(uid);
-            if (!foundBlock?.uid) console.warn(`YT GIF Timestamps: couldn't find YT GIFs within the Hierarchy: ((${uid}))`);
-            const { uid: f_uid } = foundBlock || { uid: '' };
-
-
-            const barObj = {
-                condition: function () { return tEl.closest(`.${this.root}`) },
-            }
-            const PagesObj = {
-                main: {
-                    root: 'roam-article',
-                    crossRoot: 'rm-sidebar-outline',
-                },
-                side: {
-                    root: 'rm-sidebar-outline',
-                    crossRoot: 'roam-article',
-                },
-                pageRef: {
-                    root: 'rm-reference-main',
-                    crossRoot: 'rm-sidebar-outline',
-                },
-            };
-
-
-            Object.keys(PagesObj).forEach(key => Object.assign(PagesObj[key], barObj));
-            const key = Object.keys(PagesObj).find(x => PagesObj[x].condition());
-            const { root, crossRoot } = PagesObj[key];
-            const blockExist = document.querySelector(`.${root} [id$="${f_uid}"]`);
-
-
-
-            // root -> roam-article || rm-sidebar-outline
-            const WrappersInBlock = (r) =>
-            {
-                const wrappers = [...document.querySelectorAll(`.${r} [id$="${f_uid}"] .yt-gif-wrapper`)];
-
-                if (r == PagesObj.main.crossRoot)
-                    return wrappers; // they don't have this tEl
-
-                return wrappers.map(pw => closest_rm_container(pw))
-                    .filter(pc => pc.contains(tEl))
-                    .map(c => [...c.querySelectorAll(`[id$="${f_uid}"] .yt-gif-wrapper`)])
-                    .flat(Infinity);
-            }
-
-            const lastWrapperInBlock = (r = root) => [...WrappersInBlock(r)]?.pop();
-
-
-            return {
-                lastWrapperInBlock, WrappersInBlock,
-                f_uid, blockExist,
-                root, crossRoot, mainRoot: PagesObj.main.root,
-            }
-        }
-
-
-        function pulse(anim)
-        {
-            UTILS.toggleClasses(false, allAnim, tEl);
-            UTILS.toggleClasses(true, anim, tEl);
-            setTimeout(() => UTILS.toggleClasses(false, anim, tEl), 500);
-        }
-        function getClicks()
-        {
-            return {
-                click: which == 1,
-                rghtclick: which == 3,
-                mdlclick: which == 2,
-            }
-        }
-        function NoLongerAwaiting()
-        {
-            tEl.removeAttribute('awaiting');
-        }
-    }
-
-    function getTimestampAnims()
-    {
-        const baseAnim = ['yt-timestamp-pulse-text-anim'];
-        const greenAnim = [...baseAnim, 'yt-timestamp-success'];
-        const redAnim = [...baseAnim, 'yt-timestamp-warn'];
-        const blueAnim = [...baseAnim, 'yt-timestamp-opening'];
-        const purpleAnim = [...baseAnim, 'yt-timestamp-reset'];
-        const allAnim = [...greenAnim, ...redAnim, ...blueAnim].filter((v, i, a) => a.indexOf(v) === i); // remove duplicates on allAnim
-        return { redAnim, greenAnim, blueAnim, purpleAnim, allAnim };
-    }
-
-    //#region 6.2.1
-    async function updateTimestampOnMouseleave(e, uid, nodePpts)
-    {
-        const { currentTarget: tEl } = e;
-        toogleDocumentScroll(tEl, false);
-        const { blockRgx } = BlockRegexObj(StartEnd_Config.componentPage, true);
-        const res = RAP.getBlockInfoByUID(nodePpts.fromUid);
-        const rawText = res[0]?.[0]?.string || 'F';
-    }
-    async function rawTimestampOnWheel(e, uid)
-    {
-        const { currentTarget: tEl } = e;
-        if (!tEl.parentNode.classList.contains('yt-gif-timestamp-prevent-scroll')) return;
-
-        const validTimestamp = tEl.innerHTML.match(StartEnd_Config.targetStringRgx)?.[0];
-        const secondsOnly = UTILS.HMSToSecondsOnly(validTimestamp);
-
-        if (!validTimestamp || typeof secondsOnly !== 'number') return;
-
-        const newTimestamp = SliderValue(secondsOnly);
-        tEl.innerHTML = UTILS.convertHMS(newTimestamp);
-
-        function SliderValue(value)
-        {
-            const dir = Math.sign(e.deltaY) * -1;
-            const parsed = parseInt(value, 10);
-            return Number(dir + parsed);
-        }
-    }
-    // 6.2.2
-    function toogleDocumentScroll(el, bol)
-    {
-        UTILS.toggleClasses(bol, ['yt-gif-timestamp-prevent-scroll'], el);
-    }
-    //#endregion
-
-
-
-    // 6.3
-    async function registerKeyCombinations(e)
-    {
-        if (e['ctrlKey'] && e['altKey']) 
-        {
-            let pageRefSufx = null;
-            if (e.key == 's') // Ctrl + Alt + s
-            {
-                pageRefSufx = 'start'
-            }
-            else if (e.key == 'd') // Ctrl + Alt + d
-            {
-                pageRefSufx = 'end'
-            }
-            await addBlockTimestamp_smart_local(pageRefSufx);
-        }
-    }
-    // 6.3.1
-    async function addBlockTimestamp_smart_local(pageRefSufx)
-    {
-        const timestampObj = await getTimestampObj_smart(pageRefSufx);
-        const uid = timestampObj.uid;
-        const component = timestampObj[UI.timestamps.tm_workflow_grab.value]?.fmt ?? '';
-        if (!uid) return;
-
-        const { updatedString, el } = concatStringAtCaret(getCurrentInputBlock(), component);
-
-        await RAP.updateBlock(uid, updatedString);
-        await RAP.sleep(50);
-
-        updateAtCaret(getCurrentInputBlock(), el.selectionEnd);
-    }
-    function updateAtCaret(el, atLength = 0, start = false)
-    {
-        if (start)
-            el.selectionStart = el.selectionEnd = atLength;
-        else
-            el.selectionEnd = el.selectionStart = atLength;
-        el.focus();
-    }
-    function concatStringAtCaret(el, newText)
-    {
-        const start = el.selectionStart
-        const end = el.selectionEnd
-        const text = el.value
-        const before = text.substring(0, start)
-        const after = text.substring(end, text.length)
-        el.value = (before + newText + after)
-        updateAtCaret(el, (end + newText.length));
-
-        return { updatedString: el.value, el }
-    }
-
-
-    // 6.0 observe added/removed nodes and act accordingly
-    function slashMenuMutation_cb(mutationsList, observer)
-    {
-        const found = [];
-        const removed = [];
-
-        for (const { addedNodes, removedNodes } of mutationsList)
-        {
-            for (const node of addedNodes)
-            {
-                if (!node.tagName) continue; // not an element
-
-                if (node.classList.contains(slashObj.targetClass) && !node.classList.contains(slashObj.emulationClass))
-                {
-                    found.push(node);
-                }
-                else if (node.firstElementChild)
-                {
-                    found.push(...node.getElementsByClassName(slashObj.targetClass));
-                }
-            }
-
-            for (const node of removedNodes)
-            {
-                if (!node.tagName) continue; // not an element
-
-                if (node.classList.contains(slashObj.targetClass) && !node.classList.contains(slashObj.emulationClass))
-                {
-                    removed.push(node);
-                }
-                else if (node.firstElementChild)
-                {
-                    removed.push(...node.getElementsByClassName(slashObj.targetClass));
-                }
-            }
-        }
-
-        if (removed.length == 0 && found.length == 0) return;
-
-        const timeNode = (node) => node.innerHTML.includes('Time');
-        const YTtimeNode = (node) => node.innerHTML.includes('YT GIF');
-        const validTimeNode = (node) => timeNode(node) && !YTtimeNode(node);
-
-        const dontUnfocusBlocks = [...document.querySelectorAll('body > div.rm-autocomplete__results.bp3-elevation-3 > .dont-unfocus-block .bp3-text-overflow-ellipsis')];
-        const emulations = [...document.querySelectorAll(`body > div.rm-autocomplete__results.bp3-elevation-3 > [class*="${slashObj.emulationClass}"]`)];
-        const LastTimeNode = dontUnfocusBlocks.reverse().find(node => validTimeNode(node));
-        const AnyTimeNodeExist = dontUnfocusBlocks.filter(node => validTimeNode(node)).length != 0;
-
-
-        for (const node of found)
-        {
-            const clone = node?.parentNode?.cloneNode(true);
-            if (clone?.querySelector('.bp3-text-overflow-ellipsis')?.innerHTML &&
-                clone?.querySelector('.rm-icon-key-prompt')?.innerHTML &&
-                clone?.querySelector('.bp3-icon')?.className)
-            {
-                slashObj.clone = clone;
-            }
-
-
-            const emulations = [...document.querySelectorAll(`body > div.rm-autocomplete__results.bp3-elevation-3 > [class*="${slashObj.emulationClass}"]`)];
-
-
-            if (validTimeNode(node))
-            {
-                const parent = node.parentNode;
-
-                if (slashObj.clone && emulations.length == 0)
-                {
-                    const start = createSlashMenuEmulation_videoItem({
-                        cloneFrom: slashObj.clone,
-                        emulationSufix: '-start',
-                        prompt: 'YT GIF Timestamp - start',
-                        shortutPrompt: 'Ctrl + Alt + s',
-                    });
-                    parent.parentNode.insertBefore(start, parent);
-                    start.addEventListener('click', async () => addBlockTimestamp_smart_local('start'));
-
-
-                    const end = createSlashMenuEmulation_videoItem({
-                        cloneFrom: slashObj.clone,
-                        emulationSufix: '-end',
-                        prompt: 'YT GIF Timestamp - end',
-                        shortutPrompt: 'Ctrl + Alt + d',
-                    });
-                    parent.parentNode.insertBefore(end, parent);
-                    end.addEventListener('click', async () => addBlockTimestamp_smart_local('end'));
-                }
-
-                if (LastTimeNode)
-                {
-                    const parent = LastTimeNode.parentNode;
-                    emulations.forEach(el => parent.parentNode.insertBefore(el, parent));
-                }
-            }
-        }
-
-
-        for (const node of removed)
-        {
-            if (timeNode(node) && !AnyTimeNodeExist)
-            {
-                emulations.forEach(x => x.remove());
-                return;
-            }
-        }
-
-        function createSlashMenuEmulation_videoItem({ cloneFrom, emulationSufix, prompt, shortutPrompt, iconSufix })
-        {
-            iconSufix = iconSufix || 'video';
-            const el = cloneFrom.cloneNode(true);
-
-            el.classList.add(slashObj.emulationClass + emulationSufix);
-            el.querySelector('.bp3-text-overflow-ellipsis').innerHTML = prompt;
-            el.querySelector('.rm-icon-key-prompt').innerHTML = shortutPrompt;
-            el.querySelector('.bp3-icon').className = `bp3-icon bp3-icon-${iconSufix}`;
-            return el;
-        }
-    };
-    async function TimestampBtnsMutation_cb(mutationsList)
-    {
-        const found = [];
-
-        for (const { addedNodes } of mutationsList)
-        {
-            for (const node of addedNodes)
-            {
-                if (!node.tagName) continue; // not an element
-
-                if (node.classList.contains(timestampObj.start.targetClass) || node.classList.contains(timestampObj.end.targetClass))
-                {
-                    found.push(node);
-                }
-                else if (node.firstElementChild)
-                {
-                    found.push(...node.getElementsByClassName(timestampObj.start.targetClass));
-                    found.push(...node.getElementsByClassName(timestampObj.end.targetClass));
-                }
-            }
-        }
-
-        await cleanAndSetUp_TimestampEmulation(found);
-    }
-
-
-    // 7.0 display
-    function ChangeTimestamapsDisplay(value)
-    {
-        const fmt = fmtTimestamp(value);
-
-        document.querySelectorAll('[yt-gif-timestamp-emulation]')
-            .forEach(tms => tms.innerHTML = fmt(tms));
-    }
-    function fmtTimestamp(value)
-    {
-        const str2sec = (str) => UTILS.HMSToSecondsOnly(str)
-        let fmt = (tms) => tms.getAttribute('timestamp');
-
-        if (value == 'lessHMS')
-            fmt = (tms) => UTILS.seconds2time(str2sec(tms.innerHTML));
-        else if (value == 'HMS')
-            fmt = (tms) => UTILS.convertHMS(str2sec(tms.innerHTML));
-        else if (value == 'S')
-            fmt = (tms) => str2sec(tms.innerHTML);
-
-        return fmt;
-    }
-
-    //#endregion
-
-
-    //#region 7. url btn emulation
-    async function InlineUrlBtnMutations_cb(mutationsList)
-    {
-        let added = [];
-        for (const { addedNodes } of mutationsList)
-            added = [...added, ...NodesRecord(addedNodes, 'bp3-icon-video')];
-
-        ReadyUrlBtns(added);
-    }
-    function ReadyUrlBtns(added)
-    {
-        for (const rm_btn of added)
-        {
-            UTILS.toggleClasses(true, ['yt-gif'], rm_btn);
-            rm_btn.insertAdjacentHTML('afterbegin', links.html.fetched.urlBtn);
-
-
-            const grabS = () => UI.timestamps.tm_workflow_grab.value == 'S';
-            const floatParam = (p, url) => new RegExp(`((?:${p})=)((\\d+)?[.]?\\d+)`, 'gm')?.exec(url)?.[2] || '0';
-            const startParam = (url) => grabS() ? floatParam('t|start', url) : UTILS.convertHMS(floatParam('t|start', url));
-            const endParam = (url) => grabS() ? floatParam('end', url) : UTILS.convertHMS(floatParam('end', url));
-
-
-            urlBtn('yt-gif').onclick = async (e) => await OnYtGifUrlBtn(e, (url) => `{{[[yt-gif]]: ${url} }}`);
-            urlBtn('start').onclick = async (e) => await OnYtGifUrlBtn(e, (url) => `{{[[yt-gif/start]]: ${startParam(url)} }}`);
-            urlBtn('end').onclick = async (e) => await OnYtGifUrlBtn(e, (url) => `{{[[yt-gif/end]]: ${endParam(url)} }}`);
-            urlBtn('start|end').onclick = async (e) => await OnYtGifUrlBtn(e, (url) => `{{[[yt-gif/start]]: ${startParam(url)} }} {{[[yt-gif/end]]: ${endParam(url)} }}`);
-
-
-
-            async function OnYtGifUrlBtn(e, fmtCmpnt_cb)
-            {
-                // 0.
-                const tEl = e.currentTarget;
-                e.stopPropagation();
-                e.preventDefault();
-
-
-                // 1. execute further if the user has valid keys
-                const block = closestBlock(rm_btn);
-                const uid = block?.id?.slice(-9);
-                const { url, ytUrlEl } = getYTUrlObj(rm_btn);
-
-                if (!ValidUrlBtnUsage())
-                    return console.warn('YT GIF Url Button: Invalid Simulation keys');
-                if (!uid || !url)
-                    return logUrlBtnWarning();
-
-
-                // 2. protect against spamming clicks
-                const awaiting = (bol) => awaitingAtrr(bol, rm_btn) && awaitingAtrr(bol, tEl);
-
-                if (rm_btn.hasAttribute('awaiting'))
-                    return;
-
-                awaiting(true);
-
-
-                // 3. execute further if the block and the urlBtn exist
-                const blockReq = await RAP.getBlockInfoByUIDM(uid);
-                const info = blockReq[0]?.[0];
-                if (!info) return;
-
-                const index = ElementsPerBlock(block, `.bp3-icon-video + a[href="${url}"]`).indexOf(ytUrlEl);
-                if (index == -1)
-                    return logUrlBtnWarning();
-
-
-                // 4. gather spots/boundaries where roam does NOT render information
-                const IndexObj = (rgx, type) => indexPairObj(rgx, info.string, type);
-                const BadIndexMatches = [
-                    ...IndexObj(/(`.+?`)|(`([\s\S]*?)`)/gm, 'codeBlocks'), // codeBlocks
-
-                    ...filterOutCode(IndexObj(/{{=:(.+?)\|(.+)}}/gm, 'tooltipPrompt'))
-                        .map(op =>
-                        {
-                            const y = { ...op };
-                            y.start = op.start + 4; // 4 = {{=:
-                            y.end = op.end - (1 + op.groups[2]?.length + 2); // 1 = |     +    [2].length = hiidden content   +    2 = }}
-                            y.match = op.groups[1]; // prompt
-                            return y;
-                        }), // tooltipPrompt
-
-                    ...filterOutCode(IndexObj(/({{.+})/gm, 'components')), // components
-                ];
-
-
-                // 5. valid spots where you can insert fmt components - user requests
-                const urlsMatches = IndexObj(new RegExp(`(${url.replace(/[?\\]/g, '\\$&')})`, 'gm'), 'urlsMatch');
-                const freeUrls = urlsMatches.filter(uo =>
-                {
-                    let specialCase = false;
-                    const badIndex = BadIndexMatches
-                        .some(bio =>
-                        {
-                            const bounded = uo.start >= bio.start && uo.end <= bio.end;
-                            specialCase = bio.type == 'tooltipPrompt';
-                            return bounded;
-                        });
-
-                    if (specialCase)
-                        return true;
-                    return !badIndex;
-                })
-
-
-                // 6. return if any errors
-                let string;
-                try
-                {
-                    string = replaceString(info.string, freeUrls[index].start, freeUrls[index].end, fmtCmpnt_cb(url));
-                }
-                catch (error)
-                {
-                    return logUrlBtnWarning();
-                }
-
-
-                // 7. FINALLY! update the block
-                UIDtoURLInstancesMapMap.delete(uid);
-                await RAP.updateBlock(uid, string, info.open);
-
-
-                // 8. set free for any possible future clicks
-                awaiting(false);
-
-
-                function logUrlBtnWarning()
-                {
-                    console.warn(`YT GIF Url Button: couldn't find url within the block: ((${uid}))`);
-                }
-            }
-            function urlBtn(page)
-            {
-                return rm_btn.querySelector(`[yt-gif-url-btn="${page}"]`);
-            }
-        }
-
-
-        function indexPairObj(regex, str, type)
-        {// https://www.designcise.com/web/tutorial/how-to-return-the-position-of-a-regular-expression-match-in-javascript#:~:text=matchArr%5B1%5D.length%5D)%3B%0A%7D-,console.log(indexPairs)%3B%20//%20output%3A%20%5B8%2C%2025%5D%2C%20%5B27%2C%2035%5D,-The%20exec()%20method
-            const matches = [...str.matchAll(regex)];
-
-            const indexPairs = [];
-
-            for (const matchArr of matches)
-            {
-                indexPairs.push(
-                    [
-                        matchArr.index,
-                        matchArr.index + matchArr[0]?.length,
-                        matchArr[0],
-                        matchArr
-                    ]
-                );
-            }
-            return [...indexPairs].map(mp => ({
-                type,
-                start: mp[0],
-                end: mp[1],
-                match: mp[2],
-                groups: mp[3],
-            }));
-        }
-        function filterOutCode(indexObj)
-        {
-            const inlindeCodeRgx = /(`.+?`)|(`([\s\S]*?)`)/gm;
-            return [...indexObj].filter(x => !inlindeCodeRgx.test(x.match))
-        }
-        function replaceString(str, start, end, replace)
-        {
-            if (start < 0 || start > str.length)
-            {
-                throw new RangeError(`start index ${start} is out of the range 0~${str.length}`);
-            }
-            if (end > str.length || end < start)
-            {
-                throw new RangeError(`end index ${end} is out of the range ${start}~${str.length}`);
-            }
-            return str.substring(0, start) + replace + str.substring(end);
-        }
-    }
-    function getYTUrlObj(rm_btn)
-    {
-        const ytUrlEl = rm_btn?.nextSibling;
-        let url = ytUrlEl?.href;
-
-        if (!YTGIF_Config.guardClause(url))
-            url = null;
-
-        return { url, ytUrlEl };
-    }
-
-    function NodesRecord(Nodes, sel)
-    {
-        if (!Nodes || Nodes.length == 0)
-            return [];
-
-        return [...Array.from(Nodes)]
-            .filter(el => !!el.tagName)
-            .map(x =>
-            {
-                if (x.classList.contains(sel))
-                    return x
-                else
-                    return [...x.querySelectorAll(`.${sel}`)]
-            })
-            .flat(Infinity)
-            .filter((v, i, a) =>
-            {
-                return !!v &&
-                    getYTUrlObj(v).url &&
-                    !hasYTGifAttr(v) &&
-                    !hasYTGifClass(v) &&
-                    v.classList.contains(sel) &&
-                    a.indexOf(v) === i &&
-                    isRendered(v);
-            })
-    }
-    /* ****************** */
-    function ToogleUrlBtnObserver(bol, obs)
-    {
-        obs.disconnect();
-
-        if (bol)
-        {
-            const allUrlBtns_rm = [...document.querySelectorAll('.bp3-icon-video')]
-                .filter(b =>
-                {
-                    // those that do not have yt-gif customization
-                    return !hasYTGifAttr(b) && !hasYTGifClass(b) && getYTUrlObj(b).url;
-                });
-
-            ReadyUrlBtns(allUrlBtns_rm);
-            obs.observe(targetNode, config);
-        }
-        else
-        {
-            const allUrlBtns = [...document.querySelectorAll(`.yt-gif-url-btns,.yt-gif-url-btn-wrapper`)]
-                .forEach(el => el.remove());
-            const allUrlBtns_rm = [...document.querySelectorAll('.bp3-icon-video')]
-                .forEach(el => el.classList.remove('yt-gif'));
-        }
-    }
-    function hasYTGifClass(b)
-    {
-        return [...b.classList]
-            .some(x => x.includes('yt-gif'));
-    }
-    function hasYTGifAttr(b)
-    {
-        return [...b.attributes]
-            .map(a => a.name)
-            .some(x => x.includes('yt-gif'));
-    }
-    /* ****************** */
-    function confirmUrlBtnUsage(bol, e)
-    {
-        const canUse = ValidUrlBtnUsage();
-        if (!bol || canUse)
-            return;
-
-        const yesMessage = canUse ?
-            'Simulate because I have both graph and localStorage keys' :
-            'Simulate, but first take me to the caution prompt - localStorage key is missing';
-
-        const userMind = confirm(`YT GIF Url Button: Simulation Request\n\nYES: ${yesMessage} \n   -  https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/install/faq/README.md#simulate-url-button-to-video-component \n\nNO: Don't simulate`);
-
-        if (userMind)
-        {
-            localStorage.setItem('simulate_url_to_video_component', 'true');
-            if (!canUse)
-                window.open("https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#caution-prompt", '_blank').focus();
-        }
-        else
-        {
-            if (e)
-            {
-                e.stopPropagation();
-                e.preventDefault();
-                e.currentTarget.checked = false;
-                e.currentTarget.value = "off";
-                e.currentTarget.dispatchEvent(new Event('customChange'));
-            }
-            localStorage.removeItem('simulate_url_to_video_component');
-        }
-        return userMind;
-    }
-    function ValidUrlBtnUsage()
-    {
-        const key = 'simulate_url_to_video_component';
-        const binarySessionVal = (k) => UTILS.isTrue(window.YT_GIF_DIRECT_SETTINGS?.get(k)?.sessionValue);
-        const usageKey = binarySessionVal('override_' + key) || UTILS.isTrue(localStorage.getItem(key));
-
-        return usageKey && binarySessionVal(key)
-    }
     //#endregion
 
 
@@ -2726,8 +1448,8 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             UIDtoURLInstancesMapMap.delete(uid);
             // ⛔ if (!UI.timestamps.tm_recovery.checked)
             // DeactivateTimestampsInHierarchy(rm_container, wrapper);
-            if (!isRendered(rm_container) && rm_container?.closest('.rm-sidebar-outline'))
-                observedParameters.delete(blockID);
+            // ⛔if (!isRendered(rm_container) && rm_container?.closest('.rm-sidebar-outline'))
+            // observedParameters.delete(blockID);
         },
     }
     UTILS.ObserveRemovedEl_Smart(options);
@@ -2964,235 +1686,6 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         return false;
     }
 
-    // 5.0 timestamp recovery
-    function SetUpTimestampRecovery(rm_container)
-    {
-        if (!rm_container || rm_container?.hasAttribute('active-timestamp-observer'))
-            return;
-
-        rm_container.setAttribute('active-timestamp-observer', '');
-
-        const arr = [getObsTimestamp()];
-        const MutationObj = { removed: arr, lastActive: arr };
-        let awaiting = false;
-
-        const observer = new MutationObserver(async (mutationsList) =>
-        {
-            if (awaiting || !UI.display.simulate_roam_research_timestamps.checked)
-                return;
-
-            awaiting == true;
-
-            await TimestampsInHierarchyMutation_cb(mutationsList, MutationObj);
-
-            awaiting == false;
-        });
-
-        observer.observe(rm_container, { childList: true, subtree: true, attributes: true });
-    }
-    async function TimestampsInHierarchyMutation_cb(mutationsList, MutationObj)
-    {
-        const { lastActive, added } = getMutationNodes(mutationsList, MutationObj);
-
-
-        // 0. set last active timestamp by attribute
-        const lastActiveTimestamp = lastActive.find(aO => aO?.target?.timestamp && aO.blockID);
-        setObsTimestamp(lastActiveTimestamp);
-
-
-
-        // 1. Reset when removed
-        const removedActiveObj = MutationObj.removed.find(rO => rO?.target?.timestamp && canReset(rO.blockID));
-        if (removedActiveObj && UI.timestamps.tm_reset_on_removal.value != 'disabled')
-        {
-            MutationObj.removed.length = 0;
-
-            return await ClickResetWrapper([...grandParentBlock.querySelectorAll('.yt-gif-wrapper')]?.pop());
-        }
-
-
-        // 2. Restore last active timestamp
-        const commonObj = added.find(aO => aO?.blockID && aO.blockID == getObsTimestamp()?.blockID);
-        if (commonObj && UI.timestamps.tm_recovery.checked)
-        {
-            const block = document.getElementById(commonObj.blockID);
-
-            // wait until all timestamps are rendered
-            const rawComponents = ElementsPerBlock(block, '.rm-xparser-default-start, .rm-xparser-default-end');
-            if (rawComponents.length > 0)
-                return;
-
-            const get = (k) => getObsTimestamp()?.target[k];
-            const equals = (k = 'timestamp') => get(k) == ElementsPerBlock(block, `[${k}]`)?.[get('index')]?.getAttribute?.(k);
-
-            // cleanup - since it's a rendered mismatch
-            if (UI.timestamps.tm_restore.value == 'match' && !equals())
-                return observedParameters.delete(blockID);
-
-            // value == 'any' - go ahead with anything in this position
-            const assignObj = equals() ? { simMessage: 'visuals' } : {};
-            return await TryToRecoverActiveTimestamp(getObsTimestamp(), assignObj);
-        }
-
-
-        // 1.2 cleanup - previous unrendered|removed node
-
-        if (!UI.timestamps.tm_recovery.checked && added.length > 0 && MutationObj.removed.length > 0)
-        {
-            const inactiveYetAdded = MutationObj.removed.find(rO => rO?.target?.timestamp && [...added].some(aO => aO?.target?.timestamp && aO.blockID.includes(rO.blockID))); // HOLY SHIT!!!
-            if (inactiveYetAdded)
-                MutationObj.removed.splice(MutationObj.removed.indexOf(inactiveYetAdded), 1);
-        }
-
-
-        function canReset(id)
-        {
-            if ('block' == UI.timestamps.tm_reset_on_removal.value)
-            {
-                if (!document.querySelector('div.rm-block__input#' + id))
-                    return true;
-            }
-            else if ('container' == UI.timestamps.tm_reset_on_removal.value)
-            {
-                if (!document.getElementById(id))
-                    return true;
-            }
-        }
-    }
-    async function TryToRecoverActiveTimestamp(commonObj, assignObj)
-    {
-        await RAP.sleep(10);
-
-        const children = (sel, self) => !self ? rm_container?.querySelectorAll(sel) : [rm_container, ...rm_container?.querySelectorAll(sel)];
-        const atIndex = (siblings, index) => Array.from(siblings).flat(Infinity)[index];
-
-        // const active_rm_container = atIndex(children('.roam-block-container', true), commonObj.containerIndex);
-        let active_block = atIndex(children('.roam-block'), commonObj.blockIndex);
-
-        const block = document.getElementById(commonObj.blockID);
-        if (block != active_block && commonObj.workflow == 'strict')
-        {
-            if (!rm_container.contains(block))
-                return;
-            active_block = block; // Hmmm...
-        }
-
-        const timestamps = ElementsPerBlock(active_block, '[yt-gif-timestamp-emulation]') || [];
-        const targetTimestamp = timestamps[commonObj.target.index] || timestamps[commonObj.start.index] || timestamps[commonObj.end.index] || timestamps[timestamps.length - 1];
-
-        await ClickOnTimestamp(targetTimestamp, assignObj);
-    }
-    function getMutationNodes(mutationsList, MutationObj)
-    {
-        let added = [];
-        let lastActive = [];
-
-
-        for (const record of mutationsList)
-        {
-            const t = record.target;
-            if (t == rm_container)
-                continue;
-            if (record.type == "attributes")
-            {
-                lastActive = [...lastActive, NodesRecord(record.target, 'last-active-timestamp', t)];
-                continue;
-            }
-
-            const { removedNodes, addedNodes } = record;
-            MutationObj.removed = [...MutationObj.removed, NodesRecord(removedNodes, 'active-timestamp', t)];
-            added = [...added, NodesRecord(addedNodes, 'yt-gif-timestamp-emulation', t)];
-        }
-
-
-        MutationObj.removed = validArr(MutationObj.removed);
-        added = validArr(added);
-        lastActive = validArr(lastActive);
-        function validArr(arr) { return arr.flat(Infinity).filter(x => !!x) }
-
-        return { lastActive, added };
-    }
-    function NodesRecord(Nodes, attr, target)
-    {
-        if (!Nodes || Nodes.length == 0)
-            return null;
-
-        const NodesArr = (Nodes == '[object NodeList]' ? [...Nodes] : [Nodes]).filter(el => !!el.tagName);
-
-        return NodesArr
-            .map(x =>
-            {
-                if (x.hasAttribute(attr))
-                    return x
-                else
-                    return [...x.querySelectorAll(`[${attr}]`)]
-            })
-            .flat(Infinity)
-            .map(el => closestBlock(el))
-            .filter((v, i, a) => a.indexOf(v) === i)// remove duplicates
-            .map(block => 
-            {
-                const timestamps = ElementsPerBlock(block, '[yt-gif-timestamp-emulation]') || [];
-                const activeTimestamps = timestamps.filter(x => x.hasAttribute(attr)) || [];
-
-                const getActivePage = (p) => activeTimestamps.find(x => x.getAttribute('timestamp-style') == p);
-                const timestampPage = (page) => ({
-                    timestamp: page?.getAttribute('timestamp'),
-                    index: timestamps.indexOf(page),
-                });
-
-                const siblingIndex = (siblings, el) => Array.from(siblings).flat(Infinity).indexOf(el);
-                const children = (sel, self) => !self ? rm_container?.querySelectorAll(sel) : [rm_container, ...rm_container?.querySelectorAll(sel)];
-
-                return {
-                    blockID: block.id,
-                    blockIndex: siblingIndex(children('.rm-block__input'), block),
-                    containerIndex: siblingIndex(children('.roam-block-container', true), rm_container),
-                    workflow: 'strict',
-
-                    node: target,
-                    start: timestampPage(getActivePage("start")),
-                    end: timestampPage(getActivePage("end")),
-                    target: timestampPage(activeTimestamps.find(x => x.hasAttribute('last-active-timestamp') || x.hasAttribute(attr))),
-                }
-            });
-    }
-    function setObsTimestamp(commonObj)
-    {
-        if (!commonObj || !commonObj.blockID)
-            return;
-        const lastActive = observedParameters.get(blockID)?.lastActiveTimestamp;
-
-        const equals = commonObj?.target?.timestamp === lastActive?.target?.timestamp;
-        const ok = commonObj?.target?.timestamp;
-
-        if (ok && (!equals || !lastActive)) // newEntry || not even initialized
-            observedParameters.set(blockID, { lastActiveTimestamp: commonObj }); // Hmmm...
-    }
-    function getObsTimestamp()
-    {
-        const lastActive = observedParameters.get(blockID)?.lastActiveTimestamp;
-        if (lastActive && UI.timestamps.tm_recovery.checked)
-        {
-            return lastActive;
-        }
-        return null;
-    }
-    async function AssertParamsClickTimestamp()
-    {
-        const lastActive = getObsTimestamp();
-        if (UI.display.simulate_roam_research_timestamps.checked)
-            if (UI.timestamps.tm_recovery.checked && lastActive)
-            {
-                await TryToRecoverActiveTimestamp(lastActive);
-                await RAP.sleep(10);
-
-                const TryActiveTimestamp = (p) => rm_container?.querySelector(`.rm-video-timestamp[timestamp-style="${p}"][active-timestamp]`)?.getAttribute('timestamp') || '';
-                configParams.start = UTILS.HMSToSecondsOnly(TryActiveTimestamp('start')) || configParams.start;
-                configParams.end = UTILS.HMSToSecondsOnly(TryActiveTimestamp('end')) || configParams.end;
-            }
-    }
-
     // 7.0
     async function DeployYT_IFRAME_OnInteraction()
     {
@@ -3202,13 +1695,6 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
         AddInteractionEventListener();
         wrapper.addEventListener('customPlayerReady', CreateYTPlayer);
-
-        function changeMouseEvents(e)
-        {
-            if (!isRendered(e.currentTarget))
-                return RemoveAllListeners()
-            ReplaceInteractionEventListener(e.type)
-        }
 
         // ⛔awaiting_input_type.addEventListener('change', changeMouseEvents);
 
@@ -3237,7 +1723,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 configParams.mute = e.detail.mute ?? configParams.mute;
                 configParams['play-right-away'] = e.detail['play-right-away'] ?? configParams['play-right-away'];
 
-                setObsTimestamp(Object.assign(e.detail.obsTimestamp, { workflow: 'soft' }));
+                // ⛔ setObsTimestamp(Object.assign(e.detail.obsTimestamp, { workflow: 'soft' }));
             }
 
             return await DeployYT_IFRAME();
@@ -3250,11 +1736,6 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
             // ⛔ awaiting_input_type.removeEventListener('change', changeMouseEvents);
         }
-        function ReplaceInteractionEventListener(listener = interactionType)
-        {
-            RemoveInteractionEventListener();
-            AddInteractionEventListener(listener);
-        }
         function AddInteractionEventListener(listener = interactionType)
         {
             wrapper.addEventListener(listener, CreateYTPlayer);
@@ -3263,7 +1744,6 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         {
             wrapper.removeEventListener(interactionType, CreateYTPlayer);
         }
-
         function setUpWrapperAwaitingAnimation()
         {
             const { awiting_player_pulse_anim, awaitng_player_user_input, awaitng_input_with_thumbnail } = cssData;
@@ -3395,25 +1875,7 @@ async function onPlayerReady(event)
 
     // 1. previous parameters if available
     // ⛔ const { previousTimestamp, previousVolume } = UI; // still inner objects
-    if (lastBlockIDParameters.has(blockID))
-    {
-        // 🚧? because, this object/functionalities are only relevant when it's iframe destroyed ≡ or when the script goes full cricle... Hmmmm?
-        const sesion = lastBlockIDParameters.get(blockID);
-        // 🧼
-        const previousTimestamp = {
-            strict_start_timestamp: UI.previous.strict_start_timestamp,
-            start_timestamp: UI.previous.start_timestamp,
-            fixed_start_timestam: UI.previous.fixed_start_timestamp
-        }
-        // 🧼
-        const previousVolume = {
-            strict_start_volume: UI.previous.strict_start_volume,
-            start_volume: UI.previous.start_volume,
-            fixed_start_volum: UI.previous.fixed_start_volume
-        }
-        RunWithPrevious_TimestampStyle(sesion, previousTimestamp);
-        RunWithPrevious_VolumeStyle(sesion, previousVolume);
-    }
+    RunWithPreviousParamsONiframeLoad(); // 🧼
 
 
 
@@ -3478,9 +1940,20 @@ async function onPlayerReady(event)
 
 
     //#region 1. previous parameters
-    function RunWithPrevious_VolumeStyle(sesion, { strict_start_volume, start_volume, fixed_start_volume })
+    function RunWithPreviousParamsONiframeLoad()
     {
-        if (strict_start_volume.checked)
+        const sesion = lastBlockIDParameters.get(blockID);
+        if (sesion)
+        {
+            const { url_boundaries, url_volume } = UI.playerSettings;
+            RunWithPrevious_TimestampStyle(sesion, url_boundaries);
+            RunWithPrevious_VolumeStyle(sesion, url_volume);
+        }
+    }
+    /* ******************* */
+    function RunWithPrevious_VolumeStyle(sesion, { value })
+    {
+        if (value == 'strict')
         {
             const vl_Hist = sesion.volumeURLmapHistory;
             if (vl_Hist[vl_Hist.length - 1] != entryVolume) // new entry is valid ≡ user updated "&vl="
@@ -3493,36 +1966,36 @@ async function onPlayerReady(event)
                 t.__proto__.newVol = sesion.updateVolume;
             }
         }
-        else if (start_volume.checked)
+        else if (value == 'soft')
         {
             t.__proto__.newVol = sesion.updateVolume;
         }
-        else if (fixed_start_volume.checked)
+        else if (value == 'start-only')
         {
             t.__proto__.newVol = validVolumeURL();
         }
     }
 
-    function RunWithPrevious_TimestampStyle(sesion, { strict_start_timestamp, start_timestamp, fixed_start_timestamp })
+    function RunWithPrevious_TimestampStyle(sesion, { value })
     {
-        if (strict_start_timestamp.checked)
+        if (value == 'strict')
         {
             const timeHist = sesion.timeURLmapHistory;
-            if (timeHist[timeHist.length - 1] != start) // new entry is valid ≡ user updated "?t="
+            if (timeHist[timeHist.length - 1] != map.start) // new entry is valid ≡ user updated "?t="
             {
-                timeHist.push(start);
-                seekToUpdatedTime(start);
+                timeHist.push(map.start);
+                seekToUpdatedTime(map.start);
             }
             else
             {
                 seekToUpdatedTime(sesion.updateTime);
             }
         }
-        else if (start_timestamp.checked && isBounded(sesion.updateTime))
+        else if (value == 'soft' && isBounded(sesion.updateTime))
         {
             seekToUpdatedTime(sesion.updateTime);
         }
-        else if (fixed_start_timestamp.checked)
+        else if (value == 'start-only')
         {
             // don't seek you are already there, it's just semantics and a null option
         }
@@ -4148,43 +2621,6 @@ async function onStateChange(state)
     {
         await ReloadYTVideo({ t, start: map?.start, end: map?.end });
     }
-
-    async function TryToLoadNextTimestampSet()
-    {
-        await RAP.sleep(10);
-
-        const iframe = t?.getIframe?.();
-        if (!iframe)
-            return await RealoadThis();
-
-        const lastStartSel = `[timestamp-set][timestamp-style="start"]`;
-        const targetWrapper = iframe.closest('.yt-gif-wrapper');
-        const rm_container = closest_rm_container(iframe);
-
-        if (!rm_container)
-            return await RealoadThis();
-
-        const lastActive = TimestampsInHierarchy(rm_container, targetWrapper, '[last-active-timestamp]')?.[0];
-        const starts = TimestampsInHierarchy(rm_container, targetWrapper, lastStartSel);
-
-
-        const active = ElementsPerBlock(closestBlock(lastActive), lastStartSel)?.[0]; // go one level up and search for a "start" timestamp, bc does it makes sense to loop through "end" boundaries???
-        const index = starts.indexOf(active);
-
-        if (index === -1 && UI.timestamps.tm_loop_hierarchy.value == 'active')
-            return await RealoadThis();
-        // else value == 'auto'
-
-        const nextIndex = (index + 1) % starts.length;
-        DeactivateTimestampsInHierarchy(rm_container, targetWrapper); // might be redundant
-
-        const target = starts[nextIndex];
-
-        if (isRendered(target))
-            await ClickOnTimestamp(target);
-        else
-            await RealoadThis();
-    }
     function PlayEndSound(url)
     {
         return new Promise(function (resolve, reject)
@@ -4216,130 +2652,6 @@ async function onStateChange(state)
 
 
 //#region Performance Mode Utils
-function PushNew_ShiftAllOlder_IframeBuffer(parentCssPath)
-{
-    if (parentCssPath)
-        window.YT_GIF_OBSERVERS.masterIframeBuffer = UTILS.pushSame(window.YT_GIF_OBSERVERS.masterIframeBuffer, parentCssPath);
-
-    ifStack_ShiftAllOlder_IframeBuffer(); // modifies and returns masterIframeBuffer
-}
-function ifStack_ShiftAllOlder_IframeBuffer()
-{
-    if (!UI.experience.iframe_buffer_stack.checked)
-    {
-        return null;
-    }
-
-
-    // work in pregress | by shifting/removing the first entry, you clean the most irrelevent YT GIF, and give space to new ones (to load, thus autoplay on mouseenter) when intersecting the website
-    let arr = window.YT_GIF_OBSERVERS.masterIframeBuffer;
-    const cap = parseInt(UI.range.iframe_buffer_slider.value, 10);
-    const { displaced, buffer } = attrInfo.creation;
-
-
-
-    if (isValid_TryIntersection_EnabledCheck())
-    {
-        // 2.
-        arr = FitBuffer_OffScreen(arr, cap, displaced);
-    }
-    else
-    {
-        // 2. while...
-        const { shiftedArr, atLeastOne, lastOne } = FitBuffer(arr, cap, buffer);
-        arr = shiftedArr;
-        // 2.1 mix and match
-        if (atLeastOne || cap <= arr.length)
-        {
-            AwaitingBtn_ActiveCheck(true);
-            AwaitingBtn_VisualFeedback(true);
-        }
-        else if (!atLeastOne || cap > arr.length)
-        {
-            smart_AwaitingBtn_Dispatch_ActiveCheck();
-            AwaitingBtn_VisualFeedback(false, false);
-        }
-    }
-
-    // 3. pass by value
-    return window.YT_GIF_OBSERVERS.masterIframeBuffer = arr;
-
-
-    function FitBuffer(arr, cap, creation)
-    {
-        let atLeastOne = false;
-        let lastOne = null;
-        let stop = arr.length + 0;
-        let ini = 0; // most defenetly the very first one in the array
-
-        // 1. try to clean wrappers
-        while (arr.length > cap)
-        {
-            if (stop < 0)
-                throw new Error('index out of bounds');
-
-            lastOne = arr[ini];
-            const wrapper = document.querySelector(lastOne);
-
-            // 2. if wrapper is not on screen, remove it
-            if (wrapper)
-            {
-                const newCreation = UTILS.isElementVisible(wrapper) ? attrInfo.creation.forceAwaiting : creation;
-                CleanAndBrandNewWrapper(wrapper, attrInfo.creation.name, newCreation);
-            }
-            else
-            {
-                ini++;
-            }
-
-            // 3. shift last one anyways
-            arr.shift(lastOne);
-            atLeastOne = true;
-
-            stop--;
-        }
-
-        arr = [...new Set(arr)]; // remove duplicates
-        arr = arr.filter(sel => document.querySelector(sel) != null); // remove any that are no longer in the DOM
-
-        return { shiftedArr: arr, atLeastOne, lastOne };
-    }
-    function FitBuffer_OffScreen(arr, cap, creation)
-    {
-        // 0. work very much in progress....
-        const anyLoaded = document.querySelectorAll('.yt-gif-wrapper');
-        const options = { root: null, threshold: 0.1 }// set offset 0.1 means trigger if atleast 10% of element in viewport
-
-        if (anyLoaded.length < cap)
-            return arr;
-
-        // 1. loop through all loaded iframes to see if they are off screen and if so, remove them
-        for (let i = 0; i < anyLoaded.length; i++)
-        {
-            const observer = new window.IntersectionObserver(OffScreen_cb, options); // 1.1
-            observer.observe(anyLoaded[i]);
-            return arr;
-        }
-
-        return arr;
-
-
-        function OffScreen_cb([entry], observer)
-        {
-            if (entry.isIntersecting)
-                return arr;
-
-            // 1.1 not in viewport, remove it
-            const { shiftedArr } = FitBuffer(arr, cap, creation);
-            arr = shiftedArr;
-
-            observer.disconnect();
-
-            return window.YT_GIF_OBSERVERS.masterIframeBuffer = arr; // this can happen in the future...
-        }
-    }
-
-}
 function CleanAndBrandNewWrapper(wrapper_p, attr_name = attrInfo.creation.name, attr_value = '')
 {
     const targetClass = wrapper_p.getAttribute(`${attrInfo.target}`);
@@ -4351,104 +2663,6 @@ function CleanAndBrandNewWrapper(wrapper_p, attr_name = attrInfo.creation.name, 
     document.querySelector(parentSel).appendChild(div);
     return div;
 }
-
-//#region visual feedback - checked - disabled - dispatch
-function smart_AwaitingBtn_Dispatch_ActiveCheck()
-{
-    let validCheck = undefined;
-    if (typeof userActiveChoice_awaitingBtn !== 'undefined')
-    {
-        validCheck = userActiveChoice_awaitingBtn;
-    }
-    else if (typeof initialCheck_awaitngBtn !== 'undefined')
-    {
-        validCheck = initialCheck_awaitngBtn;
-    }
-
-    if (typeof validCheck !== 'undefined')
-    {
-        return AwaitingBtn_ActiveCheck(validCheck);
-    }
-
-    return undefined;
-}
-function AwaitingBtn_ActiveCheck(bol)
-{
-    const { awaiting_for_user_input_to_initialize } = UI.experience;
-    awaiting_for_user_input_to_initialize.disabled = bol;
-    awaiting_for_user_input_to_initialize.checked = bol;
-
-    return awaiting_for_user_input_to_initialize;
-}
-/* *********************** */
-function isValid_TryIntersection_EnabledCheck()
-{
-    const { try_to_load_on_intersection_beta } = UI.experience;
-    return isValid_TryIntersection_check() && !try_to_load_on_intersection_beta.disabled;
-}
-function isValid_TryIntersection_check()
-{
-    return UI.experience.try_to_load_on_intersection_beta.checked;
-}
-function isValid_Awaiting_check()
-{
-    // kinda spaghetti
-    // bc both can't be checked at the same time
-    // the logic would contradict itself
-    return UI.experience.awaiting_for_user_input_to_initialize.checked && !isValid_TryIntersection_check();
-}
-/* *********************** */
-function TryingBtn_VisualFeedback(bol, disabled = undefined)
-{
-    const { try_to_load_on_intersection_beta } = UI.experience;
-
-    if (!try_to_load_on_intersection_beta.hasAttribute("data-tooltip-original"))
-    {
-        try_to_load_on_intersection_beta.setAttribute("data-tooltip-original", try_to_load_on_intersection_beta.getAttribute("data-tooltip"));
-    }
-    const originalClause = try_to_load_on_intersection_beta.getAttribute("data-tooltip-original");
-
-    const clause = bol ? '"Awaiting for user input" has priority' : originalClause;
-    try_to_load_on_intersection_beta.setAttribute("data-tooltip", clause);
-    //UTILS.toggleAttribute(bol, 'data-tooltip', try_to_load_on_intersection_beta, clause);
-    return btn_VS(bol, try_to_load_on_intersection_beta, disabled);
-}
-function AwaitingBtn_VisualFeedback(bol, disabled = undefined)
-{
-    const { awaiting_for_user_input_to_initialize } = UI.experience;
-
-    const clause = "Full stack Iframe Buffer has priority";
-
-    UTILS.toggleAttribute(bol, 'data-tooltip', awaiting_for_user_input_to_initialize, clause);
-    btn_VS(bol, awaiting_for_user_input_to_initialize, disabled);
-}
-/* *********** */
-function toggleBtn_VS(checked, VisualFeedback_cb = () => { }) 
-{
-    if (checked)
-    {
-        VisualFeedback_cb(true, true);
-    }
-    else
-    {
-        VisualFeedback_cb(false, false);
-    }
-}
-function btn_VS(bol, exp_btn, disabled)
-{
-    const { ditem_allow } = cssData;
-
-    UTILS.toggleClasses(bol, [ditem_allow], exp_btn.parentNode);
-
-    if (typeof disabled !== 'undefined')
-    {
-        exp_btn.disabled = disabled; // spaghetti? Yes. Confusing. Kinda. But it works, as the btn names (semantics) suggest, maybe that's my problem.
-    }
-
-    return exp_btn;
-}
-//#endregion
-
 //#endregion
 
 
@@ -4488,105 +2702,11 @@ function isRendered(el)
 
 
 //#region Timestamp
-window.YTGIFs = {
-    getTimestampObj: getTimestampObj_smart
-}
-async function getTimestampObj_smart(page)
-{
-    const openInputBlock = getCurrentInputBlock();
-    const uid = openInputBlock?.id?.slice(-9);
-    const failObj = { S: null, HMS: null, };
-
-    if (!page || !uid || !openInputBlock)
-        return failObj;
-    return await getTimestampObj(page, uid);
-
-    async function getTimestampObj(page, uid)
-    {
-        const { formats, foundBlock, targetBlock } = await getLastComponentInHierarchy(uid);
-        if (!foundBlock) return failObj;
-
-        const { lestHMS, HMS, S } = formats;
-
-        const obj = (v) => ({
-            value: v,
-            fmt: `{{[[yt-gif/${page}]]: ${v} }}`,
-        });
-
-        return {
-            lessHMS: obj(fmt({ lestHMS })),
-            HMS: obj(fmt({ HMS })),
-            S: obj(parseInt(S ?? targetBlock[page].S)),
-            uid: targetBlock?.uid,
-        }
-
-        function fmt(obj)
-        {// https://www.codegrepper.com/code-examples/javascript/get+var+name+javascript#:~:text=%E2%80%9Cget%20var%20name%20javascript%E2%80%9D%20Code%20Answer
-            const key = Object.keys(obj)[0];
-            const value = obj[key]; // Hmmm...
-            return (!value || value?.includes?.('NaN')) ? targetBlock[page][key] : value;
-        }
-    }
-}
-function getCurrentInputBlock()
-{
-    return document.querySelector(".rm-block__input--active.rm-block-text")
-}
-function DeactivateTimestampsInHierarchy(rm_container, targetWrapper)
-{
-    if (!rm_container) return;
-    const sel = '[yt-gif-timestamp-emulation]';
-    const all = TimestampsInHierarchy(rm_container, targetWrapper, sel);
-    all.forEach(el =>
-    {
-        UTILS.toggleAttribute(false, 'active-timestamp', el);
-        UTILS.toggleAttribute(false, 'last-active-timestamp', el);
-    });
-}
-function TimestampsInHierarchy(rm_container, targetWrapper, allSelector)
-{
-    const badSets = [...rm_container.querySelectorAll('.yt-gif-wrapper')]
-        .filter(w => w != targetWrapper)
-        .map(w => [...closest_rm_container(w).querySelectorAll(allSelector)])
-        .flat(Infinity);
-
-    const actives = [...rm_container.querySelectorAll(allSelector)]
-        .filter(tm => !badSets.includes(tm));
-    return actives;
-}
-/* ***************** */
-async function ClickOnTimestamp(target, assignObj = {})
-{
-    // how do you resolve/return a promise using a CustomEvent handler?
-    await target?.OnClicks?.(
-        { // cringe event object
-            currentTarget: target,
-            which: 1,
-            seekToMessage: UI.timestamps?.tm_seek_to?.value == 'soft' ? 'seekTo-soft' : 'seekTo-strict',
-            mute: UI.timestamps.tm_seek_action.value == 'mute',
-            ...assignObj
-        },
-    )
-}
-async function ClickResetWrapper(targetWrapper)
-{
-    if (!targetWrapper) return;
-
-    const reset = targetWrapper.querySelector('.yt-gif-reset-boundaries');
-    await reset?.dispatchEvent(new Event('click'));
-}
-/* ***************** */
 function ElementsPerBlock(block, selector)
 {
     if (!block) return [];
     return [...block?.querySelectorAll(selector)]?.filter(b => closestBlock(b).id == block.id) || [];
 }
-/* ***************** */
-function awaitingAtrr(bol, el)
-{
-    return UTILS.toggleAttribute(bol, 'awaiting', el);
-}
-/* ***************** */
 async function ReloadYTVideo({ t, start, end })
 {
     if (!t)
@@ -4628,113 +2748,22 @@ async function ReloadYTVideo({ t, start, end })
 
     return t?.getCurrentTime?.();
 }
-/* ***************** */
-function replace_nth(str = '', subStr = '', repStr = '', n = 1)
-{// https://stackoverflow.com/questions/35499498/replace-nth-occurrence-of-string#:~:text=with%20RegExp%20constructor-,const%20replace_nth%20%3D%20function%20(s%2C%20f%2C%20r%2C%20n)%20%7B,-//%20From%20the%20given
-    // From the given string s, replace f with r of nth occurrence
-    return str.replace(RegExp("^(?:.*?" + subStr + "){" + n + "}")
-        , x => x.replace(RegExp(subStr + "$"), repStr));
-}
 //#endregion
 
 
 
 
 //#region  backend/frontend communication - XXX_Config = {...}
-async function getLastComponentInHierarchy(tempUID, _Config = YTGIF_Config, includeOrigin = true)
-{
-    const original = await RAP.getBlockInfoByUID(tempUID);
-    const ParentHierarchy = await RAP.getBlockParentUids_custom(tempUID);
-    if (!ParentHierarchy && !original) { return {}; }
-    const originalStr = original[0]?.[0]?.string || '';
-
-
-    const baseObj = {
-        blockID: null, start: 0, end: 0, HMS: 000, crrTime: null,
-    }
-    const iframeMaps = {
-        targets: {
-            condition: function (sufix)
-            {
-                this.blockID = [...recordedIDs.keys()].find(k => k?.endsWith(sufix));
-                return this.crrTime = recordedIDs.get(this.blockID)?.target?.getCurrentTime() || false;
-            },
-        },
-        lastParams: {
-            condition: function (sufix)
-            {
-                this.blockID = [...lastBlockIDParameters.keys()].find(k => k?.endsWith(sufix));
-                return this.crrTime = lastBlockIDParameters.get(this.blockID)?.updateTime || false;
-            },
-        },
-    }
-    Object.keys(iframeMaps).forEach(key => Object.assign(iframeMaps[key], baseObj));
-
-    const Hierarchy = !includeOrigin ? ParentHierarchy : [...ParentHierarchy, [{ uid: tempUID, string: originalStr }, { title: 'made-up', uid: 'invalid' }]];
-    const blockStrings = Hierarchy.map(arr => arr[0]).map(o => res = { string: clean_rm_string(o.string), uid: o.uid });
-
-
-    for (const { string, uid } of blockStrings.reverse())
-    {
-        const componentMap = await getComponentMap(uid, _Config);
-        const reverseValues = [...componentMap.values()].reverse();
-
-        const lastUrl = reverseValues?.find(v => _Config.guardClause(v));
-        if (!lastUrl) continue;
-
-        const lastUrlIndex = reverseValues.indexOf(lastUrl);
-        const possibleBlockIDSufix = uid + properBlockIDSufix(lastUrl, lastUrlIndex);
-
-        const key = Object.keys(iframeMaps).find(x => iframeMaps[x].condition(possibleBlockIDSufix));
-
-        const crrTime = iframeMaps[key]?.crrTime;
-        const startObj = boundaryObj(lastUrl.match(/(t=|start=)(?:(\d+))/)?.[2] || 0);
-        const endObj = boundaryObj(lastUrl.match(/(end=)(?:(\d+))/)?.[2] || 0);
-
-        return {
-            formats: boundaryObj(crrTime),
-            foundBlock: {
-                string,
-                uid,
-                blockID: iframeMaps[key]?.blockID,
-                possibleBlockIDSufix,
-            },
-            targetBlock: {
-                string: originalStr,
-                uid: tempUID,
-                start: startObj,
-                end: endObj,
-            },
-        };
-
-        function boundaryObj(value)
-        {
-            return {
-                lestHMS: UTILS.seconds2time(parseInt(value)),
-                HMS: UTILS.convertHMS(value),
-                S: value,
-            }
-        }
-    }
-    return {};
-}
-
-
 function MapAtIndex_Value(map, valueAtIndex, property = 'is')
 {
     const key = FilterMapByIsKey(map, property)?.[valueAtIndex];
     return map?.get(key);
-}
-function MapAtIndex_ObjKey(map, valueAtIndex, property = 'is')
-{
-    return FilterMapByIsKey(map, property)?.[valueAtIndex];
 }
 function FilterMapByIsKey(map, property)
 {
     if (!map || map?.size == 0) return null;
     return [...map.keys()].filter(o => o['isKey'].includes(property));
 }
-
 
 async function getMap_smart(key, map, callback, ...setMapCb_params)
 {// https://stackoverflow.com/questions/3458553/javascript-passing-parameters-to-a-callback-function#:~:text=console.log(param1)%3B%0A%7D-,function%20callbackTester(callback%2C%20...params)%20%7B,-callback(...params)%3B%0A%7D%0A%0A%0A%0AcallbackTester
@@ -4960,7 +2989,6 @@ function BlockRegexObj(componentPage, caputureGargabe = false)
             new RegExp(acc.source != '(?:)' ? acc.source + '|' + v.source : v.source, 'gm'), new RegExp());
     }
 }
-
 function preRgxComp(rgxPage)
 {
     return `{{(\\[\\[)?(${rgxPage})(?!\\/)(?!\\/)(?:(\\]\\])(.*?(?::|))|:|\\s)(?:(?<=:)|)(.+?)(\\}\\})`
