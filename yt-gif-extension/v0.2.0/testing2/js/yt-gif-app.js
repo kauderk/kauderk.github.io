@@ -2602,7 +2602,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             UIDtoURLInstancesMapMap.delete(uid);
             if (!UI.timestamps.tm_recovery.checked)
                 DeactivateTimestampsInHierarchy(rm_container, wrapper);
-            if (!isRendered(rm_container) && rm_container.closest('.rm-sidebar-outline'))
+            if (!isRendered(rm_container) && rm_container?.closest('.rm-sidebar-outline'))
                 observedParameters.delete(blockID);
         },
     }
@@ -2687,7 +2687,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 targetSelector: ['[data-video-url]'].join(),
 
                 condition: function () { return this.url = this.el.getAttribute(attrInfo.url.path) },
-                grandParentBlock: function () { return this.el.closest('.dwn-yt-gif-player-container') },
+                grandParentBlock: function () { return this.el.closest('.dropdown-content') },
             },
         }
         Object.keys(uidResults).forEach(key => Object.assign(uidResults[key], tempUrlObj));
@@ -2708,6 +2708,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
         if (key == 'is ddm tutorial')
         {
+            resObj.accUrlIndex = resObj.preUrlIndex;
             return resObj;
         }
         else if (key == 'is tooltip card')
@@ -4065,7 +4066,7 @@ async function onPlayerReady(event)
 
         const keys = UI.InAndOutKeys.keysArray.split(',').map(s => s.trim()).filter(s => !!s);
         for (const name of keys)
-            if (e[name] && UTILS.isTrue(name))
+            if (e[name])
                 return true;
 
         return false;
@@ -4179,6 +4180,8 @@ async function onStateChange(state)
         const targetWrapper = iframe.closest('.yt-gif-wrapper');
         const rm_container = closest_rm_container(iframe);
 
+        if (!rm_container)
+            return await RealoadThis();
 
         const lastActive = TimestampsInHierarchy(rm_container, targetWrapper, '[last-active-timestamp]')?.[0];
         const starts = TimestampsInHierarchy(rm_container, targetWrapper, lastStartSel);
