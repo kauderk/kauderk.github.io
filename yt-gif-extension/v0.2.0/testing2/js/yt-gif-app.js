@@ -495,6 +495,7 @@ async function Ready()
     const observer = new MutationObserver(mainDDMstyle_cb); // when closed, clean tutorials -> wrappers
     observer.observe(mainDDM, { attributes: true });
 
+    SetUpSelectTurorials();
     SetUpTutorials_smartNotification();
 
 
@@ -1167,6 +1168,27 @@ async function Ready()
 
 
     //#region 5. Setting up tutorials
+    function SetUpSelectTurorials()
+    {
+        const selectObjs = [...document.querySelectorAll('.ddm-tut select')].filter(el => !!el)
+            .map(sel => selectObj(sel))
+            .forEach(obj =>
+            {
+                toogleFoldAnim(false, obj.ddm);
+
+                obj.select.addEventListener('change', async (e) =>
+                {
+                    resetOptions(obj);
+                    await ShowOption(obj);
+                });
+                obj.container.addEventListener('mouseenter', async (e) => await ShowOption(obj));
+
+                // fire change on selected attr
+                const selected = obj.select.querySelector('[selected]')?.value;
+                if (selected)
+                    obj.select.dispatchEvent(new Event('change'));
+            })
+    }
     function SetUpTutorials_smartNotification()
     {
         const tutContArr = [...document.querySelectorAll('.dwn-yt-gif-player-container')].filter(el => el != null); // trying to make it modular
@@ -1222,19 +1244,56 @@ async function Ready()
         }
     }
 
-    function DDM_onlyOneTut(updateCont)
+    //#region Select tutorial
+    function selectObj(sel)
     {
-        const updateCont_content = updateCont.querySelector('.dropdown-content');
-        const updateTutParents = [updateCont_content, mainDDM];
+        const ddm = sel.closest('.ddm-tut');
+        const options = [...sel.options].map(o => o.value);
+        const htmls = [...options].reduce((acc, crr) =>
+        {
+            acc[crr] = ddm.querySelector(`[select="${crr}"]`)?.innerHTML;
+            return acc;
+        }, {});
 
+        return {
+            options,
+            target: (v) => ddm.querySelector(`[select="${v}"]`),
 
-        const { classToObserve } = rm_components.yt_gif_tut;
-        const { forceAwaiting } = attrInfo.creation;
-        let tutWrapperAwaiting = null;
+            html: (v) => htmls[v],
 
-        updateCont.addEventListener('mouseenter', deployTutorialVideo);
-        icon.addEventListener('blur', () => toggleFocusOnDMMsparents(false));
+            select: sel, ddm,
+            container: sel.closest('.dropdown'),
+        }
+    }
+    async function ShowOption(obj)
+    {
+        if (obj.select.value == 'disabled')
+            return toogleFoldAnim(false, obj.ddm);
 
+        toogleFoldAnim(true, obj.ddm);
+
+        const target = obj.target(obj.select.value);
+        target.style.display = 'block';
+
+        await DDM_DeployTutorial(target);
+    }
+    function resetOptions(obj)
+    {
+        for (const option of obj.options)
+        {
+            const wrapper = obj.target(option);
+            if (!(wrapper instanceof Element))
+                continue;
+            wrapper.style.display = 'none';
+            wrapper.innerHTML = obj.html(option);
+        }
+    }
+    function toogleFoldAnim(bol, el)
+    {
+        UTILS.toggleClasses(!bol, ['absolute'], el); // vertical
+        UTILS.toggleClasses(bol, ['w-full'], el); // horizontal
+    }
+    //#endregion
 
         async function deployTutorialVideo(e)
         {
