@@ -1192,7 +1192,6 @@ async function Ready()
     function SetUpTutorials_smartNotification()
     {
         const tutContArr = ['tut_update_ver'].map(id => document.querySelector(`[id="${id}"]`)).filter(el => el != null);
-        let atLeastOne = false;
 
         for (const container of tutContArr)
         {
@@ -1207,9 +1206,7 @@ async function Ready()
 
                 function ToogleVisualFeedback(bol)
                 {
-                    bol = UTILS.isTrue(bol);
-                    UTILS.toggleClasses(false, [obj.trueIcon, obj.falseIcon], btn);
-                    UTILS.toggleClasses(true, [bol ? obj.trueIcon : obj.falseIcon], btn);
+                    bol = toogleIcons(bol, obj.iconObj, btn);
                     UTILS.toggleClasses(!bol, [cssData.dwn_pulse_anim], obj.pulseElm);
                 }
 
@@ -1229,34 +1226,21 @@ async function Ready()
                     }
                 }
             }
-
-
-            // container.addEventListener('mouseenter', e => DDM_DeployTutorial(obj.target()));
-            // atLeastOne = true;
         }
-
-        if (atLeastOne && UTILS.hasOneDayPassed_localStorage('yt_gif_icon_update_available'))
-        {
-            // one pulse per day -  to show that there are updates
-            iconIsPulsing(true);
-            setTimeout(() => iconIsPulsing(false), 3000);
-        }
-
-
 
         function getTutorialObj(container)
         {
             const btn = container.querySelector('input[class*=bp3-icon-]');
             const pulseElm = container.querySelector('.drodown_item-pulse-animation');
-            const falseIcon = [...btn.classList]?.reverse().find(c => c.includes('bp3-icon-'));
-            const trueIcon = 'bp3-icon-' + btn.getAttribute('flip-icon'); // bookmark
+            const iconObj = getIconFlipObj(btn); // bookmark
             const parentSelector = UTILS.getUniqueSelector(container.querySelector('[data-video-url]')?.parentElement)
 
             return {
-                falseIcon, trueIcon, btn, pulseElm,
+                iconObj,
+                btn, pulseElm,
                 id: container.id,
                 target: () => container.querySelector(parentSelector),
-                ok: falseIcon && trueIcon && btn // the btn can flip visually
+                ok: iconObj.falseVal && iconObj.trueVal && btn // the btn can flip visually
             };
         }
     }
