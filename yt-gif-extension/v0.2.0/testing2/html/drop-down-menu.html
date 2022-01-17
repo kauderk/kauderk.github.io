@@ -60,23 +60,23 @@
                             <span class="dropdown-info-message" data-tooltip="Set timestamps per Block and Hierarchy">YT
                                 GIF timestamps</span>
                             <div class="dropdown-content dropdown-info-box">
-                                <div class="ddm-tut">
+                                <div class="ddm-tut" id="tut_timestamps_sel">
                                     <span class="tut-sel-wpr">
                                         <span class="ddm-tut-icon" data-tooltip="How to use">
                                             <a type="checkbox"
                                                 class="bp3-button bp3-minimal bp3-small m-0 appearance-none bp3-icon-learning"></a>
                                         </span>
-                                        <select class="ddm-select-item" id="tut_timestamps">
+                                        <select class="ddm-select-item">
                                             <option value="disabled">Hide</option>
-                                            <option value="recovery">Recovery</option>
-                                            <option value="loops">Looping</option>
+                                            <option value="0">Recovery</option>
+                                            <option value="1">Looping</option>
                                         </select>
                                     </span>
                                     <div class="yt-gifs-tuts">
-                                        <div class="dropdown-item" select="recovery">
+                                        <div class="dropdown-item" select="0">
                                             <div data-video-url="https://youtu.be/loK7BWFdwlc"></div>
                                         </div>
-                                        <div class="dropdown-item" select="loops">
+                                        <div class="dropdown-item" select="1">
                                             <div data-video-url="https://www.youtube.com/watch?v=iKnOk-mEA1M"></div>
                                         </div>
                                     </div>
@@ -206,6 +206,25 @@
                             <span class="dropdown-info-message" data-tooltip="Quality of life Features">
                                 Experience</span>
                             <div class="dropdown-content dropdown-info-box">
+                                <div class="ddm-tut" id="tut_experience_sel">
+                                    <span class="tut-sel-wpr">
+                                        <span class="ddm-tut-icon" data-tooltip="How to use">
+                                            <a type="checkbox"
+                                                class="bp3-button bp3-minimal bp3-small m-0 appearance-none bp3-icon-learning"></a>
+                                        </span>
+                                        <select class="ddm-select-item">
+                                            <option value="disabled">Hide</option>
+                                            <option value="0">Iframe Buffer</option>
+                                        </select>
+                                    </span>
+                                    <div class="yt-gifs-tuts">
+                                        <div class="dropdown-item" select="0">
+                                            <div data-video-url="https://www.youtube.com/watch?v=L7ZT_71R9QQ"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description"
                                         data-tooltip="Don't load until interaction">Awaiting for input to
@@ -261,6 +280,29 @@
                         <div class="dropdown yt-gif-style yt-gif-style-player-settings">
                             <span class="dropdown-info-message">Player Settings</span>
                             <div class="dropdown-content dropdown-info-box">
+                                <div class="ddm-tut" id="tut_player_settings_sel">
+                                    <span class="tut-sel-wpr">
+                                        <span class="ddm-tut-icon" data-tooltip="How to use">
+                                            <a type="checkbox"
+                                                class="bp3-button bp3-minimal bp3-small m-0 appearance-none bp3-icon-learning"></a>
+                                        </span>
+                                        <select class="ddm-select-item">
+                                            <option value="disabled">Hide</option>
+                                            <option value="0">Play-style</option>
+                                            <option value="1">Mute-style</option>
+                                        </select>
+                                    </span>
+                                    <div class="yt-gifs-tuts">
+                                        <div class="dropdown-item" select="0">
+                                            <div data-video-url="https://www.youtube.com/watch?v=UNs91t7GLWo"></div>
+                                        </div>
+                                        <div class="dropdown-item" select="1">
+                                            <div data-video-url="https://www.youtube.com/watch?v=xLu0YnRlwX8"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+
                                 <div class="dropdown-item-select">
                                     <span class="ddm-info" for="" data-tooltip="Play/Pause yt-gifs">Play Style</span>
                                     <select class="ddm-select-item" id="play_style">
@@ -365,6 +407,29 @@
                         <div class="dropdown yt-gif-style">
                             <span class="dropdown-info-message">Miscellaneous</span>
                             <div class="dropdown-content dropdown-info-box">
+                                <div class="ddm-tut" id="tut_miscellaneous_sel">
+                                    <span class="tut-sel-wpr">
+                                        <span class="ddm-tut-icon" data-tooltip="How to use">
+                                            <a type="checkbox"
+                                                class="bp3-button bp3-minimal bp3-small m-0 appearance-none bp3-icon-learning"></a>
+                                        </span>
+                                        <select class="ddm-select-item">
+                                            <option value="disabled">Hide</option>
+                                            <option value="0">URL Buttons</option>
+                                            <option value="1">Timestamp Scrolling</option>
+                                        </select>
+                                    </span>
+                                    <div class="yt-gifs-tuts">
+                                        <div class="dropdown-item" select="0">
+                                            <div data-video-url="https://www.youtube.com/watch?v=MgvH0AEP6MM"></div>
+                                        </div>
+                                        <div class="dropdown-item" select="1">
+                                            <div data-video-url="https://www.youtube.com/watch?v=U7A6w0VIFbo"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description"
                                         data-tooltip="Click on the button next to a youtube video url and create it's {{[[yt-gif]]}} component">Simulate
@@ -427,9 +492,9 @@
                             <div class="dropdown-show-info">
                                 <span class="ddm-transparent-btn-h"
                                     data-tooltip="Frequently Asked Questions - kauderk.github.io/yt-gif-faq">
-                                    <input type="checkbox"
+                                    <a type="checkbox"
                                         class="bp3-button bp3-minimal bp3-small m-0 appearance-none bp3-icon-help"
-                                        href="https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq">
+                                        href="https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq"></a>
                                 </span>
                             </div>
                             <div class="dropdown-show-info" id="navigate-to-yt-gif-settings-page">
@@ -480,22 +545,23 @@
                                                 class="bp3-button bp3-minimal bp3-small m-0 appearance-none bp3-icon-social-media"
                                                 href="https://twitter.com/kauDerk_"></a>
                                         </span>
-                                    <div class="ddm-tut">
+                                    </span>
+                                    <div class="ddm-tut" id="tut_update_ver_sel">
                                         <span class="tut-sel-wpr">
                                             <span class="ddm-tut-icon">
                                                 <a type="checkbox"
                                                     class="bp3-button bp3-minimal bp3-small m-0 appearance-none bp3-icon-learning"></a>
                                             </span>
-                                            <select class="ddm-select-item" id="tut_timestamps">
-                                                <option value="installation" selected>Intallation</option>
-                                                <option value="showcase">Features Showcase</option>
+                                            <select class="ddm-select-item">
+                                                <option value="0" selected>Intallation</option>
+                                                <option value="1">Features Showcase</option>
                                             </select>
                                         </span>
                                         <div class="yt-gifs-tuts">
-                                            <div class="dropdown-item" select="installation">
+                                            <div class="dropdown-item" select="0">
                                                 <div data-video-url="https://www.youtube.com/watch?v=HapWNMdeVR0"></div>
                                             </div>
-                                            <div class="dropdown-item" select="showcase">
+                                            <div class="dropdown-item" select="1">
                                                 <div data-video-url="https://www.youtube.com/watch?v=nOaSzWckutw"></div>
                                             </div>
                                         </div>
