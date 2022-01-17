@@ -1260,6 +1260,54 @@ async function Ready()
             };
         }
     }
+    async function DDM_DeployTutorial(parentTarget)
+    {
+        if (!parentTarget || parentTarget.querySelector('.yt-gif-wrapper')) // video already deployed
+            return;
+
+        const tutWrapper = parentTarget.querySelector('[data-video-url]');
+
+        // remove every attribute but data-video-url
+        for (const attr of [...tutWrapper.attributes].filter(attr => attr.name != 'data-video-url'))
+            tutWrapper.removeAttribute(attr.name); // fuck!
+
+        const awaitingWrapper = await onYouTubePlayerAPIReady(tutWrapper, 'yt-gif-ddm-tutorial', 'force-awaiting', 'testing manual ty gif tutorial');
+
+        icon.addEventListener('blur', localBlur);
+
+        awaitingWrapper.addEventListener('mouseenter', (e) =>
+        {
+            icon.dispatchEvent(new Event('click'))
+            toggle_VisualFeedback(e.currentTarget, false);
+        })
+        awaitingWrapper.addEventListener('mouseleave', (e) =>
+        {
+            toggleFocusOnDMMsparents(true)
+            toggle_VisualFeedback(e.currentTarget, true)
+        })
+
+
+        function localBlur(e)
+        {
+            if (!isRendered(awaitingWrapper))
+                icon.removeEventListener('blur', localBlur);
+            else
+                toggleFocusOnDMMsparents(false);
+        }
+        function toggleFocusOnDMMsparents(toggle = true)
+        {
+            const updateTutParents = [parentTarget?.closest('.dropdown-content'), mainDDM];
+            for (const el of updateTutParents)
+                UTILS.toggleClasses(toggle, [ddm_focus], el);
+
+            if (toggle)
+                icon.dispatchEvent(new Event('click'));
+        }
+        function toggle_VisualFeedback(el, bol)
+        {
+            UTILS.toggleClasses(bol, [cssData.ddn_tut_awaiting], el);
+        }
+    }
 
     //#region Select tutorial
     function selectObj(sel)
@@ -1312,54 +1360,8 @@ async function Ready()
     }
     //#endregion
 
-    async function DDM_DeployTutorial(parentTarget)
-    {
-        if (!parentTarget || parentTarget.querySelector('.yt-gif-wrapper')) // video already deployed
-            return;
+    //#endregion
 
-        const tutWrapper = parentTarget.querySelector('[data-video-url]');
-
-        // remove every attribute but data-video-url
-        for (const attr of [...tutWrapper.attributes].filter(attr => attr.name != 'data-video-url'))
-            tutWrapper.removeAttribute(attr.name); // fuck!
-
-        const awaitingWrapper = await onYouTubePlayerAPIReady(tutWrapper, 'yt-gif-ddm-tutorial', 'force-awaiting', 'testing manual ty gif tutorial');
-
-        icon.addEventListener('blur', localBlur);
-
-        awaitingWrapper.addEventListener('mouseenter', (e) =>
-        {
-            icon.dispatchEvent(new Event('click'))
-            toggle_VisualFeedback(e.currentTarget, false);
-        })
-        awaitingWrapper.addEventListener('mouseleave', (e) =>
-        {
-            toggleFocusOnDMMsparents(true)
-            toggle_VisualFeedback(e.currentTarget, true)
-        })
-
-
-        function localBlur(e)
-        {
-            if (!isRendered(awaitingWrapper))
-                icon.removeEventListener('blur', localBlur);
-            else
-                toggleFocusOnDMMsparents(false);
-        }
-        function toggleFocusOnDMMsparents(toggle = true)
-        {
-            const updateTutParents = [parentTarget?.closest('.dropdown-content'), mainDDM];
-            for (const el of updateTutParents)
-                UTILS.toggleClasses(toggle, [ddm_focus], el);
-
-            if (toggle)
-                icon.dispatchEvent(new Event('click'));
-        }
-        function toggle_VisualFeedback(el, bol)
-        {
-            UTILS.toggleClasses(bol, [cssData.ddn_tut_awaiting], el);
-        }
-    }
 
     //#region Focus and close mainDDM
     function mainDDMstyle_cb(mutationList)
@@ -1414,8 +1416,6 @@ async function Ready()
     {
         return UTILS.toggleClasses(bol, [cssData.dwn_pulse_anim], icon)
     }
-    //#endregion
-
     //#endregion
 
 
