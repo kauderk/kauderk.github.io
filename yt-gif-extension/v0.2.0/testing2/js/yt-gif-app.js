@@ -1191,49 +1191,48 @@ async function Ready()
     }
     function SetUpTutorials_smartNotification()
     {
-        const tutContArr = [...document.querySelectorAll('.dwn-yt-gif-player-container')].filter(el => el != null); // trying to make it modular
+        const tutContArr = ['tut_update_ver'].map(id => document.querySelector(`[id="${id}"]`)).filter(el => el != null);
         let atLeastOne = false;
 
-        for (const tutCont of tutContArr)
+        for (const container of tutContArr)
         {
-            //#region hardcoded values
-            const btn = tutCont.querySelector('.bp3-button[class*=bp3-icon-]');
-            const pulsingMessageEl = tutCont.querySelector('.drodown_item-pulse-animation.dropdown-info-message');
-            const defaultIcon = [...btn?.classList]?.reverse().find(c => c.includes('bp3-icon-'));
-            const agrredIcon = 'bp3-icon-graph-remove';
+            const obj = getTutorialObj(container);
 
-            if (defaultIcon)
+            if (obj.ok) // toogle icon onchange
             {
-                btn.addEventListener('change', (e) =>
-                {
-                    const bol = btn.classList.contains(agrredIcon) ? false : true;
-                    ToogleVisualFeedback(bol);
-                });
+                const { btn } = obj;
+                btn.addEventListener('change', e => ToogleVisualFeedback(e.target.checked));
+
+                CheckOnLocalStorage(obj);
 
                 function ToogleVisualFeedback(bol)
                 {
                     bol = UTILS.isTrue(bol);
-                    UTILS.toggleClasses(bol, [agrredIcon], btn);
-                    UTILS.toggleClasses(!bol, [cssData.dwn_pulse_anim], pulsingMessageEl);
+                    UTILS.toggleClasses(false, [obj.trueIcon, obj.falseIcon], btn);
+                    UTILS.toggleClasses(true, [bol ? obj.trueIcon : obj.falseIcon], btn);
+                    UTILS.toggleClasses(!bol, [cssData.dwn_pulse_anim], obj.pulseElm);
                 }
 
-                if (UTILS.hasOneDayPassed_localStorage(btn.id))
+                function CheckOnLocalStorage({ btn, id })
                 {
-                    btn.checked = true; // show visual feedback
-                    btn.click();
-                    btn.dispatchEvent(new Event('change'));
-                }
-                else
-                {
-                    const sessionValue = window.YT_GIF_DIRECT_SETTINGS.get(btn.id)?.sessionValue;
-                    const bol = typeof sessionValue === 'undefined' ? true : sessionValue;
-                    ToogleVisualFeedback(bol);
+                    if (UTILS.hasOneDayPassed_localStorage(id))
+                    {
+                        btn.checked = true;
+                        btn.dispatchEvent(new Event('change'));
+                    }
+                    else
+                    {
+                        const sessionValue = window.YT_GIF_DIRECT_SETTINGS.get(id)?.sessionValue;
+                        const bol = typeof sessionValue === 'undefined' ? true : sessionValue;
+                        btn.checked = bol;
+                        ToogleVisualFeedback(bol);
+                    }
                 }
             }
-            //#endregion
 
-            DDM_onlyOneTut(tutCont);
-            atLeastOne = true;
+
+            // container.addEventListener('mouseenter', e => DDM_DeployTutorial(obj.target()));
+            // atLeastOne = true;
         }
 
         if (atLeastOne && UTILS.hasOneDayPassed_localStorage('yt_gif_icon_update_available'))
@@ -1241,6 +1240,24 @@ async function Ready()
             // one pulse per day -  to show that there are updates
             iconIsPulsing(true);
             setTimeout(() => iconIsPulsing(false), 3000);
+        }
+
+
+
+        function getTutorialObj(container)
+        {
+            const btn = container.querySelector('input[class*=bp3-icon-]');
+            const pulseElm = container.querySelector('.drodown_item-pulse-animation');
+            const falseIcon = [...btn.classList]?.reverse().find(c => c.includes('bp3-icon-'));
+            const trueIcon = 'bp3-icon-' + btn.getAttribute('flip-icon'); // bookmark
+            const parentSelector = UTILS.getUniqueSelector(container.querySelector('[data-video-url]')?.parentElement)
+
+            return {
+                falseIcon, trueIcon, btn, pulseElm,
+                id: container.id,
+                target: () => container.querySelector(parentSelector),
+                ok: falseIcon && trueIcon && btn // the btn can flip visually
+            };
         }
     }
 
