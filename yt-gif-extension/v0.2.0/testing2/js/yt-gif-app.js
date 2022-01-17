@@ -2527,6 +2527,36 @@ async function Ready()
         const { ddm_exist } = cssData
         return document.querySelectorAll('.' + ddm_exist);
     }
+    /* ****************** */
+    //#region flip icons and tooltip helpers
+    function getIconFlipObj(el)
+    {
+        const falseVal = [...el.classList]?.reverse().find(c => c.includes('bp3-icon-'));
+        const trueVal = 'bp3-icon-' + el.getAttribute('flip-icon');
+        return { falseVal, trueVal, el };
+    }
+    function getTooltipFlipObj(el)
+    {
+        const trueVal = el.getAttribute('flip-tooltip');
+        const falseVal = el.getAttribute('data-tooltip');
+        return { falseVal, trueVal, el };
+    }
+    function toogleIcons(bol, { falseVal, trueVal, el })
+    {
+        bol = UTILS.isTrue(bol);
+        UTILS.toggleClasses(false, [trueVal, falseVal], el);
+        UTILS.toggleClasses(true, [bol ? trueVal : falseVal], el);
+        return bol;
+    }
+    function toogleTooltips(bol, { falseVal, trueVal, el })
+    {
+        bol = UTILS.isTrue(bol);
+        UTILS.toggleAttribute(true, 'data-tooltip', el, bol ? trueVal : falseVal);
+        return bol;
+    }
+    //#endregion
+
+
     //#endregion
 
 }
