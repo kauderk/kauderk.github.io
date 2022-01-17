@@ -382,6 +382,19 @@
                                 </span>
 
                                 <span class="dropdown-item-separator"></span>
+                                <span class="dropdown-item rangeOffset">
+                                    <span class="dropdown-info-message dropdown-item-description"
+                                        data-tooltip="Go back on forward when scrolling inside the timestamp display">Time
+                                        offset on scroll wheel</span>
+                                    <div class="flex">
+                                        <input type="range" min="1" max="60" value="1" class="slider"
+                                            id="timestamp_display_scroll_offset">
+                                        <label for="" class="dropdown-item-description" data-tooltip="from 1 to 60"
+                                            id="rangeValue">5</label>
+                                    </div>
+                                </span>
+
+                                <span class="dropdown-item-separator"></span>
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description"
                                         data-tooltip="Reminds you that the clip has ended">Sound
@@ -402,18 +415,6 @@
                                 </span>
                             </div>
                         </div>
-
-                        <span class="dropdown-item rangeOffset">
-                            <span class="dropdown-info-message dropdown-item-description"
-                                data-tooltip="Go back on forward when scrolling inside the timestamp display">Time
-                                offset on scroll wheel</span>
-                            <div class="flex">
-                                <input type="range" min="1" max="60" value="1" class="slider"
-                                    id="timestamp_display_scroll_offset">
-                                <label for="" class="dropdown-item-description" data-tooltip="from 1 to 60"
-                                    id="rangeValue">5</label>
-                            </div>
-                        </span>
 
                         <div class="flex items-center self-center">
                             <div class="dropdown-show-info">
