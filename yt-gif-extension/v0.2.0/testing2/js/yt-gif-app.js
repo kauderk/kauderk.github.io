@@ -1343,6 +1343,8 @@ async function Ready()
             UTILS.toggleClasses(bol, [cssData.ddn_tut_awaiting], el);
         }
     }
+
+    //#region Focus and close mainDDM
     function mainDDMstyle_cb(mutationList)
     {//https://stackoverflow.com/questions/37168158/javascript-jquery-how-to-trigger-an-event-when-display-none-is-removed#:~:text=11-,Here%20we%20go,-var%20blocker%20%20%3D%20document
         // observers for computed styles... -it needs to be a thing... 🙃
@@ -1373,7 +1375,6 @@ async function Ready()
             }
         });
     }
-
     function mainDDMdisplay(d)
     {
         return mainDDM.style.display = d
@@ -1384,9 +1385,11 @@ async function Ready()
     }
     function tryToCloseMenu()
     {
+        if (canCloseMenu())
+            [...mainDDM.querySelectorAll('.dropdown-focus')].forEach(el => el.classList.remove('dropdown-focus'));
         return canCloseMenu() ? mainDDMdisplay('none') : null
     }
-    function openMenu()
+    function openCleanMenu()
     {
         return mainDDMdisplay('flex')
     }
@@ -1394,6 +1397,8 @@ async function Ready()
     {
         return UTILS.toggleClasses(bol, [cssData.dwn_pulse_anim], icon)
     }
+    //#endregion
+
     //#endregion
 
 
