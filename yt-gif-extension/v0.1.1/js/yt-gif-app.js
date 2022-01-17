@@ -1,6 +1,6 @@
 // restricting features ⛔ -> YT_GIF_SETTINGS_PAGE
 // restoring/modifying features 🧼
-// version 38 - semi-refactored
+// version 39 - semi-refactored
 /**
  * @summary USER INPUTS
  * @type Object
@@ -10,7 +10,7 @@
 */
 const UI = JSON.parse(JSON.stringify(window.YTGIF));//JSON.parse(JSON.stringify(window.YT_GIF_SETTINGS_PAGE));
 const UTILS = window.kauderk.util;
-const RAP_K = window.kauderk.rap; // 🧼
+const RAP = window.kauderk.rap; // 🧼
 /*-----------------------------------*/
 /* user doesn't need to see this */
 UI.label = {
@@ -34,6 +34,16 @@ UI.referenced = {
     block_timestamp: '',
     block_volume: '',
 }
+UI.dropdownMenu = { // 🧼
+    ddm_css_theme_input: '',
+}
+UI.playerSettings = { // 🧼
+    play_style: 'strict',
+    play_last_active_player_off_intersection: '1',
+    mute_style: 'strict',
+    url_boundaries: 'strict',
+    url_volume: 'strict',
+}
 /*-----------------------------------*/
 const iframeIDprfx = 'player_';
 let currentFullscreenPlayer = null;
@@ -45,6 +55,9 @@ const YT_GIF_OBSERVERS_TEMP = {
     masterIntersectionObservers: [],
     masterIntersectionObservers_buffer: [],
     masterIframeBuffer: [],
+    //slashMenuObserver: null,
+    timestampObserver: null,
+    keyupEventHanlder: () => { },
     creationCounter: -1, // crucial, because the api won't reload iframes with the same id
     CleanMasterObservers: function ()
     {
@@ -84,6 +97,7 @@ const YT_GIF_OBSERVERS_TEMP = {
             CleanAndBrandNewWrapper(wrapper, attrInfo.creation.name, attrInfo.creation.cleaning); //wrapperParent -> nest new span
         }
     },
+    dmm_html: null,
 }
 window.YT_GIF_OBSERVERS = (!window.YT_GIF_OBSERVERS) ? YT_GIF_OBSERVERS_TEMP : window.YT_GIF_OBSERVERS;
 /*-----------------------------------*/
@@ -112,10 +126,25 @@ const sesionIDs = {
     target: null,
     uid: '---------'
 }
+//
+const observedParameters = new Map();
+const obsParams = {
+    lastActiveTimestamp: null,
+}
+/*-----------------------------------*/
+const StartEnd_Config = {
+    componentPage: 'yt-gif\\/(start|end)',
+    targetStringRgx: /((\d{1,2}):)?((\d{1,2}):)((\d{1,2}))|(\d+(?:(\.\d{1})|(?=\s|\}|\w+|$)))/,
+}
+const YTGIF_Config = {
+    componentPage: 'yt-gif|video',
+    targetStringRgx: /https\:\/\/(www\.)?(youtu(be.com\/watch|.be\/))?(.*?(?=\s|$|\}|\]|\)))/,
+    guardClause: (url) => typeof url === 'string' && url.match('https://(www.)?youtube|youtu\.be'),
+}
 const UIDtoURLInstancesMapMap = new Map(); // since it store recursive maps, once per instance it's enough
 /*-----------------------------------*/
 const urlFolder = (f) => `https://kauderk.github.io/yt-gif-extension/resources/${f}`;
-const self_urlFolder = (f) => `https://kauderk.github.io/yt-gif-extension/v0.1.1/${f}`;
+const self_urlFolder = (f) => `https://kauderk.github.io/yt-gif-extension/v0.2.0/testing2/${f}`;
 const urlFolder_css = (f) => urlFolder(`css/${f}`);
 const urlFolder_html = (f) => urlFolder(`html/${f}`);
 const urlFolder_js = (f) => urlFolder(`js/${f}`);
@@ -124,20 +153,25 @@ const links = {
         dropDownMenuStyle: urlFolder_css('drop-down-menu.css'),
         playerStyle: urlFolder_css('player.css'),
         themes: {
-            dark_dropDownMenu: urlFolder_css('themes/dark-drop-down-menu.css'),
-            light_dropDownMenu: urlFolder_css('themes/light-drop-down-menu.css'),
+            dark: urlFolder_css('themes/dark-drop-down-menu.css'),
+            light: urlFolder_css('themes/light-drop-down-menu.css'),
+            get: function (i) { return this.toogle(!UTILS.isTrue(i)) },
+            toogle: function (t) { return UTILS.isTrue(t) ? this.dark : this.light },
         }
     },
     html: {
         dropDownMenu: self_urlFolder('html/drop-down-menu.html'),
-        playerControls: urlFolder_html('player-controls.html'),
+        playerControls: self_urlFolder('html/player-controls.html'),
+        urlBtn: self_urlFolder('html/url-btn.html'),
         fetched: {
             playerControls: '',
+            urlBtn: '',
         },
     },
     js: {
         utils: urlFolder_js('utils.js'),
         roamAlphaApi: urlFolder_js('utils-roam-alpha-api.js'),
+        settingsPage: self_urlFolder('js/settings-page.js'),
         main: self_urlFolder('js/yt-gif-main.js'),
     },
     help: {
@@ -188,12 +222,16 @@ const cssData = {
 
     id: {
         navigate_btn: '#navigate-to-yt-gif-settings-page',
+        toogle_theme: '#yt-gif-ddm-theme',
+        ddm_main_theme: '#yt-gif-ddm-main-theme',
     }
 }
 const attrData = {
-    initialize_bg: 'initialize-bg',
-    initialize_loop: 'initialize-loop',
-    iframe_buffer: 'iframe_buffer', // ok "_" and "-" is causing confusion... fix this later
+    // [data-main] -> [data-bind]
+    'initialize-bg': '',
+    'initialize-loop': '',
+    'iframe-buffer': '',
+    'timestamp-experience': '',
 }
 const attrInfo = {
     url: {
@@ -251,11 +289,13 @@ function baseDeploymentObj_both()
 const rm_components = {
     video: {
         description: '{{[[video]]}}',
+        page: 'video',
         classToObserve: 'rm-video-player__spacing-wrapper',
         BinaryDomUI: () => UI.deploymentStyle.deployment_style_video,
     },
     yt_gif: {
         description: '{{[[yt-gif]]}}',
+        page: 'yt-gif',
         classToObserve: `rm-xparser-default-${cssData.yt_gif}`,
         BinaryDomUI: () => UI.deploymentStyle.deployment_style_yt_gif,
     },
@@ -265,11 +305,13 @@ const rm_components = {
     state: {
         currentKey: '',
         initialKey: '',
+        currentClassesToObserver: [],
     },
     currentTarget: function ()
     {
         const crr = this.state.currentKey;
         const tkey = (crr == 'both') ? 'yt_gif' : crr;
+        //currentClassesToObserver = (crr == 'both') ? this[tkey].classToObserve;
         return this[tkey].classToObserve;
     },
     assertCurrentKey: function (override_roam_video_component)
@@ -287,6 +329,11 @@ const rm_components = {
         {
             newKey = 'yt_gif';
         }
+
+        // 🍝 // 🍝 // 🍝
+        this.state.currentClassesToObserver = (newKey == 'both') ? this[newKey].classesToObserve : [this[newKey].classToObserve];
+        YTGIF_Config.componentPage = (newKey == 'both') ? 'yt-gif|video' : this[newKey].page;
+
         return this.state.currentKey = newKey;
     },
     validOverrideComponentSettingBlock: function (el)
@@ -342,7 +389,7 @@ Object.assign(rm_components.both, baseDeploymentObj_both());
 
 if (
     typeof (UTILS) !== 'undefined' &&
-    typeof (RAP_K) != 'undefined' &&
+    typeof (RAP) != 'undefined' &&
     typeof (YT) != 'undefined'
 )
 {
@@ -382,13 +429,14 @@ async function Ready()
     const { themes, playerStyle, dropDownMenuStyle } = links.css;
     const { playerControls, dropDownMenu } = links.html;
     const { yt_gif } = cssData; // CssThemes_UCS
+    const { ddm_main_theme: ddm_main_theme_id } = cssData.id;
     //#endregion
 
     await smart_LoadCSS(dropDownMenuStyle, `${yt_gif}-dropDownMenuStyle`);
     await smart_LoadCSS(playerStyle, `${yt_gif}-playerStyle`);
 
-    // ⛔ -> sessionValues 
-    await smart_CssThemes_UCS(css_theme, themes, yt_gif); // UCS - user customizations
+    // ⛔ sessionValues 
+    await smart_LoadCSS(themes.toogle(css_theme == 'dark'), `${yt_gif}-css-theme`); // UCS - user customizations
     await smart_CssPlayer_UCS(player_span);
 
     links.html.fetched.playerControls = await PlayerHtml_UCS(playerControls);
@@ -399,8 +447,7 @@ async function Ready()
 
     // 2. assign direct values to the main object | UI - user inputs
     DDM_to_UI_variables(); // filtering baseKey & prompts and transforming them from objs to values or dom els - it is not generic and only serves for the first indent level (from parent to child keys)
-    // ⛔
-    //SaveSettingsOnChanges(); // the seetings page script is responsable for everything, this are just events
+    // ⛔ SaveSettingsOnChanges(); // the seetings page script is responsable for everything, these are just events
 
 
 
@@ -410,33 +457,30 @@ async function Ready()
     const { timestamp_display_scroll_offset, end_loop_sound_volume, iframe_buffer_slider } = UI.range;
     const { rangeValue, loop_volume_displayed, iframe_buffer_label } = UI.label;
     const { awaiting_with_video_thumnail_as_bg } = UI.experience;
-    const { iframe_buffer_stack, awaiting_for_mouseenter_to_initialize, try_to_load_on_intersection_beta } = UI.experience;
-    const { dwp_message, stt_allow } = cssData;
-    const { navigate_btn } = cssData.id;
+    const { iframe_buffer_stack, awaiting_for_user_input_to_initialize, try_to_load_on_intersection_beta } = UI.experience;
+    const { ddm_css_theme_input } = UI.dropdownMenu;
     //#endregion
 
     DDM_IconFocusBlurEvents(ddm_icon, ddm_focus, ddm_info_message_selector);
 
     DDM_FlipBindedDataAttr_RTM([dropdown__hidden], attrData); // RTM runtime
 
-    UpdateOnScroll_RTM(timestamp_display_scroll_offset, rangeValue);
-    UpdateOnScroll_RTM(end_loop_sound_volume, loop_volume_displayed);
-    // ⛔
-    //UpdateOnScroll_RTM(iframe_buffer_slider, iframe_buffer_label);
+    // ⛔ UpdateOnScroll_RTM(timestamp_display_scroll_offset, rangeValue);
+    // ⛔ UpdateOnScroll_RTM(end_loop_sound_volume, loop_volume_displayed);
+    // ⛔ UpdateOnScroll_RTM(iframe_buffer_slider, iframe_buffer_label);
 
     TogglePlayerThumbnails_DDM_RTM(awaiting_with_video_thumnail_as_bg, awaitng_input_with_thumbnail);
 
-    // ⛔
-    //navigateToSettingsPageInSidebar(navigate_btn, dwp_message, stt_allow);
+    // ⛔ navigateToSettingsPageInSidebar();
+    // ⛔ ToggleTheme_DDM_RTM(ddm_css_theme_input, themes, ddm_css_theme_stt, ddm_main_theme_id);
 
-    // ⛔
-    //IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_mouseenter_to_initialize, iframe_buffer_slider, try_to_load_on_intersection_beta);
+    // ⛔ IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_user_input_to_initialize, iframe_buffer_slider, try_to_load_on_intersection_beta);
 
 
 
     // 4. run extension and events - set up
     //#region relevant variables
-    const { override_roam_video_component } = UI.default;
+    const { override_roam_video_component } = UI.default; // 🧼
     //#endregion
 
     await MasterObserver_UCS_RTM(); // listening for changes | change the behaviour RTM // BIG BOI FUNCTION
@@ -448,12 +492,96 @@ async function Ready()
 
 
 
-    // 5. TESTING!
-    SettingUpTutorials();
+    // 5. Setting up tutorials
+    const { icon, mainDDM, mainMenu } = GetMainYTGIFicon(ddm_icon);
+
+    // if the user entered/initizlied/played the tutorial,
+    // the ddm won't be closed until it losses focus,
+    // conventionally clicking anything but the ddm/ddm-children
+    mainDDMdisplay('none');
+    mainMenu.addEventListener('mouseenter', () => openCleanMenu());
+    mainMenu.addEventListener('mouseleave', () => tryToCloseMenu());
+    icon.addEventListener('blur', () => tryToCloseMenu());
+
+    let previousValue = mainDDM.style.display; // changes inside style_cb
+    const observer = new MutationObserver(mainDDMstyle_cb); // when closed, clean tutorials -> wrappers
+    observer.observe(mainDDM, { attributes: true });
+
+    SetUpSelectTurorials();
+    SetUpTutorials_smartNotification();
+
+
+
+    // 6. Emulate -> slash menu, timestamps + shortcuts
+    //#region relevant variables
+    const slashObj = {
+        targetClass: 'bp3-text-overflow-ellipsis',
+        emulationClass: 'slash-menu-emulation',
+        clone: null,
+    }
+    const componentClass = (page) => `bp3-button bp3-small dont-focus-block rm-xparser-default-${page}`;
+    const timestampObj = {
+        roamClassName: 'rm-video-timestamp dont-focus-block',
+        start: {
+            page: 'start',
+            targetClass: 'rm-xparser-default-start',
+            buttonClass: componentClass('start'),
+        },
+        end: {
+            page: 'end',
+            targetClass: 'rm-xparser-default-end',
+            buttonClass: componentClass('end'),
+        },
+        attr: {
+            emulation: 'yt-gif-timestamp-emulation',
+            timestampStyle: 'timestamp-style', // start or end
+            timestamp: 'timestamp',
+        },
+        timestamp: {
+            buttonClass: componentClass('timestamp'),
+        },
+        parent: {
+            className: 'yt-gif-timestamp-parent',
+        },
+    };
+
+    const { simulate_roam_research_timestamps } = UI.display;
+    // ⛔ const { tm_shortcuts, tm_workflow_display } = UI.timestamps;
+
+    let { timestampObserver, keyupEventHanlder } = window.YT_GIF_OBSERVERS;
+    timestampObserver?.disconnect();
+    const targetNode = document.body;
+    const config = { childList: true, subtree: true };
+    //#endregion
+
+    timestampObserver = new MutationObserver(TimestampBtnsMutation_cb);
+
+    // 6.1 cleanAndSetUp_TimestampEmulation -> PlayPauseOnClicks
+    // 6.2 run timestampObserver
+    // 6.3 registerKeyCombinations (keyupEventHanlder)
+    //      6.3.1 addBlockTimestamps
+    // ⛔ toggleTimestampEmulation(simulate_roam_research_timestamps.checked);
+    // ⛔ simulate_roam_research_timestamps.addEventListener('change', (e) => toggleTimestampEmulation(e.currentTarget.checked));
+    // ⛔ tm_shortcuts.addEventListener('change', e => ToogleTimestampShortcuts(e.target.checked));
+    // ⛔ tm_workflow_display.addEventListener('change', e => ChangeTimestamapsDisplay(e.currentTarget.value));
+
+
+    // 7. simulate inline url btn
+    //#region relevant variables
+    const { simulate_url_to_video_component } = UI.display;
+    links.html.fetched.urlBtn = await UTILS.fetchTextTrimed(links.html.urlBtn);
+    //#endregion
+
+    const urlObserver = new MutationObserver(InlineUrlBtnMutations_cb);
+
+    // ⛔ ToogleUrlBtnObserver(simulate_url_to_video_component.checked && ValidUrlBtnUsage(), urlObserver);
+    // ⛔ simulate_url_to_video_component.addEventListener('change', (e) => confirmUrlBtnUsage(e.currentTarget.checked, e));
+    // ⛔ simulate_url_to_video_component.addEventListener('change', (e) => ToogleUrlBtnObserver(e.currentTarget.checked, urlObserver));
 
 
 
     console.log('YT GIF extension activated');
+
 
 
 
@@ -467,15 +595,7 @@ async function Ready()
 
         return new Promise(function (resolve, reject)
         {
-            const stylesAlready = document.querySelectorAll(`[id='${id}']`);
-            if (stylesAlready?.length > 0) // well well well - we don't like duplicates
-            {
-                SytleSheetExistAlready(cssURL);
-                for (const el of stylesAlready)
-                {
-                    el.parentElement.removeChild(el);
-                }
-            }
+            DeleteDOM_Els(id, cssURL);
             const link = document.createElement('link');
             link.rel = 'stylesheet';
             link.href = UTILS.NoCash(cssURL);
@@ -485,12 +605,17 @@ async function Ready()
             link.onload = () => resolve();
         });
     }
-    async function smart_CssThemes_UCS(currentTheme, CSSThemes, prefixID)
+    function DeleteDOM_Els(id, cssURL)
     {
-        const themToLoad = (currentTheme === 'dark') ?
-            'dark_dropDownMenu' : 'light_dropDownMenu';
-
-        await smart_LoadCSS(CSSThemes[themToLoad], `${prefixID}-main-theme`);
+        const stylesAlready = document.querySelectorAll(`[id='${id}']`);
+        if (stylesAlready?.length > 0) // well well well - we don't like duplicates
+        {
+            SytleSheetExistAlready(cssURL);
+            for (const el of stylesAlready)
+            {
+                el.parentElement.removeChild(el);
+            }
+        }
     }
     function smart_CssPlayer_UCS(player_span)
     {
@@ -507,9 +632,9 @@ async function Ready()
     }
     async function smart_Load_DDM_onTopbar(dropDownMenu)
     {
-        //⚠️
+        // caution:
         const rm_moreIcon = document.querySelector('.bp3-icon-more').closest('.rm-topbar .rm-topbar__spacer-sm + .bp3-popover-wrapper');
-        const htmlText = await UTILS.FetchText(dropDownMenu);
+        const htmlText = window.YT_GIF_OBSERVERS.dmm_html ?? await UTILS.FetchText(dropDownMenu);
         const previousList = DDM_Els();
         if (previousList?.length > 0)
         {
@@ -568,9 +693,14 @@ async function Ready()
                             parentObj[childKey].innerHTML = sessionValue;
                             break;
                         default:
-                            const binaryInput = parentObj[childKey];
-                            binaryInput.checked = UTILS.isTrue(sessionValue);
-                            UTILS.linkClickPreviousElement(binaryInput);
+                            const input = parentObj[childKey];
+
+                            if (domEl.tagName == 'SELECT')
+                                input.value = sessionValue.toString();
+                            else // checkbox
+                                input.checked = UTILS.isTrue(sessionValue);
+
+                            input.previousElementSibling?.setAttribute('for', input.id);
                     }
                 }
                 // ⛔
@@ -605,6 +735,8 @@ async function Ready()
                     case 'InAndOutKeys':
                     case 'defaultPlayerValues':
                     case 'defaultValues':
+                    case 'default':
+                    case 'referenced':
                         continue;
                     case 'deploymentStyle': // special case...
                         child.addEventListener('change', function (e) { updateOverrideComponentSettingBlock(e, this, childKey, siblingKeys) }, true);
@@ -612,15 +744,23 @@ async function Ready()
                     case 'range': // special case...
                         child.addEventListener('wheel', function (e) { changeOnWeeel(e, this, childKey) }, true);
                 }
-                child.addEventListener('change', function (e) { updateSettingsPageBlock(e, this, childKey, siblingKeys) }, true);
+                function HandleSettingsPageBlockUpdate(e)
+                {
+                    return updateSettingsPageBlock(e, e.currentTarget, childKey, siblingKeys)
+                }
+
+                if (!child?.addEventListener) { debugger; continue; }
+                child.addEventListener('change', HandleSettingsPageBlockUpdate, true);
+                child.addEventListener('customChange', HandleSettingsPageBlockUpdate, true);
             }
         }
     }
+
     /* *************** */
     function updateSettingsPageBlock(e, el, keyObj, siblingKeys)
     {
         const { type, checked, value } = el;
-        let replaceWith = (value).toString(); // range - checkbox - radio - label
+        let replaceWith = (value).toString(); // range - checkbox - radio - label - select
 
         if (type == 'checkbox' || type == 'radio')
         {
@@ -628,10 +768,10 @@ async function Ready()
         }
         if (type == 'radio') // special case...
         {
-            for (const key of siblingKeys)
-            {
-                window.YT_GIF_DIRECT_SETTINGS.get(key).UpdateSettingsBlockValue(''); // to false
-            }
+            [...siblingKeys]
+                .map(x => window.YT_GIF_DIRECT_SETTINGS.get(x))
+                .filter(y => y.inputType == 'radio')
+                .forEach(o => o.UpdateSettingsBlockValue('')) // to false
         }
 
         window.YT_GIF_DIRECT_SETTINGS.get(keyObj)?.UpdateSettingsBlockValue(replaceWith);
@@ -656,7 +796,7 @@ async function Ready()
     //#region 3. events pre observers
     function DDM_IconFocusBlurEvents(ddm_icon, ddm_focus, ddm_info_message_selector)
     {
-        // 1. ⚠️ special case
+        // 1. caution: special case
         const { icon, mainDDM } = GetMainYTGIFicon(ddm_icon);
         const classNames = [ddm_focus]; // used inside two local func
 
@@ -717,34 +857,17 @@ async function Ready()
     {
         for (const key in attrData)
         {
-            const value = attrData[key];
-            const main = document.querySelector(data_MAIN_with(value));
-            const all = [...document.querySelectorAll(data_bind_with(value, '*'))];
-            const valid = all.filter(el => el != main);
+            const main = document.querySelector(`[data-main='${key}']`);
+            const binds = [...document.querySelectorAll(`[data-bind*='${key}']`)];
 
             toggleValidItemClasses();
             main.addEventListener('change', toggleValidItemClasses);
 
             function toggleValidItemClasses()
             {
-                for (const i of valid)
-                {
-                    UTILS.toggleClasses(!main.checked, toggleClassArr, i);
-                }
+                binds.forEach(b => UTILS.toggleClasses(!main.checked, toggleClassArr, b));
             }
         }
-
-        //#region local utils
-        function data_MAIN_with(value, selector = '')
-        {
-            return `[data-main${selector}='${value}']`;
-        }
-        function data_bind_with(value, selector = '')
-        {
-            return `[data-bind${selector}='${value}']`;
-        }
-
-        //#endregion
     }
     function UpdateOnScroll_RTM(scroll, labelEl)
     {
@@ -790,59 +913,75 @@ async function Ready()
             }
         }
     }
-    async function navigateToSettingsPageInSidebar(settingsBtnID, dwp_message, stt_allow)
+    /* ************* */
+    function ToggleTheme_DDM_RTM(ddm_css_theme_input, themes, ddm_css_theme_stt, ddm_main_theme_id)
     {
-        // ⚠️
+        const icons = ['bp3-icon-flash', 'bp3-icon-moon'];
+
+        ToogleThemeCombo(ddm_css_theme_input);
+
+        ddm_css_theme_input.addEventListener('change', async (e) => await ToogleThemeCombo(e.currentTarget));
+
+        async function ToogleThemeCombo(tEl)
+        {
+            const previousIcons = [...tEl?.classList]?.filter(el => el.startsWith('bp3-icon-'));
+            UTILS.toggleClasses(false, previousIcons, tEl);
+
+            UTILS.toggleClasses(true, [!tEl.checked ? icons[0] : icons[1]], tEl);
+            await smart_LoadCSS(themes.toogle(ddm_css_theme_stt.sessionValue), ddm_main_theme_id);
+        }
+    }
+    async function navigateToSettingsPageInSidebar()
+    {
+        // caution:
         const SttPages = () => UTILS.innerElsContains('.rm-sidebar-outline .rm-title-display span', TARGET_PAGE);
         const anySidebarInstance = () => SttPages().length >= 1;
 
-        const settingsBtnWrapper = document.querySelector(settingsBtnID);
-        const settingsBtn = settingsBtnWrapper.querySelector(`.${dwp_message}[data-tooltip]`)
+        const wrapper = document.querySelector('#navigate-to-yt-gif-settings-page');
+        const tooltipObj = getTooltipFlipObj(wrapper.querySelector(`[data-tooltip]`))
+        const iconObj = getIconFlipObj(wrapper.querySelector(`input`));
 
-        const originalTooltip = settingsBtn.getAttribute('data-tooltip');
-        const clause = `YT GIF Settings page instance already open within the Sidebar. It's pourpouse is to check values. Change them using this menu.`;
-
-
-        settingsBtn.addEventListener('click', async function (e)
+        const toogleVisuals = (bol) =>
         {
-            // ⚠️⚠️⚠️ how do you communicate with the other scripts? Interfaces? Events? WindowEvents?
-            await RAP_K.setSideBarState(3);
-            await RAP_K.sleep(50); // an observer is the safest option though
+            toogleTooltips(bol, tooltipObj);
+            toogleIcons(bol, iconObj);
+        }
+        const toogleOnSidebar = () => toogleVisuals(anySidebarInstance())
+
+
+        tooltipObj.el.addEventListener('click', async function (e)
+        {
+            // caution: how do you communicate with the other scripts? Interfaces? Events? WindowEvents?
+            await RAP.setSideBarState(3);
+            await RAP.sleep(50); // an observer is the safest option though
 
             if (!anySidebarInstance())
             {
-                UTILS.toggleClasses(true, [stt_allow], settingsBtnWrapper);
-                settingsBtn.setAttribute('data-tooltip', clause);
-                await RAP_K.openBlockInSidebar(TARGET_UID); // back end execution... should it be here...? //https://stackoverflow.com/questions/12097381/communication-between-scripts-three-methods#:~:text=All%20JS%20scripts%20are%20run%20in%20the%20global%20scope.%20When%20the%20files%20are%20downloaded%20to%20the%20client%2C%20they%20are%20parsed%20in%20the%20global%20scope
+                toogleVisuals(true);
+                await RAP.openBlockInSidebar(TARGET_UID); // backend execution... should it be here...? //https://stackoverflow.com/questions/12097381/communication-between-scripts-three-methods#:~:text=All%20JS%20scripts%20are%20run%20in%20the%20global%20scope.%20When%20the%20files%20are%20downloaded%20to%20the%20client%2C%20they%20are%20parsed%20in%20the%20global%20scope
             }
 
-            // firs settings page instance
-            await RAP_K.sleep(50);
-            SttPages()?.[0]?.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
+            // fires settings page instance
+            await RAP.sleep(50);
+            SttPages()?.[0]?.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
         });
 
-        settingsBtn.addEventListener('mouseenter', ToogleSettingBtnVisualFeedback);
-
-        const { icon, mainDDM } = GetMainYTGIFicon(ddm_icon);
-        icon.addEventListener('blur', ToogleSettingBtnVisualFeedback, true);
-        icon.addEventListener('mouseenter', ToogleSettingBtnVisualFeedback, true);
-        icon.addEventListener('mouseleave', ToogleSettingBtnVisualFeedback, true);
+        tooltipObj.el.addEventListener('mouseenter', toogleOnSidebar);
 
 
-        function ToogleSettingBtnVisualFeedback()
-        {
-            const open = anySidebarInstance();
-            settingsBtn.setAttribute('data-tooltip', (open) ? clause : originalTooltip);
-            UTILS.toggleClasses(open, [stt_allow], settingsBtnWrapper);
-        }
+        const { icon } = GetMainYTGIFicon(ddm_icon);
+        icon.addEventListener('blur', toogleOnSidebar, true);
+        icon.addEventListener('mouseenter', toogleOnSidebar, true);
+        icon.addEventListener('mouseleave', toogleOnSidebar, true);
     }
-    function IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_mouseenter_to_initialize, iframe_buffer_slider, try_to_load_on_intersection_beta)
+    /* ************* */
+    function IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_user_input_to_initialize, iframe_buffer_slider, try_to_load_on_intersection_beta)
     {
-        initialCheck_awaitngBtn = awaiting_for_mouseenter_to_initialize.checked;
+        initialCheck_awaitngBtn = awaiting_for_user_input_to_initialize.checked;
 
         Initial_synergy_btns();
 
-        awaiting_for_mouseenter_to_initialize.addEventListener('change', function (e)
+        awaiting_for_user_input_to_initialize.addEventListener('change', function (e)
         {
             const { checked, parentNode } = e.currentTarget;
             toggleBtn_VS(checked, TryingBtn_VisualFeedback);
@@ -1044,128 +1183,1340 @@ async function Ready()
 
 
     //#region 5. Setting up tutorials
-    function SettingUpTutorials()
+    function SetUpSelectTurorials()
     {
-        const { icon, mainDDM, mainMenu } = GetMainYTGIFicon(ddm_icon);
-
-
-        const mainDDMdisplay = (d) => mainDDM.style.display = d;
-        const canCloseMenu = () => !mainDDM.classList.contains(ddm_focus) && !mainMenu.matches(':hover');
-        const tryToCloseMenu = () => canCloseMenu() ? mainDDMdisplay('none') : null;
-        const openMenu = () => mainDDMdisplay('flex');
-        const iconIsPulsing = (bol) => UTILS.toggleClasses(bol, [cssData.dwn_pulse_anim], icon);
-
-
-        // if the user entered/initizlied/played the tutorial,
-        // the ddm won't be closed until it losses focus,
-        // conventionally clicking anything but the ddm/ddm-children
-        mainDDMdisplay('none');
-        mainMenu.addEventListener('mouseenter', () => openMenu());
-        mainMenu.addEventListener('mouseleave', () => tryToCloseMenu());
-        icon.addEventListener('blur', () => tryToCloseMenu());
-
-
-        let previousValue = mainDDM.style.display; // changes inside style_cb
-        const config = { attributes: true };
-        const observer = new MutationObserver(mainDDMstyle_cb); // when closed, clean tutorials -> wrappers
-        observer.observe(mainDDM, config);
-
-
-        const tutContArr = [document.querySelector("#yt-gif-tutorial-container--update")].filter(el => el != null) // trying to make it modular
-        let atLeastOne = false;
-        for (const tutCont of tutContArr)
-        {
-            DDM_onlyOneTut(tutCont);
-            atLeastOne = true;
-        }
-
-        if (atLeastOne && UTILS.hasOneDayPassed_localStorage('yt_gif_icon_update_available'))
-        {
-            // one pulse per day -  to show that there are updates
-            iconIsPulsing(true);
-            setTimeout(() => iconIsPulsing(false), 3000);
-        }
-
-
-        function DDM_onlyOneTut(updateCont)
-        {
-            const updateCont_content = updateCont.querySelector('.dropdown-content');
-            const updateTutParents = [updateCont_content, mainDDM];
-
-
-            const { classToObserve } = rm_components.yt_gif_tut;
-            const { forceAwaiting } = attrInfo.creation;
-            let tutWrapperAwaiting = null;
-
-            updateCont.addEventListener('mouseenter', deployTutorialVideo);
-            icon.addEventListener('blur', () => toggleFocusOnDMMsparents(false));
-
-
-            async function deployTutorialVideo(e)
+        const selectObjs = [...document.querySelectorAll('.ddm-tut select')].filter(el => !!el)
+            .map(sel => selectObj(sel))
+            .forEach(obj =>
             {
-                if (e.currentTarget.querySelector('.yt-gif-wrapper')) // video already deployed
-                    return;
+                toogleFoldAnim(false, obj.ddm);
 
-                const tutWrapper = e.currentTarget.querySelector('[data-target]');
-
-                tutWrapperAwaiting = await onYouTubePlayerAPIReady(tutWrapper, classToObserve, forceAwaiting, 'testing manual ty gif tutorial');
-
-                tutWrapperAwaiting.addEventListener('mouseenter', () => icon.dispatchEvent(new Event('click')));
-                tutWrapperAwaiting.addEventListener('mouseleave', () => toggleFocusOnDMMsparents(true));
-
-
-                tutWrapperAwaiting.addEventListener('mouseenter', (e) => toggle_VisualFeedback(e, false));
-                tutWrapperAwaiting.addEventListener('mouseleave', (e) => toggle_VisualFeedback(e, true));
-            }
-
-            function toggleFocusOnDMMsparents(toggle = true)
-            {
-                for (const el of updateTutParents)
+                obj.select.addEventListener('change', async (e) =>
                 {
-                    UTILS.toggleClasses(toggle, [ddm_focus], el);
+                    resetOptions(obj);
+                    await ShowOption(obj);
+                });
+                obj.container.addEventListener('mouseenter', async (e) => await ShowOption(obj));
+
+                // fire change on selected attr
+                const selected = obj.select.querySelector('[selected]')?.value;
+                if (selected)
+                    obj.select.dispatchEvent(new Event('change'));
+            })
+    }
+    function SetUpTutorials_smartNotification()
+    {
+        const tutContArr = ['tut_update_ver'].map(id => document.querySelector(`[id="${id}"]`)).filter(el => el != null);
+
+        for (const container of tutContArr)
+        {
+            const obj = getTutorialObj(container);
+
+            if (obj.ok) // toogle icon onchange
+            {
+                const { btn } = obj;
+                btn.addEventListener('change', e => ToogleVisualFeedback(e.target.checked));
+
+                CheckOnLocalStorage(obj);
+
+                function ToogleVisualFeedback(bol)
+                {
+                    bol = toogleIcons(bol, obj.iconObj, btn);
+                    UTILS.toggleClasses(!bol, [cssData.dwn_pulse_anim], obj.pulseElm);
                 }
 
-                if (toggle)
+                function CheckOnLocalStorage({ btn, id })
                 {
-                    icon.dispatchEvent(new Event('click'));
-                }
-            }
-
-            function toggle_VisualFeedback(e, bol)
-            {
-                UTILS.toggleClasses(bol, [cssData.ddn_tut_awaiting], e.currentTarget);
-            }
-        }
-        function mainDDMstyle_cb(mutationList)
-        {//https://stackoverflow.com/questions/37168158/javascript-jquery-how-to-trigger-an-event-when-display-none-is-removed#:~:text=11-,Here%20we%20go,-var%20blocker%20%20%3D%20document
-            // observers for computed styles... -it needs to be a thing... 🙃
-            mutationList.forEach(function (record)
-            {
-                if (record.attributeName !== 'style')
-                    return;
-
-                const currentValue = record.target.style.display;
-                const displayWas = (d) => previousValue === d && currentValue !== d;
-
-                if (currentValue !== previousValue)
-                {
-                    if (displayWas('flex'))
+                    if (UTILS.hasOneDayPassed_localStorage(id))
                     {
-                        // sometimes you just want to see the world burn
-                        const cleanedWrappers = [...(mainDDM).querySelectorAll('iframe')]
-                            .map(el => el.closest('[data-target]'))
-                            .filter(el => el != null)
-                            .forEach(el =>
-                            {
-                                el.removeAttribute('class'); // target classes
-                                el = UTILS.RemoveAllChildren(el);
-                            });
+                        btn.checked = true;
+                        btn.dispatchEvent(new Event('change'));
+                    }
+                    else
+                    {
+                        // ⛔ 
+                        // const sessionValue = window.YT_GIF_DIRECT_SETTINGS.get(id)?.sessionValue;
+                        // const bol = typeof sessionValue === 'undefined' ? true : sessionValue;
+                        btn.checked = false;
+                        ToogleVisualFeedback(false);
+                    }
+                }
+            }
+        }
+
+        function getTutorialObj(container)
+        {
+            const btn = container.querySelector('input[class*=bp3-icon-]');
+            const pulseElm = container.querySelector('.drodown_item-pulse-animation');
+            const iconObj = getIconFlipObj(btn); // bookmark
+            const parentSelector = UTILS.getUniqueSelector(container.querySelector('[data-video-url]')?.parentElement)
+
+            return {
+                iconObj,
+                btn, pulseElm,
+                id: container.id,
+                target: () => container.querySelector(parentSelector),
+                ok: iconObj.falseVal && iconObj.trueVal && btn // the btn can flip visually
+            };
+        }
+    }
+    async function DDM_DeployTutorial(parentTarget)
+    {
+        if (!parentTarget || parentTarget.querySelector('.yt-gif-wrapper')) // video already deployed
+            return;
+
+        const tutWrapper = parentTarget.querySelector('[data-video-url]');
+
+        // remove every attribute but data-video-url
+        for (const attr of [...tutWrapper.attributes].filter(attr => attr.name != 'data-video-url'))
+            tutWrapper.removeAttribute(attr.name); // fuck!
+
+        const awaitingWrapper = await onYouTubePlayerAPIReady(tutWrapper, 'yt-gif-ddm-tutorial', 'force-awaiting', 'testing manual ty gif tutorial');
+
+        icon.addEventListener('blur', localBlur);
+
+        awaitingWrapper.addEventListener('mouseenter', (e) =>
+        {
+            icon.dispatchEvent(new Event('click'))
+            toggle_VisualFeedback(e.currentTarget, false);
+        })
+        awaitingWrapper.addEventListener('mouseleave', (e) =>
+        {
+            toggleFocusOnDMMsparents(true)
+            toggle_VisualFeedback(e.currentTarget, true)
+        })
+
+
+        function localBlur(e)
+        {
+            if (!isRendered(awaitingWrapper))
+                icon.removeEventListener('blur', localBlur);
+            else
+                toggleFocusOnDMMsparents(false);
+        }
+        function toggleFocusOnDMMsparents(toggle = true)
+        {
+            const updateTutParents = [parentTarget?.closest('.dropdown-content'), mainDDM];
+            for (const el of updateTutParents)
+                UTILS.toggleClasses(toggle, [ddm_focus], el);
+
+            if (toggle)
+                icon.dispatchEvent(new Event('click'));
+        }
+        function toggle_VisualFeedback(el, bol)
+        {
+            UTILS.toggleClasses(bol, [cssData.ddn_tut_awaiting], el);
+        }
+    }
+
+    //#region Select tutorial
+    function selectObj(sel)
+    {
+        const ddm = sel.closest('.ddm-tut');
+        const options = [...sel.options].map(o => o.value);
+        const htmls = [...options].reduce((acc, crr) =>
+        {
+            acc[crr] = ddm.querySelector(`[select="${crr}"]`)?.innerHTML;
+            return acc;
+        }, {});
+
+        return {
+            options,
+            target: (v) => ddm.querySelector(`[select="${v}"]`),
+
+            html: (v) => htmls[v],
+
+            select: sel, ddm,
+            container: sel.closest('.dropdown'),
+        }
+    }
+    async function ShowOption(obj)
+    {
+        if (obj.select.value == 'disabled')
+            return toogleFoldAnim(false, obj.ddm);
+
+        toogleFoldAnim(true, obj.ddm);
+
+        const target = obj.target(obj.select.value);
+        target.style.display = 'block';
+
+        await DDM_DeployTutorial(target);
+    }
+    function resetOptions(obj)
+    {
+        for (const option of obj.options)
+        {
+            const wrapper = obj.target(option);
+            if (!(wrapper instanceof Element))
+                continue;
+            wrapper.style.display = 'none';
+            wrapper.innerHTML = obj.html(option);
+        }
+    }
+    function toogleFoldAnim(bol, el)
+    {
+        UTILS.toggleClasses(!bol, ['absolute'], el); // vertical
+        UTILS.toggleClasses(bol, ['w-full'], el); // horizontal
+    }
+    //#endregion
+
+    //#endregion
+
+
+    //#region Focus and close mainDDM
+    function mainDDMstyle_cb(mutationList)
+    {//https://stackoverflow.com/questions/37168158/javascript-jquery-how-to-trigger-an-event-when-display-none-is-removed#:~:text=11-,Here%20we%20go,-var%20blocker%20%20%3D%20document
+        // observers for computed styles... -it needs to be a thing... 🙃
+        mutationList.forEach(function (record)
+        {
+            if (record.attributeName !== 'style')
+                return;
+
+            const currentValue = record.target.style.display;
+            const displayWas = (d) => previousValue === d && currentValue !== d;
+
+            if (currentValue !== previousValue)
+            {
+                if (displayWas('flex'))
+                {
+                    // sometimes you just want to see the world burn
+                    const cleanedWrappers = [...(mainDDM).querySelectorAll('iframe')]
+                        .map(el => el.closest('[data-target]'))
+                        .filter(el => el != null)
+                        .forEach(el =>
+                        {
+                            el.removeAttribute('class'); // target classes
+                            el = UTILS.RemoveAllChildren(el);
+                        });
+                }
+
+                previousValue = record.target.style.display;
+            }
+        });
+    }
+    function mainDDMdisplay(d)
+    {
+        return mainDDM.style.display = d
+    }
+    function canCloseMenu()
+    {
+        return !mainDDM.classList.contains(ddm_focus) && !mainMenu.matches(':hover')
+    }
+    function tryToCloseMenu()
+    {
+        if (canCloseMenu())
+            [...mainDDM.querySelectorAll('.dropdown-focus')].forEach(el => el.classList.remove('dropdown-focus'));
+        return canCloseMenu() ? mainDDMdisplay('none') : null
+    }
+    function openCleanMenu()
+    {
+        return mainDDMdisplay('flex')
+    }
+    function iconIsPulsing(bol)
+    {
+        return UTILS.toggleClasses(bol, [cssData.dwn_pulse_anim], icon)
+    }
+    //#endregion
+
+
+    //#region 6. Emulate slash menu & timestamps
+    function toggleTimestampEmulation(bol)
+    {
+        if (bol)
+            RunEmulation();
+        else
+            StopEmulation();
+
+        UTILS.toggleClasses(!bol, [`${cssData.dropdown__hidden}`], document.querySelector('.dropdown_timestamp-style'));
+
+        function RunEmulation()
+        {
+            StopEmulation();
+            ToogleTimestampSetUp(true);
+            ToogleTimestampShortcuts(tm_shortcuts.checked);
+        }
+        function StopEmulation()
+        {
+            ToogleTimestampSetUp(false);
+            ToogleTimestampShortcuts(false);
+        }
+    }
+    function ToogleTimestampSetUp(bol)
+    {
+        timestampObserver.disconnect();
+
+        if (bol)
+        {
+            const found = [];
+            found.push(...targetNode.getElementsByClassName(timestampObj.start.targetClass));
+            found.push(...targetNode.getElementsByClassName(timestampObj.end.targetClass));
+            cleanAndSetUp_TimestampEmulation(found);
+            timestampObserver.observe(targetNode, config);
+        }
+        else
+        {
+            const foundToRemove = [...targetNode.querySelectorAll(`[${timestampObj.attr.emulation}]`)];
+            for (let i of foundToRemove)
+            {
+                const key = i.getAttribute(timestampObj.attr.timestampStyle) || 'timestamp';
+                i.innerHTML = key;
+                i = UTILS.ChangeElementType(i, 'button');
+                i.className = timestampObj[key].buttonClass;
+            }
+            // already disconnected
+        }
+    }
+    function ToogleTimestampShortcuts(bol)
+    {
+        // remove them anyway, avoid duplicates
+        document.removeEventListener('keydown', keyupEventHanlder);
+        if (bol)
+        {
+            keyupEventHanlder = registerKeyCombinations;
+            document.addEventListener('keydown', keyupEventHanlder);
+        }
+        else
+        {
+            // already removed
+        }
+    }
+
+
+    // 6.1 on valid dom nodes get last component and add timestamp + click events
+    async function cleanAndSetUp_TimestampEmulation(found)
+    {
+        let siblingsArr = [];
+        const previousSiblingsMap = new Map(); // block -> buttons
+
+        let startEndComponentMap = null;
+        const componentMapMap = new Map();
+
+        let emulationArr = [];
+        const succesfulEmulationMap = new Map();
+        const componenSel = `.${timestampObj.end.targetClass}, .${timestampObj.start.targetClass}, .rm-video-timestamp[${timestampObj.attr.emulation}]`;
+        const isKey = 'is component';
+
+
+        const renderedComponents = found.filter(node1 => isRendered(node1)).filter(node2 => UTILS.isNotZoomPath(node2));
+        for (const node of renderedComponents)
+        {
+            const block = closestBlock(node);
+            if (!block) continue;
+
+            const tempUID = block?.id?.slice(-9);
+            const mapsKEY = block.id;
+            const update_startEndComponentMap = async () => startEndComponentMap = await getMap_smart(mapsKEY, componentMapMap, getComponentMap, tempUID, StartEnd_Config);
+
+
+            // you are iterating through renderedComponents (mutation records), so you need to get the original siblings of each block
+            siblingsArr = ElementsPerBlock(block, `:is(${componenSel})`);
+            await update_startEndComponentMap();
+
+            if (!startEndComponentMap || ((startEndComponentMap.size !== siblingsArr.length) && !MapAtIndex_Value(startEndComponentMap, siblingsArr.indexOf(node), isKey)))
+            {
+                // console.count(`YT GIF Timestamps: updating block strings: ((${tempUID})) ...        ...       ...         ...`);
+                await RAP.sleep(800); // YIKES!!!
+                componentMapMap.set(mapsKEY, await getComponentMap(tempUID, StartEnd_Config));
+                await update_startEndComponentMap();
+            }
+
+
+            let targetNodeParent = siblingsArr.find(x => x === node);
+            const targetIndex = siblingsArr.indexOf(node);
+            if (targetIndex == -1 || !targetNodeParent || !targetNodeParent?.parentNode) continue;
+
+
+            const timestampContent = MapAtIndex_Value(startEndComponentMap, targetIndex, isKey);
+            if (!timestampContent) continue;
+            const ObjAsKey = MapAtIndex_ObjKey(startEndComponentMap, targetIndex, isKey);
+            const indent = parseInt(ObjAsKey.indent, 10);
+            const similarCount = ObjAsKey.similarCount;
+            const similarCountButRoot = indent == 0 ? 0 : similarCount;
+            const fromUid = ObjAsKey.uid;
+
+            const key = Object.keys(timestampObj).find(key => targetNodeParent.classList.contains(timestampObj[key]?.targetClass)); // find timestampObj key that is included in targetNode classlist
+            const page = timestampObj[key]?.page || 'timestamp';
+
+            targetNodeParent.attributes?.forEach?.(attr => targetNodeParent.removeAttribute(attr.name));
+            targetNodeParent = UTILS.ChangeElementType(targetNodeParent, 'div');
+            targetNodeParent.className = timestampObj.parent.className;
+            targetNodeParent.innerHTML = '';
+
+            const targetNode = UTILS.elm('', 'a');
+            targetNode.setAttribute(timestampObj.attr.timestampStyle, page);
+            targetNode.setAttribute(timestampObj.attr.emulation, '');
+            targetNode.setAttribute(timestampObj.attr.timestamp, timestampContent);
+            targetNode.className = timestampObj.roamClassName;
+            targetNode.innerHTML = timestampContent;
+            targetNode.innerHTML = fmtTimestamp(UI.timestamps.tm_workflow_display.value)(targetNode); // javascript is crazy!
+
+            targetNodeParent.appendChild(targetNode);
+
+
+            const targetNodePpts = {
+                fromUniqueUid: fromUid + similarCountButRoot,
+                similarCount: parseInt(similarCount, 10),
+                page, indent, targetIndex, tempUID, fromUid, targetNode,
+                timestamp: timestampContent,
+                color: window.getComputedStyle(targetNode).color,
+                ObjAsKey, blockUid: tempUID, blockID: mapsKEY, startEndComponentMap
+            }
+
+
+            emulationArr = await getMap_smart(mapsKEY, succesfulEmulationMap, () => []);
+            emulationArr = UTILS.pushSame(emulationArr, targetNodePpts);
+
+
+            //targetNode.addEventListener('mousedown', async (e) => await PlayPauseOnClicks(e, tempUID, targetNodePpts));
+            //targetNode.addEventListener('wheel', async (e) => await rawTimestampOnWheel(e, tempUID));
+            // targetNodeParent.addEventListener('mouseleave', async (e) => await updateTimestampOnMouseleave(e, tempUID, targetNodePpts));
+            // targetNodeParent.addEventListener('mouseenter', e => toogleDocumentScroll(e.currentTarget, true));
+        }
+
+
+
+        for (let [keys, values] of succesfulEmulationMap.entries())
+        {
+            values = values.sort((a, b) => a.indent - b.indent); // RAP utils
+            const sortedByUid = sortObjByKey('fromUniqueUid', values);
+            const targetObjsArr = sortedByUid.map((v, i, a) => a[i]['data']);
+
+
+            targetObjsArr.forEach((ArrObjs, i, a) =>
+            {
+                const findPage = (p) => [...ArrObjs].reverse().find(x => x.page == p);
+                const lastArr = [findPage('start'), findPage('end')];
+                const completePears = lastArr.every(el => !!el);
+
+                ArrObjs.forEach((o, i) =>
+                {
+                    if (!o?.targetNode)
+                        return;
+                    const isPear = lastArr.includes(o);
+                    if (isPear)
+                    {
+                        if (completePears)
+                            o.targetNode.style.filter = `brightness(${100 + (5 * i)}%)`;
+                        else
+                            o.targetNode.style.filter = `brightness(85%)`;
+
+                        UTILS.toggleAttribute(true, 'timestamp-set', o.targetNode);
+                    }
+                    else
+                    {
+                        o.targetNode.style.filter = `brightness(70%)`;
                     }
 
-                    previousValue = record.target.style.display;
-                }
-            });
+                    o.targetNode.oncontextmenu = e => e.preventDefault(); //https://codinhood.com/nano/dom/disable-context-menu-right-click-javascript
+
+                    async function OnClicks(e)
+                    {
+                        await PlayPauseOnClicks(e, o.tempUID, { self: o, pears: (isPear && completePears) ? lastArr : null });
+                    }
+
+                    o.targetNode.addEventListener('customMousedown', OnClicks);
+                    o.targetNode.onmousedown = OnClicks;
+                    o.targetNode.OnClicks = OnClicks;
+                })
+            })
         }
+
+
+
+        function sortObjByKey(key, obj)
+        {// https://gist.github.com/JamieMason/0566f8412af9fe6a1d470aa1e089a752
+            const groupBy = key => array => array.reduce((objectsByKeyValue, obj) =>
+            {
+                const value = obj[key];
+                objectsByKeyValue[value] = (objectsByKeyValue[value] || []).concat(obj);
+                return objectsByKeyValue;
+            }, {});
+            const groupByKey = groupBy(key);
+            const objByKey = groupByKey(obj);
+            return Object.entries(objByKey).map(([title, data]) => ({ title, data }));
+        }
+    }
+    // 6.1.1
+    async function PlayPauseOnClicks(e, uid, targetNodePpts)
+    {
+        const { currentTarget: tEl } = e;
+        const { which, seekToMessage, simMessage } = typeof e.detail == 'object' ? e.detail : e;
+
+        if (tEl.hasAttribute('awaiting')) return;
+        tEl.setAttribute('awaiting', true);
+
+
+        const { redAnim, greenAnim, blueAnim, purpleAnim, allAnim } = getTimestampAnims();
+        const { click, rghtclick, mdlclick } = getClicks();
+
+        const {
+            lastWrapperInBlock, WrappersInBlock,
+            f_uid, blockExist,
+            root, crossRoot, mainRoot,
+        } = await getYTwrapperRootObj(uid, tEl);
+
+
+
+        if (!blockExist) // fail
+        {
+            if (click || rghtclick || !f_uid)
+                pulse(redAnim);
+            else if (mdlclick)
+                return await openingOnCrossRoot();
+
+            return NoLongerAwaiting();
+        }
+
+
+        if (click || rghtclick) // success
+        {
+            if (e['altKey'])
+                await ClickResetWrapper(lastWrapperInBlock(root));
+            else if (click)
+                await playLastBlockOnly_SimHover(root);
+            else if (rghtclick)
+                pauseLastBlock_SimHoverOut(root);
+
+            return NoLongerAwaiting();
+        }
+
+
+        if (mdlclick) // opening?
+        {
+            return await openingOnCrossRoot();
+        }
+
+
+
+        return NoLongerAwaiting();
+
+
+
+        async function playLastBlockOnly_SimHover(r)
+        {
+            pulse(greenAnim);
+
+
+            const boundaryObj = await getBoundaryObj(r);
+            if (!boundaryObj.success)
+                return;
+            if (simMessage == 'visuals')
+                pulse(purpleAnim);
+
+
+            // 1.
+            const { record, obsTimestamp, targetWrapper, timestampObj } = boundaryObj;
+            const { start, end, currentTime, seekTo, ok } = timestampObj;
+
+
+            // 3.0
+            if (simMessage == 'visuals' && ok && seekToMessage != 'seekTo-strict')
+                return;
+            // 3.1
+            await ReloadYTVideo({ t: record?.player, start, end });
+
+
+            // 4.0
+            if (seekToMessage == 'seekTo-soft' && ok)
+                record?.player?.seekTo?.(currentTime);
+            else if (seekTo != start) // ReloadYTVideo already seeks to start
+                record?.player?.seekTo?.(seekTo);
+
+
+            // 4.1
+            if (UI.display.simulate_roam_research_timestamps.checked)
+            {
+                record?.isSoundingFine?.(!(UI.timestamps.tm_seek_action.value == 'mute'));
+                record?.togglePlay?.(!(UI.timestamps.tm_seek_action.value == 'pause'));
+            }
+
+
+            // 5.
+            targetWrapper?.dispatchEvent(new CustomEvent('customPlayerReady',
+                {
+                    bubbles: true,
+                    detail: {
+                        start, end, updateTime: currentTime ?? seekTo,
+                        ['play-right-away']: true,
+                        mute: UI.timestamps.tm_seek_action.value == 'mute' && UI.display.simulate_roam_research_timestamps.checked,
+                        obsTimestamp,
+                    },
+                }));
+
+
+            // 6.
+            if (e['ctrlKey'])
+                ScrollToTargetWrapper(r);
+        }
+        async function getBoundaryObj(r)
+        {
+            const targetWrapper = lastWrapperInBlock(r);
+
+
+            // 1. pause everthing but this
+            const deactivateAll = [...document.querySelectorAll('.yt-gif-wrapper')]
+                .forEach(wrapper =>
+                {
+                    UTILS.toggleAttribute(false, 'yt-active', wrapper);
+                    if (wrapper != targetWrapper)
+                        wrapper?.dispatchEvent(UTILS.simHoverOut());
+                });
+
+
+            // 2. 
+            const validTimestamp = tEl.innerHTML.match(StartEnd_Config.targetStringRgx)?.[0];
+            const secondsOnly = UTILS.HMSToSecondsOnly(validTimestamp);
+            if (!validTimestamp || typeof secondsOnly !== 'number')
+            {
+                return { success: false };
+            }
+
+
+            // 2.1
+            const targetBlockID = [...recordedIDs.keys()].reverse().find(k => k?.startsWith(closestYTGIFparentID(targetWrapper)));
+            const record = recordedIDs.get(targetBlockID);
+            const obsBlockID = [...observedParameters.keys()].reverse().find(k => k?.endsWith(getWrapperUrlSufix(targetWrapper, f_uid)));
+            const obsTimestampOrg = observedParameters.get(obsBlockID)?.lastActiveTimestamp ?? {};
+            const obsTimestamp = { ...obsTimestampOrg };
+
+
+            // 3.
+            DeactivateTimestampsInHierarchy(closest_rm_container(targetWrapper), targetWrapper);
+            ToggleBoundarySet(targetWrapper, true);
+
+
+            return {
+                sameBoundaries: record?.sameBoundaries?.(),
+                success: true,
+
+                record, obsTimestamp, targetWrapper,
+
+                timestampObj: getSeconds(),
+            }
+
+            function getSeconds()
+            {
+                const start = sec("start") ? secondsOnly : (pearSec() || 0);
+                const end = sec("end") ? secondsOnly : pearSec() || record?.player?.getDuration?.();
+                const seekTo = sec("end") ? secondsOnly + 1 : secondsOnly;
+
+                const tm = record?.player?.getCurrentTime?.();
+                const currentTimeAlternative = lastBlockIDParameters.get(targetBlockID)?.updateTime;
+                const currentTime = tm ?? currentTimeAlternative ?? start;
+
+                const bounded = ((tm = currentTime) => tm >= start && tm <= end)();
+                const farEnough = ((tm = currentTime) => tm + 1 > seekTo)();
+
+                return {
+                    start, end,
+                    seekTo, currentTime,
+                    ok: bounded && farEnough
+                }
+
+                function sec(p) { return targetNodePpts.self.page == p }
+                function pearSec() { return UTILS.HMSToSecondsOnly(targetNodePpts.pears?.find(o => o != targetNodePpts.self)?.timestamp || '') }
+            }
+        }
+
+
+        function ToggleBoundarySet(targetWrapper, bol = true)
+        {
+            if (targetNodePpts.pears)
+                targetNodePpts.pears.forEach(o => toogleActiveAttr(bol, o.targetNode));
+
+            else
+                toogleActiveAttr(bol, targetNodePpts.self.targetNode);
+
+            UTILS.toggleAttribute(bol, 'last-active-timestamp', targetNodePpts.self.targetNode);
+            UTILS.toggleAttribute(bol, 'yt-active', targetWrapper);
+
+            function toogleActiveAttr(bol, el)
+            {
+                if (el)
+                    UTILS.toggleAttribute(bol, 'active-timestamp', el);
+            }
+        }
+
+        async function pauseLastBlock_SimHoverOut(r)
+        {
+            //lastWrapperInBlock(r)?.setAttribute('play-right-away', false);
+            lastWrapperInBlock(r)?.dispatchEvent(UTILS.simHoverOut()); // hover out -> videoIsPlayingWithSound(false)
+        }
+
+
+        async function openingOnCrossRoot()
+        {
+            await RAP.setSideBarState(3);
+            await RAP.sleep(50);
+
+            pulse(blueAnim);
+            if (WrappersInBlock(crossRoot).length == 0) // 0 instances on crossRoot
+            {
+                await RAP.navigateToUiOrCreate(f_uid, (root == mainRoot), 'block');
+            }
+
+            const prevWrapper = lastWrapperInBlock(crossRoot);
+            const isRendered = prevWrapper instanceof Element && UTILS.isElementVisible(prevWrapper);
+            await RAP.sleep(isRendered ? 50 : 500); // visible? then quicker
+
+            ScrollToTargetWrapper(crossRoot);
+
+            await playLastBlockOnly_SimHover(crossRoot);
+            return NoLongerAwaiting();
+        }
+
+
+        function ScrollToTargetWrapper(r)
+        {
+            lastWrapperInBlock(r)?.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+        }
+        async function getYTwrapperRootObj(uid, tEl)
+        {
+            const { foundBlock } = await getLastComponentInHierarchy(uid);
+            if (!foundBlock?.uid) console.warn(`YT GIF Timestamps: couldn't find YT GIFs within the Hierarchy: ((${uid}))`);
+            const { uid: f_uid } = foundBlock || { uid: '' };
+
+
+            const barObj = {
+                condition: function () { return tEl.closest(`.${this.root}`) },
+            }
+            const PagesObj = {
+                main: {
+                    root: 'roam-article',
+                    crossRoot: 'rm-sidebar-outline',
+                },
+                side: {
+                    root: 'rm-sidebar-outline',
+                    crossRoot: 'roam-article',
+                },
+                pageRef: {
+                    root: 'rm-reference-main',
+                    crossRoot: 'rm-sidebar-outline',
+                },
+            };
+
+
+            Object.keys(PagesObj).forEach(key => Object.assign(PagesObj[key], barObj));
+            const key = Object.keys(PagesObj).find(x => PagesObj[x].condition());
+            const { root, crossRoot } = PagesObj[key];
+            const blockExist = document.querySelector(`.${root} [id$="${f_uid}"]`);
+
+
+
+            // root -> roam-article || rm-sidebar-outline
+            const WrappersInBlock = (r) =>
+            {
+                const wrappers = [...document.querySelectorAll(`.${r} [id$="${f_uid}"] .yt-gif-wrapper`)];
+
+                if (r == PagesObj.main.crossRoot)
+                    return wrappers; // they don't have this tEl
+
+                return wrappers.map(pw => closest_rm_container(pw))
+                    .filter(pc => pc.contains(tEl))
+                    .map(c => [...c.querySelectorAll(`[id$="${f_uid}"] .yt-gif-wrapper`)])
+                    .flat(Infinity);
+            }
+
+            const lastWrapperInBlock = (r = root) => [...WrappersInBlock(r)]?.pop();
+
+
+            return {
+                lastWrapperInBlock, WrappersInBlock,
+                f_uid, blockExist,
+                root, crossRoot, mainRoot: PagesObj.main.root,
+            }
+        }
+
+
+        function pulse(anim)
+        {
+            UTILS.toggleClasses(false, allAnim, tEl);
+            UTILS.toggleClasses(true, anim, tEl);
+            setTimeout(() => UTILS.toggleClasses(false, anim, tEl), 500);
+        }
+        function getClicks()
+        {
+            return {
+                click: which == 1,
+                rghtclick: which == 3,
+                mdlclick: which == 2,
+            }
+        }
+        function NoLongerAwaiting()
+        {
+            tEl.removeAttribute('awaiting');
+        }
+    }
+
+    function getTimestampAnims()
+    {
+        const baseAnim = ['yt-timestamp-pulse-text-anim'];
+        const greenAnim = [...baseAnim, 'yt-timestamp-success'];
+        const redAnim = [...baseAnim, 'yt-timestamp-warn'];
+        const blueAnim = [...baseAnim, 'yt-timestamp-opening'];
+        const purpleAnim = [...baseAnim, 'yt-timestamp-reset'];
+        const allAnim = [...greenAnim, ...redAnim, ...blueAnim].filter((v, i, a) => a.indexOf(v) === i); // remove duplicates on allAnim
+        return { redAnim, greenAnim, blueAnim, purpleAnim, allAnim };
+    }
+
+    //#region 6.2.1
+    async function updateTimestampOnMouseleave(e, uid, nodePpts)
+    {
+        const { currentTarget: tEl } = e;
+        toogleDocumentScroll(tEl, false);
+        const { blockRgx } = BlockRegexObj(StartEnd_Config.componentPage, true);
+        const res = RAP.getBlockInfoByUID(nodePpts.fromUid);
+        const rawText = res[0]?.[0]?.string || 'F';
+    }
+    async function rawTimestampOnWheel(e, uid)
+    {
+        const { currentTarget: tEl } = e;
+        if (!tEl.parentNode.classList.contains('yt-gif-timestamp-prevent-scroll')) return;
+
+        const validTimestamp = tEl.innerHTML.match(StartEnd_Config.targetStringRgx)?.[0];
+        const secondsOnly = UTILS.HMSToSecondsOnly(validTimestamp);
+
+        if (!validTimestamp || typeof secondsOnly !== 'number') return;
+
+        const newTimestamp = SliderValue(secondsOnly);
+        tEl.innerHTML = UTILS.convertHMS(newTimestamp);
+
+        function SliderValue(value)
+        {
+            const dir = Math.sign(e.deltaY) * -1;
+            const parsed = parseInt(value, 10);
+            return Number(dir + parsed);
+        }
+    }
+    // 6.2.2
+    function toogleDocumentScroll(el, bol)
+    {
+        UTILS.toggleClasses(bol, ['yt-gif-timestamp-prevent-scroll'], el);
+    }
+    //#endregion
+
+
+
+    // 6.3
+    async function registerKeyCombinations(e)
+    {
+        if (e['ctrlKey'] && e['altKey']) 
+        {
+            let pageRefSufx = null;
+            if (e.key == 's') // Ctrl + Alt + s
+            {
+                pageRefSufx = 'start'
+            }
+            else if (e.key == 'd') // Ctrl + Alt + d
+            {
+                pageRefSufx = 'end'
+            }
+            await addBlockTimestamp_smart_local(pageRefSufx);
+        }
+    }
+    // 6.3.1
+    async function addBlockTimestamp_smart_local(pageRefSufx)
+    {
+        const timestampObj = await getTimestampObj_smart(pageRefSufx);
+        const uid = timestampObj.uid;
+        const component = timestampObj[UI.timestamps.tm_workflow_grab.value]?.fmt ?? '';
+        if (!uid) return;
+
+        const { updatedString, el } = concatStringAtCaret(getCurrentInputBlock(), component);
+
+        await RAP.updateBlock(uid, updatedString);
+        await RAP.sleep(50);
+
+        updateAtCaret(getCurrentInputBlock(), el.selectionEnd);
+    }
+    function updateAtCaret(el, atLength = 0, start = false)
+    {
+        if (start)
+            el.selectionStart = el.selectionEnd = atLength;
+        else
+            el.selectionEnd = el.selectionStart = atLength;
+        el.focus();
+    }
+    function concatStringAtCaret(el, newText)
+    {
+        const start = el.selectionStart
+        const end = el.selectionEnd
+        const text = el.value
+        const before = text.substring(0, start)
+        const after = text.substring(end, text.length)
+        el.value = (before + newText + after)
+        updateAtCaret(el, (end + newText.length));
+
+        return { updatedString: el.value, el }
+    }
+
+
+    // 6.0 observe added/removed nodes and act accordingly
+    function slashMenuMutation_cb(mutationsList, observer)
+    {
+        const found = [];
+        const removed = [];
+
+        for (const { addedNodes, removedNodes } of mutationsList)
+        {
+            for (const node of addedNodes)
+            {
+                if (!node.tagName) continue; // not an element
+
+                if (node.classList.contains(slashObj.targetClass) && !node.classList.contains(slashObj.emulationClass))
+                {
+                    found.push(node);
+                }
+                else if (node.firstElementChild)
+                {
+                    found.push(...node.getElementsByClassName(slashObj.targetClass));
+                }
+            }
+
+            for (const node of removedNodes)
+            {
+                if (!node.tagName) continue; // not an element
+
+                if (node.classList.contains(slashObj.targetClass) && !node.classList.contains(slashObj.emulationClass))
+                {
+                    removed.push(node);
+                }
+                else if (node.firstElementChild)
+                {
+                    removed.push(...node.getElementsByClassName(slashObj.targetClass));
+                }
+            }
+        }
+
+        if (removed.length == 0 && found.length == 0) return;
+
+        const timeNode = (node) => node.innerHTML.includes('Time');
+        const YTtimeNode = (node) => node.innerHTML.includes('YT GIF');
+        const validTimeNode = (node) => timeNode(node) && !YTtimeNode(node);
+
+        const dontUnfocusBlocks = [...document.querySelectorAll('body > div.rm-autocomplete__results.bp3-elevation-3 > .dont-unfocus-block .bp3-text-overflow-ellipsis')];
+        const emulations = [...document.querySelectorAll(`body > div.rm-autocomplete__results.bp3-elevation-3 > [class*="${slashObj.emulationClass}"]`)];
+        const LastTimeNode = dontUnfocusBlocks.reverse().find(node => validTimeNode(node));
+        const AnyTimeNodeExist = dontUnfocusBlocks.filter(node => validTimeNode(node)).length != 0;
+
+
+        for (const node of found)
+        {
+            const clone = node?.parentNode?.cloneNode(true);
+            if (clone?.querySelector('.bp3-text-overflow-ellipsis')?.innerHTML &&
+                clone?.querySelector('.rm-icon-key-prompt')?.innerHTML &&
+                clone?.querySelector('.bp3-icon')?.className)
+            {
+                slashObj.clone = clone;
+            }
+
+
+            const emulations = [...document.querySelectorAll(`body > div.rm-autocomplete__results.bp3-elevation-3 > [class*="${slashObj.emulationClass}"]`)];
+
+
+            if (validTimeNode(node))
+            {
+                const parent = node.parentNode;
+
+                if (slashObj.clone && emulations.length == 0)
+                {
+                    const start = createSlashMenuEmulation_videoItem({
+                        cloneFrom: slashObj.clone,
+                        emulationSufix: '-start',
+                        prompt: 'YT GIF Timestamp - start',
+                        shortutPrompt: 'Ctrl + Alt + s',
+                    });
+                    parent.parentNode.insertBefore(start, parent);
+                    start.addEventListener('click', async () => addBlockTimestamp_smart_local('start'));
+
+
+                    const end = createSlashMenuEmulation_videoItem({
+                        cloneFrom: slashObj.clone,
+                        emulationSufix: '-end',
+                        prompt: 'YT GIF Timestamp - end',
+                        shortutPrompt: 'Ctrl + Alt + d',
+                    });
+                    parent.parentNode.insertBefore(end, parent);
+                    end.addEventListener('click', async () => addBlockTimestamp_smart_local('end'));
+                }
+
+                if (LastTimeNode)
+                {
+                    const parent = LastTimeNode.parentNode;
+                    emulations.forEach(el => parent.parentNode.insertBefore(el, parent));
+                }
+            }
+        }
+
+
+        for (const node of removed)
+        {
+            if (timeNode(node) && !AnyTimeNodeExist)
+            {
+                emulations.forEach(x => x.remove());
+                return;
+            }
+        }
+
+        function createSlashMenuEmulation_videoItem({ cloneFrom, emulationSufix, prompt, shortutPrompt, iconSufix })
+        {
+            iconSufix = iconSufix || 'video';
+            const el = cloneFrom.cloneNode(true);
+
+            el.classList.add(slashObj.emulationClass + emulationSufix);
+            el.querySelector('.bp3-text-overflow-ellipsis').innerHTML = prompt;
+            el.querySelector('.rm-icon-key-prompt').innerHTML = shortutPrompt;
+            el.querySelector('.bp3-icon').className = `bp3-icon bp3-icon-${iconSufix}`;
+            return el;
+        }
+    };
+    async function TimestampBtnsMutation_cb(mutationsList)
+    {
+        const found = [];
+
+        for (const { addedNodes } of mutationsList)
+        {
+            for (const node of addedNodes)
+            {
+                if (!node.tagName) continue; // not an element
+
+                if (node.classList.contains(timestampObj.start.targetClass) || node.classList.contains(timestampObj.end.targetClass))
+                {
+                    found.push(node);
+                }
+                else if (node.firstElementChild)
+                {
+                    found.push(...node.getElementsByClassName(timestampObj.start.targetClass));
+                    found.push(...node.getElementsByClassName(timestampObj.end.targetClass));
+                }
+            }
+        }
+
+        await cleanAndSetUp_TimestampEmulation(found);
+    }
+
+
+    // 7.0 display
+    function ChangeTimestamapsDisplay(value)
+    {
+        const fmt = fmtTimestamp(value);
+
+        document.querySelectorAll('[yt-gif-timestamp-emulation]')
+            .forEach(tms => tms.innerHTML = fmt(tms));
+    }
+    function fmtTimestamp(value)
+    {
+        const str2sec = (str) => UTILS.HMSToSecondsOnly(str)
+        let fmt = (tms) => tms.getAttribute('timestamp');
+
+        if (value == 'lessHMS')
+            fmt = (tms) => UTILS.seconds2time(str2sec(tms.innerHTML));
+        else if (value == 'HMS')
+            fmt = (tms) => UTILS.convertHMS(str2sec(tms.innerHTML));
+        else if (value == 'S')
+            fmt = (tms) => str2sec(tms.innerHTML);
+
+        return fmt;
+    }
+
+    //#endregion
+
+
+    //#region 7. url btn emulation
+    async function InlineUrlBtnMutations_cb(mutationsList)
+    {
+        let added = [];
+        for (const { addedNodes } of mutationsList)
+            added = [...added, ...NodesRecord(addedNodes, 'bp3-icon-video')];
+
+        ReadyUrlBtns(added);
+    }
+    function ReadyUrlBtns(added)
+    {
+        for (const rm_btn of added)
+        {
+            UTILS.toggleClasses(true, ['yt-gif'], rm_btn);
+            rm_btn.insertAdjacentHTML('afterbegin', links.html.fetched.urlBtn);
+
+
+            const grabS = () => UI.timestamps.tm_workflow_grab.value == 'S';
+            const floatParam = (p, url) => new RegExp(`((?:${p})=)((\\d+)?[.]?\\d+)`, 'gm')?.exec(url)?.[2] || '0';
+            const startParam = (url) => grabS() ? floatParam('t|start', url) : UTILS.convertHMS(floatParam('t|start', url));
+            const endParam = (url) => grabS() ? floatParam('end', url) : UTILS.convertHMS(floatParam('end', url));
+
+
+            urlBtn('yt-gif').onclick = async (e) => await OnYtGifUrlBtn(e, (url) => `{{[[yt-gif]]: ${url} }}`);
+            urlBtn('start').onclick = async (e) => await OnYtGifUrlBtn(e, (url) => `{{[[yt-gif/start]]: ${startParam(url)} }}`);
+            urlBtn('end').onclick = async (e) => await OnYtGifUrlBtn(e, (url) => `{{[[yt-gif/end]]: ${endParam(url)} }}`);
+            urlBtn('start|end').onclick = async (e) => await OnYtGifUrlBtn(e, (url) => `{{[[yt-gif/start]]: ${startParam(url)} }} {{[[yt-gif/end]]: ${endParam(url)} }}`);
+
+
+
+            async function OnYtGifUrlBtn(e, fmtCmpnt_cb)
+            {
+                // 0.
+                const tEl = e.currentTarget;
+                e.stopPropagation();
+                e.preventDefault();
+
+
+                // 1. execute further if the user has valid keys
+                const block = closestBlock(rm_btn);
+                const uid = block?.id?.slice(-9);
+                const { url, ytUrlEl } = getYTUrlObj(rm_btn);
+
+                if (!ValidUrlBtnUsage())
+                    return console.warn('YT GIF Url Button: Invalid Simulation keys');
+                if (!uid || !url)
+                    return logUrlBtnWarning();
+
+
+                // 2. protect against spamming clicks
+                const awaiting = (bol) => awaitingAtrr(bol, rm_btn) && awaitingAtrr(bol, tEl);
+
+                if (rm_btn.hasAttribute('awaiting'))
+                    return;
+
+                awaiting(true);
+
+
+                // 3. execute further if the block and the urlBtn exist
+                const blockReq = await RAP.getBlockInfoByUIDM(uid);
+                const info = blockReq[0]?.[0];
+                if (!info) return;
+
+                const index = ElementsPerBlock(block, `.bp3-icon-video + a[href="${url}"]`).indexOf(ytUrlEl);
+                if (index == -1)
+                    return logUrlBtnWarning();
+
+
+                // 4. gather spots/boundaries where roam does NOT render information
+                const IndexObj = (rgx, type) => indexPairObj(rgx, info.string, type);
+                const BadIndexMatches = [
+                    ...IndexObj(/(`.+?`)|(`([\s\S]*?)`)/gm, 'codeBlocks'), // codeBlocks
+
+                    ...filterOutCode(IndexObj(/{{=:(.+?)\|(.+)}}/gm, 'tooltipPrompt'))
+                        .map(op =>
+                        {
+                            const y = { ...op };
+                            y.start = op.start + 4; // 4 = {{=:
+                            y.end = op.end - (1 + op.groups[2]?.length + 2); // 1 = |     +    [2].length = hiidden content   +    2 = }}
+                            y.match = op.groups[1]; // prompt
+                            return y;
+                        }), // tooltipPrompt
+
+                    ...filterOutCode(IndexObj(/({{.+})/gm, 'components')), // components
+                ];
+
+
+                // 5. valid spots where you can insert fmt components - user requests
+                const urlsMatches = IndexObj(new RegExp(`(${url.replace(/[?\\]/g, '\\$&')})`, 'gm'), 'urlsMatch');
+                const freeUrls = urlsMatches.filter(uo =>
+                {
+                    let specialCase = false;
+                    const badIndex = BadIndexMatches
+                        .some(bio =>
+                        {
+                            const bounded = uo.start >= bio.start && uo.end <= bio.end;
+                            specialCase = bio.type == 'tooltipPrompt';
+                            return bounded;
+                        });
+
+                    if (specialCase)
+                        return true;
+                    return !badIndex;
+                })
+
+
+                // 6. return if any errors
+                let string;
+                try
+                {
+                    string = replaceString(info.string, freeUrls[index].start, freeUrls[index].end, fmtCmpnt_cb(url));
+                }
+                catch (error)
+                {
+                    return logUrlBtnWarning();
+                }
+
+
+                // 7. FINALLY! update the block
+                UIDtoURLInstancesMapMap.delete(uid);
+                await RAP.updateBlock(uid, string, info.open);
+
+
+                // 8. set free for any possible future clicks
+                awaiting(false);
+
+
+                function logUrlBtnWarning()
+                {
+                    console.warn(`YT GIF Url Button: couldn't find url within the block: ((${uid}))`);
+                }
+            }
+            function urlBtn(page)
+            {
+                return rm_btn.querySelector(`[yt-gif-url-btn="${page}"]`);
+            }
+        }
+
+
+        function indexPairObj(regex, str, type)
+        {// https://www.designcise.com/web/tutorial/how-to-return-the-position-of-a-regular-expression-match-in-javascript#:~:text=matchArr%5B1%5D.length%5D)%3B%0A%7D-,console.log(indexPairs)%3B%20//%20output%3A%20%5B8%2C%2025%5D%2C%20%5B27%2C%2035%5D,-The%20exec()%20method
+            const matches = [...str.matchAll(regex)];
+
+            const indexPairs = [];
+
+            for (const matchArr of matches)
+            {
+                indexPairs.push(
+                    [
+                        matchArr.index,
+                        matchArr.index + matchArr[0]?.length,
+                        matchArr[0],
+                        matchArr
+                    ]
+                );
+            }
+            return [...indexPairs].map(mp => ({
+                type,
+                start: mp[0],
+                end: mp[1],
+                match: mp[2],
+                groups: mp[3],
+            }));
+        }
+        function filterOutCode(indexObj)
+        {
+            const inlindeCodeRgx = /(`.+?`)|(`([\s\S]*?)`)/gm;
+            return [...indexObj].filter(x => !inlindeCodeRgx.test(x.match))
+        }
+        function replaceString(str, start, end, replace)
+        {
+            if (start < 0 || start > str.length)
+            {
+                throw new RangeError(`start index ${start} is out of the range 0~${str.length}`);
+            }
+            if (end > str.length || end < start)
+            {
+                throw new RangeError(`end index ${end} is out of the range ${start}~${str.length}`);
+            }
+            return str.substring(0, start) + replace + str.substring(end);
+        }
+    }
+    function getYTUrlObj(rm_btn)
+    {
+        const ytUrlEl = rm_btn?.nextSibling;
+        let url = ytUrlEl?.href;
+
+        if (!YTGIF_Config.guardClause(url))
+            url = null;
+
+        return { url, ytUrlEl };
+    }
+
+    function NodesRecord(Nodes, sel)
+    {
+        if (!Nodes || Nodes.length == 0)
+            return [];
+
+        return [...Array.from(Nodes)]
+            .filter(el => !!el.tagName)
+            .map(x =>
+            {
+                if (x.classList.contains(sel))
+                    return x
+                else
+                    return [...x.querySelectorAll(`.${sel}`)]
+            })
+            .flat(Infinity)
+            .filter((v, i, a) =>
+            {
+                return !!v &&
+                    getYTUrlObj(v).url &&
+                    !hasYTGifAttr(v) &&
+                    !hasYTGifClass(v) &&
+                    v.classList.contains(sel) &&
+                    a.indexOf(v) === i &&
+                    isRendered(v);
+            })
+    }
+    /* ****************** */
+    function ToogleUrlBtnObserver(bol, obs)
+    {
+        obs.disconnect();
+
+        if (bol)
+        {
+            const allUrlBtns_rm = [...document.querySelectorAll('.bp3-icon-video')]
+                .filter(b =>
+                {
+                    // those that do not have yt-gif customization
+                    return !hasYTGifAttr(b) && !hasYTGifClass(b) && getYTUrlObj(b).url;
+                });
+
+            ReadyUrlBtns(allUrlBtns_rm);
+            obs.observe(targetNode, config);
+        }
+        else
+        {
+            const allUrlBtns = [...document.querySelectorAll(`.yt-gif-url-btns,.yt-gif-url-btn-wrapper`)]
+                .forEach(el => el.remove());
+            const allUrlBtns_rm = [...document.querySelectorAll('.bp3-icon-video')]
+                .forEach(el => el.classList.remove('yt-gif'));
+        }
+    }
+    function hasYTGifClass(b)
+    {
+        return [...b.classList]
+            .some(x => x.includes('yt-gif'));
+    }
+    function hasYTGifAttr(b)
+    {
+        return [...b.attributes]
+            .map(a => a.name)
+            .some(x => x.includes('yt-gif'));
+    }
+    /* ****************** */
+    function confirmUrlBtnUsage(bol, e)
+    {
+        const canUse = ValidUrlBtnUsage();
+        if (!bol || canUse)
+            return;
+
+        const yesMessage = canUse ?
+            'Simulate because I have both graph and localStorage keys' :
+            'Simulate, but first take me to the caution prompt - localStorage key is missing';
+
+        const userMind = confirm(`YT GIF Url Button: Simulation Request\n\nYES: ${yesMessage} \n   -  https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/install/faq/README.md#simulate-url-button-to-video-component \n\nNO: Don't simulate`);
+
+        if (userMind)
+        {
+            localStorage.setItem('simulate_url_to_video_component', 'true');
+            if (!canUse)
+                window.open("https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#caution-prompt", '_blank').focus();
+        }
+        else
+        {
+            if (e)
+            {
+                e.stopPropagation();
+                e.preventDefault();
+                e.currentTarget.checked = false;
+                e.currentTarget.value = "off";
+                e.currentTarget.dispatchEvent(new Event('customChange'));
+            }
+            localStorage.removeItem('simulate_url_to_video_component');
+        }
+        return userMind;
+    }
+    function ValidUrlBtnUsage()
+    {
+        const key = 'simulate_url_to_video_component';
+        const binarySessionVal = (k) => UTILS.isTrue(window.YT_GIF_DIRECT_SETTINGS?.get(k)?.sessionValue);
+        const usageKey = binarySessionVal('override_' + key) || UTILS.isTrue(localStorage.getItem(key));
+
+        return usageKey && binarySessionVal(key)
     }
     //#endregion
 
@@ -1176,6 +2527,36 @@ async function Ready()
         const { ddm_exist } = cssData
         return document.querySelectorAll('.' + ddm_exist);
     }
+    /* ****************** */
+    //#region flip icons and tooltip helpers
+    function getIconFlipObj(el)
+    {
+        const falseVal = [...el.classList]?.reverse().find(c => c.includes('bp3-icon-'));
+        const trueVal = 'bp3-icon-' + el.getAttribute('flip-icon');
+        return { falseVal, trueVal, el };
+    }
+    function getTooltipFlipObj(el)
+    {
+        const trueVal = el.getAttribute('flip-tooltip');
+        const falseVal = el.getAttribute('data-tooltip');
+        return { falseVal, trueVal, el };
+    }
+    function toogleIcons(bol, { falseVal, trueVal, el })
+    {
+        bol = UTILS.isTrue(bol);
+        UTILS.toggleClasses(false, [trueVal, falseVal], el);
+        UTILS.toggleClasses(true, [bol ? trueVal : falseVal], el);
+        return bol;
+    }
+    function toogleTooltips(bol, { falseVal, trueVal, el })
+    {
+        bol = UTILS.isTrue(bol);
+        UTILS.toggleAttribute(true, 'data-tooltip', el, bol ? trueVal : falseVal);
+        return bol;
+    }
+    //#endregion
+
+
     //#endregion
 
 }
@@ -1260,7 +2641,7 @@ function ObserveIframesAndDelployYTPlayers(targetClass)
         }
         for (const node of found)
         {
-            if (isNotZoomPath(node))
+            if (UTILS.isNotZoomPath(node))
             {
                 window.YT_GIF_OBSERVERS.masterIntersectionObservers.push(ObserveIntersectToSetUpPlayer(node, 'valid entries MutationObserver'));
             }
@@ -1273,11 +2654,7 @@ function ObserveIframesAndDelployYTPlayers(targetClass)
     {
         const components = Array.from(document.querySelectorAll('.' + targetClass));
         //valids
-        return components.filter(el => isNotZoomPath(el));
-    }
-    function isNotZoomPath(el)
-    {
-        return !el.closest("[class*='rm-zoom']");
+        return components.filter(el => UTILS.isNotZoomPath(el));
     }
     //#endregion
 }
@@ -1289,11 +2666,6 @@ function ObserveIframesAndDelployYTPlayers(targetClass)
 //
 async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, message = 'I dunno')
 {
-    if (message == 'testing manual ty gif tutorial')
-    {
-        console.log(message);
-        //debugger;
-    }
     if (!wrapper || !wrapper.parentNode) return;
 
 
@@ -1305,8 +2677,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     if (!url || accUrlIndex < 0 || !uid)
     {
         UIDtoURLInstancesMapMap.delete(uid);
-        console.log(`YT GIF - Couldn't find ${accUrlIndex}th yt-gif component within the block ((${uid}))`);
-        return;
+        return console.log(`YT GIF: Couldn't find yt-gif component number ${accUrlIndex + 1} within the block ((${uid}))`);
     }
     const newId = iframeIDprfx + Number(++window.YT_GIF_OBSERVERS.creationCounter);
 
@@ -1330,6 +2701,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         wrapper = UTILS.ChangeElementType(wrapper, 'div');
     wrapper.parentElement.classList.add(`${cssData.yt_gif_wrapper}-parent`);
     wrapper.className = `${cssData.yt_gif_wrapper} dont-focus-block`;
+    wrapper.style.setProperty('--yt-gif-player-span', parseFloat(configParams.sp) + "%");
     wrapper.setAttribute(attrInfo.target, targetClass);
     wrapper.setAttribute(attrInfo.creation.name, dataCreation);
     wrapper.setAttribute(attrInfo.url.path, url);
@@ -1340,23 +2712,37 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
 
-    // 5. clean url map when removed from DOM
+    // 5. Observe children containers and recover active timestamps respectively
+    const rm_container = closest_rm_container(grandParentBlock);
+    // ⛔ SetUpTimestampRecovery(rm_container);
+
+
+
+    // 6. On removed from DOM clear Uid2Url map and deactivate timestamps
     const options = {
         el: grandParentBlock?.querySelector('span'),
-        OnRemmovedFromDom_cb: () => UIDtoURLInstancesMapMap.delete(uid),
+        OnRemmovedFromDom_cb: () =>
+        {
+            UIDtoURLInstancesMapMap.delete(uid);
+            // ⛔ if (!UI.timestamps.tm_recovery.checked)
+            // DeactivateTimestampsInHierarchy(rm_container, wrapper);
+            if (!isRendered(rm_container) && rm_container?.closest('.rm-sidebar-outline'))
+                observedParameters.delete(blockID);
+        },
     }
-    UTILS.ObserveRemovedEl_Smart(options); // Expensive? think so. Elegant? no, but works
+    UTILS.ObserveRemovedEl_Smart(options);
 
 
 
-    // 6. 
-    if (dataCreation == attrInfo.creation.forceAwaiting || isValid_Awaiting_check())
+    // 7. 
+    if (dataCreation == attrInfo.creation.forceAwaiting)// ⛔ || isValid_Awaiting_check())
     {
         return await DeployYT_IFRAME_OnInteraction();
     }
     else
     {
-        return DeployYT_IFRAME();
+        // ⛔ await AssertParamsClickTimestamp();
+        return await DeployYT_IFRAME();
     }
 
 
@@ -1364,11 +2750,29 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     // 1. uidResultsObj
     async function tempUidResultsObj(el)
     {
-        const closestBlockID = (x) => x?.closest('.rm-block__input');
-        const grandParentBlock = function () { return closestBlockID(this.el) };
-        const grandParentPopOver = function () { return document.querySelector("div.bp3-popover-content > .rm-alias-tooltip__content") };
-        const uidFromGrandParent = function () { return this.uid = this.grandParentBlock()?.id?.slice(-9) };
-        const targetSelector = [[...rm_components.both.classesToObserve].map(x => '.' + x), '.yt-gif-wrapper', 'a.rm-alias.rm-alias--block'].join();
+        const grandParentBlock = function () { return closestBlock(this.el) };
+        const condition = function () { return this.uid = this.grandParentBlock()?.id?.slice(-9) };
+
+        //#region alias like properties
+        const aliasSel = {
+            inline: {
+                is: 'a.rm-alias.rm-alias--block',
+                from: '.rm-alias-tooltip__content'
+            },
+            card: {
+                is: '.rm-block__part--equals',
+                from: '.bp3-card'
+            }
+        }
+        const openAlias = function (isSel) { return document.querySelector(`.bp3-popover-open > ${isSel}`) };
+        const PopOverParent = function (fromSel) { return el.closest(`div.bp3-popover-content > ${fromSel}`) };
+        const aliasCondition = function () { return PopOverParent(this.from) && this.uidCondition() };
+        const grandParentBlockFromAlias = function () { return closestBlock(this.el.closest('.bp3-popover-open')) };
+        //#endregion
+
+        // uidFromGrandParent
+        const preSelector = [[...rm_components.state.currentClassesToObserver].map(s => '.' + s), '.yt-gif-wrapper'];
+        const targetSelector = preSelector.join();
         const tempUrlObj = {
             urlComponents: function () { return [...this.grandParentBlock().querySelectorAll(this.targetSelector)] },
             getUrlIndex: function () { return this.urlComponents().indexOf(this.el) },
@@ -1376,26 +2780,42 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
         const uidResults = { /* a class makes the most sense here, but they're so similar, yet so different, and it only happens once at the time I hope... */
-            'base-block': {
-                uid: null, url: null, el,
-                condition: uidFromGrandParent,
-                targetSelector,
+            'is component': {
+                uid: null, url: null, targetSelector, el,
+
+                condition,
                 grandParentBlock,
             },
-            'popover': {
-                uid: null, url: null, el: document.querySelector('.bp3-popover-target.bp3-popover-open > a.rm-alias.rm-alias--block'),
-                condition: uidFromGrandParent,
-                targetSelector,
-                grandParentBlock: function () { return closestBlockID(document.querySelector('.bp3-popover-open')) },//grandParentPopOver,
+            'is tooltip card': {
+                uid: null, url: null, el: openAlias(aliasSel.card.is),
+
+                targetSelector: [aliasSel.card.is].join(),
+
+                from: aliasSel.card.from,
+                grandParentBlock: grandParentBlockFromAlias,
+                uidCondition: condition,
+                condition: aliasCondition,
             },
-            'ddm-tutorial': {
+            'is alias': {
+                uid: null, url: null, targetSelector, el: openAlias(aliasSel.inline.is),
+
+                targetSelector: [aliasSel.inline.is].join(),
+
+                from: aliasSel.inline.from,
+                grandParentBlock: grandParentBlockFromAlias,
+                uidCondition: condition,
+                condition: aliasCondition,
+            },
+            'is ddm tutorial': {
                 uid: 'irrelevant-uid', url: null, el,
-                condition: function () { return this.url = this.el.getAttribute(attrInfo.url.path) },
                 targetSelector: ['[data-video-url]'].join(),
-                grandParentBlock: function () { return this.el.closest('.dwn-yt-gif-player-container') },
+
+                condition: function () { return this.url = this.el.getAttribute(attrInfo.url.path) },
+                grandParentBlock: function () { return this.el.closest('.dropdown-content') },
             },
         }
         Object.keys(uidResults).forEach(key => Object.assign(uidResults[key], tempUrlObj));
+        Object.assign(uidResults['is component'], { urlComponents: function () { return ElementsPerBlock(this.grandParentBlock(), this.targetSelector) } }); // such a curious emebed predicament...
         const key = Object.keys(uidResults).find(x => uidResults[x].condition());
         if (!key) return {};
 
@@ -1406,214 +2826,65 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             accUrlIndex: 0,
             url: uidResults[key].url,
             grandParentBlock: uidResults[key].grandParentBlock(),
+            nestedComponentMap: new Map()
         }
 
 
-        if (key == 'ddm-tutorial')
+        if (key == 'is ddm tutorial')
         {
+            resObj.accUrlIndex = resObj.preUrlIndex;
             return resObj;
         }
-
-
-        if (key == 'popover')  
+        else if (key == 'is tooltip card')
         {
+            // it is a block in it's own right
+            const tempMap = await getUrlMap_smart(uidResults[key].uid);
+
+            resObj.nestedComponentMap = MapAtIndex_Value(tempMap, resObj.preUrlIndex, key);
+            // https://roamresearch.slack.com/archives/CTAE9JC2K/p1638578496037700
+            if (!resObj?.nestedComponentMap || resObj?.nestedComponentMap.size == 0)
+            {
+                debugger;
+                resObj.nestedComponentMap = [...tempMap.values()][resObj.preUrlIndex];
+            }
+            if (!resObj?.nestedComponentMap || resObj?.nestedComponentMap.size == 0)
+            {
+                return resObj;
+            }
+            updateUrlIndexInsideAlias();
+        }
+        else if (key == 'is alias')
+        {
+            const tempMap = await getUrlMap_smart(uidResults[key].uid);
+
             // needs it's own UID                                   // is it's parent's
-            resObj.uid = extractFromMap_AtIndex(await getUrlMap_smart(uidResults[key].uid), resObj.preUrlIndex);
-            uidResults['base-block'].grandParentBlock = grandParentPopOver; // once there (abstract enough to borrow functionalities)
-            resObj.accUrlIndex += resObj.preUrlIndex;
-            resObj.preUrlIndex = uidResults['base-block'].getUrlIndex(); // it also needs it's own urlIndex
+            resObj.uid = MapAtIndex_Value(tempMap, resObj.preUrlIndex, key);
+            resObj.nestedComponentMap = await getUrlMap_smart(resObj.uid);
+            updateUrlIndexInsideAlias();
+        }
+        else
+        {
+            resObj.nestedComponentMap = await getUrlMap_smart(resObj.uid);
         }
 
 
-        resObj.url = extractFromMap_AtIndex(await getUrlMap_smart(resObj.uid), resObj.preUrlIndex);
+        resObj.url = MapAtIndex_Value(resObj.nestedComponentMap, resObj.preUrlIndex, 'is component');
         resObj.accUrlIndex += resObj.preUrlIndex;
-        if (!resObj.url || !resObj.url.includes('http')) return {};
+        if (!YTGIF_Config.guardClause(resObj?.url))
+            resObj.url = null;
         return resObj;
 
 
+
+        function updateUrlIndexInsideAlias()
+        {
+            resObj.accUrlIndex += resObj.preUrlIndex;
+            resObj.preUrlIndex = uidResults[key].getUrlIndex();  // it also needs it's own urlIndex
+        }
+
         async function getUrlMap_smart(uid)
         {
-            // since it store recursive maps, once per instance it's enough
-            try
-            {
-                if (!uid) throw new Error('uid is null');
-                if (!UIDtoURLInstancesMapMap.has(uid))
-                    UIDtoURLInstancesMapMap.set(uid, await getUrlMap(uid)); // a map inside a map 🤯
-                return UIDtoURLInstancesMapMap.get(uid);
-            } catch (error)
-            {
-                console.log(error);
-                return null;
-            }
-        }
-        function extractFromMap_AtIndex(map, valueAtIndex, indexToCheck)
-        {
-            if (!map) debugger;
-            let val = [...map.values()][valueAtIndex];
-            if (!val) debugger;
-            return val;
-        }
-        async function getUrlMap(tempUID)
-        {
-            let indentFunc = 0;
-            let componentsInOrderMap = new Map();
-
-
-            const orderObj = {
-                order: -1,
-                incrementIf: function (condition) { return condition ? Number(++this.order) : 'ﾠ' },
-                condition: (x) => false,
-            };
-            const results = { /* the order does matter */
-                'has components aliases': { tone: '#37d5d6' },
-                'has components': { tone: '#36096d' },
-                'has any aliases': { tone: '#734ae8' },
-                'has any components': { tone: '#21d190' },
-
-                'is component': { tone: '#20bf55' },
-                'is alias': { tone: '#bfe299' },
-                'is block referece': { tone: 'green' },
-                //'is alias component': { tone: 'LightGreen' },
-            };
-            Object.keys(results).forEach(key => Object.assign(results[key], orderObj));
-
-
-            const FirstObj = await TryToFindURL_Rec(tempUID);
-            return componentsInOrderMap;
-
-
-            async function TryToFindURL_Rec(uid, parentObj)
-            {
-                const objRes = await TryToFindURL(uid);
-
-
-                results['has components aliases'].condition = () => parentObj?.innerAliasesUids?.includes(uid) && (!!objRes.urls?.[0]);
-                results['has any aliases'].condition = () => objRes?.innerAliasesUids.length > 0;
-                results['has components'].condition = () => objRes.components.length > 0;
-                const hasKey = Object.keys(results).filter(x => x.includes('has')).find(x => results[x].condition());
-                objRes.hasKey = hasKey;
-
-
-                //console.log("%c" + cleanIndentedBlock(), `color:${results[hasKey]?.tone || 'black'}`);
-
-
-                for (const i of objRes.urlsWithUids) // looping through RENDERED urls (components) and uids (references)
-                {
-                    results['is component'].condition = () => objRes?.urls.includes(i);
-                    results['is alias'].condition = () => objRes?.innerAliasesUids.includes(i);
-                    results['is block referece'].condition = () => objRes?.blockReferencesAlone.includes(i);
-
-
-                    const isKey = Object.keys(results).filter(x => x.includes('is')).find(x => results[x].condition());
-                    const parentKeysArentAlias = !parentObj?.isKey?.includes('alias') && !parentObj?.hasKey?.includes('alias');
-                    const AtLeast = (arr) => arr.find(w => w === isKey);
-
-
-                    if (
-                        (parentKeysArentAlias && i != tempUID) // unrendered -> pass
-                        || AtLeast(['is component']) // urls (components) -> go
-                    )
-                    {
-                        if (AtLeast(['is alias', 'is component']))
-                        {
-                            componentsInOrderMap.set(assertUniqueKey_while(uid, indentFunc, isKey, hasKey), i);
-                        }
-                    }
-
-
-                    if (isKey == 'is block referece')// it is rendered, so execute it's rec func
-                    {
-                        await ExecuteIndented_Rec(isKey, i);
-                    }
-                }
-
-                return { uid, objRes, parentObj };
-
-
-                async function ExecuteIndented_Rec(isKey, i)
-                {
-                    indentFunc += 1;
-                    objRes.isKey = isKey;
-                    const awaitingObj = await TryToFindURL_Rec(i, objRes);
-                    indentFunc -= 1;
-                }
-
-                function assertUniqueKey_while(uid, indent, isKey, hasKey)
-                {
-                    // the order in which the components are rendered within the block
-                    const keyAnyComponetInOrder = results['has any components'].incrementIf(UTILS.includesAtlest(['has components', 'has components aliases'], hasKey, null));
-                    const keyInComponentOrder = results['has components'].incrementIf(hasKey === 'has components');
-                    const keyInAliasComponentOrder = results['has components aliases'].incrementIf(hasKey === 'has components aliases');
-
-                    const keyIsAlias = results['is alias'].incrementIf(isKey === 'is alias');
-                    const keyIsComponent = results['is component'].incrementIf(isKey === 'is component');
-                    const keyIsBlockRef = results['is block referece'].incrementIf(isKey === 'is block referece');
-
-                    const baseKey = [indent, uid, hasKey, keyAnyComponetInOrder, keyInComponentOrder, keyInAliasComponentOrder, isKey, keyIsBlockRef, keyIsComponent, keyIsAlias];
-
-                    let similarCount = 0; // keep track of similarities
-                    const preKey = () => [similarCount, ...baseKey, 'ﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠ'].join(' - ');
-                    let uniqueKey = preKey();
-
-
-                    while (componentsInOrderMap.has(uniqueKey))
-                    {
-                        debugger;
-                        similarCount += 1; // try to make it unique
-                        uniqueKey = preKey();
-                    }
-                    similarCount = 0;
-
-                    //return { uniqueKey, original: preKey(), isKey, hasKey };
-                    return uniqueKey
-                }
-
-                function cleanIndentedBlock()
-                {
-                    const tab = '\t'.repeat(indentFunc);
-                    const cleanLineBrakes = objRes.string.replace(/(\n)/gm, ". ");
-                    const indentedBlock = tab + cleanLineBrakes.replace(/.{70}/g, '$&\n' + tab);
-                    return indentedBlock;
-                }
-            }
-
-
-            async function TryToFindURL(desiredUID)
-            {
-                const info = await RAP_K.getBlockInfoByUID(desiredUID);
-                const rawText = info[0][0]?.string || "F";
-
-                const urlRgx = /(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(.*?(?=\s|\}|\]|\)))/;
-                const string = rawText.replace(/(`.*?`)/g, 'used_to_be_an_inline_code_block');
-
-                // {{[[component]]: xxxyoutube-urlxxx }}
-                const components = [...string.matchAll(/{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)/gm)].map(x => x = x[0]) || [];
-                // (((xxxuidxxx))) || ((xxxuidxxx))
-                const innerUIDs = string.match(/(?<=\(\()([^(].*?[^)])(?=\)\))/gm) || [];
-                // [xxxanything goesxxx](((xxxuidxxx)))
-                const aliasesPlusUids = [...string.matchAll(/\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm)];
-
-                // componets with uids // set in the order in which roam renders them
-                const urlsWithUids = [...[...string.matchAll(/{{(\[\[)?((yt-gif|video))(\]\])?.*?(\}\}|\{\{)|(?<=\(\()([^(].*?[^)])(?=\)\))/gm)]
-                    .map(x => x = x[0])]
-                    .map(x => components.includes(x) ? x = x.match(urlRgx)?.[0] : x);
-                // uid aliases alone
-                const innerAliasesUids = [...aliasesPlusUids].map(x => x = x[2]) || []; // [xxnopexxx]('((xxxyesxxx))')
-
-                // uid block references alone
-                const blockReferencesAlone = innerUIDs?.filter(x => !innerAliasesUids.includes(x));
-
-
-
-                let urls = [];
-                for (const i of components)
-                {
-                    // xxxyoutube-urlxxx
-                    urls = UTILS.pushSame(urls, i.match(urlRgx)?.[0]);
-                }
-
-                return { uid: desiredUID, components, urls, innerUIDs, urlsWithUids, aliasesPlusUids, innerAliasesUids, blockReferencesAlone, string, info };
-            };
+            return await getMap_smart(uid, UIDtoURLInstancesMapMap, getComponentMap, uid, YTGIF_Config);
         }
     }
 
@@ -1622,12 +2893,12 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     {
         let success = false;
         const media = JSON.parse(JSON.stringify(videoParams));
-        if (url.match('https://(www.)?youtube|youtu\.be'))
+        if (YTGIF_Config.guardClause(url))
         {
             media.id = YouTubeGetID(url);
 
-            media.start = ExtractFromURL('int', /(t=|start=)(?:\d+)/g);
-            media.end = ExtractFromURL('int', /(end=)(?:\d+)/g);
+            media.start = media.defaultStart = ExtractFromURL('int', /(t=|start=)(?:\d+)/g);
+            media.end = media.defaultEnd = ExtractFromURL('int', /(end=)(?:\d+)/g);
 
             media.speed = ExtractFromURL('float', /(s=|speed=)([-+]?\d*\.\d+|\d+)/g);
 
@@ -1635,6 +2906,9 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
             media.hl = new RegExp(/(hl=)((?:\w+))/, 'gm').exec(url)?.[2];
             media.cc = new RegExp(/(cc=|cc_lang_pref=)((?:\w+))/, 'gm').exec(url)?.[2];
+
+            media.sp = new RegExp(/(sp=|span=)((?:\w+))/, 'gm').exec(url)?.[2];
+            media.sp = media.sp ?? document.documentElement.style.getPropertyValue('--yt-gif-player-span');
 
             media.src = url;
             media.type = 'youtube';
@@ -1690,19 +2964,306 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         return false;
     }
 
-    // 5.0
+    // 5.0 timestamp recovery
+    function SetUpTimestampRecovery(rm_container)
+    {
+        if (!rm_container || rm_container?.hasAttribute('active-timestamp-observer'))
+            return;
+
+        rm_container.setAttribute('active-timestamp-observer', '');
+
+        const arr = [getObsTimestamp()];
+        const MutationObj = { removed: arr, lastActive: arr };
+        let awaiting = false;
+
+        const observer = new MutationObserver(async (mutationsList) =>
+        {
+            if (awaiting || !UI.display.simulate_roam_research_timestamps.checked)
+                return;
+
+            awaiting == true;
+
+            await TimestampsInHierarchyMutation_cb(mutationsList, MutationObj);
+
+            awaiting == false;
+        });
+
+        observer.observe(rm_container, { childList: true, subtree: true, attributes: true });
+    }
+    async function TimestampsInHierarchyMutation_cb(mutationsList, MutationObj)
+    {
+        const { lastActive, added } = getMutationNodes(mutationsList, MutationObj);
+
+
+        // 0. set last active timestamp by attribute
+        const lastActiveTimestamp = lastActive.find(aO => aO?.target?.timestamp && aO.blockID);
+        setObsTimestamp(lastActiveTimestamp);
+
+
+
+        // 1. Reset when removed
+        const removedActiveObj = MutationObj.removed.find(rO => rO?.target?.timestamp && canReset(rO.blockID));
+        if (removedActiveObj && UI.timestamps.tm_reset_on_removal.value != 'disabled')
+        {
+            MutationObj.removed.length = 0;
+
+            return await ClickResetWrapper([...grandParentBlock.querySelectorAll('.yt-gif-wrapper')]?.pop());
+        }
+
+
+        // 2. Restore last active timestamp
+        const commonObj = added.find(aO => aO?.blockID && aO.blockID == getObsTimestamp()?.blockID);
+        if (commonObj && UI.timestamps.tm_recovery.checked)
+        {
+            const block = document.getElementById(commonObj.blockID);
+
+            // wait until all timestamps are rendered
+            const rawComponents = ElementsPerBlock(block, '.rm-xparser-default-start, .rm-xparser-default-end');
+            if (rawComponents.length > 0)
+                return;
+
+            const get = (k) => getObsTimestamp()?.target[k];
+            const equals = (k = 'timestamp') => get(k) == ElementsPerBlock(block, `[${k}]`)?.[get('index')]?.getAttribute?.(k);
+
+            // cleanup - since it's a rendered mismatch
+            if (UI.timestamps.tm_restore.value == 'match' && !equals())
+                return observedParameters.delete(blockID);
+
+            // value == 'any' - go ahead with anything in this position
+            const assignObj = equals() ? { simMessage: 'visuals' } : {};
+            return await TryToRecoverActiveTimestamp(getObsTimestamp(), assignObj);
+        }
+
+
+        // 1.2 cleanup - previous unrendered|removed node
+
+        if (!UI.timestamps.tm_recovery.checked && added.length > 0 && MutationObj.removed.length > 0)
+        {
+            const inactiveYetAdded = MutationObj.removed.find(rO => rO?.target?.timestamp && [...added].some(aO => aO?.target?.timestamp && aO.blockID.includes(rO.blockID))); // HOLY SHIT!!!
+            if (inactiveYetAdded)
+                MutationObj.removed.splice(MutationObj.removed.indexOf(inactiveYetAdded), 1);
+        }
+
+
+        function canReset(id)
+        {
+            if ('block' == UI.timestamps.tm_reset_on_removal.value)
+            {
+                if (!document.querySelector('div.rm-block__input#' + id))
+                    return true;
+            }
+            else if ('container' == UI.timestamps.tm_reset_on_removal.value)
+            {
+                if (!document.getElementById(id))
+                    return true;
+            }
+        }
+    }
+    async function TryToRecoverActiveTimestamp(commonObj, assignObj)
+    {
+        await RAP.sleep(10);
+
+        const children = (sel, self) => !self ? rm_container?.querySelectorAll(sel) : [rm_container, ...rm_container?.querySelectorAll(sel)];
+        const atIndex = (siblings, index) => Array.from(siblings).flat(Infinity)[index];
+
+        // const active_rm_container = atIndex(children('.roam-block-container', true), commonObj.containerIndex);
+        let active_block = atIndex(children('.roam-block'), commonObj.blockIndex);
+
+        const block = document.getElementById(commonObj.blockID);
+        if (block != active_block && commonObj.workflow == 'strict')
+        {
+            if (!rm_container.contains(block))
+                return;
+            active_block = block; // Hmmm...
+        }
+
+        const timestamps = ElementsPerBlock(active_block, '[yt-gif-timestamp-emulation]') || [];
+        const targetTimestamp = timestamps[commonObj.target.index] || timestamps[commonObj.start.index] || timestamps[commonObj.end.index] || timestamps[timestamps.length - 1];
+
+        await ClickOnTimestamp(targetTimestamp, assignObj);
+    }
+    function getMutationNodes(mutationsList, MutationObj)
+    {
+        let added = [];
+        let lastActive = [];
+
+
+        for (const record of mutationsList)
+        {
+            const t = record.target;
+            if (t == rm_container)
+                continue;
+            if (record.type == "attributes")
+            {
+                lastActive = [...lastActive, NodesRecord(record.target, 'last-active-timestamp', t)];
+                continue;
+            }
+
+            const { removedNodes, addedNodes } = record;
+            MutationObj.removed = [...MutationObj.removed, NodesRecord(removedNodes, 'active-timestamp', t)];
+            added = [...added, NodesRecord(addedNodes, 'yt-gif-timestamp-emulation', t)];
+        }
+
+
+        MutationObj.removed = validArr(MutationObj.removed);
+        added = validArr(added);
+        lastActive = validArr(lastActive);
+        function validArr(arr) { return arr.flat(Infinity).filter(x => !!x) }
+
+        return { lastActive, added };
+    }
+    function NodesRecord(Nodes, attr, target)
+    {
+        if (!Nodes || Nodes.length == 0)
+            return null;
+
+        const NodesArr = (Nodes == '[object NodeList]' ? [...Nodes] : [Nodes]).filter(el => !!el.tagName);
+
+        return NodesArr
+            .map(x =>
+            {
+                if (x.hasAttribute(attr))
+                    return x
+                else
+                    return [...x.querySelectorAll(`[${attr}]`)]
+            })
+            .flat(Infinity)
+            .map(el => closestBlock(el))
+            .filter((v, i, a) => a.indexOf(v) === i)// remove duplicates
+            .map(block => 
+            {
+                const timestamps = ElementsPerBlock(block, '[yt-gif-timestamp-emulation]') || [];
+                const activeTimestamps = timestamps.filter(x => x.hasAttribute(attr)) || [];
+
+                const getActivePage = (p) => activeTimestamps.find(x => x.getAttribute('timestamp-style') == p);
+                const timestampPage = (page) => ({
+                    timestamp: page?.getAttribute('timestamp'),
+                    index: timestamps.indexOf(page),
+                });
+
+                const siblingIndex = (siblings, el) => Array.from(siblings).flat(Infinity).indexOf(el);
+                const children = (sel, self) => !self ? rm_container?.querySelectorAll(sel) : [rm_container, ...rm_container?.querySelectorAll(sel)];
+
+                return {
+                    blockID: block.id,
+                    blockIndex: siblingIndex(children('.rm-block__input'), block),
+                    containerIndex: siblingIndex(children('.roam-block-container', true), rm_container),
+                    workflow: 'strict',
+
+                    node: target,
+                    start: timestampPage(getActivePage("start")),
+                    end: timestampPage(getActivePage("end")),
+                    target: timestampPage(activeTimestamps.find(x => x.hasAttribute('last-active-timestamp') || x.hasAttribute(attr))),
+                }
+            });
+    }
+    function setObsTimestamp(commonObj)
+    {
+        if (!commonObj || !commonObj.blockID)
+            return;
+        const lastActive = observedParameters.get(blockID)?.lastActiveTimestamp;
+
+        const equals = commonObj?.target?.timestamp === lastActive?.target?.timestamp;
+        const ok = commonObj?.target?.timestamp;
+
+        if (ok && (!equals || !lastActive)) // newEntry || not even initialized
+            observedParameters.set(blockID, { lastActiveTimestamp: commonObj }); // Hmmm...
+    }
+    function getObsTimestamp()
+    {
+        const lastActive = observedParameters.get(blockID)?.lastActiveTimestamp;
+        if (lastActive && UI.timestamps.tm_recovery.checked)
+        {
+            return lastActive;
+        }
+        return null;
+    }
+    async function AssertParamsClickTimestamp()
+    {
+        const lastActive = getObsTimestamp();
+        if (UI.display.simulate_roam_research_timestamps.checked)
+            if (UI.timestamps.tm_recovery.checked && lastActive)
+            {
+                await TryToRecoverActiveTimestamp(lastActive);
+                await RAP.sleep(10);
+
+                const TryActiveTimestamp = (p) => rm_container?.querySelector(`.rm-video-timestamp[timestamp-style="${p}"][active-timestamp]`)?.getAttribute('timestamp') || '';
+                configParams.start = UTILS.HMSToSecondsOnly(TryActiveTimestamp('start')) || configParams.start;
+                configParams.end = UTILS.HMSToSecondsOnly(TryActiveTimestamp('end')) || configParams.end;
+            }
+    }
+
+    // 7.0
     async function DeployYT_IFRAME_OnInteraction()
     {
         const mainAnimation = setUpWrapperAwaitingAnimation();
-        wrapper.addEventListener('mouseenter', CreateYTPlayer);
-        return wrapper;
-        function CreateYTPlayer(e)
+        // ⛔const { awaiting_input_type } = UI.experience;
+        const interactionType = 'mousedown'; // ⛔ awaiting_input_type.value == 'mousedown' ? 'mousedown' : 'mouseenter'; // huga buga
+
+        AddInteractionEventListener();
+        wrapper.addEventListener('customPlayerReady', CreateYTPlayer);
+
+        function changeMouseEvents(e)
         {
+            if (!isRendered(e.currentTarget))
+                return RemoveAllListeners()
+            ReplaceInteractionEventListener(e.type)
+        }
+
+        // ⛔awaiting_input_type.addEventListener('change', changeMouseEvents);
+
+        return wrapper;
+
+
+        async function CreateYTPlayer(e)
+        {
+            e.preventDefault();
+
             UTILS.toggleClasses(false, mainAnimation, wrapper);
             UTILS.removeIMGbg(wrapper);
-            wrapper.removeEventListener('mouseenter', CreateYTPlayer);
-            return DeployYT_IFRAME();
+
+            RemoveAllListeners();
+
+            if (!e.type.includes('custom'))
+            {
+                // ⛔ await AssertParamsClickTimestamp();
+                wrapper.dispatchEvent(UTILS.simHover());
+            }
+            else if (typeof e.detail == 'object')
+            {
+                configParams.start = e.detail.start ?? configParams.start;
+                configParams.end = e.detail.end ?? configParams.end;
+                configParams.updateTime = e.detail.updateTime ?? configParams.updateTime;
+                configParams.mute = e.detail.mute ?? configParams.mute;
+                configParams['play-right-away'] = e.detail['play-right-away'] ?? configParams['play-right-away'];
+
+                setObsTimestamp(Object.assign(e.detail.obsTimestamp, { workflow: 'soft' }));
+            }
+
+            return await DeployYT_IFRAME();
         }
+
+        function RemoveAllListeners()
+        {
+            RemoveInteractionEventListener();
+            wrapper.removeEventListener('customPlayerReady', CreateYTPlayer);
+
+            // ⛔ awaiting_input_type.removeEventListener('change', changeMouseEvents);
+        }
+        function ReplaceInteractionEventListener(listener = interactionType)
+        {
+            RemoveInteractionEventListener();
+            AddInteractionEventListener(listener);
+        }
+        function AddInteractionEventListener(listener = interactionType)
+        {
+            wrapper.addEventListener(listener, CreateYTPlayer);
+        }
+        function RemoveInteractionEventListener()
+        {
+            wrapper.removeEventListener(interactionType, CreateYTPlayer);
+        }
+
         function setUpWrapperAwaitingAnimation()
         {
             const { awiting_player_pulse_anim, awaitng_player_user_input, awaitng_input_with_thumbnail } = cssData;
@@ -1726,11 +3287,11 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     }
 
 
-    // last - customize the iframe api
+    // last - customize the iframe - api
     function playerConfig(configParams)
     {
-        // ⛔ in progress
-        // const { player_interface_language, player_captions_language, player_captions_on_load } = Object.fromEntries(window.YT_GIF_DIRECT_SETTINGS); // https://stackoverflow.com/questions/49569682/destructuring-a-map#:~:text=let%20%7B%20b%2C%20d%20%7D%20%3D%20Object.fromEntries(m)
+        // in progress
+        // ⛔ const { player_interface_language, player_captions_language, player_captions_on_load } = Object.fromEntries(window.YT_GIF_DIRECT_SETTINGS); // https://stackoverflow.com/questions/49569682/destructuring-a-map#:~:text=let%20%7B%20b%2C%20d%20%7D%20%3D%20Object.fromEntries(m)
 
         const playerVars = {
             autoplay: 1, 		// Auto-play the video on load
@@ -1739,8 +3300,10 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             start: configParams?.start,
             end: configParams?.end,
 
+            // ⛔ hl: configParams?.hl || player_interface_language.sessionValue,           // Display interface language   // https://developers.google.com/youtube/player_parameters#:~:text=Sets%20the%20player%27s%20interface%20language.%20The%20parameter%20value%20is%20an%20ISO%20639-1%20two-letter%20language%20code%20or%20a%20fully%20specified%20locale.%20For%20example%2C%20fr%20and%20fr-ca%20are%20both%20valid%20values.%20Other%20language%20input%20codes%2C%20such%20as%20IETF%20language%20tags%20(BCP%2047)%20might%20also%20be%20handled%20properly.
+            // ⛔ cc_lang_pref: configParams?.cc || player_captions_language.sessionValue, 	// Display closed captions      // https://developers.google.com/youtube/player_parameters#:~:text=This%20parameter%20specifies%20the%20default%20language%20that%20the%20player%20will%20use%20to%20display%20captions.%20Set%20the%20parameter%27s%20value%20to%20an%20ISO%20639-1%20two-letter%20language%20code.
 
-            cc_load_policy: 3,  // Hide closed captions - broken feature by design
+            // ⛔ cc_load_policy: (UTILS.isTrue(player_captions_on_load.sessionValue)) ? 1 : 3,  // Hide closed captions - broken feature by design
             iv_load_policy: 3,  // Hide the Video Annotations
 
             vq: 'hd1080',
@@ -1769,9 +3332,9 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             }
         };
     }
-    function DeployYT_IFRAME()
+    async function DeployYT_IFRAME()
     {
-        return new window.YT.Player(newId, playerConfig(configParams));
+        return record.player = new window.YT.Player(newId, playerConfig(configParams));
     }
 }
 //
@@ -1971,17 +3534,11 @@ async function onPlayerReady(event)
     function ToggleStyles_EventListeners(bol = false)
     {
         // hmmmm... Mainly because of CleanLoadedWrappers... UI is window.YT_GIF_OBSERVERS.UI | timestamps persist this way
-        for (const p in UI.playStyle)
-        {
-            UI.playStyle[p] = Flip(UI.playStyle[p], playStyleDDMO);
-        }
-        for (const m in UI.muteStyle)
-        {
-            UI.muteStyle[m] = Flip(UI.muteStyle[m], muteStyleDDMO);
-        }
+        UI.playerSettings.play_style = Flip(UI.playerSettings.play_style, playStyleDDMO);
+        UI.playerSettings.mute_style = Flip(UI.playerSettings.mute_style, muteStyleDDMO);
         function Flip(binaryInput, styleDDMO = () => { })
         {
-            if (binaryInput.tagName)
+            if (binaryInput?.tagName)
             {
                 if (bol)
                     binaryInput.addEventListener('change', styleDDMO);
@@ -1997,7 +3554,7 @@ async function onPlayerReady(event)
     {
         if (!UTILS.isElementVisible(iframe)) return; //play all VISIBLE Players, this will be called on all visible iframes
 
-        if (UI.playStyle.visible_clips_start_to_play_unmuted.checked)
+        if (UI.playerSettings.play_style.value == 'all-visible')
         {
             togglePlay(true);
             isSoundingFine(false);
@@ -2011,7 +3568,7 @@ async function onPlayerReady(event)
     {
         if (!UTILS.isElementVisible(iframe)) return; //mute all VISIBLE Players, this will be called on all visible iframes
 
-        if (UI.muteStyle.strict_mute_everything_except_current.checked || UI.muteStyle.muted_on_any_mouse_interaction.checked)
+        if (UI.playerSettings.mute_style.value == 'strict' || UI.playerSettings.mute_style.value == 'all-muted')
         {
             isSoundingFine(false);
         }
@@ -2030,14 +3587,14 @@ async function onPlayerReady(event)
             togglePlay(true);
 
 
-            if (UI.muteStyle.strict_mute_everything_except_current.checked)
+            if (UI.playerSettings.mute_style.value == 'strict')
             {
                 if (anyValidInAndOutKey(e))
                 {
                     MuteEveryPlayer_Visibly();
                 }
             }
-            if (UI.playStyle.strict_play_current_on_mouse_over.checked)
+            if (UI.playerSettings.play_style.value == 'soft')
             {
                 PauseAllOthersPlaying_Visibly();
             }
@@ -2047,7 +3604,7 @@ async function onPlayerReady(event)
             {
                 isSoundingFine();
             }
-            else if (UI.muteStyle.muted_on_mouse_over.checked)
+            else if (UI.playerSettings.mute_style.value == 'soft')
             {
                 isSoundingFine(false);
             }
@@ -2058,7 +3615,7 @@ async function onPlayerReady(event)
             t.__proto__.globalHumanInteraction = false;
 
             //ﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠﾠ//the same as: if it's true, then the other posibilities are false
-            if (anyValidInAndOutKey(e) && !UI.muteStyle.muted_on_any_mouse_interaction.checked)
+            if (anyValidInAndOutKey(e) && UI.playerSettings.mute_style.value != 'all-muted')
             {
                 videoIsPlayingWithSound();
             }
@@ -2241,9 +3798,9 @@ async function onPlayerReady(event)
         {
             PauseAllOthersPlaying_Visibly();
         }
-        else if (UI.playStyle.visible_clips_start_to_play_unmuted.checked)
+        else if (UI.playerSettings.play_style.value == 'all-visible')
         {
-            UI.playStyle.visible_clips_start_to_play_unmuted.dispatchEvent(new Event('change'));
+            UI.playerSettings.play_style.visible_clips_start_to_play_unmuted.dispatchEvent(new Event('change'));
         }
     }
     //#endregion
@@ -2321,7 +3878,7 @@ async function onPlayerReady(event)
 
         if (tick() > updateStartTime + loadingMarginOfError && !t.__proto__.globalHumanInteraction) // and the interval function 'OneFrame' to prevent the loading black screen
         {
-            if (UI.playStyle.visible_clips_start_to_play_unmuted.checked)
+            if (UI.playerSettings.play_style.value != 'all-visible')
             {
                 togglePlay(entries[0]?.isIntersecting);
             }
@@ -2369,7 +3926,7 @@ async function onPlayerReady(event)
                     }
                     else if (UTILS.isElementVisible(iframe) && !t.__proto__.globalHumanInteraction)
                     {
-                        togglePlay(UI.playStyle.visible_clips_start_to_play_unmuted.checked); // pause?
+                        togglePlay(UI.playerSettings.play_style.value == 'all-visible'); // pause?
                     }
                     else if (!isParentHover())
                     {
@@ -2447,7 +4004,7 @@ async function onPlayerReady(event)
     }
     function CanUnmute()//NotMuteAnyHover
     {
-        return !UI.muteStyle.muted_on_mouse_over.checked && !UI.muteStyle.muted_on_any_mouse_interaction.checked
+        return UI.playerSettings.mute_style.value != 'soft' && UI.playerSettings.mute_style.value != 'all-muted';
     }
     //#endregion
 
@@ -2501,7 +4058,7 @@ async function onPlayerReady(event)
     }
     function AnyPlayOnHover()
     {
-        return UI.playStyle.play_on_mouse_over.checked || UI.playStyle.strict_play_current_on_mouse_over.checked
+        return UI.playerSettings.play_style.value == 'soft' || UI.playerSettings.play_style.value == 'strict'
     }
     function isParentHover()
     {
@@ -2538,14 +4095,17 @@ async function onPlayerReady(event)
 /*↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓*/
 /*↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓*/
 //loops between 'start' and 'end' boundaries
-function onStateChange(state)
+async function onStateChange(state)
 {
     const t = state.target;
     const map = allVideoParameters.get(t.h.id);
 
     if (state.data === YT.PlayerState.ENDED)
     {
-        t.seekTo(map?.start || 0);
+        await RealoadThis();
+        // ⛔ if (UI.timestamps.tm_loop_hierarchy.value != 'disabled')
+        // await TryToLoadNextTimestampSet();
+
 
         const soundSrc = validSoundURL();
         if (soundSrc)
@@ -2584,6 +4144,47 @@ function onStateChange(state)
     }
 
 
+    async function RealoadThis()
+    {
+        await ReloadYTVideo({ t, start: map?.start, end: map?.end });
+    }
+
+    async function TryToLoadNextTimestampSet()
+    {
+        await RAP.sleep(10);
+
+        const iframe = t?.getIframe?.();
+        if (!iframe)
+            return await RealoadThis();
+
+        const lastStartSel = `[timestamp-set][timestamp-style="start"]`;
+        const targetWrapper = iframe.closest('.yt-gif-wrapper');
+        const rm_container = closest_rm_container(iframe);
+
+        if (!rm_container)
+            return await RealoadThis();
+
+        const lastActive = TimestampsInHierarchy(rm_container, targetWrapper, '[last-active-timestamp]')?.[0];
+        const starts = TimestampsInHierarchy(rm_container, targetWrapper, lastStartSel);
+
+
+        const active = ElementsPerBlock(closestBlock(lastActive), lastStartSel)?.[0]; // go one level up and search for a "start" timestamp, bc does it makes sense to loop through "end" boundaries???
+        const index = starts.indexOf(active);
+
+        if (index === -1 && UI.timestamps.tm_loop_hierarchy.value == 'active')
+            return await RealoadThis();
+        // else value == 'auto'
+
+        const nextIndex = (index + 1) % starts.length;
+        DeactivateTimestampsInHierarchy(rm_container, targetWrapper); // might be redundant
+
+        const target = starts[nextIndex];
+
+        if (isRendered(target))
+            await ClickOnTimestamp(target);
+        else
+            await RealoadThis();
+    }
     function PlayEndSound(url)
     {
         return new Promise(function (resolve, reject)
@@ -2612,7 +4213,9 @@ function onStateChange(state)
 
 
 
-//#region ⛔ ⛔ ⛔ Performance Mode Utils
+
+
+//#region Performance Mode Utils
 function PushNew_ShiftAllOlder_IframeBuffer(parentCssPath)
 {
     if (parentCssPath)
@@ -2648,7 +4251,7 @@ function ifStack_ShiftAllOlder_IframeBuffer()
         // 2.1 mix and match
         if (atLeastOne || cap <= arr.length)
         {
-            AwaitingBtn_Dispatch_ActiveCheck(true);
+            AwaitingBtn_ActiveCheck(true);
             AwaitingBtn_VisualFeedback(true);
         }
         else if (!atLeastOne || cap > arr.length)
@@ -2764,18 +4367,18 @@ function smart_AwaitingBtn_Dispatch_ActiveCheck()
 
     if (typeof validCheck !== 'undefined')
     {
-        return AwaitingBtn_Dispatch_ActiveCheck(validCheck);
+        return AwaitingBtn_ActiveCheck(validCheck);
     }
 
     return undefined;
 }
-function AwaitingBtn_Dispatch_ActiveCheck(bol)
+function AwaitingBtn_ActiveCheck(bol)
 {
-    const { awaiting_for_mouseenter_to_initialize } = UI.experience;
-    awaiting_for_mouseenter_to_initialize.disabled = bol;
-    awaiting_for_mouseenter_to_initialize.checked = bol;
+    const { awaiting_for_user_input_to_initialize } = UI.experience;
+    awaiting_for_user_input_to_initialize.disabled = bol;
+    awaiting_for_user_input_to_initialize.checked = bol;
 
-    return awaiting_for_mouseenter_to_initialize;
+    return awaiting_for_user_input_to_initialize;
 }
 /* *********************** */
 function isValid_TryIntersection_EnabledCheck()
@@ -2785,30 +4388,39 @@ function isValid_TryIntersection_EnabledCheck()
 }
 function isValid_TryIntersection_check()
 {
-    const { try_to_load_on_intersection_beta } = UI.experience;
-    return try_to_load_on_intersection_beta.checked;// && !try_to_load_on_intersection_beta.disabled;
+    return UI.experience.try_to_load_on_intersection_beta.checked;
 }
 function isValid_Awaiting_check()
 {
-    const { awaiting_for_mouseenter_to_initialize } = UI.experience;
-    // kinda spaghetti, but they are pretty much entangled and only one of those can be true at a time
-    return awaiting_for_mouseenter_to_initialize.checked; // ⛔ && !isValid_TryIntersection_check(); 
+    // kinda spaghetti
+    // bc both can't be checked at the same time
+    // the logic would contradict itself
+    return UI.experience.awaiting_for_user_input_to_initialize.checked && !isValid_TryIntersection_check();
 }
 /* *********************** */
 function TryingBtn_VisualFeedback(bol, disabled = undefined)
 {
     const { try_to_load_on_intersection_beta } = UI.experience;
 
+    if (!try_to_load_on_intersection_beta.hasAttribute("data-tooltip-original"))
+    {
+        try_to_load_on_intersection_beta.setAttribute("data-tooltip-original", try_to_load_on_intersection_beta.getAttribute("data-tooltip"));
+    }
+    const originalClause = try_to_load_on_intersection_beta.getAttribute("data-tooltip-original");
+
+    const clause = bol ? '"Awaiting for user input" has priority' : originalClause;
+    try_to_load_on_intersection_beta.setAttribute("data-tooltip", clause);
+    //UTILS.toggleAttribute(bol, 'data-tooltip', try_to_load_on_intersection_beta, clause);
     return btn_VS(bol, try_to_load_on_intersection_beta, disabled);
 }
 function AwaitingBtn_VisualFeedback(bol, disabled = undefined)
 {
-    const { awaiting_for_mouseenter_to_initialize } = UI.experience;
+    const { awaiting_for_user_input_to_initialize } = UI.experience;
 
     const clause = "Full stack Iframe Buffer has priority";
-    UTILS.toggleAttribute(bol, 'data-tooltip', awaiting_for_mouseenter_to_initialize, clause);
 
-    return btn_VS(bol, awaiting_for_mouseenter_to_initialize, disabled);
+    UTILS.toggleAttribute(bol, 'data-tooltip', awaiting_for_user_input_to_initialize, clause);
+    btn_VS(bol, awaiting_for_user_input_to_initialize, disabled);
 }
 /* *********** */
 function toggleBtn_VS(checked, VisualFeedback_cb = () => { }) 
@@ -2845,18 +4457,518 @@ function btn_VS(bol, exp_btn, disabled)
 //#region clossesYTGIFParent Utils
 function closestYTGIFparentID(el)
 {
-    return (el?.closest('.rm-block__input') || el.closest('.dwn-yt-gif-player-container'))?.id
+    return (closestBlock(el) || el?.closest('.dwn-yt-gif-player-container'))?.id
 }
-function getWrapperUrlSufix(wrapper)
+function closestBlock(el)
+{
+    return el?.closest('.rm-block__input')
+}
+function closest_rm_container(el)
+{
+    return el?.closest('.roam-block-container')
+}
+function getWrapperUrlSufix(wrapper, uid = '')
 {
     const url = wrapper.getAttribute(attrInfo.url.path);
     const urlIndex = wrapper.getAttribute(attrInfo.url.index);
     const urlSufix = properBlockIDSufix(url, urlIndex);
-    return urlSufix;
+    return uid + urlSufix;
 }
 function properBlockIDSufix(url, urlIndex)
 {
     return '_' + [url, urlIndex].join('_');
+}
+function isRendered(el)
+{
+    return document.body.contains(el);
+}
+//#endregion
+
+
+
+
+//#region Timestamp
+window.YTGIFs = {
+    getTimestampObj: getTimestampObj_smart
+}
+async function getTimestampObj_smart(page)
+{
+    const openInputBlock = getCurrentInputBlock();
+    const uid = openInputBlock?.id?.slice(-9);
+    const failObj = { S: null, HMS: null, };
+
+    if (!page || !uid || !openInputBlock)
+        return failObj;
+    return await getTimestampObj(page, uid);
+
+    async function getTimestampObj(page, uid)
+    {
+        const { formats, foundBlock, targetBlock } = await getLastComponentInHierarchy(uid);
+        if (!foundBlock) return failObj;
+
+        const { lestHMS, HMS, S } = formats;
+
+        const obj = (v) => ({
+            value: v,
+            fmt: `{{[[yt-gif/${page}]]: ${v} }}`,
+        });
+
+        return {
+            lessHMS: obj(fmt({ lestHMS })),
+            HMS: obj(fmt({ HMS })),
+            S: obj(parseInt(S ?? targetBlock[page].S)),
+            uid: targetBlock?.uid,
+        }
+
+        function fmt(obj)
+        {// https://www.codegrepper.com/code-examples/javascript/get+var+name+javascript#:~:text=%E2%80%9Cget%20var%20name%20javascript%E2%80%9D%20Code%20Answer
+            const key = Object.keys(obj)[0];
+            const value = obj[key]; // Hmmm...
+            return (!value || value?.includes?.('NaN')) ? targetBlock[page][key] : value;
+        }
+    }
+}
+function getCurrentInputBlock()
+{
+    return document.querySelector(".rm-block__input--active.rm-block-text")
+}
+function DeactivateTimestampsInHierarchy(rm_container, targetWrapper)
+{
+    if (!rm_container) return;
+    const sel = '[yt-gif-timestamp-emulation]';
+    const all = TimestampsInHierarchy(rm_container, targetWrapper, sel);
+    all.forEach(el =>
+    {
+        UTILS.toggleAttribute(false, 'active-timestamp', el);
+        UTILS.toggleAttribute(false, 'last-active-timestamp', el);
+    });
+}
+function TimestampsInHierarchy(rm_container, targetWrapper, allSelector)
+{
+    const badSets = [...rm_container.querySelectorAll('.yt-gif-wrapper')]
+        .filter(w => w != targetWrapper)
+        .map(w => [...closest_rm_container(w).querySelectorAll(allSelector)])
+        .flat(Infinity);
+
+    const actives = [...rm_container.querySelectorAll(allSelector)]
+        .filter(tm => !badSets.includes(tm));
+    return actives;
+}
+/* ***************** */
+async function ClickOnTimestamp(target, assignObj = {})
+{
+    // how do you resolve/return a promise using a CustomEvent handler?
+    await target?.OnClicks?.(
+        { // cringe event object
+            currentTarget: target,
+            which: 1,
+            seekToMessage: UI.timestamps?.tm_seek_to?.value == 'soft' ? 'seekTo-soft' : 'seekTo-strict',
+            mute: UI.timestamps.tm_seek_action.value == 'mute',
+            ...assignObj
+        },
+    )
+}
+async function ClickResetWrapper(targetWrapper)
+{
+    if (!targetWrapper) return;
+
+    const reset = targetWrapper.querySelector('.yt-gif-reset-boundaries');
+    await reset?.dispatchEvent(new Event('click'));
+}
+/* ***************** */
+function ElementsPerBlock(block, selector)
+{
+    if (!block) return [];
+    return [...block?.querySelectorAll(selector)]?.filter(b => closestBlock(b).id == block.id) || [];
+}
+/* ***************** */
+function awaitingAtrr(bol, el)
+{
+    return UTILS.toggleAttribute(bol, 'awaiting', el);
+}
+/* ***************** */
+async function ReloadYTVideo({ t, start, end })
+{
+    if (!t)
+        return; //console.log(`YT GIF : Couldn't reload a video. Internal target is missing.`);
+
+    const vars = t.i.h;
+    const map = allVideoParameters.get(t.h.id);
+    const iframe = t?.getIframe?.();
+
+    start = start || 0;
+    end = end || t.getDuration();
+
+    vars.playerVars.start = map.start = start;
+    vars.playerVars.end = map.end = end;
+
+    while (isRendered(iframe) && !t?.seekTo)
+        await RAP.sleep(50);
+
+    // https://stackoverflow.com/questions/60409231/why-does-my-youtube-react-component-fire-the-playerstate-ended-event-twice-befor
+    // t.l.h[5] = async () => { }; // the craziet shinanigans EVER!
+    // t.seekTo?.(start); // not only it was preserving it's state
+    // t.pauseVideo?.(); // and performing it's onStateChange func twice
+    if (t.playerInfo?.playerState)
+        t.playerInfo.playerState = 'F';
+    if (t.l?.h?.[5])
+        t.l.h[5] = async () => { }; // the only way to prevent double fire...? man...
+    // though I'm waiting to see what bugs it's going to cause
+
+    await t?.loadVideoById?.({ // but it requieres you to load the video again to set "endSeconds" once again
+        'videoId': t.i.h.videoId,
+        'startSeconds': start,
+        'endSeconds': end,
+    });
+
+    while (isRendered(iframe) && !t?.getCurrentTime?.())
+        await RAP.sleep(50);
+
+    try { t.l.h[5] = onStateChange; } catch (error) { }
+
+    return t?.getCurrentTime?.();
+}
+/* ***************** */
+function replace_nth(str = '', subStr = '', repStr = '', n = 1)
+{// https://stackoverflow.com/questions/35499498/replace-nth-occurrence-of-string#:~:text=with%20RegExp%20constructor-,const%20replace_nth%20%3D%20function%20(s%2C%20f%2C%20r%2C%20n)%20%7B,-//%20From%20the%20given
+    // From the given string s, replace f with r of nth occurrence
+    return str.replace(RegExp("^(?:.*?" + subStr + "){" + n + "}")
+        , x => x.replace(RegExp(subStr + "$"), repStr));
+}
+//#endregion
+
+
+
+
+//#region  backend/frontend communication - XXX_Config = {...}
+async function getLastComponentInHierarchy(tempUID, _Config = YTGIF_Config, includeOrigin = true)
+{
+    const original = await RAP.getBlockInfoByUID(tempUID);
+    const ParentHierarchy = await RAP.getBlockParentUids_custom(tempUID);
+    if (!ParentHierarchy && !original) { return {}; }
+    const originalStr = original[0]?.[0]?.string || '';
+
+
+    const baseObj = {
+        blockID: null, start: 0, end: 0, HMS: 000, crrTime: null,
+    }
+    const iframeMaps = {
+        targets: {
+            condition: function (sufix)
+            {
+                this.blockID = [...recordedIDs.keys()].find(k => k?.endsWith(sufix));
+                return this.crrTime = recordedIDs.get(this.blockID)?.target?.getCurrentTime() || false;
+            },
+        },
+        lastParams: {
+            condition: function (sufix)
+            {
+                this.blockID = [...lastBlockIDParameters.keys()].find(k => k?.endsWith(sufix));
+                return this.crrTime = lastBlockIDParameters.get(this.blockID)?.updateTime || false;
+            },
+        },
+    }
+    Object.keys(iframeMaps).forEach(key => Object.assign(iframeMaps[key], baseObj));
+
+    const Hierarchy = !includeOrigin ? ParentHierarchy : [...ParentHierarchy, [{ uid: tempUID, string: originalStr }, { title: 'made-up', uid: 'invalid' }]];
+    const blockStrings = Hierarchy.map(arr => arr[0]).map(o => res = { string: clean_rm_string(o.string), uid: o.uid });
+
+
+    for (const { string, uid } of blockStrings.reverse())
+    {
+        const componentMap = await getComponentMap(uid, _Config);
+        const reverseValues = [...componentMap.values()].reverse();
+
+        const lastUrl = reverseValues?.find(v => _Config.guardClause(v));
+        if (!lastUrl) continue;
+
+        const lastUrlIndex = reverseValues.indexOf(lastUrl);
+        const possibleBlockIDSufix = uid + properBlockIDSufix(lastUrl, lastUrlIndex);
+
+        const key = Object.keys(iframeMaps).find(x => iframeMaps[x].condition(possibleBlockIDSufix));
+
+        const crrTime = iframeMaps[key]?.crrTime;
+        const startObj = boundaryObj(lastUrl.match(/(t=|start=)(?:(\d+))/)?.[2] || 0);
+        const endObj = boundaryObj(lastUrl.match(/(end=)(?:(\d+))/)?.[2] || 0);
+
+        return {
+            formats: boundaryObj(crrTime),
+            foundBlock: {
+                string,
+                uid,
+                blockID: iframeMaps[key]?.blockID,
+                possibleBlockIDSufix,
+            },
+            targetBlock: {
+                string: originalStr,
+                uid: tempUID,
+                start: startObj,
+                end: endObj,
+            },
+        };
+
+        function boundaryObj(value)
+        {
+            return {
+                lestHMS: UTILS.seconds2time(parseInt(value)),
+                HMS: UTILS.convertHMS(value),
+                S: value,
+            }
+        }
+    }
+    return {};
+}
+
+
+function MapAtIndex_Value(map, valueAtIndex, property = 'is')
+{
+    const key = FilterMapByIsKey(map, property)?.[valueAtIndex];
+    return map?.get(key);
+}
+function MapAtIndex_ObjKey(map, valueAtIndex, property = 'is')
+{
+    return FilterMapByIsKey(map, property)?.[valueAtIndex];
+}
+function FilterMapByIsKey(map, property)
+{
+    if (!map || map?.size == 0) return null;
+    return [...map.keys()].filter(o => o['isKey'].includes(property));
+}
+
+
+async function getMap_smart(key, map, callback, ...setMapCb_params)
+{// https://stackoverflow.com/questions/3458553/javascript-passing-parameters-to-a-callback-function#:~:text=console.log(param1)%3B%0A%7D-,function%20callbackTester(callback%2C%20...params)%20%7B,-callback(...params)%3B%0A%7D%0A%0A%0A%0AcallbackTester
+    // since it store recursive maps, once per instance it's enough
+    try
+    {
+        if (!key) throw new Error('uid is null');
+        if (!map.has(key))
+            map.set(key, await callback(...setMapCb_params));
+        return map.get(key);
+    } catch (error)
+    {
+        console.log(error);
+        return null;
+    }
+}
+async function getComponentMap(tempUID, _Config = YTGIF_Config)
+{
+    let uidMagazine = [];
+    let indentFunc = 0;
+    const { targetStringRgx, componentPage } = _Config;
+
+    const orderObj = {
+        order: -1,
+        incrementIf: function (condition) { return condition ? Number(++this.order) : null },
+        condition: (x) => false,
+    };
+    const results = {
+        // 'has components aliases': { tone: '#37d5d6' },
+        // 'has components': { tone: '#36096d' },
+        // 'has any aliases': { tone: '#734ae8' },
+        // 'has any components': { tone: '#21d190' },
+        'is tooltip card': { tone: '#21d190' },
+        'is component': { tone: '#20bf55' },
+        'is alias': { tone: '#bfe299' },
+        'is block reference': { tone: 'green' },
+    };
+    Object.keys(results).forEach(key => Object.assign(results[key], orderObj));
+
+    // componentsInOrderMap
+    return await TryToFindTargetStrings_Rec(await TryToFindTargetString(tempUID), { uidHierarchy: [] }, new Map());
+
+
+
+    async function TryToFindTargetStrings_Rec(objRes, parentObj, map)
+    {
+        for (const { value, is, order } of objRes?.targetStringsWithUids) // loop through RENDERED targetStrings (components) and uids (references)
+        {
+            const generateUniqueKey = () => assertUniqueKey_while(objRes.uid, indentFunc, is, order);
+
+            if (['is alias', 'is component'].some(w => w === is))
+            {
+                map.set(generateUniqueKey(), value);
+            }
+            else if (is === 'is tooltip card')
+            {
+                const { tooltipKey, tooltipObj } = generateTooltipObj(value, objRes, generateUniqueKey); // save it a spot in the map
+                const tooltipMap = await TryToFindTargetStrings_Rec(tooltipObj, parentObj, new Map());
+                map.set(tooltipKey, tooltipMap); // assign it
+            }
+            else if (is == 'is block reference')
+            {
+                parentObj.uidHierarchy = UTILS.pushSame(parentObj.uidHierarchy, value);
+
+                const comesFromRecursiveParent = parentObj?.uid == value;
+                const isSelfRecursive = parentObj?.blockReferencesAlone?.includes(value) || value == tempUID;
+                const pastFirstLevel = indentFunc > parentObj?.uidHierarchy?.length ?? 1;
+                if (comesFromRecursiveParent || (pastFirstLevel && isSelfRecursive))
+                    continue; // skip it | unrendered
+
+                // it is rendered, so execute it's rec func
+                indentFunc += 1;
+                objRes.isKey = is;
+                map = await TryToFindTargetStrings_Rec(await TryToFindTargetString(value), objRes, map);
+                indentFunc -= 1;
+            }
+        }
+
+        return map;
+
+        function assertUniqueKey_while(uid, indent, isKey, order)
+        {
+            uidMagazine = PushIfNewEntry(uidMagazine, uid); // clunky, but it works
+
+            const similarCount = uidMagazine.filter(x => x === uid).length; // uniqueKey among non siblings
+            return {
+                indent, uid, similarCount,
+                isKey, isKeyOrder: isCount(),
+                order,
+            }
+
+            function isCount()
+            {
+                const keys = ['is tooltip card', 'is alias', 'is component', 'is block reference'];
+                for (const is of keys)
+                    results[isKey].incrementIf(isKey === is)
+
+                return results[isKey].order;
+            }
+        }
+        function cleanIndentedBlock()
+        {
+            const tab = '\t'.repeat(indentFunc);
+            const cleanLineBrakes = objRes.string.replace(/(\n)/gm, ". ");
+            const indentedBlock = tab + cleanLineBrakes.replace(/.{70}/g, '$&\n' + tab);
+            return indentedBlock;
+        }
+        function PushIfNewEntry(arr, item)
+        {
+            const lastItem = [...arr]?.pop();
+            if (lastItem != item)
+                arr = UTILS.pushSame(arr, item);
+            return arr;
+        }
+    }
+
+    function generateTooltipObj(value, objRes, generateUniqueKey)
+    {
+        const tooltipObj = stringsWihtUidsObj(value);
+        tooltipObj.uid = objRes.uid + '_t' + (results['is tooltip card'].order < 0 ? 0 : results['is tooltip card'].order);
+        const tooltipKey = generateUniqueKey();
+        return { tooltipKey, tooltipObj };
+    }
+
+    async function TryToFindTargetString(desiredUID)
+    {
+        const info = await RAP.getBlockInfoByUID(desiredUID);
+        const rawText = info[0][0]?.string || "F";
+        const resObj = stringsWihtUidsObj(rawText);
+        resObj.uid = desiredUID;
+        resObj.uidHierarchy = resObj.uidHierarchy ?? [];
+        return resObj;
+    }
+
+    function stringsWihtUidsObj(rawText)
+    {
+        const { blockRgx, aliasPlusUidsRgx, tooltipCardRgx, componentRgx } = BlockRegexObj(componentPage);
+        const string = clean_rm_string(rawText);
+
+        let blockReferencesAlone = [];
+        const compactObjs = getRenderedStuff(string);
+        const targetStringsWithUids = compactObjs.flat(Infinity).filter(x => x != null);
+
+        return { targetStringsWithUids, blockReferencesAlone };
+
+        function getRenderedStuff(string)
+        {
+            const blockMatches = [...[...string.matchAll(new RegExp(blockRgx, 'gm'))].map(x => x = x[0])];
+            const siblingsOrderObj = {
+                'is block reference': {},
+                'is tooltip card': {},
+                'is alias': {},
+                'is component': {},
+            }
+            Object.keys(siblingsOrderObj).forEach(key => Object.assign(siblingsOrderObj[key], orderObj));
+
+            return blockMatches.map(val => isValueObj(val, siblingsOrderObj));
+
+            function isValueObj(val, siblingsOrder)
+            {
+                const resObj = () =>
+                {
+                    siblingsOrder[is].incrementIf(true);
+                    return { value: inOrderValue, is, order: siblingsOrder[is].order }
+                }
+
+                let is = 'is block reference', inOrderValue = val;
+
+                if (val.match(tooltipCardRgx)?.[0]) // {{=:_rendered_by_roam_| -> string XXxxxx ... <- }}
+                {
+                    is = 'is tooltip card';
+                    inOrderValue = [...val.matchAll(tooltipCardRgx)][0][2];
+
+                    const blockLikeString = [...val.matchAll(tooltipCardRgx)][0][1];
+                    return [resObj(), ...getRenderedStuff(blockLikeString),]
+                }
+                else if (val.match(aliasPlusUidsRgx)?.[0]) // [xxxanything goesxxx]((( -> xxxuidxxx <- )))
+                {
+                    is = 'is alias';
+                    inOrderValue = [...val.matchAll(aliasPlusUidsRgx)][0][2];
+                }
+                else if (val.match(componentRgx)?.[0]) // {{componentPage: -> first target <- xxxxxx xxx... }}
+                {
+                    is = 'is component';
+                    inOrderValue = val.match(targetStringRgx)?.[0];
+                }
+                else // xxxuidxxx
+                {
+                    if (inOrderValue.length != 9)
+                        return null;
+                    else
+                        blockReferencesAlone = UTILS.pushSame(blockReferencesAlone, val);
+                }
+
+                return resObj()
+            }
+        }
+
+    }
+
+}
+
+function BlockRegexObj(componentPage, caputureGargabe = false)
+{
+    const componentRgx = new RegExp(preRgxComp(componentPage), 'gm');
+    const inlindeCodeRgx = /(`.+?`)|(`([\s\S]*?)`)/gm;
+    const embedCompRgx = new RegExp(preRgxComp('embed'), 'gm');
+    const anyPossibleComponentsRgx = /{{.+}/gm;
+    const aliasPlusUidsRgx = /\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm;
+    const tooltipCardRgx = /{{=:(.+?)\|(.+)}}/gm;
+    const anyUidRgx = /(?<=\(\()([^(].*?[^)])(?=\)\))/gm;
+    // set in the order in which roam renders them - anyPossibleComponents is kinda like a joker card, it will trap components along with irrelevant uids
+    const baseBlockRgx = [tooltipCardRgx, componentRgx, anyPossibleComponentsRgx, aliasPlusUidsRgx, anyUidRgx]
+    const withGarbage = [inlindeCodeRgx, embedCompRgx, ...baseBlockRgx];
+
+    const blockRgx = reduceRgxArr(!caputureGargabe ? baseBlockRgx : withGarbage);
+
+    return { blockRgx, aliasPlusUidsRgx, tooltipCardRgx, anyPossibleComponentsRgx, componentRgx };
+
+    function reduceRgxArr(regexArr)
+    {// https://masteringjs.io/tutorials/fundamentals/concat-regexp
+        return regexArr.reduce((acc, v, i, a) =>
+            new RegExp(acc.source != '(?:)' ? acc.source + '|' + v.source : v.source, 'gm'), new RegExp());
+    }
+}
+
+function preRgxComp(rgxPage)
+{
+    return `{{(\\[\\[)?(${rgxPage})(?!\\/)(?!\\/)(?:(\\]\\])(.*?(?::|))|:|\\s)(?:(?<=:)|)(.+?)(\\}\\})`
+}
+function clean_rm_string(rawText)
+{
+    const s1 = rawText.replace(/(`.+?`)|(`([\s\S]*?)`)/gm, 'used_to_be_an_inline_code_block');
+    return s1.replace(new RegExp(preRgxComp('embed'), 'gm'), 'used_to_be_an_embed_block');
 }
 //#endregion
 
@@ -2864,6 +4976,7 @@ function properBlockIDSufix(url, urlIndex)
 
 
 /*
+>Why so many grammatical errors? Well Because I write them while they come to mind. "OH that's cool, BUT WAIT!", type of deal.<
 
 user requested ☐ ☑
 
@@ -2874,9 +4987,21 @@ I want to add ☐ ☑
         a litle bit earlier, a litle bit after...
         and inplement the changes, when the user the user enter the real edit block mode
             🙋
-
+    
+    an inline timeline under YT GIFs to show any related idea taken form there
+        just like sound clouds timestamp/comment timeline
+            https://soundcloud.com/codytxr0kr/the-joe-rogan-experience-279
 
 added
+    Timestamps
+        option to display 
+            formated MSH 00:00:00
+            seconds only
+            original or formated MSH 00:00:00
+
+    InAndOutKeys + Click Events (Timestamps) 
+        Play (focus on player) Ctrl ☑ ☑
+    
     visible_clips_start_to_play_unmuted synergy with fullscreenStyle ☑ ☑
         each does what they're suposed be doing
             when entering fullscreen mode
@@ -2899,40 +5024,63 @@ added
     yt iframe customizable ui language ☑ ☑
         add yt_api customizable settings ✘
 
-TODO ☐ ☑
+    the ability to let only one frame to keep playing with sound
+        while exiting the frame
+        the usage of two InAndOutKeys will do the trick
 
+    relative and strict timestamps, specially when using nested references
 
+    timestamps
+        when folding a block or when the current active timestamp disappears
+            add an observer with the uid and block id
+            to activate them when they get rendered
+                add strict and soft boundaries recoveries
+                    keep the current time
+                    seek to recoverd start
 
-features on hold btn at the bottom ☑ ☑
     focus & blus for sub ddm ☑ ☑
     an util class ☑ ☑
     click the item checks the btn ☑ ☑
     radios : mute pause when document is inactive ☑ ✘
-
+    
     use only one audio?? ☑ ☑ url so is customizable by nature
     loop sound adjusment with slider hidden inside sub menu | ohhhh bind main checkbox to hidde it's "for"
     deploy on mouse enter ☑ ☑
     scrolwheel is broke, fix ☑ ☑
-
+    
     to apply volume on end loop audio ☑ ☑
     http vs https ☑ ☑
     coding train shifman mouse inside div, top, left ✘ ☑ ☑
-
+    
     bind thumbnail input element hiddeness to initialize checkbox ☑ . what? jaja
-
+    
     play a sound to indicate the current gif makes loop ☑ ☑
     https://freesound.org/people/candy299p/sounds/250091/          * film ejected *
     https://freesound.org/data/previews/250/250091_4586102-lq.mp3
-
+    
     https://freesound.org/people/nckn/sounds/256113/               * param ram *
     https://freesound.org/data/previews/256/256113_3263906-lq.mp3
-
+    
     https://freesound.org/data/previews/35/35631_18799-lq.mp3 - roam research pomodoro * ding! *
+    
+    pause or mute when video plays with while using the inAndOutKeys ☑
 
-    pause or mute when video plays with while using the inAndOutKeys ☐
 
+TODO ☐ ☑
+    when changing the url on a yt gif compoenent, if it has rendered block references
+            they don't update the url ☐
+
+
+Features on hold ☐ ☐
+    controls (can't add <select> tags under rm_input-block)
+        brake down url into start/end timestamps
+            on the start component, append the remainings of the yt gif component hidden text
 
 Discarted
+    Url Btn formatter + Timestamps (display all anyways)
+        add option - more buttons to the right
+        to format start/end timestamp, if the url has those parameters
+
     shortcuts for any btn ✘
     all hoverable actions, after 500ms the item it's checked // and this feature own btn ofcourse ✘
 
@@ -2947,6 +5095,46 @@ Discarted
         already exist in the DB, a promt message will
             I see... but that's too intrusive though, even If I know exactly what's going on...
                 it's the same as navegateToUIpage on a brand new installation.
+
+    replace with awaiting for input/thumbnails
+        when the frame gets lost while scrolling
+        offer a margin of error / slider / how far away
+            though the same functionallity can be achieved
+            using the buffer, if you set it to 1 max
+
+    should happen only when there are yt-gif componenst whitin the block hierarchy
+        open/show the slash menu
+        paint/link them visually
+
+    Scroll over timestamp and change it accordingly (currently doable because of url btns functionality)
+        https://chrome.google.com/webstore/detail/video-annotation-bookmark/apoimieffgakgcbagednnmdhgaiedbea
+        https://www.designcise.com/web/tutorial/how-to-return-the-position-of-a-regular-expression-match-in-javascript#:~:text=football%27%3B%0A%0Aconst%20indexPairs%20%3D%20%5B%5D%3B-,while%20(null%20!%3D%3D%20(matchArr%20%3D%20regex.exec(str)))%20%7B,-indexPairs.push(%5BmatchArr
+        while (null !== (matchArr = regex.exec(str))) {
+            indexPairs.push([matchArr.index, regex.lastIndex]);
+        }
+        indexPairs.reduce((acc, v,i,a)=> [...acc, sb(a[i-1]?.[0],v[0]), sb(v[0],v[1]), sb(v[1], a[i+1]?.[1]) ], [])
+        (`.+?`)|({{.+?}})
+
+        var regex = /(`.+?`)|({{.+?}})/gm;
+        var indexPairs = [];
+
+        while (null !== (matchArr = regex.exec(str3))) {
+            indexPairs.push([matchArr.index, regex.lastIndex]);
+        }
+
+        console.log(indexPairs);
+
+        https://stackoverflow.com/questions/4514144/js-string-split-without-removing-the-delimiters#:~:text=%22abcdeabcde%22.split(-,/(%3F%3Dd)/g,-)%20//%2D%3E%20%5B%22abc%22%2C%20%22deabc%22%2C%20%22de
+        /(?=d)/g
+
+
+Potential errors
+    btn url
+        matching url will be overwritten inside
+            components
+            code blocks
+            tooltip hidden content
+    
 
 
 Bugs
@@ -2968,11 +5156,37 @@ Bugs
             Which means it's so hard to catch why and where it happens
             Is very annoying
 
+    timestamp recovery
+        they fire multiple times as the observer catches them
+        they fire by index, which means changing pages yeilds different results
 
 Fixed
      videoParams ☑ ☑
         default volume is mistaken as string ☑ ☑
             it should be an integer
+
+    the weird recursive func doesn't work on block references - uids ((0UN_kefSF))
+        plus the persistent timestamp doen't work as expected
+
+    Turns out that "Try to load less offten" is the cause of the problem
+        timestamps
+        recovery off
+        empty recordID
+            with a peer, clicking on start then end then start
+            when it reaches the boundary it doesn't go back to the NEW start
+
+    ok so here's the plan // url btns
+        match every rm component and render stuff
+        then store those substrings boundaries
+        then search every instance of url (match)
+        then check if the url is NOT inside the boundaries
+        then replace substring with the yt-gif componenent
+
+    url btn + click events
+        middle click
+            will open on cross root, 
+            but if on your current root you have videos playing OFF SCREEN
+            they will be ignored
 
 
 bugs that fixed themselves
