@@ -44,6 +44,12 @@ UI.playerSettings = { // 🧼
     url_boundaries: 'strict',
     url_volume: 'strict',
 }
+UI.experience = { // 🧼
+    awaiting_for_user_input_to_initialize: '1',
+    awaiting_with_video_thumnail_as_bg: '1',
+    awaiting_input_type: 'mousedown',
+    sound_when_video_loops: '1',
+}
 /*-----------------------------------*/
 const iframeIDprfx = 'player_';
 let currentFullscreenPlayer = null;
@@ -558,7 +564,7 @@ async function Ready()
     // 7. simulate inline url btn
     //#region relevant variables
     // const { simulate_url_to_video_component } = UI.display;
-    links.html.fetched.urlBtn = await UTILS.fetchTextTrimed(links.html.urlBtn);
+    // links.html.fetched.urlBtn = await UTILS.fetchTextTrimed(links.html.urlBtn);
     //#endregion
 
     // const urlObserver = new MutationObserver(InlineUrlBtnMutations_cb);
@@ -755,6 +761,12 @@ async function Ready()
         ]
 
         ddmConts.forEach(el => el.classList.add('ddm-updt-h'))
+
+        const expecptions = [ // 🧼
+            document.getElementById('awaiting_for_user_input_to_initialize'),
+            document.getElementById('awaiting_with_video_thumnail_as_bg'),
+        ]
+        expecptions.filter(el => !!el).forEach(el => el.disabled = false);
     }
     //#endregion
 
@@ -1057,7 +1069,7 @@ async function Ready()
                 {
                     if (UTILS.hasOneDayPassed_localStorage(id))
                     {
-                        btn.checked = true;
+                        btn.checked = false;
                         btn.dispatchEvent(new Event('change'));
                     }
                     else
@@ -1065,8 +1077,7 @@ async function Ready()
                         // ⛔ 
                         // const sessionValue = window.YT_GIF_DIRECT_SETTINGS.get(id)?.sessionValue;
                         // const bol = typeof sessionValue === 'undefined' ? true : sessionValue;
-                        btn.checked = false;
-                        ToogleVisualFeedback(false);
+                        ToogleVisualFeedback(btn.checked = true);
                     }
                 }
             }
@@ -1457,7 +1468,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
     // 7. 
-    if (dataCreation == attrInfo.creation.forceAwaiting)// ⛔ || isValid_Awaiting_check())
+    if (dataCreation == attrInfo.creation.forceAwaiting || isValid_Awaiting_check())
     {
         return await DeployYT_IFRAME_OnInteraction();
     }
@@ -1690,13 +1701,20 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     async function DeployYT_IFRAME_OnInteraction()
     {
         const mainAnimation = setUpWrapperAwaitingAnimation();
-        // ⛔const { awaiting_input_type } = UI.experience;
-        const interactionType = 'mousedown'; // ⛔ awaiting_input_type.value == 'mousedown' ? 'mousedown' : 'mouseenter'; // huga buga
+        const { awaiting_input_type } = UI.experience;  // 🧼
+        const interactionType = awaiting_input_type.value == 'mousedown' ? 'mousedown' : 'mouseenter'; // huga buga
 
         AddInteractionEventListener();
         wrapper.addEventListener('customPlayerReady', CreateYTPlayer);
 
-        // ⛔awaiting_input_type.addEventListener('change', changeMouseEvents);
+        function changeMouseEvents(e)
+        {
+            if (!isRendered(e.currentTarget))
+                return RemoveAllListeners()
+            ReplaceInteractionEventListener(e.type)
+        }
+
+        awaiting_input_type.addEventListener('change', changeMouseEvents);
 
         return wrapper;
 
@@ -1734,7 +1752,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             RemoveInteractionEventListener();
             wrapper.removeEventListener('customPlayerReady', CreateYTPlayer);
 
-            // ⛔ awaiting_input_type.removeEventListener('change', changeMouseEvents);
+            awaiting_input_type.removeEventListener('change', changeMouseEvents);
         }
         function AddInteractionEventListener(listener = interactionType)
         {
@@ -2662,6 +2680,10 @@ function CleanAndBrandNewWrapper(wrapper_p, attr_name = attrInfo.creation.name, 
     UTILS.toggleAttribute(true, attr_name, div, attr_value);
     document.querySelector(parentSel).appendChild(div);
     return div;
+}
+function isValid_Awaiting_check()
+{
+    return UI.experience.awaiting_for_user_input_to_initialize.checked // 🧼
 }
 //#endregion
 
