@@ -645,3 +645,6 @@ select {
 .yt-gif-wrapper, .yt-gif-iframe-wrapper {
   min-width: 220px;
 }
+.dropdown select {
+  color: var(--dropdown-c);
+}
