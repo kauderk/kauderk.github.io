@@ -51,6 +51,8 @@ window.YT_GIF_SETTINGS_PAGE = {
 
         tm_shortcuts: dom('', chk),
         tm_loop_hierarchy: dom('disabled'),
+        tm_loop_to: dom('start'),
+        tm_loop_options: dom('skip, include-player'),
         tm_seek_action: dom('disabled'),
 
         tm_workflow_display: dom('default'),
