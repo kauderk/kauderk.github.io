@@ -758,9 +758,9 @@ async function Ready()
     }
 
     /* *************** */
-    function updateSettingsPageBlock(e, el, keyObj, siblingKeys)
+    function updateSettingsPageBlock(e, input, keyObj, siblingKeys)
     {
-        const { type, checked, value } = el;
+        const { type, checked, value } = input;
         let replaceWith = (value).toString(); // range - checkbox - radio - label - select
 
         if (type == 'checkbox' || type == 'radio')
@@ -773,6 +773,10 @@ async function Ready()
                 .map(x => window.YT_GIF_DIRECT_SETTINGS.get(x))
                 .filter(y => y.inputType == 'radio')
                 .forEach(o => o.UpdateSettingsBlockValue('')) // to false
+        }
+        if (type == 'select-multiple')
+        {
+            replaceWith = [...input.selectedOptions].map(o => o.value);
         }
 
         window.YT_GIF_DIRECT_SETTINGS.get(keyObj)?.UpdateSettingsBlockValue(replaceWith);
@@ -886,7 +890,7 @@ async function Ready()
     }
     function UpdateOnScroll_RTM(scroll, labelEl)
     {
-        UptLabel(scroll);
+        labelEl.innerHTML = scroll.value; // don't fire rendundant API calls on startup
 
         // 📦
         scroll.addEventListener('click', (e) => UptLabel(e.currentTarget), true);
