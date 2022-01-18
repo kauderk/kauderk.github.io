@@ -1773,6 +1773,7 @@ async function Ready()
 
             // 1. pause everthing but this
             const deactivateAll = [...document.querySelectorAll('.yt-gif-wrapper')]
+                .filter(el => !el.closest('.ddm-tut')) // yikes
                 .forEach(wrapper =>
                 {
                     UTILS.toggleAttribute(false, 'yt-active', wrapper);
@@ -5108,9 +5109,9 @@ function BlockRegexObj(componentPage, caputureGargabe = false)
     const componentRgx = new RegExp(preRgxComp(componentPage), 'gm');
     const inlindeCodeRgx = /(`.+?`)|(`([\s\S]*?)`)/gm;
     const embedCompRgx = new RegExp(preRgxComp('embed'), 'gm');
-    const anyPossibleComponentsRgx = /{{.+}/gm;
+    const anyPossibleComponentsRgx = /{{([^}]*)/gm; // https://stackoverflow.com/questions/30787438/how-to-stop-match-until-before-a-character-in-regex#:~:text=assisterId%3D-,(%5B%5E%22%5D*),-%5B%5E%22%5D*%20matches%20any%20character
     const aliasPlusUidsRgx = /\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm;
-    const tooltipCardRgx = /{{=:(.+?)\|(.+)}}/gm;
+    const tooltipCardRgx = /{{=:(.+?)\|([^}]*)/gm;
     const anyUidRgx = /(?<=\(\()([^(].*?[^)])(?=\)\))/gm;
     // set in the order in which roam renders them - anyPossibleComponents is kinda like a joker card, it will trap components along with irrelevant uids
     const baseBlockRgx = [tooltipCardRgx, componentRgx, anyPossibleComponentsRgx, aliasPlusUidsRgx, anyUidRgx]
