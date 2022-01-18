@@ -1566,7 +1566,7 @@ async function Ready()
             targetNode.setAttribute(timestampObj.attr.timestamp, timestampContent);
             targetNode.className = timestampObj.roamClassName;
             targetNode.innerHTML = timestampContent;
-            targetNode.innerHTML = fmtTimestamp(UI.timestamps.tm_workflow_display.value)(targetNode); // javascript is crazy!
+            targetNode.innerHTML = fmtTimestamp(UI.timestamps.tm_workflow_display.value)(targetNode.innerHTML); // javascript is crazy!
 
             targetNodeParent.appendChild(targetNode);
 
@@ -1664,7 +1664,7 @@ async function Ready()
         tEl.setAttribute('awaiting', true);
 
 
-        const { redAnim, greenAnim, blueAnim, purpleAnim, allAnim } = getTimestampAnims();
+        const { pulse } = PulseObj(tEl);
         const { click, rghtclick, mdlclick } = getClicks();
 
         const {
@@ -1678,7 +1678,7 @@ async function Ready()
         if (!blockExist) // fail
         {
             if (click || rghtclick || !f_uid)
-                pulse(redAnim);
+                pulse('red');
             else if (mdlclick)
                 return await openingOnCrossRoot();
 
@@ -1712,14 +1712,14 @@ async function Ready()
 
         async function playLastBlockOnly_SimHover(r)
         {
-            pulse(greenAnim);
+            pulse('green');
 
 
             const boundaryObj = await getBoundaryObj(r);
             if (!boundaryObj.success)
                 return;
             if (simMessage == 'visuals')
-                pulse(purpleAnim);
+                pulse('purple');
 
 
             // 1.
@@ -1867,7 +1867,7 @@ async function Ready()
             await RAP.setSideBarState(3);
             await RAP.sleep(50);
 
-            pulse(blueAnim);
+            pulse('blue');
             if (WrappersInBlock(crossRoot).length == 0) // 0 instances on crossRoot
             {
                 await RAP.navigateToUiOrCreate(f_uid, (root == mainRoot), 'block');
@@ -1946,12 +1946,6 @@ async function Ready()
         }
 
 
-        function pulse(anim)
-        {
-            UTILS.toggleClasses(false, allAnim, tEl);
-            UTILS.toggleClasses(true, anim, tEl);
-            setTimeout(() => UTILS.toggleClasses(false, anim, tEl), 500);
-        }
         function getClicks()
         {
             return {
@@ -1964,17 +1958,6 @@ async function Ready()
         {
             tEl.removeAttribute('awaiting');
         }
-    }
-
-    function getTimestampAnims()
-    {
-        const baseAnim = ['yt-timestamp-pulse-text-anim'];
-        const greenAnim = [...baseAnim, 'yt-timestamp-success'];
-        const redAnim = [...baseAnim, 'yt-timestamp-warn'];
-        const blueAnim = [...baseAnim, 'yt-timestamp-opening'];
-        const purpleAnim = [...baseAnim, 'yt-timestamp-reset'];
-        const allAnim = [...greenAnim, ...redAnim, ...blueAnim].filter((v, i, a) => a.indexOf(v) === i); // remove duplicates on allAnim
-        return { redAnim, greenAnim, blueAnim, purpleAnim, allAnim };
     }
 
     //#region 6.2.1
@@ -2220,19 +2203,19 @@ async function Ready()
         const fmt = fmtTimestamp(value);
 
         document.querySelectorAll('[yt-gif-timestamp-emulation]')
-            .forEach(tms => tms.innerHTML = fmt(tms));
+            .forEach(tms => tms.innerHTML = fmt(tms.innerHTML));
     }
     function fmtTimestamp(value)
     {
         const str2sec = (str) => UTILS.HMSToSecondsOnly(str)
-        let fmt = (tms) => tms.getAttribute('timestamp');
+        let fmt = (tms) => tms;
 
         if (value == 'lessHMS')
-            fmt = (tms) => UTILS.seconds2time(str2sec(tms.innerHTML));
+            fmt = (tms) => UTILS.seconds2time(str2sec(tms));
         else if (value == 'HMS')
-            fmt = (tms) => UTILS.convertHMS(str2sec(tms.innerHTML));
+            fmt = (tms) => UTILS.convertHMS(str2sec(tms));
         else if (value == 'S')
-            fmt = (tms) => str2sec(tms.innerHTML);
+            fmt = (tms) => str2sec(tms);
 
         return fmt;
     }
@@ -2257,10 +2240,11 @@ async function Ready()
             rm_btn.insertAdjacentHTML('afterbegin', links.html.fetched.urlBtn);
 
 
-            const grabS = () => UI.timestamps.tm_workflow_grab.value == 'S';
             const floatParam = (p, url) => new RegExp(`((?:${p})=)((\\d+)?[.]?\\d+)`, 'gm')?.exec(url)?.[2] || '0';
-            const startParam = (url) => grabS() ? floatParam('t|start', url) : UTILS.convertHMS(floatParam('t|start', url));
-            const endParam = (url) => grabS() ? floatParam('end', url) : UTILS.convertHMS(floatParam('end', url));
+            const getFmtPage = (p, url) => fmtTimestamp(UI.timestamps.tm_workflow_display.value)(floatParam(p, url)); // javascript is crazy!
+
+            const startParam = (url) => getFmtPage('t|start', url);
+            const endParam = (url) => getFmtPage('end', url);
 
 
             urlBtn('yt-gif').onclick = async (e) => await OnYtGifUrlBtn(e, (url) => `{{[[yt-gif]]: ${url} }}`);
@@ -4714,6 +4698,27 @@ function TimestampsInHierarchy(rm_container, targetWrapper, allSelector)
     const actives = [...rm_container.querySelectorAll(allSelector)]
         .filter(tm => !badSets.includes(tm));
     return actives;
+}
+/* ***************** */
+function PulseObj(tEl)
+{
+    const base = ['yt-timestamp-pulse-text-anim'];
+    const anims = {
+        green: [...base, 'yt-timestamp-success'],
+        red: [...base, 'yt-timestamp-warn'],
+        blue: [...base, 'yt-timestamp-opening'],
+        purple: [...base, 'yt-timestamp-reset'],
+    }
+    anims['all'] = Object.values(anims).flat(Infinity).filter((v, i, a) => a.indexOf(v) === i); // remove duplicates on allAnim
+
+    function pulse(anim = 'green')
+    {
+        UTILS.toggleClasses(false, anims['all'], tEl)
+        UTILS.toggleClasses(true, anims[anim], tEl)
+        setTimeout(() => UTILS.toggleClasses(false, anim, tEl), 500);
+    }
+
+    return { pulse }
 }
 /* ***************** */
 async function ClickOnTimestamp(target, assignObj = {})
