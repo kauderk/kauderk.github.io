@@ -646,6 +646,15 @@ async function Ready()
     //#region 2. filter UI user inputs variables
     function DDM_to_UI_variables()
     {
+        document.querySelectorAll(".select").forEach(fakeSel =>
+        {
+            if (!fakeSel) return;
+
+            const { select } = new CustomSelect({ fakeSel });
+            select.id = fakeSel.id;
+            fakeSel.removeAttribute('id');
+        })
+
         // this took a solid hour. thak you thank you
         // also, how would this looks like with the array functions filter|map|fill? Hmmm
         for (const parentKey in UI)
@@ -680,7 +689,16 @@ async function Ready()
                             const input = parentObj[childKey];
 
                             if (domEl.tagName == 'SELECT')
-                                input.value = sessionValue.toString();
+                            {
+                                const sesionOptions = sessionValue.toString().split(',').filter(s => !!s);
+                                const options = [...input.options].forEach(o =>
+                                {
+                                    const selected = sesionOptions.includes(o.value);
+                                    if (o.selected = selected)
+                                        input.value = o.value;
+                                    o['customSelect']?.(o.selected); // Hmmmmm
+                                })
+                            }
                             else // checkbox
                                 input.checked = UTILS.isTrue(sessionValue);
 
@@ -5094,6 +5112,111 @@ function clean_rm_string(rawText)
     const s1 = rawText.replace(/(`.+?`)|(`([\s\S]*?)`)/gm, 'used_to_be_an_inline_code_block');
     return s1.replace(new RegExp(preRgxComp('embed'), 'gm'), 'used_to_be_an_embed_block');
 }
+//#endregion
+
+
+
+
+//#region custom elms
+class CustomSelect
+{// https://codepen.io/dcode-software/pen/MWmrqGQ // https://www.youtube.com/watch?v=zbjGcA3iEME
+    constructor({ fakeSel, classes })
+    {
+        this.classes = classes ?? {};
+        this.fakeSel = fakeSel;
+        this.customSelect = document.createElement("select");
+
+        if (this.fakeSel.hasAttribute('multiple'))
+            this.customSelect.setAttribute('multiple', '');
+
+        this._removeFakeSibling();
+
+        this.fakeSel.children.forEach((fake, idx, arr) =>
+        {
+            const option = document.createElement("option"); // binded to the fake select
+
+            option.setAttribute('value', fake.getAttribute('value'));
+            option.textContent = fake.textContent;
+            this.customSelect.appendChild(option);
+
+            if (fake.hasAttribute('selected'))
+                this._select(fake);
+
+            fake.addEventListener('click', handleSelect.bind(this));
+            option.customSelect = customSelect.bind(this);
+            option.customHandleSelect = handleSelect.bind(this);
+
+            function handleSelect() 
+            {
+                if (
+                    this.fakeSel.hasAttribute('multiple') &&
+                    (fake.hasAttribute('selected') || option.selected)
+                )
+                {
+                    this._deselect(fake);
+                } else
+                {
+                    this._select(fake);
+                }
+            }
+            function customSelect(bol)
+            {
+                if (bol)
+                    this._select(fake);
+                else
+                    this._deselect(fake);
+            }
+        });
+
+        this.fakeSel.insertAdjacentElement("afterend", this.customSelect);
+        this.customSelect.style.display = "none";
+        this.customSelect.setAttribute('hidden-fake-select', '');
+
+        return {
+            select: this.customSelect,
+            originalSelect: this.fakeSel,
+        }
+    }
+
+    _removeFakeSibling()
+    {
+        const fakeSibling = this.fakeSel.nextElementSibling?.hasAttribute('hidden-fake-select');
+        if (fakeSibling)
+            this.fakeSel.parentNode.removeChild(this.fakeSel.nextElementSibling);
+    }
+    _select(fake)
+    {
+        if (!this.fakeSel.hasAttribute('multiple'))
+        {
+            this.fakeSel.children.forEach((el) =>
+            {
+                this._vsSelected(false, el);
+            });
+        }
+
+        this._isSelected(true, fake);
+        this._vsSelected(true, fake);
+        this.customSelect.dispatchEvent(new Event('change'));
+    }
+    _deselect(fake)
+    {
+        this._isSelected(false, fake);
+        this._vsSelected(false, fake);
+        this.customSelect.dispatchEvent(new Event('change'));
+    }
+    _vsSelected(bol, el)
+    {
+        UTILS.toggleAttribute(bol, 'selected', el);
+        if (this.classes.selected)
+            UTILS.toggleClasses(bol, [this.classes.selected], el);
+    }
+    _isSelected(bol, fake)
+    {
+        const index = Array.from(this.fakeSel.children).indexOf(fake);
+        this.customSelect.children[index].selected = bol;
+    }
+}
+
 //#endregion
 
 
