@@ -1613,12 +1613,8 @@ async function Ready()
                     const isPear = lastArr.includes(o);
                     if (isPear)
                     {
-                        if (completePears)
-                            o.targetNode.style.filter = `brightness(${100 + (5 * i)}%)`;
-                        else
-                            o.targetNode.style.filter = `brightness(85%)`;
-
-                        UTILS.toggleAttribute(true, 'timestamp-set', o.targetNode);
+                        const set = completePears ? 'pears' : 'single';
+                        UTILS.toggleAttribute(true, 'timestamp-set', o.targetNode, set);
                     }
                     else
                     {
