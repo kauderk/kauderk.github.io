@@ -687,3 +687,8 @@ select {
 [timestamp-set="pears"]{
   filter: brightness(100%);
 }
+[timestamp-set="out-of-bounds"]{
+  --c: #9f3030;
+  filter: brightness(60%);
+}
+
