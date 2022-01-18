@@ -642,3 +642,6 @@ select {
   border: 2px #02665d solid;
   border-style: dashed;
 }
+.yt-gif-wrapper, .yt-gif-iframe-wrapper {
+  min-width: 220px;
+}
