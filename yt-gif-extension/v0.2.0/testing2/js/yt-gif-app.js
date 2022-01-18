@@ -219,6 +219,7 @@ const attrData = {
     'initialize-loop': '',
     'iframe-buffer': '',
     'timestamp-experience': '',
+    'timestamp-loop-opt': '',
 }
 const attrInfo = {
     url: {
@@ -860,12 +861,26 @@ async function Ready()
             const main = document.querySelector(`[data-main='${key}']`);
             const binds = [...document.querySelectorAll(`[data-bind*='${key}']`)];
 
-            toggleValidItemClasses();
-            main.addEventListener('change', toggleValidItemClasses);
-
-            function toggleValidItemClasses()
+            const toogleSingle = () => binds.forEach(b => UTILS.toggleClasses(!main.checked, toggleClassArr, b));
+            const toogleMultiple = () => binds.forEach(b =>
             {
-                binds.forEach(b => UTILS.toggleClasses(!main.checked, toggleClassArr, b));
+                const on = b.getAttribute('on');
+                const showMatch = on == main.value;
+                const showIfAny = main.value != 'disabled' && on == 'any';
+
+                UTILS.toggleClasses(!(showMatch || showIfAny), toggleClassArr, b);
+            });
+
+
+            if (main.tagName == 'INPUT')
+            {
+                toogleSingle();
+                main.addEventListener('change', toogleSingle);
+            }
+            else if (main.tagName == 'SELECT')
+            {
+                toogleMultiple();
+                main.addEventListener('change', toogleMultiple);
             }
         }
     }
