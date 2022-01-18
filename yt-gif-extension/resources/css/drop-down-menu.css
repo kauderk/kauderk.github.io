@@ -648,3 +648,6 @@ select {
 .dropdown select {
   color: var(--dropdown-c);
 }
+.yt-gifs-tuts .yt-gif-controls{
+  bottom: 43%;
+}
