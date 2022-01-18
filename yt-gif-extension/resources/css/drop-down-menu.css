@@ -676,3 +676,11 @@ select {
 .select [selected] {
   background: #314d62;
 }
+
+/* timestamp sets */
+[timestamp-set="single"]{
+  filter: brightness(70%);
+}
+[timestamp-set="complete"]{
+  filter: brightness(100%);
+}
