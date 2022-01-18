@@ -678,9 +678,12 @@ select {
 }
 
 /* timestamp sets */
-[timestamp-set="single"]{
+[yt-gif-timestamp-emulation]{
   filter: brightness(70%);
 }
-[timestamp-set="complete"]{
+[timestamp-set="single"]{
+  filter: brightness(85%);
+}
+[timestamp-set="pears"]{
   filter: brightness(100%);
 }
