@@ -157,7 +157,8 @@
                                     <span class="ddm-info" for=""
                                         data-tooltip="Finish a set of timestamp boundaries, then move to the next one">Loop
                                         Timestamps</span>
-                                    <select class="ddm-select-item" id="tm_loop_hierarchy">
+                                    <select class="ddm-select-item" id="tm_loop_hierarchy"
+                                        data-main="timestamp-loop-opt">
                                         <option value="auto" title="Fire the next rendered timestamp">Automatically
                                         </option>
                                         <option value="active" title="Only if there is an active set playing">Last
@@ -165,6 +166,21 @@
                                         <option value="disabled">Disabled</option>
                                     </select>
                                 </div>
+                                <span class="dropdown-item pr-5" data-bind="timestamp-loop-opt" on="any">
+                                    <div class="select" id="tm_loop_boundary">
+                                        <div class="select__item" value="end"
+                                            data-tooltip="Target {{[[end]]}} boundaries">End</div>
+                                        <div class="select__item" selected value="start"
+                                            data-tooltip="Target {{[[start]]}} boundaries">Start</div>
+                                    </div>
+                                    <div class="select" id="tm_loop_options" multiple="">
+                                        <div class="select__item" selected value="skip"
+                                            data-tooltip="Skip if target boundary is missing">Skip</div>
+                                        <div class="select__item" selected value="include-player"
+                                            data-tooltip="Include players' timestamp in the loop">
+                                            Player</div>
+                                    </div>
+                                </span>
 
                                 <span class="dropdown-item-separator"></span>
                                 <div class="dropdown-item-select">
