@@ -651,3 +651,28 @@ select {
 .yt-gifs-tuts .yt-gif-controls{
   bottom: 43%;
 }
+
+/* custom select */
+.select {
+  display: flex;
+  gap: 5px;
+  margin: 3px 5px;
+  align-self: end;
+
+  --m: 2px;
+}
+.select__item {
+  padding: 3px;
+  cursor: pointer;
+  
+  text-align: center;
+  border-radius: 3px;
+
+  background: #2f414e;
+  color: var(--dropdown-c);
+
+  transition: background 0.1s;
+}
+.select [selected] {
+  background: #314d62;
+}
