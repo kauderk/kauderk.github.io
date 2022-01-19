@@ -149,6 +149,10 @@ window.YT_GIF_SETTINGS_PAGE = {
             baseKey: BaseInitSetting('', bol),
             orsuvc_opt: InlinePmt(`Because of browsers' external problems, I'd like to set this as the "usage key" replacement`),
         },
+        YT_API_KEY_V3: {
+            baseKey: BaseInitSetting('', str),
+            yakv_opt: InlinePmt(``),
+        },
     },
     dropdownMenu: {
         baseKey: BaseSetting(),
