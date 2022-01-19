@@ -2,6 +2,11 @@ var kauderk = window.kauderk || {};
 
 kauderk.util = ((util) =>
 {
+    util.getYouTubeVideoID = (url) =>
+    {//https://stackoverflow.com/questions/28735459/how-to-validate-youtube-url-in-client-side-in-text-box#:~:text=function%20matchYoutubeUrl(url)%20%7B
+        url = url.split(/(vi\/|v=|\/v\/|youtu\.be\/|\/embed\/)/);
+        return (url[2] !== undefined) ? url[2].split(/[^0-9a-z_\-]/i)[0] : url[0];
+    }
     util.fetchTextTrimed = async (url) =>
     {// https://stackoverflow.com/questions/27841112/how-to-remove-white-space-between-html-tags-using-javascript#:~:text=Ignoring%20%3C%20and%20%3E%20chars%20inside%20text%20nodes%3A
         const str = await util.FetchText(url);
