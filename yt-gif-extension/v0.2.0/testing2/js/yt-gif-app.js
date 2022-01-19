@@ -1511,7 +1511,7 @@ async function Ready()
 
         let emulationArr = [];
         const succesfulEmulationMap = new Map();
-        const componenSel = `.${timestampObj.end.targetClass}, .${timestampObj.start.targetClass}, .rm-video-timestamp[${timestampObj.attr.emulation}]`;
+        const componenSel = `.${timestampObj.end.targetClass}, .${timestampObj.start.targetClass}, .${timestampObj.parent.className}`;
         const isKey = 'is component';
 
 
@@ -1568,13 +1568,12 @@ async function Ready()
             targetNode.innerHTML = timestampContent;
             targetNode.innerHTML = fmtTimestamp(UI.timestamps.tm_workflow_display.value)(targetNode.innerHTML); // javascript is crazy!
 
-            targetNodeParent.appendChild(targetNode);
-
 
             const targetNodePpts = {
                 fromUniqueUid: fromUid + similarCountButRoot,
                 similarCount: parseInt(similarCount, 10),
-                page, indent, targetIndex, tempUID, fromUid, targetNode,
+                page, indent, targetIndex, tempUID, fromUid,
+                targetNode, appendToParent: () => targetNodeParent.appendChild(targetNode),
                 timestamp: timestampContent,
                 color: window.getComputedStyle(targetNode).color,
                 ObjAsKey, blockUid: tempUID, blockID: mapsKEY, startEndComponentMap
@@ -1631,6 +1630,7 @@ async function Ready()
                     o.targetNode.addEventListener('customMousedown', OnClicks);
                     o.targetNode.onmousedown = OnClicks;
                     o.targetNode.OnClicks = OnClicks;
+                    o.appendToParent(); // I'm using observers and these functions take just a little bit of longer to get attached, NOW it should be ok
                 })
             })
         }
@@ -3006,7 +3006,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         {
             MutationObj.removed.length = 0;
 
-            return await ClickResetWrapper([...grandParentBlock.querySelectorAll('.yt-gif-wrapper')]?.pop());
+            return await ClickResetWrapper(getTargetWrapper());
         }
 
 
@@ -3098,6 +3098,9 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 continue;
             }
 
+            if (!record.target.hasAttribute('class'))
+                continue;
+
             const { removedNodes, addedNodes } = record;
             MutationObj.removed = [...MutationObj.removed, NodesRecord(removedNodes, 'active-timestamp', t)];
             added = [...added, NodesRecord(addedNodes, 'yt-gif-timestamp-emulation', t)];
@@ -3149,12 +3152,17 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                     containerIndex: siblingIndex(children('.roam-block-container', true), rm_container),
                     workflow: 'strict',
 
-                    node: target,
+                    node: target.querySelector('[yt-gif-timestamp-emulation]'),
                     start: timestampPage(getActivePage("start")),
                     end: timestampPage(getActivePage("end")),
                     target: timestampPage(activeTimestamps.find(x => x.hasAttribute('last-active-timestamp') || x.hasAttribute(attr))),
                 }
             });
+    }
+    function getTargetWrapper()
+    {
+        if (!grandParentBlock) return null;
+        return [...grandParentBlock.querySelectorAll('.yt-gif-wrapper')]?.pop();
     }
     function setObsTimestamp(commonObj)
     {
