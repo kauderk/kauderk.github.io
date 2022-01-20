@@ -1942,64 +1942,6 @@ async function Ready()
         {
             lastWrapperInBlock(r)?.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
         }
-        async function getYTwrapperRootObj(uid, tEl)
-        {
-            const { foundBlock } = await getLastComponentInHierarchy(uid);
-            if (!foundBlock?.uid) console.warn(`YT GIF Timestamps: couldn't find YT GIFs within the Hierarchy: ((${uid}))`);
-            const { uid: f_uid } = foundBlock || { uid: '' };
-
-
-            const barObj = {
-                condition: function () { return tEl.closest(`.${this.root}`) },
-            }
-            const PagesObj = {
-                main: {
-                    root: 'roam-article',
-                    crossRoot: 'rm-sidebar-outline',
-                },
-                side: {
-                    root: 'rm-sidebar-outline',
-                    crossRoot: 'roam-article',
-                },
-                pageRef: {
-                    root: 'rm-reference-main',
-                    crossRoot: 'rm-sidebar-outline',
-                },
-            };
-
-
-            Object.keys(PagesObj).forEach(key => Object.assign(PagesObj[key], barObj));
-            const key = Object.keys(PagesObj).find(x => PagesObj[x].condition());
-            const { root, crossRoot } = PagesObj[key];
-            const blockExist = document.querySelector(`.${root} [id$="${f_uid}"]`);
-
-
-
-            // root -> roam-article || rm-sidebar-outline
-            const WrappersInBlock = (r) =>
-            {
-                const wrappers = [...document.querySelectorAll(`.${r} [id$="${f_uid}"] .yt-gif-wrapper`)];
-
-                if (r == PagesObj.main.crossRoot)
-                    return wrappers; // they don't have this tEl
-
-                return wrappers.map(pw => closest_rm_container(pw))
-                    .filter(pc => pc.contains(tEl))
-                    .map(c => [...c.querySelectorAll(`[id$="${f_uid}"] .yt-gif-wrapper`)])
-                    .flat(Infinity);
-            }
-
-            const lastWrapperInBlock = (r = root) => [...WrappersInBlock(r)]?.pop();
-
-
-            return {
-                lastWrapperInBlock, WrappersInBlock,
-                f_uid, blockExist,
-                root, crossRoot, mainRoot: PagesObj.main.root,
-            }
-        }
-
-
         function getClicks()
         {
             return {
@@ -2011,6 +1953,63 @@ async function Ready()
         function NoLongerAwaiting()
         {
             tEl.removeAttribute('awaiting');
+        }
+    }
+    async function getYTwrapperRootObj(uid, tEl)
+    {
+        const { foundBlock } = await getLastComponentInHierarchy(uid);
+        if (!foundBlock?.uid) console.warn(`YT GIF Timestamps: couldn't find YT GIFs within the Hierarchy: ((${uid}))`);
+        const { uid: f_uid } = foundBlock || { uid: '' };
+
+
+        const barObj = {
+            tEl,
+            condition: function () { return this.tEl.closest(`.${this.root}`) },
+        }
+        const PagesObj = {
+            main: {
+                root: 'roam-article',
+                crossRoot: 'rm-sidebar-outline',
+            },
+            side: {
+                root: 'rm-sidebar-outline',
+                crossRoot: 'roam-article',
+            },
+            pageRef: {
+                root: 'rm-reference-main',
+                crossRoot: 'rm-sidebar-outline',
+            },
+        };
+
+
+        Object.keys(PagesObj).forEach(key => Object.assign(PagesObj[key], barObj));
+        const key = Object.keys(PagesObj).find(x => PagesObj[x].condition());
+        const { root, crossRoot } = PagesObj[key];
+        const blockExist = document.querySelector(`.${root} [id$="${f_uid}"]`);
+
+
+
+        // root -> roam-article || rm-sidebar-outline
+        const WrappersInBlock = (r) =>
+        {
+            const wrappers = [...document.querySelectorAll(`.${r} [id$="${f_uid}"] .yt-gif-wrapper`)];
+
+            if (r == PagesObj.main.crossRoot)
+                return wrappers; // they don't have this tEl
+
+            return wrappers.map(pw => closest_rm_container(pw))
+                .filter(pc => pc.contains(tEl))
+                .map(c => [...c.querySelectorAll(`[id$="${f_uid}"] .yt-gif-wrapper`)])
+                .flat(Infinity);
+        }
+
+        const lastWrapperInBlock = (r = root) => [...WrappersInBlock(r)]?.pop();
+
+
+        return {
+            lastWrapperInBlock, WrappersInBlock,
+            f_uid, blockExist,
+            root, crossRoot, mainRoot: PagesObj.main.root,
         }
     }
 
