@@ -3508,6 +3508,7 @@ async function onPlayerReady(event)
     // 3. Mouse over the frame functionality
     parent.addEventListener('mouseenter', InState);
     parent.addEventListener('mouseleave', OutState);
+    parent.addEventListener('customVideoEnded', OnCustomVideoEnded);
 
 
 
@@ -3526,7 +3527,7 @@ async function onPlayerReady(event)
 
     // 6. Reload bounaries
     resetBoundariesBtn.addEventListener('click', ResetBoundaries_smart);
-
+    resetBoundariesBtn.ResetBoundaries_smart = ResetBoundaries_smart;
 
 
     // 7. store relevant elements with event event listeners to clean them later
@@ -3582,6 +3583,7 @@ async function onPlayerReady(event)
     // 12. Guard clause - onPlayerReady executed
     parent.setAttribute('loaded', '');
     iframe.addEventListener('load', () => t.__proto__.previousTick = tick(t));
+    ValidateHierarchyTimestampsSets(parent, blockID);
 
 
 
@@ -3828,6 +3830,7 @@ async function onPlayerReady(event)
 
         if (!isThereAnyTimeDisplayInteraction()) return;
 
+        ClearTimers();
         UpdateTimeDisplay();
 
         t.__proto__.timerID = window.setInterval(() =>
@@ -3919,6 +3922,11 @@ async function onPlayerReady(event)
     {
         return isTimeDisplayHover() || isParentHover();
     }
+    const TimestampVisible = (bol) =>
+    {
+        UTILS.toggleClasses(bol, ['yt-gif-timestamp-update'], timeDisplay);
+        UTILS.toggleClasses(!bol, ['yt-gif-invisible-element'], timeDisplay);
+    }
     //#endregion
 
 
@@ -3957,18 +3965,45 @@ async function onPlayerReady(event)
     //#region 6. reload boundaries
     async function ResetBoundaries_smart(e)
     {
-        const tEl = e.currentTarget;
+        const tEl = e?.currentTarget ?? resetBoundariesBtn;
         const awaiting = (bol) => awaitingAtrr(bol, tEl);
 
         if (tEl.hasAttribute('awaiting'))
             return;
 
+        TimestampVisible(true);
         awaiting(true);
 
         DeactivateTimestampsInHierarchy(closest_rm_container(tEl), parent);
         await ReloadYTVideo({ t, start: map.defaultStart, end: map.defaultEnd });
 
+        UpdateTimeDisplay();
         awaiting(false);
+
+        if (!e.message == 'update-timestamp')
+            return TimestampVisible(false);
+
+        // update/visible until any interaction
+        UpdateTimeDisplay();
+        t.__proto__.timerID = window.setInterval(() => UpdateTimeDisplay(), tickOffset);
+        t.__proto__.timers.push(t.__proto__.timerID);
+        timeDisplay.onmousemove = stopUpdateDisplayOnce;
+        function stopUpdateDisplayOnce(e)
+        {
+            e.stopPropagation();
+            e.preventDefault();
+            TimestampVisible(false);
+            e.currentTarget.onmousemove = null;
+        }
+    }
+    function OnCustomVideoEnded()
+    {
+        if (timeDisplay.classList.contains('yt-gif-timestamp-update'))
+        {
+            timeDisplay.onmousemove = null;
+            TimestampVisible(false);
+            ClearTimers();
+        }
     }
     //#endregion
 
@@ -4305,6 +4340,8 @@ async function onStateChange(state)
 
     if (state.data === YT.PlayerState.ENDED)
     {
+        t.getIframe()?.closest('.yt-gif-wrapper')?.dispatchEvent(new CustomEvent('customVideoEnded'));
+
         if (UI.timestamps.tm_loop_hierarchy.value != 'disabled')
         {
             await TryToLoadNextTimestampSet();
