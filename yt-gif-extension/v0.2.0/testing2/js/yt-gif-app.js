@@ -695,7 +695,8 @@ async function Ready()
                                 const options = [...input.options].forEach(o =>
                                 {
                                     const selected = sesionOptions.includes(o.value);
-                                    if (o.selected = selected)
+                                    o.selected = selected;
+                                    if (selected && input.type == 'select-one')
                                         input.value = o.value;
                                     o['customSelect']?.(o.selected); // Hmmmmm
                                 })
