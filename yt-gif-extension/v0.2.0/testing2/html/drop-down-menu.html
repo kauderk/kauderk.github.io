@@ -71,6 +71,7 @@
                                             <option value="0">Recovery</option>
                                             <option value="1">Looping</option>
                                             <option value="2">Click Events</option>
+                                            <option value="3">YT API v3</option>
                                         </select>
                                     </span>
                                     <div class="yt-gifs-tuts">
@@ -82,6 +83,9 @@
                                         </div>
                                         <div class="dropdown-item" select="2">
                                             <div data-video-url="https://www.youtube.com/watch?v=iMXWKMkGTNY"></div>
+                                        </div>
+                                        <div class="dropdown-item" select="3">
+                                            <div data-video-url="https://youtu.be/U-xr0s-ssi4"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -136,13 +140,6 @@
                                 </div>
 
                                 <span class="dropdown-item-separator"></span>
-                                <span class="dropdown-item">
-                                    <label for="" class="dropdown-item-description ddm-tooltip-shortcuts"
-                                        data-tooltip="Start: Ctrl + Alt + s End: Ctrl + Alt + d">Grab timestamps using
-                                        shortcuts
-                                    </label>
-                                    <input type="checkbox" name="timestamp_checkbox" id="tm_shortcuts">
-                                </span>
                                 <div class="dropdown-item-select">
                                     <span class="ddm-info" for=""
                                         data-tooltip="Recommended when recovery/restore mode is on">Seek To
@@ -211,12 +208,21 @@
                                             Only</option>
                                     </select>
                                 </div>
-
-                                <span class="dropdown-item-separator"></span>
-                                <span class="dropdown-info-message dropdown-info-message--aditional"><a
-                                        href="https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/components"
-                                        data-tooltip="kauderk.github.io/yt-gif-components">Grab timestamps using
-                                        smartblocks</a>
+                                <span class="dropdown-item pr-1">
+                                    <div class="select" multiple="" id="tm_options">
+                                        <div class="select__item" value="shortcuts"
+                                            data-tooltip="Grab timestamps using Shortcuts E.g. Start: Ctrl + Alt + s End: Ctrl + Alt + d">
+                                            Shortcuts</div>
+                                        <span class="" value="smartblocks"
+                                            data-tooltip="Grab timestamps using smartblocks kauderk.github.io/yt-gif-components">
+                                            <a type="checkbox"
+                                                class="bp3-button bp3-minimal bp3-small m-0 appearance-none bp3-icon-link"
+                                                href="https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/components"></a>
+                                        </span>
+                                        <div class="select__item" value="include-player"
+                                            data-tooltip="Use your YouTube API DATA v3 KEY to performe operations ... Watch the up-right-conrner tutorial to learn more">
+                                            YT API v3</div>
+                                    </div>
                                 </span>
                             </div>
                         </div>
