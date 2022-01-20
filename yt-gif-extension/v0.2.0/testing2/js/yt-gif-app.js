@@ -4787,7 +4787,7 @@ async function ReloadYTVideo({ t, start, end })
     // t.l.h[5] = async () => { }; // the craziet shinanigans EVER!
     // t.seekTo?.(start); // not only it was preserving it's state
     // t.pauseVideo?.(); // and performing it's onStateChange func twice
-    if (t.playerInfo?.playerState)
+    if (t.playerInfo?.playerState ?? 0)
         t.playerInfo.playerState = 'F';
     if (t.l?.h?.[5])
         t.l.h[5] = async () => { }; // the only way to prevent double fire...? man...
