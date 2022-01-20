@@ -5537,6 +5537,14 @@ TODO ☐ ☑
     when changing the url on a yt gif compoenent, if it has rendered block references
             they don't update the url ☐
 
+    implement a boundary detection ☐
+         on timestamp startup
+            using API KEY ☑ ☑
+            on iframe load ☐ ☐
+
+    timestamp options
+         player to timestamp loops ☑ ☑
+         skip out of bounds timestamps ☑ ☑
 
 Features on hold ☐ ☐
     controls (can't add <select> tags under rm_input-block)
