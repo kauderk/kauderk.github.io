@@ -688,7 +688,7 @@ select {
   filter: brightness(100%);
 }
 [out-of-bounds]{
-  --c: #9f3030;
+  text-decoration: line-through;
   filter: brightness(60%);
 }
 

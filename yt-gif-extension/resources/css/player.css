@@ -72,16 +72,17 @@
 
   cursor: row-resize;
 }
-.yt-gif-timestamp.yt-gif-invisible-element:hover {
+.yt-gif-timestamp:hover,
+.yt-gif-timestamp-update {
   color: white;
   text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000,
     1px 1px 0 #000;
 }
 /* offset feedback colors */
-.yt-gif-timestamp:hover :is([offset]) {
+:is(.yt-gif-timestamp, .yt-gif-timestamp-update):hover :is([offset]) {
   color: red;
 }
-.yt-gif-timestamp:hover :is([tick-offset]) {
+:is(.yt-gif-timestamp, .yt-gif-timestamp-update):hover :is([tick-offset]) {
   color: orange;
 }
 
