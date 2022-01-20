@@ -5395,7 +5395,48 @@ class CustomSelect
         this.customSelect.children[index].selected = bol;
     }
 }
+/* ********************* */
+async function tryToGetUrlDuration(id)
+{
+    const key = window.YT_GIF_DIRECT_SETTINGS.get('YT_API_KEY_V3')?.sessionValue; // yikes
+    if (!key)
+        return null;
 
+    try
+    {
+
+        const url = `https://www.googleapis.com/youtube/v3/videos?id=${id}&key=${key}&part=snippet,contentDetails`;
+        const res = await asyncAjax(url);
+        const youtube_time = res.items[0].contentDetails.duration;
+        console.log(`youtube_time: ${youtube_time}, id: ${id}`);
+        return formatISODate(youtube_time);
+    }
+    catch (error)
+    {
+
+    }
+
+    return null;
+}
+function asyncAjax(url)
+{// https://stackoverflow.com/questions/27612372/how-to-await-the-ajax-request#:~:text=return%20new%20Promise(function(resolve%2C%20reject)%20%7B
+    return new Promise(function (resolve, reject)
+    {
+        $.ajax({
+            url: url,
+            type: "GET",
+            dataType: "json",
+            beforeSend: function () { },
+            success: function (data) { resolve(data) },
+            error: function (err) { reject(err) },
+        })
+    })
+}
+function formatISODate(youtube_time)
+{ // https://stackoverflow.com/questions/2086260/youtube-player-api-how-to-get-duration-of-a-loaded-cued-video-without-playing-i#:~:text=function%20formatISODate(youtube_time)%7B
+    const arr = youtube_time.match(/(\d+)(?=[MHS])/ig) || [];
+    return arr.map(i => (i.length < 2) ? ('0' + i) : i).join(':');
+}
 //#endregion
 
 
