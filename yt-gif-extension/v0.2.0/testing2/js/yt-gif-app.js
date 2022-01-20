@@ -1650,7 +1650,50 @@ async function Ready()
             const objByKey = groupByKey(obj);
             return Object.entries(objByKey).map(([title, data]) => ({ title, data }));
         }
+        async function durationObj(succesfulEmulationMap)
+        {
+            let wrapperObjs = [];
+            const targetElms = [...succesfulEmulationMap.values()].map(arrs => arrs[0]?.targetNodeParent);
+            if (targetElms.length == 0)
+                return {};
+
+            for (const el of targetElms)
+            {
+                const o = await getWrapperInHierarchyObj(el);
+                if (!wrapperObjs.find(x => x.id == o.id)) // push if o.id is not in wrapperObjs
+                    wrapperObjs.push(o);
+            }
+
+            const durationMap = new Map(); // store duration of each grandparent wrapper, if any
+            for (const wo of wrapperObjs)
+            {
+                const lastUrl = wo.lastWrapper?.getAttribute('data-video-url');
+                const videoId = UTILS.getYouTubeVideoID(lastUrl ?? '') || 'invalid';
+                if (durationMap.has(wo.id) && !durationMap.get(wo.id))
+                    YTvideoIDs.delete(videoId); // it fetched something wrong, clean it and try angain
+                // getMap_smart -> avoid making redudundant requests from YT API V3
+                durationMap.set(wo.id, await getMap_smart(videoId, YTvideoIDs, tryToGetUrlDuration, videoId));
+            }
+
+            return {
+                getDuration: (targetBlockID) =>
+                {
+                    // a grandparent wrapper should have it's duration
+                    const foundBlockID = wrapperObjs.find(x => x.container?.contains(document.getElementById(targetBlockID)))?.id;
+                    return durationMap.get(foundBlockID);
+                },
+            }
+        }
     }
+    async function getVideoDuration_smart(uid, el)
+    {
+        const { lastWrapperInBlock, root } = await getYTwrapperRootObj(uid, el);
+        const wraper = lastWrapperInBlock(root);
+        const lastUrl = wraper?.getAttribute('data-video-url');
+        const videoId = UTILS.getYouTubeVideoID(lastUrl ?? '') || 'invalid';
+        return await getMap_smart(videoId, YTvideoIDs, tryToGetUrlDuration, videoId);
+    }
+
     // 6.1.1
     async function PlayPauseOnClicks(e, uid, targetNodePpts)
     {
