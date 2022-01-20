@@ -4759,6 +4759,53 @@ function ElementsPerBlock(block, selector)
     if (!block) return [];
     return [...block?.querySelectorAll(selector)]?.filter(b => closestBlock(b).id == block.id) || [];
 }
+async function getWrapperInHierarchyObj(pointOfReferenceElm)
+{
+    const classIs = (x, cs) => x.classList.contains(cs);
+    const hasSel = (x, sel) => x.querySelector(sel);
+
+    let el = closestBlock(pointOfReferenceElm);
+    const originalId = el?.id;
+
+    while (el?.contains?.(pointOfReferenceElm))
+    {
+        el = el.parentElement;
+        if (classIs(el.parentElement, 'roam-app'))
+            return {} // if you get to the top of the DOM, stop
+
+        let wrapper = getWrapper();
+        if (!wrapper || !classIs(el, 'roam-block-container'))
+            continue; // F
+
+        // await if the RAW wrapper exists
+        while (isRendered(wrapper) && !wrapper.hasAttribute('invalid-yt-gif') && classIs(wrapper, 'rm-xparser-default-yt-gif'))
+            await RAP.sleep(10);
+
+        wrapper = getWrapper(); // get the wrapper again, in case it was rendered
+
+        const block = closestBlock(wrapper);
+        const lastWrapper = ElementsPerBlock(block, '.yt-gif-wrapper').pop();
+
+        if (lastWrapper) // gotem!
+            return {
+                lastWrapper,
+                container: el,
+                block, id: block.id, originalId,
+            }
+    }
+    return {}
+
+    function getWrapper()
+    {
+        const wrapper = hasSel(el.firstElementChild, '.yt-gif-wrapper'); // this it a wrapper
+        return wrapper ?? hasSel(el.firstElementChild, '.rm-xparser-default-yt-gif'); // this is a raw wrapper
+    }
+    // wrapperObjs = wrapperObjs.reduce((acc, crr) =>
+    // { // https://dev.to/marinamosti/removing-duplicates-in-an-array-of-objects-in-js-with-sets-3fep
+    //     const is = acc.find(i => i.id === crr.id);
+    //     return is ? acc : acc.concat([crr]);
+    // }, []);
+}
 /* ***************** */
 function awaitingAtrr(bol, el)
 {
