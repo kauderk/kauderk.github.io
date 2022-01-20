@@ -4392,7 +4392,6 @@ async function onStateChange(state)
     {
         await ReloadYTVideo({ t, start: map?.start, end: map?.end });
     }
-
     async function TryToLoadNextTimestampSet()
     {
         await RAP.sleep(10);
@@ -4401,31 +4400,39 @@ async function onStateChange(state)
         if (!iframe)
             return await RealoadThis();
 
-        const lastStartSel = `[timestamp-set][timestamp-style="start"]`;
+        const options = [...UI.timestamps.tm_loop_options.selectedOptions].map(o => o.value); // skip - include-player
+        const page = UI.timestamps.tm_loop_to.value || 'start';
+        const sel = `[timestamp-set][timestamp-style="${page}"]`;
+        const boundedSel = `${sel}:not([out-of-bounds])`;
+        const tmSel = options.includes('skip') ? boundedSel : sel; // Skip if target is missing or if it is out of bounds
+
         const targetWrapper = iframe.closest('.yt-gif-wrapper');
         const rm_container = closest_rm_container(iframe);
 
         if (!rm_container)
             return await RealoadThis();
 
+        const targets = TimestampsInHierarchy(rm_container, targetWrapper, tmSel);
         const lastActive = TimestampsInHierarchy(rm_container, targetWrapper, '[last-active-timestamp]')?.[0];
-        const starts = TimestampsInHierarchy(rm_container, targetWrapper, lastStartSel);
+        const activeSel = ElementsPerBlock(closestBlock(lastActive), tmSel)?.[0]; // go one level up and search for a "start" timestamp, bc does it makes sense to loop through "end" boundaries???
 
-
-        const active = ElementsPerBlock(closestBlock(lastActive), lastStartSel)?.[0]; // go one level up and search for a "start" timestamp, bc does it makes sense to loop through "end" boundaries???
-        const index = starts.indexOf(active);
-
+        const index = targets.indexOf(activeSel);
         if (index === -1 && UI.timestamps.tm_loop_hierarchy.value == 'active')
             return await RealoadThis();
         // else value == 'auto'
 
-        const nextIndex = (index + 1) % starts.length;
-        DeactivateTimestampsInHierarchy(rm_container, targetWrapper); // might be redundant
+        let nextIndex = (index + 1) % targets.length;
+        if (options.includes('include-player')) // include player in the loop
+        {
+            if (index == targets.length - 1) // the only scenario where we need to go back to the beginning
+                return await ClickResetWrapper(targetWrapper, { message: 'update-timestamp' });
+            else if (index == -1) // assuming there are targets and the player was reset, go on the next one
+                nextIndex = 0;
+        }
 
-        const target = starts[nextIndex];
-
+        const target = targets[nextIndex];
         if (isRendered(target))
-            await ClickOnTimestamp(target);
+            await ClickOnTimestamp(target, { seekToMessage: 'seekTo-strict' });
         else
             await RealoadThis();
     }
