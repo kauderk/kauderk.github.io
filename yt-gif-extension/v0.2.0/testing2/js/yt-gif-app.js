@@ -118,6 +118,8 @@ const observedParameters = new Map();
 const obsParams = {
     lastActiveTimestamp: null,
 }
+//
+const YTvideoIDs = new Map();
 /*-----------------------------------*/
 const StartEnd_Config = {
     componentPage: 'yt-gif\\/(start|end)',
@@ -1575,6 +1577,7 @@ async function Ready()
                 similarCount: parseInt(similarCount, 10),
                 page, indent, targetIndex, tempUID, fromUid,
                 targetNode, appendToParent: () => targetNodeParent.appendChild(targetNode),
+                targetNodeParent,
                 timestamp: timestampContent,
                 color: window.getComputedStyle(targetNode).color,
                 ObjAsKey, blockUid: tempUID, blockID: mapsKEY, startEndComponentMap
@@ -1583,57 +1586,67 @@ async function Ready()
 
             emulationArr = await getMap_smart(mapsKEY, succesfulEmulationMap, () => []);
             emulationArr = UTILS.pushSame(emulationArr, targetNodePpts);
-
-
-            //targetNode.addEventListener('mousedown', async (e) => await PlayPauseOnClicks(e, tempUID, targetNodePpts));
-            //targetNode.addEventListener('wheel', async (e) => await rawTimestampOnWheel(e, tempUID));
-            // targetNodeParent.addEventListener('mouseleave', async (e) => await updateTimestampOnMouseleave(e, tempUID, targetNodePpts));
-            // targetNodeParent.addEventListener('mouseenter', e => toogleDocumentScroll(e.currentTarget, true));
         }
 
-
-
-        for (let [keys, values] of succesfulEmulationMap.entries())
+        const { getDuration } = await durationObj(succesfulEmulationMap);
+        for (let values of succesfulEmulationMap.values())
         {
             values = values.sort((a, b) => a.indent - b.indent); // RAP utils
             const sortedByUid = sortObjByKey('fromUniqueUid', values);
             const targetObjsArr = sortedByUid.map((v, i, a) => a[i]['data']);
 
 
-            targetObjsArr.forEach((ArrObjs, i, a) =>
+            for (const ArrObjs of targetObjsArr)
             {
                 const findPage = (p) => [...ArrObjs].reverse().find(x => x.page == p);
                 const lastArr = [findPage('start'), findPage('end')];
                 const completePears = lastArr.every(el => !!el);
 
-                ArrObjs.forEach((o, i) =>
+                for (const o of ArrObjs)
                 {
                     if (!o?.targetNode)
                         return;
-                    const isPear = lastArr.includes(o);
+
+                    o.targetNode.oncontextmenu = e => e.preventDefault(); //https://codinhood.com/nano/dom/disable-context-menu-right-click-javascript
+
+                    const isPear = lastArr.includes(o); // both used inside these functions
+                    let duration = getDuration(o.blockID); // gain some performance
+                    duration = (duration ?? 0) ? parseInt(fmtTimestamp('S')(duration)) : duration; // if it is anything else but null or undefined, then parse it to secondsOnly
+                    // changeSetIfPear();
+                    validateSelf(duration);
+
                     if (isPear)
                     {
                         const set = completePears ? 'pears' : 'single';
-                        UTILS.toggleAttribute(true, 'timestamp-set', o.targetNode, set);
-                    }
-                    else
-                    {
-                        o.targetNode.style.filter = `brightness(70%)`;
+                        o.targetNode.setAttribute('timestamp-set', set);
                     }
 
-                    o.targetNode.oncontextmenu = e => e.preventDefault(); //https://codinhood.com/nano/dom/disable-context-menu-right-click-javascript
 
                     async function OnClicks(e)
                     {
                         await PlayPauseOnClicks(e, o.tempUID, { self: o, pears: (isPear && completePears) ? lastArr : null });
                     }
+                    async function validateSelf(d)
+                    {
+                        if (!isNaN(d) && duration == parseInt(d) && o.targetNode.hasAttribute('out-of-bounds'))
+                            return; // already set, exit
+                        duration = parseInt(d); // good to go
+                        if (typeof duration !== 'number')
+                            return; // invalid, exit
+
+                        const tm = parseInt(fmtTimestamp('S')(o.timestamp));
+                        const bounded = tm >= 0 && tm <= parseInt(duration);
+
+                        UTILS.toggleAttribute(!bounded, 'out-of-bounds', o.targetNode);
+                    }
 
                     o.targetNode.addEventListener('customMousedown', OnClicks);
                     o.targetNode.onmousedown = OnClicks;
                     o.targetNode.OnClicks = OnClicks;
+                    o.targetNode.validateSelf = validateSelf;
                     o.appendToParent(); // I'm using observers and these functions take just a little bit of longer to get attached, NOW it should be ok
-                })
-            })
+                }
+            }
         }
 
 
@@ -2720,6 +2733,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     if (!url || accUrlIndex < 0 || !uid)
     {
         UIDtoURLInstancesMapMap.delete(uid);
+        wrapper.setAttribute('invalid-yt-gif', '')
         return console.log(`YT GIF: Couldn't find yt-gif component number ${accUrlIndex + 1} within the block ((${uid}))`);
     }
     const newId = iframeIDprfx + Number(++window.YT_GIF_OBSERVERS.creationCounter);
@@ -2938,7 +2952,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         const media = JSON.parse(JSON.stringify(videoParams));
         if (YTGIF_Config.guardClause(url))
         {
-            media.id = YouTubeGetID(url);
+            media.id = UTILS.getYouTubeVideoID(url);
 
             media.start = media.defaultStart = ExtractFromURL('int', /(t=|start=)(?:\d+)/g);
             media.end = media.defaultEnd = ExtractFromURL('int', /(end=)(?:\d+)/g);
@@ -2993,11 +3007,6 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                     desiredValue = valueCallback(desiredValue, pass);
                 }
                 return desiredValue;
-            }
-            function YouTubeGetID(url)
-            {//https://stackoverflow.com/questions/28735459/how-to-validate-youtube-url-in-client-side-in-text-box#:~:text=function%20matchYoutubeUrl(url)%20%7B
-                url = url.split(/(vi\/|v=|\/v\/|youtu\.be\/|\/embed\/)/);
-                return (url[2] !== undefined) ? url[2].split(/[^0-9a-z_\-]/i)[0] : url[0];
             }
             //#endregion
         }
