@@ -4830,23 +4830,24 @@ function PulseObj(tEl)
 /* ***************** */
 async function ClickOnTimestamp(target, assignObj = {})
 {
+    const detail = { // cringe event object
+        currentTarget: target,
+        which: 1,
+        seekToMessage: UI.timestamps?.tm_seek_to?.value == 'soft' ? 'seekTo-soft' : 'seekTo-strict',
+        mute: UI.timestamps.tm_seek_action.value == 'mute',
+        ...assignObj
+    };
+    Object.assign(detail, assignObj);
     // how do you resolve/return a promise using a CustomEvent handler?
-    await target?.OnClicks?.(
-        { // cringe event object
-            currentTarget: target,
-            which: 1,
-            seekToMessage: UI.timestamps?.tm_seek_to?.value == 'soft' ? 'seekTo-soft' : 'seekTo-strict',
-            mute: UI.timestamps.tm_seek_action.value == 'mute',
-            ...assignObj
-        },
-    )
+    await target?.OnClicks?.(detail)
 }
-async function ClickResetWrapper(targetWrapper)
+async function ClickResetWrapper(targetWrapper, assignObj = {})
 {
     if (!targetWrapper) return;
 
     const reset = targetWrapper.querySelector('.yt-gif-reset-boundaries');
-    await reset?.dispatchEvent(new Event('click'));
+    // await reset?.dispatchEvent(new Event('click'));
+    await reset?.ResetBoundaries_smart?.(assignObj);
 }
 /* ***************** */
 function ElementsPerBlock(block, selector)
