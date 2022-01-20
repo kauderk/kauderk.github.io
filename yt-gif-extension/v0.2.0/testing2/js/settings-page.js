@@ -49,7 +49,6 @@ window.YT_GIF_SETTINGS_PAGE = {
         tm_restore: dom('match'),
         tm_reset_on_removal: dom('container'),
 
-        tm_shortcuts: dom('', chk),
         tm_loop_hierarchy: dom('disabled'),
         tm_loop_to: dom('start'),
         tm_loop_options: dom('skip, include-player'),
@@ -57,6 +56,7 @@ window.YT_GIF_SETTINGS_PAGE = {
 
         tm_workflow_display: dom('default'),
         tm_workflow_grab: dom('HMS'),
+        tm_options: dom(''),
     },
 
     experience: {
