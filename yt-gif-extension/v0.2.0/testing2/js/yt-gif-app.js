@@ -3376,13 +3376,13 @@ async function onPlayerReady(event)
 
     const blockID = getBlockID(iframe);
     const canBeCleanedByBuffer = UTILS.closestBlockID(iframe);
-    const rocording = recordedIDs.get(blockID);
+    const recording = recordedIDs.get(blockID);
     // 🚧?
-    if (rocording != null)
+    if (recording != null)
     {
-        rocording.target = t;
-        rocording.seekToUpdatedTime = seekToUpdatedTime; // 🍝
-        rocording.sameBoundaries = function (tg = t)
+        recording.target = t;
+        recording.seekToUpdatedTime = seekToUpdatedTime; // 🍝
+        recording.sameBoundaries = function (tg = t)
         {
             if (!tg)
                 return false;
@@ -3393,13 +3393,18 @@ async function onPlayerReady(event)
 
             return startM == start && endM == end;
         }
-        rocording.isSoundingFine = function (bol = true, el = iframe)
+        recording.isSoundingFine = function (bol = true, el = iframe)
         {
             isSoundingFine(bol, el)
         }
-        rocording.togglePlay = function (bol = true, el = iframe)
+        recording.togglePlay = function (bol = true, el = iframe)
         {
             togglePlay(bol, el)
+        }
+        recording.bounded = function (sec)
+        {
+            const d = t.getDuration?.() ?? 0;
+            return sec >= 0 && sec <= d;
         }
     }
     if (parent.hasAttribute('loaded'))
