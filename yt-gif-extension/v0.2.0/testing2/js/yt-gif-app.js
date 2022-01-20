@@ -1855,7 +1855,7 @@ async function Ready()
 
         async function pauseLastBlock_SimHoverOut(r)
         {
-            //lastWrapperInBlock(r)?.setAttribute('play-right-away', false);
+            pulse('blueViolet');
             lastWrapperInBlock(r)?.dispatchEvent(UTILS.simHoverOut()); // hover out -> videoIsPlayingWithSound(false)
         }
 
@@ -4714,6 +4714,7 @@ function PulseObj(tEl)
         red: [...base, 'yt-timestamp-warn'],
         blue: [...base, 'yt-timestamp-opening'],
         purple: [...base, 'yt-timestamp-reset'],
+        blueViolet: [...base, 'yt-timestamp-pause'],
     }
     anims['all'] = Object.values(anims).flat(Infinity).filter((v, i, a) => a.indexOf(v) === i); // remove duplicates on allAnim
 
