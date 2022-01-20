@@ -537,8 +537,8 @@ async function Ready()
     };
 
     const { simulate_roam_research_timestamps } = UI.display;
-    const { tm_shortcuts, tm_workflow_display } = UI.timestamps;
-
+    const { tm_workflow_display } = UI.timestamps;
+    const shortcuts_option = [...UI.timestamps.tm_options.options].find(o => o.value == 'shortcuts');
     let { timestampObserver, keyupEventHanlder } = window.YT_GIF_OBSERVERS;
     timestampObserver?.disconnect();
     const targetNode = document.body;
@@ -553,8 +553,7 @@ async function Ready()
     //      6.3.1 addBlockTimestamps
     toggleTimestampEmulation(simulate_roam_research_timestamps.checked);
     simulate_roam_research_timestamps.addEventListener('change', (e) => toggleTimestampEmulation(e.currentTarget.checked));
-    tm_shortcuts.addEventListener('change', e => ToogleTimestampShortcuts(e.target.checked));
-
+    shortcuts_option.addEventListener('customChange', e => ToogleTimestampShortcuts(e.detail.currentValue));
     tm_workflow_display.addEventListener('change', e => ChangeTimestamapsDisplay(e.currentTarget.value));
 
 
@@ -1454,7 +1453,7 @@ async function Ready()
         {
             StopEmulation();
             ToogleTimestampSetUp(true);
-            ToogleTimestampShortcuts(tm_shortcuts.checked);
+            ToogleTimestampShortcuts(shortcuts_option.selected);
         }
         function StopEmulation()
         {
@@ -5392,7 +5391,15 @@ class CustomSelect
     _isSelected(bol, fake)
     {
         const index = Array.from(this.fakeSel.children).indexOf(fake);
-        this.customSelect.children[index].selected = bol;
+        const option = this.customSelect.children[index];
+        option.dispatchEvent(new CustomEvent('customChange',
+            {
+                detail: {
+                    previousValue: option.selected,
+                    currentValue: bol,
+                },
+            }));
+        option.selected = bol;
     }
 }
 /* ********************* */
