@@ -481,6 +481,9 @@ a.rm-video-timestamp[active-timestamp]
 .yt-timestamp-opening{
   --pulse-c: 0, 0, 255;
 }
+.yt-timestamp-pause{
+  --pulse-c: 138, 43, 226;
+}
 .yt-gif-timestamp-parent{
   display: table-cell;
 }
