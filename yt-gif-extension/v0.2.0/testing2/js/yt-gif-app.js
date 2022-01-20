@@ -5460,6 +5460,23 @@ I want to add ☐ ☑
             https://soundcloud.com/codytxr0kr/the-joe-rogan-experience-279
 
 added
+    getWrapperInHierarchyObj
+        while elm exist
+    durationObj -> getDuration from smart_map
+        validate self - bounded attr
+    videoId -> fetch API -> duration
+        using Utils to get videoId
+            formatISODate
+        tryToGetUrlDuration | asyncAjax
+            fetch -> requieres $ JQuery
+    added custom events to parent & reset controls
+        reste btn
+            show update timestamp
+            fire customVideoEnded event
+
+    timestamp loop
+        added skip & include player options (auto)        
+
     Timestamps
         option to display 
             formated MSH 00:00:00
@@ -5541,6 +5558,8 @@ TODO ☐ ☑
          on timestamp startup
             using API KEY ☑ ☑
             on iframe load ☐ ☐
+
+    validate timestamp duration on video loadeded ☐
 
     timestamp options
          player to timestamp loops ☑ ☑
