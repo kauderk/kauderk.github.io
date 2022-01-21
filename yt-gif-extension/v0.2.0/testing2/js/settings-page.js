@@ -37,9 +37,8 @@ window.YT_GIF_SETTINGS_PAGE = {
     },
     display: {
         baseKey: BaseSetting(chk),
-        clip_life_span_format: dom('1'),
         simulate_roam_research_timestamps: dom(),
-        simulate_url_to_video_component: dom(),
+        ms_options: dom('clip-lifespan-format', sel),
     },
 
     timestamps: {
@@ -99,11 +98,6 @@ window.YT_GIF_SETTINGS_PAGE = {
             ibs_opt: InlinePmt(`integers from 1 to 30`),
         },
     },
-    InAndOutKeys: {
-        baseKey: BaseSetting(chk),
-        keysArray: dom('ctrlKey', str),
-        iaok_opt: InlinePmt(`Any permutation of: altKey, shiftKey, ctrlKey \nfollowed by a "," coma\n\nMiddle mouse button is on by default`),
-    },
     defaultPlayerValues: {
         baseKey: BaseSetting(),
         player_span: {
@@ -149,10 +143,13 @@ window.YT_GIF_SETTINGS_PAGE = {
             baseKey: BaseInitSetting('', str),
             yakv_opt: InlinePmt(``),
         },
+        InAndOutKeys: {
+            baseKey: BaseInitSetting('ctrlKey', str),
+            iaok_opt: InlinePmt(`Any permutation of: altKey, shiftKey, ctrlKey \nfollowed by a "," coma\n\nMiddle mouse button is on by default`),
+        },
     },
     dropdownMenu: {
         baseKey: BaseSetting(),
-        //yt_gif_update_visual_feedback: dom('1', chk),
         ddm_css_theme_input: {
             baseKey: BaseInitSetting('', chk),
             ct_opt: InlinePmt(`"dark" == "true" or "light" == "false"`),
