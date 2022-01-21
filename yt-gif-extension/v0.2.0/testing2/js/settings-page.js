@@ -60,7 +60,6 @@ window.YT_GIF_SETTINGS_PAGE = {
 
     experience: {
         baseKey: BaseSetting(chk),
-        sound_when_video_loops: dom('1'),
 
         awaiting_for_user_input_to_initialize: dom('', chk),
         awaiting_input_type: dom('mouseenter', sel),
