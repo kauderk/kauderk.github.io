@@ -74,18 +74,15 @@ window.YT_GIF_SETTINGS_PAGE = {
     playerSettings: {
         baseKey: BaseSetting(sel),
         play_style: dom('strict'),
-        play_last_active_player_off_intersection: dom('1', chk),
 
         mute_style: dom('strict'),
 
+        fullscreen_style: dom('disabled'),
+
         url_boundaries: dom('strict'),
         url_volume: dom('strict'),
-    },
-    fullscreenStyle: {
-        baseKey: BaseSetting(chk),
-        smoll_vid_when_big_ends: dom('1'),
-        mute_on_exit_fullscreenchange: dom(),
-        pause_on_exit_fullscreenchange: dom(),
+
+        ps_options: dom('mantain last active player'),
     },
 
     range: {
