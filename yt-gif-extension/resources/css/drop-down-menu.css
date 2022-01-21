@@ -147,6 +147,7 @@ span.dropdown-item,
 
 span.dropdown-info-message.dropdown-item-description{
   background-color: transparent;
+  font-size: .9em;
 }
 
 :is(span.dropdown-item, .yt-gif-style, span[data-tooltip], div.dropdown-item-select):hover {
@@ -683,10 +684,14 @@ select {
 .select [selected] {
   background: #314d62;
 }
-.bp3-button.select__item {
+span.bp3-button.select__item {
   color: var(--dropdown-c) !important;
   border: 1px solid;
   border-color: var(--submenu-message-bg);
+  background: #2f414eb3;
+}
+.bp3-button.select__item[selected] {
+  background: #314d62;
 }
 .bp3-button.select__item[selected]:hover {
  background-color: rgb(40 120 184 / 30%);
