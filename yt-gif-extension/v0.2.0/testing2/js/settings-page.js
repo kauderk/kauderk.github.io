@@ -81,7 +81,7 @@ window.YT_GIF_SETTINGS_PAGE = {
         url_boundaries: dom('strict'),
         url_volume: dom('strict'),
 
-        ps_options: dom('mantain last active player'),
+        ps_options: dom('mantain-last-active-player'),
     },
 
     range: {
