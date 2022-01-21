@@ -343,14 +343,6 @@
                                             indefinitely</option>
                                     </select>
                                 </div>
-                                <span class="dropdown-item">
-                                    <label for="" class="dropdown-item-description"
-                                        data-tooltip="Make them active by interacting with them in a ddecive way: exiting yt-gifs while holding down 'InAndOutKeys' or by firing timestamps">Last
-                                        active player keeps on playing when exiting the viewport
-                                    </label>
-                                    <input type="checkbox" name="" id="play_last_active_player_off_intersection">
-                                </span>
-                                <span class="dropdown-item-separator"></span>
                                 <div class="dropdown-item-select">
                                     <span class="ddm-info" for="" data-tooltip="Mute/Unmute yt-gifs">Mute Style</span>
                                     <select class="ddm-select-item" id="mute_style">
@@ -362,6 +354,15 @@
                                             mouse enter</option>
                                         <option value="all-muted" title="'InAndOutKeys' won't unmute any yt-gif">
                                             Either way</option>
+                                    </select>
+                                </div>
+                                <div class="dropdown-item-select">
+                                    <span class="ddm-info" for=""
+                                        data-tooltip="While hovering the frame/player/video">Fullscreen Style</span>
+                                    <select class="ddm-select-item" id="fullscreen_style">
+                                        <option value="disabled" title="">Disabled</option>
+                                        <option value="mute" title="">Mute on exit</option>
+                                        <option value="pause" title="">Pause on exit</option>
                                     </select>
                                 </div>
 
@@ -396,36 +397,18 @@
                                     </select>
                                 </div>
                                 <span class="dropdown-item-separator"></span>
-                                <div class="dropdown yt-gif-style yt-gif-fullscreen-style ddm-inline">
-                                    <span class="dropdown-info-message"
-                                        data-tooltip="Behaviour on Fullscreen change">Fullscreen
-                                        style</span>
-                                    <div class="dropdown-content dropdown-info-box">
-                                        <span class="dropdown-item">
-                                            <label for="" class="dropdown-item-description"
-                                                data-tooltip="Exit Fullscreen when the clip ends?">Smoll Vid When
-                                                Big
-                                                Ends</label>
-                                            <input type="checkbox" name="fullscreen" id="smoll_vid_when_big_ends"
-                                                checked="">
-                                        </span>
-                                        <span class="dropdown-info-message dropdown-info-message--aditional">While
-                                            hovering the
-                                            frame</span>
-                                        <span class="dropdown-item">
-                                            <label for="" class="dropdown-item-description" data-tooltip="">Mute
-                                                when exiting
-                                                fullscreen</label>
-                                            <input type="checkbox" name="fullscreen" id="mute_on_exit_fullscreenchange">
-                                        </span>
-                                        <span class="dropdown-item">
-                                            <label for="" class="dropdown-item-description" data-tooltip="">Pause
-                                                when exiting
-                                                fullscreen</label>
-                                            <input type="checkbox" name="fullscreen"
-                                                id="pause_on_exit_fullscreenchange">
-                                        </span>
-                                    </div>
+
+                                <div class="select select-vertcial" id="ps_options" multiple="">
+                                    <span class="bp3-button bp3-minimal bp3-small select__item"
+                                        value="Last Active Player off viewport"
+                                        data-tooltip="Keep Playing - Make them active by interacting with them in a decive way: exiting yt-gifs while holding down 'InAndOutKeys' or by firing timestamps"
+                                        selected="">Mantain last active player
+                                    </span>
+                                    <span class="bp3-button bp3-minimal bp3-small select__item"
+                                        value="minimize on video ended"
+                                        data-tooltip="Exit Fullscreen when the clip ends?" selected="">Smoll Vid When
+                                        Big Ends
+                                    </span>
                                 </div>
                             </div>
                         </div>
