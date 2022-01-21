@@ -426,7 +426,7 @@
                                         <select class="ddm-select-item">
                                             <option value="disabled">Hide</option>
                                             <option value="0">URL Buttons</option>
-                                            <option value="1">Timestamp Scrolling</option>
+                                            <option value="1">Scrolling</option>
                                         </select>
                                     </span>
                                     <div class="yt-gifs-tuts">
@@ -440,21 +440,16 @@
                                 </div>
 
 
-                                <span class="dropdown-item">
-                                    <label for="" class="dropdown-item-description"
+                                <div class="select select-vertcial" multiple="" id="ms_options">
+                                    <span class="bp3-button bp3-minimal bp3-small select__item"
+                                        value="simulate-url-formatter"
                                         data-tooltip="Click on the button next to a youtube video url and create it's {{[[yt-gif]]}} component">Simulate
-                                        url button to video component
-                                    </label>
-                                    <input type="checkbox" name="" id="simulate_url_to_video_component" checked="">
-                                </span>
-
-                                <span class="dropdown-item-separator"></span>
-                                <span class="dropdown-item">
-                                    <label for="" class="dropdown-item-description"
-                                        data-tooltip="Clip duration or relative to entire video">Clip lifespan
-                                        format</label>
-                                    <input type="checkbox" name="" id="clip_life_span_format" checked="">
-                                </span>
+                                        URL formatter</span>
+                                    <span class="bp3-button bp3-minimal bp3-small select__item"
+                                        value="clip-life-span-format"
+                                        data-tooltip="Clip duration or relative to entire video" selected="">Clip
+                                        lifespan format</span>
+                                </div>
 
                                 <span class="dropdown-item-separator"></span>
                                 <span class="dropdown-item rangeOffset">
@@ -464,28 +459,20 @@
                                     <div class="flex">
                                         <input type="range" min="1" max="60" value="1" class="slider"
                                             id="timestamp_display_scroll_offset">
-                                        <label for="" class="dropdown-item-description" data-tooltip="from 1 to 60"
-                                            id="rangeValue">5</label>
+                                        <label for="" class="dropdown-item-description"
+                                            data-tooltip="from 1 to 60">5</label>
                                     </div>
                                 </span>
 
                                 <span class="dropdown-item-separator"></span>
-                                <span class="dropdown-item">
-                                    <label for="" class="dropdown-item-description"
-                                        data-tooltip="Reminds you that the clip has ended">Sound
-                                        when video loops</label>
-                                    <input type="checkbox" name="end_loop_sound" data-main="initialize-loop"
-                                        id="sound_when_video_loops" checked="">
-                                </span>
-                                <span class="dropdown-item rangeOffset sub-dropdown--range" name="end_loop_sound"
-                                    data-bind="initialize-loop">
-                                    <span class="dropdown-info-message dropdown-item-description">Volume - End loop
-                                        sound</span>
+                                <span class="dropdown-item rangeOffset sub-dropdown--range">
+                                    <span class="dropdown-info-message dropdown-item-description"
+                                        data-tooltip="Reminds you that the clip has ended">Sound when video loops</span>
                                     <div class="flex">
                                         <input type="range" min="1" max="100" value="50" class="slider"
                                             id="end_loop_sound_volume">
-                                        <label for="" class="dropdown-item-description" data-tooltip="From 0 to 100"
-                                            id="loop_volume_displayed">50</label>
+                                        <label for="" class="dropdown-item-description"
+                                            data-tooltip="From 0 to 100">50</label>
                                     </div>
                                 </span>
                             </div>
