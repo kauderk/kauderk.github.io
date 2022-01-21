@@ -73,6 +73,7 @@ window.YT_GIF_SETTINGS_PAGE = {
 
     playerSettings: {
         baseKey: BaseSetting(sel),
+
         play_style: dom('strict'),
         mute_style: dom('strict'),
         fullscreen_style: dom('disabled'),
