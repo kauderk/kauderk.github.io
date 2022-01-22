@@ -3848,7 +3848,7 @@ async function onPlayerReady(event)
         UTILS.toggleAttribute(offsetClip, 'offset', timeDisplayEnd);
 
         // timeDisplay.innerHTML = '00:00/00:00'
-        if (UI.display.clip_life_span_format.checked) // 'bounded tick'/'clip end'
+        if (isSelected(UI.display.ms_options, 'clip-lifespan-format')) // 'bounded tick'/'clip end'
         {
             const boundedTick = Math.abs(_clipSpan - (map.end - tick()));
             const validEnd = offsetClip ? map.end : _clipSpan;
@@ -3880,7 +3880,7 @@ async function onPlayerReady(event)
 
         let dir = tick() + (Math.sign(e.deltaY) * Math.round(UI.range.timestamp_display_scroll_offset.value) * -1);
 
-        if (UI.display.clip_life_span_format.checked)
+        if (isSelected(UI.display.ms_options, 'clip-lifespan-format'))
         {
             if (dir <= map.start)
                 dir = map.end - 1; //can go beyond that
