@@ -5449,6 +5449,15 @@ function formatISODate(youtube_time)
     const arr = youtube_time.match(/(\d+)(?=[MHS])/ig) || [];
     return arr.map(i => (i.length < 2) ? ('0' + i) : i).join(':');
 }
+/* ********************* */
+function isSelected(select, value)
+{
+    return [...select.selectedOptions].find(o => o.value == value)
+}
+function getOption(select, value)
+{
+    return [...select.options].find(o => o.value == value)
+}
 //#endregion
 
 
