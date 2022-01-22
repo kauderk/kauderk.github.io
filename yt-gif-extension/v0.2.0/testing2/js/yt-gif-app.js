@@ -212,9 +212,7 @@ const cssData = {
 }
 const attrData = {
     // [data-main] -> [data-bind]
-    'initialize-bg': '',
-    'initialize-loop': '',
-    'iframe-buffer': '',
+    'initialize-mode': '',
     'timestamp-experience': '',
     'timestamp-loop-opt': '',
 }
@@ -871,13 +869,23 @@ async function Ready()
             const toogleMultiple = () => binds.forEach(b =>
             {
                 const on = b.getAttribute('on');
-                const showMatch = on == main.value;
-                const showIfAny = main.value != 'disabled' && on == 'any';
+                const not = b.getAttribute('not');
 
-                UTILS.toggleClasses(!(showMatch || showIfAny), toggleClassArr, b);
+                if (on)
+                {
+                    const showMatch = on == main.value;
+                    const showIfAny = main.value != 'disabled' && on == 'any';
+                    UTILS.toggleClasses(!(showMatch || showIfAny), toggleClassArr, b);
+                }
+                else if (not)
+                {
+                    const hideMatch = not == main.value;
+                    const hideIfAny = main.value != 'disabled' && not == 'any';
+                    UTILS.toggleClasses((hideMatch || hideIfAny), toggleClassArr, b);
+                }
             });
 
-
+            if (!main) { debugger; continue; }
             if (main.tagName == 'INPUT')
             {
                 toogleSingle();
