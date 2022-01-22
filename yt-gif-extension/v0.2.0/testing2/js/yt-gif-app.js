@@ -22,10 +22,6 @@ UI.deploymentStyle = {
     // hidden submenu
     deploy_yt_gifs: '',
 }
-UI.referenced = {
-    block_timestamp: '',
-    block_volume: '',
-}
 /*-----------------------------------*/
 const iframeIDprfx = 'player_';
 let currentFullscreenPlayer = null;
@@ -440,8 +436,6 @@ async function Ready()
     const thumbnail_as_bg = getOption(UI.experience.xp_options, 'thumbnail-as-bg');
     const { iframe_buffer_stack, awaiting_for_user_input_to_initialize, try_to_load_on_intersection_beta } = UI.experience;
     const { ddm_css_theme_input } = UI.dropdownMenu;
-    const { dwp_message, stt_allow } = cssData;
-    const { navigate_btn: navigate_btn_id } = cssData.id;
     //#endregion
 
     DDM_IconFocusBlurEvents(ddm_icon, ddm_focus, ddm_info_message_selector);
@@ -530,7 +524,7 @@ async function Ready()
 
     const { simulate_roam_research_timestamps } = UI.display;
     const { tm_workflow_display } = UI.timestamps;
-    const shortcuts_option = [...UI.timestamps.tm_options.options].find(o => o.value == 'shortcuts');
+    const shortcuts_option = getOption(UI.timestamps.tm_options, 'shortcuts');
     let { timestampObserver, keyupEventHanlder } = window.YT_GIF_OBSERVERS;
     timestampObserver?.disconnect();
     const targetNode = document.body;
@@ -758,7 +752,7 @@ async function Ready()
     }
 
     /* *************** */
-    function updateSettingsPageBlock(e, input, keyObj, siblingKeys)
+    async function updateSettingsPageBlock(e, input, keyObj, siblingKeys)
     {
         const { type, checked, value } = input;
         let replaceWith = (value).toString(); // range - checkbox - radio - label - select
@@ -779,7 +773,7 @@ async function Ready()
             replaceWith = [...input.selectedOptions].map(o => o.value);
         }
 
-        window.YT_GIF_DIRECT_SETTINGS.get(keyObj)?.UpdateSettingsBlockValue(replaceWith);
+        await window.YT_GIF_DIRECT_SETTINGS.get(keyObj)?.UpdateSettingsBlockValue(replaceWith);
     }
     function changeOnWeeel(e, el, keyObj)
     {
@@ -4357,7 +4351,7 @@ async function onStateChange(state)
         const soundSrc = validSoundURL();
         if (soundSrc)
         {
-            if (UI.experience.sound_when_video_loops.checked)
+            if (UI.range.end_loop_sound_volume.value != 0)
             {
                 PlayEndSound(soundSrc);
             }
