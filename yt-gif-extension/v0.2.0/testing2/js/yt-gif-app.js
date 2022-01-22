@@ -10,11 +10,6 @@ const UI = JSON.parse(JSON.stringify(window?.YT_GIF_SETTINGS_PAGE || {}));
 const UTILS = window.kauderk?.util;
 /*-----------------------------------*/
 /* user doesn't need to see this */
-UI.label = {
-    rangeValue: '',
-    loop_volume_displayed: '',
-    iframe_buffer_label: '',
-}
 UI.deploymentStyle = {
     //menu
     suspend_yt_gif_deployment: '',
@@ -455,9 +450,9 @@ async function Ready()
 
     DDM_FlipBindedDataAttr_RTM([dropdown__hidden], attrData); // RTM runtime
 
-    UpdateOnScroll_RTM(timestamp_display_scroll_offset, rangeValue);
-    UpdateOnScroll_RTM(end_loop_sound_volume, loop_volume_displayed);
-    UpdateOnScroll_RTM(iframe_buffer_slider, iframe_buffer_label);
+    UpdateOnScroll_RTM(timestamp_display_scroll_offset);
+    UpdateOnScroll_RTM(end_loop_sound_volume);
+    UpdateOnScroll_RTM(iframe_buffer_slider);
 
     ToggleThumbnails(thumbnail_as_bg, awaitng_input_with_thumbnail);
 
@@ -895,8 +890,9 @@ async function Ready()
             }
         }
     }
-    function UpdateOnScroll_RTM(scroll, labelEl)
+    function UpdateOnScroll_RTM(scroll)
     {
+        const labelEl = scroll.nextElementSibling;
         labelEl.innerHTML = scroll.value; // don't fire rendundant API calls on startup
 
         // 📦
