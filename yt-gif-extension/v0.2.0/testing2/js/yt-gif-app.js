@@ -559,15 +559,18 @@ async function Ready()
 
     // 7. simulate inline url btn
     //#region relevant variables
-    const { simulate_url_to_video_component } = UI.display;
+    const s_u_f_key = 'simulate-url-formatter';
+    const url_formatter_option = getOption(UI.display.ms_options, s_u_f_key);
     links.html.fetched.urlBtn = await UTILS.fetchTextTrimed(links.html.urlBtn);
     //#endregion
 
     const urlObserver = new MutationObserver(InlineUrlBtnMutations_cb);
 
-    ToogleUrlBtnObserver(simulate_url_to_video_component.checked && ValidUrlBtnUsage(), urlObserver);
-    simulate_url_to_video_component.addEventListener('change', (e) => confirmUrlBtnUsage(e.currentTarget.checked, e));
-    simulate_url_to_video_component.addEventListener('change', (e) => ToogleUrlBtnObserver(e.currentTarget.checked, urlObserver));
+    const s_u_f_startUp = url_formatter_option.selected && ValidUrlBtnUsage();
+    url_formatter_option.customSelect?.(s_u_f_startUp);
+    ToogleUrlBtnObserver(s_u_f_startUp, urlObserver);
+    url_formatter_option.addEventListener('customChange', (e) => confirmUrlBtnUsage(e.detail.currentValue, e));
+    url_formatter_option.addEventListener('customChange', (e) => ToogleUrlBtnObserver(e.currentTarget.selected, urlObserver));
 
 
 
@@ -747,9 +750,12 @@ async function Ready()
                     case 'range': // special case...
                         child.addEventListener('wheel', function (e) { changeOnWeeel(e, this, childKey) }, true);
                 }
-                function HandleSettingsPageBlockUpdate(e)
+                async function HandleSettingsPageBlockUpdate(e)
                 {
-                    return updateSettingsPageBlock(e, e.currentTarget, childKey, siblingKeys)
+                    // e.preventDefault();
+                    // e.stopPropagation();
+                    // if(e.target == e.currentTarget)
+                    return await updateSettingsPageBlock(e, e.currentTarget, childKey, siblingKeys)
                 }
 
                 if (!child?.addEventListener) { debugger; continue; }
@@ -2546,7 +2552,7 @@ async function Ready()
 
         if (userMind)
         {
-            localStorage.setItem('simulate_url_to_video_component', 'true');
+            localStorage.setItem(s_u_f_key, 'true');
             if (!canUse)
                 window.open("https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#caution-prompt", '_blank').focus();
         }
@@ -2556,18 +2562,17 @@ async function Ready()
             {
                 e.stopPropagation();
                 e.preventDefault();
-                e.currentTarget.checked = false;
-                e.currentTarget.value = "off";
-                e.currentTarget.dispatchEvent(new Event('customChange'));
+                e.currentTarget.customSelect?.(false); // this used to use be a chk tag/events, but since I'm changing them for "class CustomSelect()" a weird loop happens with the 'click' event handler...
+                e.currentTarget.parentElement.dispatchEvent(new Event('customChange'));
             }
-            localStorage.removeItem('simulate_url_to_video_component');
+            localStorage.removeItem(s_u_f_key);
         }
         return userMind;
     }
     function ValidUrlBtnUsage()
     {
-        const key = 'simulate_url_to_video_component';
-        const binarySessionVal = (k) => UTILS.isTrue(window.YT_GIF_DIRECT_SETTINGS?.get(k)?.sessionValue);
+        const key = s_u_f_key;
+        const binarySessionVal = (k) => UTILS.isTrue(window.YT_GIF_DIRECT_SETTINGS?.get('ms_options')?.sessionValue?.includes?.(k));
         const usageKey = binarySessionVal('override_' + key) || UTILS.isTrue(localStorage.getItem(key));
 
         return usageKey && binarySessionVal(key)
