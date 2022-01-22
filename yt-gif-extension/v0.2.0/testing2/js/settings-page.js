@@ -59,14 +59,11 @@ window.YT_GIF_SETTINGS_PAGE = {
     },
 
     experience: {
-        baseKey: BaseSetting(chk),
+        baseKey: BaseSetting(sel),
 
-        awaiting_for_user_input_to_initialize: dom('', chk),
-        awaiting_input_type: dom('mouseenter', sel),
-        awaiting_with_video_thumnail_as_bg: dom('1'),
-
-        iframe_buffer_stack: dom('1'),
-        try_to_load_on_intersection_beta: dom(),
+        initialize_mode: dom('buffer'),
+        awaiting_input_type: dom('mouseenter'),
+        xp_options: dom('thumbnail-as-bg'),
     },
 
     playerSettings: {
