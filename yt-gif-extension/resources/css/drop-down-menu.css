@@ -712,3 +712,8 @@ span.bp3-button.select__item {
   filter: brightness(60%);
 }
 
+/* Hmmm yes go on */
+.dropdown *::selection {
+  background: transparent;
+  color: inherit;
+}
