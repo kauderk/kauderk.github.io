@@ -4286,7 +4286,7 @@ async function onPlayerReady(event)
     {
         if (e.buttons == 4) return true;
 
-        const keys = UI.InAndOutKeys.keysArray.split(',').map(s => s.trim()).filter(s => !!s);
+        const keys = UI.defaultValues.InAndOutKeys.split(',').map(s => s.trim()).filter(s => !!s);
         for (const name of keys)
             if (e[name])
                 return true;
@@ -4298,7 +4298,7 @@ async function onPlayerReady(event)
         return UI.playerSettings.play_style.value == 'soft' || UI.playerSettings.play_style.value == 'strict'
     }
     function isParentHover()
-    {
+    {// https://stackoverflow.com/questions/36767196/check-if-mouse-is-inside-div#:~:text=if%20(element.parentNode.matches(%22%3Ahover%22))%20%7B
         return parent.matches(":hover");
     }
     function isTimeDisplayHover()
