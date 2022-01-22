@@ -254,20 +254,20 @@
                                 <div class="dropdown-item-select">
                                     <span class="ddm-info" for="">Initialize</span>
                                     <select class="ddm-select-item" id="initialize_mode" data-main="initialize-mode">
+                                        <option value="input_x_buffer"
+                                            title="Create a stack, push and shift at will - Performance Mode ⚡️">Buffer
+                                            + Interaction</option>
                                         <option value="input" title="Don't load until interaction">Awaiting for input
                                         </option>
-                                        <option value="buffer"
-                                            title="Create a stack, push and shift at will - Performance Mode ⚡️">
-                                            Iframe/Player Buffer</option>
+                                        <option value="buffer" title="Initialize through buffer">Through buffer</option>
                                         <option value="overflow"
                                             title="Set automatically when the the amout of iframes loaded simultaneously reaches the limit"
                                             disabled="">Handle Overflow</option>
                                     </select>
                                 </div>
                                 <span class="dropdown-item-separator"></span>
-                                <div class="dropdown-item-select">
-                                    <span class="ddm-info">Input
-                                        Type</span>
+                                <div class="dropdown-item-select" data-bind="initialize-mode" not="buffer">
+                                    <span class="ddm-info" for="">Input Type</span>
                                     <select class="ddm-select-item" id="awaiting_input_type">
                                         <option value="mousedown">Clicks</option>
                                         <option value="mouseenter">Hovering</option>
@@ -275,19 +275,21 @@
                                 </div>
                                 <div class="select select-vertcial" multiple="" id="xp_options">
                                     <span class="bp3-button bp3-minimal bp3-small select__item" value="thumbnail_as_bg"
-                                        data-tooltip="Aesthetics - or - minimalism" selected="">Video thumbnail</span>
+                                        data-tooltip="Aesthetics - or - minimalism" selected=""
+                                        data-bind="initialize-mode" not="buffer">Video thumbnail</span>
                                     <span
                                         data-tooltip="Beta - Newly observed components will try to displace the oldest ones"
-                                        value="intersection" class="bp3-button bp3-minimal bp3-small select__item"
-                                        data-bind="initialize-mode" not="input">Try to load when redered</span>
+                                        value="intersection"
+                                        class="bp3-button bp3-minimal bp3-small select__item dropdown--hidden"
+                                        data-bind="initialize-mode" on="input_x_buffer">Try to load when redered</span>
                                 </div>
-                                <span class="dropdown-item rangeOffset sub-dropdown--range" data-bind="initialize-mode"
-                                    not="input" style="max-width: 30ch;">
+                                <span class="dropdown-item rangeOffset sub-dropdown--range dropdown--hidden"
+                                    data-bind="initialize-mode" not="input" style="max-width: 30ch;">
                                     <div class="flex">
                                         <input type="range" min="1" max="30" value="15" class="slider"
                                             id="iframe_buffer_slider" data-tooltip="Loaded Simultaneously">
                                         <label for="" class="dropdown-item-description"
-                                            data-tooltip="From 1 to 30">4</label>
+                                            data-tooltip="From 1 to 30">10</label>
                                     </div>
                                 </span>
                             </div>
