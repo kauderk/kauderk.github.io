@@ -5326,23 +5326,27 @@ class CustomSelect
 
             function handleSelect() 
             {
+                const previous = option.selected;
                 if (
                     this.fakeSel.hasAttribute('multiple') &&
                     (fake.hasAttribute('selected') || option.selected)
                 )
                 {
-                    this._deselect(fake);
+                    this._deselect(fake)
+                    this._fireCustomChange(option, false, previous)
                 } else
                 {
-                    this._select(fake);
+                    this._select(fake)
+                    this._fireCustomChange(option, true, previous)
                 }
+                this.customSelect.dispatchEvent(new Event('change'))
             }
             function customSelect(bol)
             {
                 if (bol)
-                    this._select(fake);
+                    this._select(fake)
                 else
-                    this._deselect(fake);
+                    this._deselect(fake)
             }
         });
 
@@ -5365,22 +5369,15 @@ class CustomSelect
     _select(fake)
     {
         if (!this.fakeSel.hasAttribute('multiple'))
-        {
-            this.fakeSel.children.forEach((el) =>
-            {
-                this._vsSelected(false, el);
-            });
-        }
+            this.fakeSel.children.forEach((el) => this._vsSelected(false, el));
 
         this._isSelected(true, fake);
         this._vsSelected(true, fake);
-        this.customSelect.dispatchEvent(new Event('change'));
     }
     _deselect(fake)
     {
         this._isSelected(false, fake);
         this._vsSelected(false, fake);
-        this.customSelect.dispatchEvent(new Event('change'));
     }
     _vsSelected(bol, el)
     {
@@ -5392,14 +5389,22 @@ class CustomSelect
     {
         const index = Array.from(this.fakeSel.children).indexOf(fake);
         const option = this.customSelect.children[index];
-        option.dispatchEvent(new CustomEvent('customChange',
-            {
-                detail: {
-                    previousValue: option.selected,
-                    currentValue: bol,
-                },
-            }));
         option.selected = bol;
+    }
+    _fireCustomChange(option, bol, previousValue)
+    {
+        if (previousValue != bol) // nothing changed, skip
+            option.dispatchEvent(new CustomEvent('customChange',
+                {
+                    bubbles: false,
+                    cancelBubble: true,
+                    cancelable: true,
+                    //composed: false,
+                    detail: {
+                        previousValue,
+                        currentValue: bol,
+                    },
+                }));
     }
 }
 /* ********************* */
