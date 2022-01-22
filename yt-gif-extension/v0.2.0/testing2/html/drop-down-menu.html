@@ -253,7 +253,7 @@
 
                                 <div class="dropdown-item-select">
                                     <span class="ddm-info" for="">Initialize</span>
-                                    <select class="ddm-select-item" id="initiazlize_type" data-main="initialize-type">
+                                    <select class="ddm-select-item" id="initialize_mode" data-main="initialize-mode">
                                         <option value="input" title="Don't load until interaction">Awaiting for input
                                         </option>
                                         <option value="buffer"
@@ -280,9 +280,9 @@
                                         data-tooltip="Beta - Newly observed components will try to displace the oldest ones"
                                         value="try-to-load-on-intersection-beta"
                                         class="bp3-button bp3-minimal bp3-small select__item"
-                                        data-bind="initialize-type" not="input">Try to load when redered</span>
+                                        data-bind="initialize-mode" not="input">Try to load when redered</span>
                                 </div>
-                                <span class="dropdown-item rangeOffset sub-dropdown--range" data-bind="initialize-type"
+                                <span class="dropdown-item rangeOffset sub-dropdown--range" data-bind="initialize-mode"
                                     not="input" style="max-width: 30ch;">
                                     <div class="flex">
                                         <input type="range" min="1" max="30" value="15" class="slider"
