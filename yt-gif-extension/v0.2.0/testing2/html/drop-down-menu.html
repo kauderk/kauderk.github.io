@@ -251,53 +251,44 @@
                                 </div>
 
 
-                                <span class="dropdown-item">
-                                    <label for="" class="dropdown-item-description"
-                                        data-tooltip="Don't load until interaction">Awaiting for input to
-                                        initialize</label>
-                                    <input type="checkbox" name="" data-main="initialize-bg"
-                                        id="awaiting_for_user_input_to_initialize" checked="">
-                                </span>
-                                <div class="dropdown-item-select" data-bind="initialize-bg">
-                                    <span class="ddm-info" for="">Input
+                                <div class="dropdown-item-select">
+                                    <span class="ddm-info" for="">Initialize</span>
+                                    <select class="ddm-select-item" id="initiazlize_type" data-main="initialize-type">
+                                        <option value="input" title="Don't load until interaction">Awaiting for input
+                                        </option>
+                                        <option value="buffer"
+                                            title="Create a stack, push and shift at will - Performance Mode ⚡️">
+                                            Iframe/Player Buffer</option>
+                                        <option value="overflow"
+                                            title="Set automatically when the the amout of iframes loaded simultaneously reaches the limit"
+                                            disabled="">Handle Overflow</option>
+                                    </select>
+                                </div>
+                                <span class="dropdown-item-separator"></span>
+                                <div class="dropdown-item-select">
+                                    <span class="ddm-info">Input
                                         Type</span>
                                     <select class="ddm-select-item" id="awaiting_input_type">
                                         <option value="mousedown">Clicks</option>
                                         <option value="mouseenter">Hovering</option>
                                     </select>
                                 </div>
-                                <span class="dropdown-item" data-bind="initialize-bg">
-                                    <label for="" class="dropdown-item-description"
-                                        data-tooltip="Aesthetics - or - minimalism">Video thumbnail</label>
-                                    <input type="checkbox" name="" id="awaiting_with_video_thumnail_as_bg" checked="">
-                                </span>
-
-                                <span class="dropdown-item-separator"></span>
-                                <span class="dropdown-item">
-                                    <label for="" class="dropdown-item-description"
-                                        data-tooltip="Create a stack, push and shift at will - Performance Mode ⚡️">Iframe/Player
-                                        Buffer</label>
-                                    <input type="checkbox" name="iframe-buffer" data-main="iframe-buffer"
-                                        id="iframe_buffer_stack" checked="">
-                                </span>
-                                <span class="dropdown-item dropdown-item_not-allowed_input" data-bind="iframe-buffer">
-                                    <label for="" class="dropdown-item-description"
-                                        data-tooltip="Beta - Newly observed components will try to displace the oldest ones.">Try
-                                        to load on intersection</label>
-                                    <input type="checkbox" name="" id="try_to_load_on_intersection_beta" checked=""
-                                        data-tooltip="&quot;Awaiting for user input&quot; has priority"
-                                        data-tooltip-original="Enabled? The greater the slider, the less tries, the less loadings :D"
-                                        disabled="">
-                                </span>
-                                <span class="dropdown-item rangeOffset sub-dropdown--range" name="iframe-buffer"
-                                    data-bind="iframe-buffer">
-                                    <span class="dropdown-info-message dropdown-item-description">Loaded
-                                        simultaneously</span>
+                                <div class="select select-vertcial" multiple="" id="exp_options">
+                                    <span class="bp3-button bp3-minimal bp3-small select__item" value="thumbnail-as-bg"
+                                        data-tooltip="Aesthetics - or - minimalism" selected="">Video thumbnail</span>
+                                    <span
+                                        data-tooltip="Beta - Newly observed components will try to displace the oldest ones"
+                                        value="try-to-load-on-intersection-beta"
+                                        class="bp3-button bp3-minimal bp3-small select__item"
+                                        data-bind="initialize-type" not="input">Try to load when redered</span>
+                                </div>
+                                <span class="dropdown-item rangeOffset sub-dropdown--range" data-bind="initialize-type"
+                                    not="input" style="max-width: 30ch;">
                                     <div class="flex">
                                         <input type="range" min="1" max="30" value="15" class="slider"
-                                            id="iframe_buffer_slider">
-                                        <label for="" class="dropdown-item-description" data-tooltip="From 1 to 30"
-                                            id="iframe_buffer_label">4</label>
+                                            id="iframe_buffer_slider" data-tooltip="Loaded Simultaneously">
+                                        <label for="" class="dropdown-item-description"
+                                            data-tooltip="From 1 to 30">4</label>
                                     </div>
                                 </span>
                             </div>
@@ -469,7 +460,7 @@
                                     <span class="dropdown-info-message dropdown-item-description"
                                         data-tooltip="Reminds you that the clip has ended">Sound when video loops</span>
                                     <div class="flex">
-                                        <input type="range" min="1" max="100" value="50" class="slider"
+                                        <input type="range" min="0" max="100" value="50" class="slider"
                                             id="end_loop_sound_volume">
                                         <label for="" class="dropdown-item-description"
                                             data-tooltip="From 0 to 100">50</label>
