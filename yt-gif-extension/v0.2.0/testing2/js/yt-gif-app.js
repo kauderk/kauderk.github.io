@@ -444,8 +444,7 @@ async function Ready()
     //#region relevant variables
     const { ddm_icon, ddm_focus, ddm_info_message_selector, dropdown__hidden, awaitng_input_with_thumbnail } = cssData;
     const { timestamp_display_scroll_offset, end_loop_sound_volume, iframe_buffer_slider } = UI.range;
-    const { rangeValue, loop_volume_displayed, iframe_buffer_label } = UI.label;
-    const { awaiting_with_video_thumnail_as_bg } = UI.experience;
+    const thumbnail_as_bg = getOption(UI.experience.xp_options, 'thumbnail-as-bg');
     const { iframe_buffer_stack, awaiting_for_user_input_to_initialize, try_to_load_on_intersection_beta } = UI.experience;
     const { ddm_css_theme_input } = UI.dropdownMenu;
     const { dwp_message, stt_allow } = cssData;
@@ -460,7 +459,7 @@ async function Ready()
     UpdateOnScroll_RTM(end_loop_sound_volume, loop_volume_displayed);
     UpdateOnScroll_RTM(iframe_buffer_slider, iframe_buffer_label);
 
-    TogglePlayerThumbnails_DDM_RTM(awaiting_with_video_thumnail_as_bg, awaitng_input_with_thumbnail);
+    ToggleThumbnails(thumbnail_as_bg, awaitng_input_with_thumbnail);
 
     navigateToSettingsPageInSidebar();
     ToggleTheme_DDM_RTM(ddm_css_theme_input, themes, ddm_css_theme_stt, ddm_main_theme_id);
@@ -919,24 +918,20 @@ async function Ready()
         }
     }
 
-    function TogglePlayerThumbnails_DDM_RTM(awaiting_with_video_thumnail_as_bg, awaitng_input_with_thumbnail)
+    function ToggleThumbnails(thumbnail_as_bg, awaitng_input_with_thumbnail)
     {
         // BIND TO SETTINGS PAGE
 
-        awaiting_with_video_thumnail_as_bg.addEventListener('change', handleIMGbgSwap);
+        thumbnail_as_bg.addEventListener('customChange', handleIMGbgSwap);
         function handleIMGbgSwap(e)
         {
             const awaitingGifs = [...document.querySelectorAll(`.${awaitng_input_with_thumbnail}`)];
             for (const el of awaitingGifs)
             {
-                if (awaiting_with_video_thumnail_as_bg.checked)
-                {
-                    UTILS.applyIMGbg(el, el.dataset.videoUrl);
-                }
+                if (e.target.selected)
+                    UTILS.applyIMGbg(el, el.getAttribute('data-video-url'));
                 else
-                {
                     UTILS.removeIMGbg(el); // spaguetti
-                }
             }
         }
     }
