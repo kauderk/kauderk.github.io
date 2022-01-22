@@ -3720,7 +3720,7 @@ async function onPlayerReady(event)
 
     function InState(e)
     {
-        if (UI.playerSettings.play_last_active_player_off_intersection.checked)
+        if (isSelected(UI.playerSettings.ps_options, 'mantain-last-active-player'))
             ToogleAllOthers(false, true)
 
         t.__proto__.globalHumanInteraction = true; // I'm afraid this event is slower to get attached than 200ms intervals... well 
@@ -4109,7 +4109,7 @@ async function onPlayerReady(event)
         {
             if (
                 !parent.hasAttribute('yt-active') ||
-                !UI.playerSettings.play_last_active_player_off_intersection.checked
+                !isSelected(UI.playerSettings.ps_options, 'mantain-last-active-player')
             )
                 return togglePlay(false)
 
@@ -4359,7 +4359,7 @@ async function onStateChange(state)
             }
         }
 
-        if (UI.fullscreenStyle.smoll_vid_when_big_ends.checked && (currentFullscreenPlayer === t.h.id)) // let's not talk about that this took at least 30 mins. Don't. Ughhhh
+        if (isSelected(UI.playerSettings.ps_options, 'minimize-on-video-ended') && (currentFullscreenPlayer === t.h.id)) // let's not talk about that this took at least 30 mins. Don't. Ughhhh
         {
             if (document.fullscreenElement)
             {
