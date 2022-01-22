@@ -3934,18 +3934,18 @@ async function onPlayerReady(event)
     {
         currentFullscreenPlayer = t.h.id;
 
-        if (!document.fullscreenElement && isParentHover()) //https://stackoverflow.com/questions/36767196/check-if-mouse-is-inside-div#:~:text=if%20(element.parentNode.matches(%22%3Ahover%22))%20%7B
+        if (!document.fullscreenElement)
         {
-            if (UI.fullscreenStyle.mute_on_exit_fullscreenchange.checked)
+            if (isParentHover())
             {
-                isSoundingFine(false);
+                if ('mute' == UI.playerSettings.fullscreen_style.value)
+                    isSoundingFine(false);
+                else if ('pause' == UI.playerSettings.fullscreen_style.value)
+                    togglePlay(false);
             }
-            if (UI.fullscreenStyle.pause_on_exit_fullscreenchange.checked)
-            {
-                togglePlay(false);
-            }
+            else if ('play' == UI.playerSettings.fullscreen_style.value)
+                togglePlay(true);
         }
-
     }
     function fullscreenAutoplaySynery_Handler(e)
     {
