@@ -259,14 +259,13 @@
                                             + Interaction</option>
                                         <option value="input" title="Don't load until interaction">Awaiting for input
                                         </option>
-                                        <option value="buffer" title="Initialize through buffer">Through buffer</option>
                                         <option value="overflow"
-                                            title="Set automatically when the the amout of iframes loaded simultaneously reaches the limit"
+                                            title="Set Automatically - To gain access to the buffer, either increase the limit or unload videos manually"
                                             disabled="">Handle Overflow</option>
                                     </select>
                                 </div>
                                 <span class="dropdown-item-separator"></span>
-                                <div class="dropdown-item-select" data-bind="initialize-mode" not="buffer">
+                                <div class="dropdown-item-select">
                                     <span class="ddm-info" for="">Input Type</span>
                                     <select class="ddm-select-item" id="awaiting_input_type">
                                         <option value="mousedown">Clicks</option>
@@ -275,8 +274,7 @@
                                 </div>
                                 <div class="select select-vertcial" multiple="" id="xp_options">
                                     <span class="bp3-button bp3-minimal bp3-small select__item" value="thumbnail_as_bg"
-                                        data-tooltip="Aesthetics - or - minimalism" selected=""
-                                        data-bind="initialize-mode" not="buffer">Video thumbnail</span>
+                                        data-tooltip="Aesthetics - or - minimalism" selected="">Video thumbnail</span>
                                     <span
                                         data-tooltip="Beta - Newly observed components will try to displace the oldest ones"
                                         value="intersection"
@@ -592,7 +590,7 @@
                                                     class="bp3-button bp3-minimal bp3-small m-0 appearance-none bp3-icon-learning"></a>
                                             </span>
                                             <select class="ddm-select-item">
-                                                <option value="0" selected>Intallation</option>
+                                                <option value="0">Intallation</option>
                                                 <option value="1">Features Showcase</option>
                                             </select>
                                         </span>
