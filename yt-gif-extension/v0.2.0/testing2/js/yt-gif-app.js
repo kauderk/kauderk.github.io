@@ -25,8 +25,6 @@ UI.deploymentStyle = {
 /*-----------------------------------*/
 const iframeIDprfx = 'player_';
 let currentFullscreenPlayer = null;
-let initialCheck_awaitngBtn = undefined;
-let userActiveChoice_awaitingBtn = undefined;
 /*-----------------------------------*/
 const YT_GIF_OBSERVERS_TEMP = {
     masterMutationObservers: [],
@@ -433,8 +431,9 @@ async function Ready()
     //#region relevant variables
     const { ddm_icon, ddm_focus, ddm_info_message_selector, dropdown__hidden, awaitng_input_with_thumbnail } = cssData;
     const { timestamp_display_scroll_offset, end_loop_sound_volume, iframe_buffer_slider } = UI.range;
-    const thumbnail_as_bg = getOption(UI.experience.xp_options, 'thumbnail-as-bg');
-    const { iframe_buffer_stack, awaiting_for_user_input_to_initialize, try_to_load_on_intersection_beta } = UI.experience;
+    const initialize_mode = UI.experience.initialize_mode;
+    const input_x_buffer_option = getOption(initialize_mode, 'input_x_buffer');
+    const thumbnail_as_bg = getOption(UI.experience.xp_options, 'thumbnail_as_bg');
     const { ddm_css_theme_input } = UI.dropdownMenu;
     //#endregion
 
@@ -451,7 +450,7 @@ async function Ready()
     navigateToSettingsPageInSidebar();
     ToggleTheme_DDM_RTM(ddm_css_theme_input, themes, ddm_css_theme_stt, ddm_main_theme_id);
 
-    IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_user_input_to_initialize, iframe_buffer_slider, try_to_load_on_intersection_beta);
+    initialize_modes_synergy(iframe_buffer_slider, input_x_buffer_option, initialize_mode);
 
 
 
@@ -995,58 +994,13 @@ async function Ready()
         icon.addEventListener('mouseleave', toogleOnSidebar, true);
     }
     /* ************* */
-    function IframeBuffer_AND_AwaitngToInitialize_SYNERGY_RTM(iframe_buffer_stack, awaiting_for_user_input_to_initialize, iframe_buffer_slider, try_to_load_on_intersection_beta)
+    function initialize_modes_synergy(slider, input_x_buffer, initialize_mode)
     {
-        initialCheck_awaitngBtn = awaiting_for_user_input_to_initialize.checked;
+        initialize_mode.addEventListener('change', e => input_x_buffer.disabled = false)
 
-        Initial_synergy_btns();
-
-        awaiting_for_user_input_to_initialize.addEventListener('change', function (e)
-        {
-            const { checked, parentNode } = e.currentTarget;
-            toggleBtn_VS(checked, TryingBtn_VisualFeedback);
-
-            if (parentNode.matches(":hover"))
-            {
-                userActiveChoice_awaitingBtn = checked;
-            }
-        });
-        try_to_load_on_intersection_beta.addEventListener('change', (e) =>
-        {
-            const { checked } = e.currentTarget;
-            toggleBtn_VS(checked, AwaitingBtn_VisualFeedback);
-        });
-
-
-        iframe_buffer_stack.addEventListener('change', function (e)
-        {
-            if (e.currentTarget.checked)
-            {
-                ifStack_ShiftAllOlder_IframeBuffer();
-            }
-            else
-            {
-                smart_AwaitingBtn_Dispatch_ActiveCheck();
-                AwaitingBtn_VisualFeedback(false, false);
-            }
-        });
-
-
-        iframe_buffer_slider.addEventListener('click', () => ifStack_ShiftAllOlder_IframeBuffer());
-        iframe_buffer_slider.addEventListener('wheel', () => ifStack_ShiftAllOlder_IframeBuffer());
-
-        function Initial_synergy_btns()
-        {
-            // one or the other bud, i dunno what to tell you
-            if (initialCheck_awaitngBtn)
-            {
-                toggleBtn_VS(true, TryingBtn_VisualFeedback);
-            }
-            else if (try_to_load_on_intersection_beta.checked)
-            {
-                toggleBtn_VS(true, AwaitingBtn_VisualFeedback);
-            }
-        }
+        input_x_buffer.addEventListener('customChange', ifBuffer_ShiftOldest);
+        slider.addEventListener('click', ifBuffer_ShiftOldest);
+        slider.addEventListener('wheel', ifBuffer_ShiftOldest);
     }
     //#endregion
 
@@ -2788,7 +2742,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
     // 7. 
-    if (dataCreation == attrInfo.creation.forceAwaiting || isValid_Awaiting_check())
+    if (dataCreation == attrInfo.creation.forceAwaiting || isInput_selectedValid())
     {
         return await DeployYT_IFRAME_OnInteraction();
     }
@@ -3254,16 +3208,16 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     {
         const mainAnimation = setUpWrapperAwaitingAnimation();
         const { awaiting_input_type } = UI.experience;
-        const interactionType = awaiting_input_type.value == 'mousedown' ? 'mousedown' : 'mouseenter'; // huga buga
+        let interactionType = awaiting_input_type.value == 'mousedown' ? 'mousedown' : 'mouseenter'; // huga buga
 
         AddInteractionEventListener();
         wrapper.addEventListener('customPlayerReady', CreateYTPlayer);
 
         function changeMouseEvents(e)
         {
-            if (!isRendered(e.currentTarget))
+            if (!isRendered(wrapper))
                 return RemoveAllListeners()
-            ReplaceInteractionEventListener(e.type)
+            ReplaceInteractionEventListener(e.target.value)
         }
 
         awaiting_input_type.addEventListener('change', changeMouseEvents);
@@ -3309,7 +3263,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         function ReplaceInteractionEventListener(listener = interactionType)
         {
             RemoveInteractionEventListener();
-            AddInteractionEventListener(listener);
+            AddInteractionEventListener(interactionType = listener);
         }
         function AddInteractionEventListener(listener = interactionType)
         {
@@ -3328,14 +3282,10 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
             let mainAnimation = awaitingAnimationThumbnail;
 
-            if (UI.experience.awaiting_with_video_thumnail_as_bg.checked)
-            {
+            if (isSelected(UI.experience.xp_options, 'thumbnail_as_bg'))
                 UTILS.applyIMGbg(wrapper, url);
-            }
             else
-            {
                 mainAnimation = awaitingAnimation;
-            }
 
             UTILS.toggleClasses(true, mainAnimation, wrapper);
             return mainAnimation;
@@ -4041,7 +3991,7 @@ async function onPlayerReady(event)
 
         if (canBeCleanedByBuffer)
         {
-            ifStack_ShiftAllOlder_IframeBuffer();
+            ifBuffer_ShiftOldest();
         }
 
 
@@ -4469,14 +4419,12 @@ function PushNew_ShiftAllOlder_IframeBuffer(parentCssPath)
     if (parentCssPath)
         window.YT_GIF_OBSERVERS.masterIframeBuffer = UTILS.pushSame(window.YT_GIF_OBSERVERS.masterIframeBuffer, parentCssPath);
 
-    ifStack_ShiftAllOlder_IframeBuffer(); // modifies and returns masterIframeBuffer
+    ifBuffer_ShiftOldest(); // modifies and returns masterIframeBuffer
 }
-function ifStack_ShiftAllOlder_IframeBuffer()
+function ifBuffer_ShiftOldest()
 {
-    if (!UI.experience.iframe_buffer_stack.checked)
-    {
+    if (isInputSelected()) // everything else are buffer variations
         return null;
-    }
 
 
     // work in pregress | by shifting/removing the first entry, you clean the most irrelevent YT GIF, and give space to new ones (to load, thus autoplay on mouseenter) when intersecting the website
@@ -4486,7 +4434,7 @@ function ifStack_ShiftAllOlder_IframeBuffer()
 
 
 
-    if (isValid_TryIntersection_EnabledCheck())
+    if (isIntersection_selectedValid())
     {
         // 2.
         arr = FitBuffer_OffScreen(arr, cap, displaced);
@@ -4494,18 +4442,16 @@ function ifStack_ShiftAllOlder_IframeBuffer()
     else
     {
         // 2. while...
-        const { shiftedArr, atLeastOne, lastOne } = FitBuffer(arr, cap, buffer);
+        const { shiftedArr, atLeastOne: oneShifted, lastOne } = FitBuffer(arr, cap, buffer);
         arr = shiftedArr;
         // 2.1 mix and match
-        if (atLeastOne || cap <= arr.length)
+        if (oneShifted || cap <= arr.length) // there is space
         {
-            AwaitingBtn_ActiveCheck(true);
-            AwaitingBtn_VisualFeedback(true);
+            toggle_buffers_overflow(true);
         }
-        else if (!atLeastOne || cap > arr.length)
+        else if (!oneShifted && cap > arr.length) // overflow
         {
-            smart_AwaitingBtn_Dispatch_ActiveCheck();
-            AwaitingBtn_VisualFeedback(false, false);
+            toggle_buffers_overflow(false);
         }
     }
 
@@ -4601,99 +4547,59 @@ function CleanAndBrandNewWrapper(wrapper_p, attr_name = attrInfo.creation.name, 
 }
 
 //#region visual feedback - checked - disabled - dispatch
-function smart_AwaitingBtn_Dispatch_ActiveCheck()
+function isIntersection_selectedValid()
 {
-    let validCheck = undefined;
-    if (typeof userActiveChoice_awaitingBtn !== 'undefined')
-    {
-        validCheck = userActiveChoice_awaitingBtn;
-    }
-    else if (typeof initialCheck_awaitngBtn !== 'undefined')
-    {
-        validCheck = initialCheck_awaitngBtn;
-    }
-
-    if (typeof validCheck !== 'undefined')
-    {
-        return AwaitingBtn_ActiveCheck(validCheck);
-    }
-
-    return undefined;
+    return isIntersectionSeletectd() && isInputBufferSelected() // the only place where it is available
 }
-function AwaitingBtn_ActiveCheck(bol)
+function isInput_selectedValid()
 {
-    const { awaiting_for_user_input_to_initialize } = UI.experience;
-    awaiting_for_user_input_to_initialize.disabled = bol;
-    awaiting_for_user_input_to_initialize.checked = bol;
-
-    return awaiting_for_user_input_to_initialize;
+    return isInputSelected() || (!isIntersectionSeletectd() && isInputBufferSelected()) || isSelected(UI.experience.initialize_mode, 'overflow')
 }
-/* *********************** */
-function isValid_TryIntersection_EnabledCheck()
+function isInputSelected()
 {
-    const { try_to_load_on_intersection_beta } = UI.experience;
-    return isValid_TryIntersection_check() && !try_to_load_on_intersection_beta.disabled;
+    return isSelected(UI.experience.initialize_mode, 'input')
 }
-function isValid_TryIntersection_check()
+function isIntersectionSeletectd()
 {
-    return UI.experience.try_to_load_on_intersection_beta.checked;
+    return isSelected(UI.experience.xp_options, 'intersection')
 }
-function isValid_Awaiting_check()
+function isInputBufferSelected()
 {
-    // kinda spaghetti
-    // bc both can't be checked at the same time
-    // the logic would contradict itself
-    return UI.experience.awaiting_for_user_input_to_initialize.checked && !isValid_TryIntersection_check();
+    return isSelected(UI.experience.initialize_mode, 'input_x_buffer')
 }
-/* *********************** */
-function TryingBtn_VisualFeedback(bol, disabled = undefined)
+function toggle_buffers_overflow(bol)
 {
-    const { try_to_load_on_intersection_beta } = UI.experience;
+    const modes = UI.experience.initialize_mode;
+    const input_x_buffer = getOption(modes, 'input_x_buffer');
 
-    if (!try_to_load_on_intersection_beta.hasAttribute("data-tooltip-original"))
-    {
-        try_to_load_on_intersection_beta.setAttribute("data-tooltip-original", try_to_load_on_intersection_beta.getAttribute("data-tooltip"));
-    }
-    const originalClause = try_to_load_on_intersection_beta.getAttribute("data-tooltip-original");
+    input_x_buffer.disabled = bol;
+    if (!bol)
+        input_x_buffer.selected = false;
 
-    const clause = bol ? '"Awaiting for user input" has priority' : originalClause;
-    try_to_load_on_intersection_beta.setAttribute("data-tooltip", clause);
-    //UTILS.toggleAttribute(bol, 'data-tooltip', try_to_load_on_intersection_beta, clause);
-    return btn_VS(bol, try_to_load_on_intersection_beta, disabled);
-}
-function AwaitingBtn_VisualFeedback(bol, disabled = undefined)
-{
-    const { awaiting_for_user_input_to_initialize } = UI.experience;
+    getOption(modes, 'overflow').selected = bol;
+    modes.dispatchEvent(new Event('customBind'));
 
-    const clause = "Full stack Iframe Buffer has priority";
+    // const input_x_buffer = getOption(modes, 'input_x_buffer');
+    // const buffer = getOption(modes, 'buffer');
 
-    UTILS.toggleAttribute(bol, 'data-tooltip', awaiting_for_user_input_to_initialize, clause);
-    btn_VS(bol, awaiting_for_user_input_to_initialize, disabled);
-}
-/* *********** */
-function toggleBtn_VS(checked, VisualFeedback_cb = () => { }) 
-{
-    if (checked)
-    {
-        VisualFeedback_cb(true, true);
-    }
-    else
-    {
-        VisualFeedback_cb(false, false);
-    }
-}
-function btn_VS(bol, exp_btn, disabled)
-{
-    const { ditem_allow } = cssData;
+    // buffer.disabled = input_x_buffer.disabled = bol;
+    // if (!bol)
+    //     buffer.selected = input_x_buffer.selected = false;
 
-    UTILS.toggleClasses(bol, [ditem_allow], exp_btn.parentNode);
+    // getOption(modes, 'overflow').selected = bol;
 
-    if (typeof disabled !== 'undefined')
-    {
-        exp_btn.disabled = disabled; // spaghetti? Yes. Confusing. Kinda. But it works, as the btn names (semantics) suggest, maybe that's my problem.
-    }
 
-    return exp_btn;
+
+    // const validOpt = (o, b, is) => o[is] = b
+    // const allOptions = (bol, is) => [...modes.options].forEach(o => validOpt(o, bol, is))
+
+    // allOptions(bol, 'selected');
+    // if (!bol)
+    //     allOptions(false, 'disabled');
+
+    // const overflow = getOption(modes, 'overflow');
+    // overflow.selected = bol;
+    // overflow.disabled = !bol;
 }
 //#endregion
 
@@ -5321,6 +5227,7 @@ class CustomSelect
             fake.addEventListener('click', handleSelect.bind(this));
             option.customSelect = customSelect.bind(this);
             option.customHandleSelect = handleSelect.bind(this);
+            option.fake = fake;
 
             function handleSelect() 
             {
@@ -5448,9 +5355,9 @@ function formatISODate(youtube_time)
     return arr.map(i => (i.length < 2) ? ('0' + i) : i).join(':');
 }
 /* ********************* */
-function isSelected(select, value)
+function isSelected(select, ...value)
 {
-    return [...select.selectedOptions].find(o => o.value == value)
+    return [...select.selectedOptions].find(o => value.includes(o.value))
 }
 function getOption(select, value)
 {
