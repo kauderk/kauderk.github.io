@@ -717,3 +717,6 @@ span.bp3-button.select__item {
   background: transparent;
   color: inherit;
 }
+.dropdown.dropdown-show-info:hover {
+  z-index: 100;
+}
