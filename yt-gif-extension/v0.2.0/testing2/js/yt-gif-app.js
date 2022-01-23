@@ -3550,7 +3550,7 @@ async function onPlayerReady(event)
     // 12. Guard clause - onPlayerReady executed
     parent.setAttribute('loaded', '');
     iframe.addEventListener('load', () => t.__proto__.previousTick = tick(t));
-    ValidateHierarchyTimestampsSets(parent, blockID);
+    ValidateHierarchyTimestamps(parent, t);
 
 
 
@@ -4728,6 +4728,18 @@ function TimestampsInHierarchy(rm_container, targetWrapper, allSelector)
         .filter(tm => !badSets.includes(tm));
     return actives;
 }
+function ValidateHierarchyTimestamps(wrapper, t)
+{
+    const videoId = t?.i?.h?.videoId;
+    YTvideoIDs.set(videoId, t.getDuration?.());
+
+    const d = parseInt(YTvideoIDs.get(videoId));
+    const rm_container = closest_rm_container(wrapper);
+
+    if (rm_container && typeof d == 'number')
+        TimestampsInHierarchy(rm_container, wrapper, '[yt-gif-timestamp-emulation]')
+            .forEach(tm => tm.validateSelf?.(d));
+}
 /* ***************** */
 function PulseObj(tEl)
 {
@@ -5251,6 +5263,9 @@ class CustomSelect
 
             function handleSelect() 
             {
+                if (fake.hasAttribute('disabled') || option.disabled)
+                    return;
+
                 const previous = option.selected;
                 if (
                     this.fakeSel.hasAttribute('multiple') &&
