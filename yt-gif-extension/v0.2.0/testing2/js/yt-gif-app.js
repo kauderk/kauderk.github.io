@@ -1467,7 +1467,6 @@ async function Ready()
     async function cleanAndSetUp_TimestampEmulation(found)
     {
         let siblingsArr = [];
-        const previousSiblingsMap = new Map(); // block -> buttons
 
         let startEndComponentMap = null;
         const componentMapMap = new Map();
@@ -1478,7 +1477,7 @@ async function Ready()
         const isKey = 'is component';
 
 
-        const renderedComponents = found.filter(node1 => isRendered(node1)).filter(node2 => UTILS.isNotZoomPath(node2));
+        const renderedComponents = found.filter(node => isRendered(node) && UTILS.isNotZoomPath(node))
         for (const node of renderedComponents)
         {
             const block = closestBlock(node);
@@ -1588,7 +1587,9 @@ async function Ready()
                     }
                     async function validateSelf(d)
                     {
-                        if (!isNaN(d) && duration == parseInt(d) && o.targetNode.hasAttribute('out-of-bounds'))
+                        if (typeof d !== 'number')
+                            return;
+                        if (duration == parseInt(d) && o.targetNode.hasAttribute('out-of-bounds'))
                             return; // already set, exit
                         duration = parseInt(d); // good to go
                         if (typeof duration !== 'number')
@@ -1625,17 +1626,26 @@ async function Ready()
         }
         async function durationObj(succesfulEmulationMap)
         {
-            let wrapperObjs = [];
-            const targetElms = [...succesfulEmulationMap.values()].map(arrs => arrs[0]?.targetNodeParent);
-            if (targetElms.length == 0)
-                return {};
+            const obj = { getDuration: () => null }
 
-            for (const el of targetElms)
+            if (!isSelected(UI.timestamps.tm_options, 'YT_API_KEY_V3'))
+                return obj;
+
+
+            let wrapperObjs = [];
+            const rawTargets = [...succesfulEmulationMap.values()].map(arrs => arrs[0]?.targetNodeParent);
+            if (rawTargets.length == 0)
+                return obj;
+
+
+
+            for (const el of rawTargets)
             {
                 const o = await getWrapperInHierarchyObj(el);
                 if (!wrapperObjs.find(x => x.id == o.id)) // push if o.id is not in wrapperObjs
                     wrapperObjs.push(o);
             }
+
 
             const durationMap = new Map(); // store duration of each grandparent wrapper, if any
             for (const wo of wrapperObjs)
@@ -1644,9 +1654,10 @@ async function Ready()
                 const videoId = UTILS.getYouTubeVideoID(lastUrl ?? '') || 'invalid';
                 if (durationMap.has(wo.id) && !durationMap.get(wo.id))
                     YTvideoIDs.delete(videoId); // it fetched something wrong, clean it and try angain
-                // getMap_smart -> avoid making redudundant requests from YT API V3
+                // getMap_smart -> avoid making redundant requests from YT API V3
                 durationMap.set(wo.id, await getMap_smart(videoId, YTvideoIDs, tryToGetUrlDuration, videoId));
             }
+
 
             return {
                 getDuration: (targetBlockID) =>
@@ -1658,13 +1669,14 @@ async function Ready()
             }
         }
     }
-    async function getVideoDuration_smart(uid, el)
+    async function getLastWrapper_RAP(uid, el)
     {
         const { lastWrapperInBlock, root } = await getYTwrapperRootObj(uid, el);
-        const wraper = lastWrapperInBlock(root);
-        const lastUrl = wraper?.getAttribute('data-video-url');
-        const videoId = UTILS.getYouTubeVideoID(lastUrl ?? '') || 'invalid';
-        return await getMap_smart(videoId, YTvideoIDs, tryToGetUrlDuration, videoId);
+        const lastWrapper = lastWrapperInBlock?.(root);
+        return {
+            lastWrapper,
+            id: closestBlock(lastWrapper)?.id,
+        }
     }
 
     // 6.1.1
