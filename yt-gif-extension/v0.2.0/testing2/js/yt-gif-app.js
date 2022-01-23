@@ -73,7 +73,7 @@ const YT_GIF_OBSERVERS_TEMP = {
             CleanAndBrandNewWrapper(wrapper, attrInfo.creation.name, attrInfo.creation.cleaning); //wrapperParent -> nest new span
         }
     },
-    dmm_html: null,
+    dmm_html: window.ddm_html ?? null,
 }
 window.YT_GIF_OBSERVERS = (!window.YT_GIF_OBSERVERS) ? YT_GIF_OBSERVERS_TEMP : window.YT_GIF_OBSERVERS;
 /*-----------------------------------*/
@@ -856,26 +856,20 @@ async function Ready()
         for (const key in attrData)
         {
             const main = document.querySelector(`[data-main='${key}']`);
-            const binds = [...document.querySelectorAll(`[data-bind*='${key}']`)];
+            const binds = () => [...document.querySelectorAll(`[data-bind*='${key}']`)];
 
-            const toogleSingle = () => binds.forEach(b => UTILS.toggleClasses(!main.checked, toggleClassArr, b));
-            const toogleMultiple = () => binds.forEach(b =>
+            const toogleSingle = () => binds().forEach(b => UTILS.toggleClasses(!main.checked, toggleClassArr, b));
+            const toogleMultiple = () => binds().forEach(b =>
             {
                 const on = b.getAttribute('on');
                 const not = b.getAttribute('not');
+                const equals = (s) => s.split(',').map(s => s.trim()).some(v => v == main.value);
+                const any = (v) => main.value != 'disabled' && v == 'any';
 
-                if (on)
-                {
-                    const showMatch = on == main.value;
-                    const showIfAny = main.value != 'disabled' && on == 'any';
-                    UTILS.toggleClasses(!(showMatch || showIfAny), toggleClassArr, b);
-                }
-                else if (not)
-                {
-                    const hideMatch = not == main.value;
-                    const hideIfAny = main.value != 'disabled' && not == 'any';
-                    UTILS.toggleClasses((hideMatch || hideIfAny), toggleClassArr, b);
-                }
+                if (on) // showMatch || showIfAny
+                    UTILS.toggleClasses(!(equals(on) || any(on)), toggleClassArr, b);
+                else if (not) // hideMatch || hideIfAny
+                    UTILS.toggleClasses((equals(not) || any(not)), toggleClassArr, b);
             });
 
             if (!main) { debugger; continue; }
@@ -883,11 +877,13 @@ async function Ready()
             {
                 toogleSingle();
                 main.addEventListener('change', toogleSingle);
+                main.addEventListener('customBind', toogleSingle);
             }
             else if (main.tagName == 'SELECT')
             {
                 toogleMultiple();
                 main.addEventListener('change', toogleMultiple);
+                main.addEventListener('customBind', toogleMultiple);
             }
         }
     }
