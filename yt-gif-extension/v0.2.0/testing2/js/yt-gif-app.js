@@ -1242,16 +1242,19 @@ async function Ready()
 
         const awaitingWrapper = await onYouTubePlayerAPIReady(tutWrapper, 'yt-gif-ddm-tutorial', 'force-awaiting', 'testing manual ty gif tutorial');
 
+        const getContent = () => parentTarget?.closest('.dropdown-content');
+
         icon.addEventListener('blur', localBlur);
 
         awaitingWrapper.addEventListener('mouseenter', (e) =>
         {
-            icon.dispatchEvent(new Event('click'))
+            icon.dispatchEvent(new Event('click'));
+            UnfocusEverytingButThis(true);
             toggle_VisualFeedback(e.currentTarget, false);
         })
         awaitingWrapper.addEventListener('mouseleave', (e) =>
         {
-            toggleFocusOnDMMsparents(true)
+            toggleFocusOnDMMsparents(true);
             toggle_VisualFeedback(e.currentTarget, true)
         })
 
@@ -1265,12 +1268,21 @@ async function Ready()
         }
         function toggleFocusOnDMMsparents(toggle = true)
         {
-            const updateTutParents = [parentTarget?.closest('.dropdown-content'), mainDDM];
-            for (const el of updateTutParents)
-                UTILS.toggleClasses(toggle, [ddm_focus], el);
+            const ownContent = [getContent(), mainDDM];
+
+            for (const el of ownContent)
+                UTILS.toggleClasses(toggle, [ddm_focus], el); // focus this
 
             if (toggle)
                 icon.dispatchEvent(new Event('click'));
+        }
+        function UnfocusEverytingButThis(toggle)
+        {
+            const otherTutContent = [...document.querySelectorAll('.dropdown-item.yt-gif-wrapper-parent')]
+                .map(tut => tut.closest('.dropdown-info-box.dropdown-focus'))
+                .filter((v, i, a) => !!v && v != getContent() && a.indexOf(v) === i);
+            for (const el of otherTutContent)
+                UTILS.toggleClasses(!toggle, [ddm_focus], el);
         }
         function toggle_VisualFeedback(el, bol)
         {
