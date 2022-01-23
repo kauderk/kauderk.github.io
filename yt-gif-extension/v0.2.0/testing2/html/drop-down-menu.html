@@ -210,20 +210,29 @@
                                 </div>
                                 <span class="dropdown-item pr-1">
                                     <div class="select" multiple="" id="tm_options">
-                                        <div class="select__item" value="shortcuts"
+                                        <span class="bp3-button bp3-minimal bp3-small select__item" value="shortcuts"
                                             data-tooltip="Grab timestamps using Shortcuts E.g. Start: Ctrl + Alt + s End: Ctrl + Alt + d">
-                                            Shortcuts</div>
+                                            Shortcuts</span>
                                         <span class="" value="smartblocks"
                                             data-tooltip="Grab timestamps using smartblocks kauderk.github.io/yt-gif-components">
                                             <a type="checkbox"
                                                 class="bp3-button bp3-minimal bp3-small m-0 appearance-none bp3-icon-link"
                                                 href="https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/components"></a>
                                         </span>
-                                        <div class="select__item" value="include-player"
-                                            data-tooltip="Use your YouTube API DATA v3 KEY to performe operations ... Watch the up-right-conrner tutorial to learn more">
-                                            YT API v3</div>
+                                        <span class="bp3-button bp3-minimal bp3-small select__item"
+                                            value="YT_API_KEY_V3"
+                                            disabled-tooltip="YT_API_KEY_V3 missing within your settings page ... Watch the up-right-conrner tutorial to learn more"
+                                            data-tooltip="Enable my YouTube API DATA v3 KEY to performe operations ... Watch the up-right-conrner tutorial to learn more"
+                                            disabled>YT API v3</span>
                                     </div>
                                 </span>
+                                <!-- <div class="dropdown-item-select">
+                                    <span class="ddm-info" for="">Assert</span>
+                                    <select class="ddm-select-item" id="tm_assert_startup">
+                                        <option value="RAP" title="">Roam Research</option>
+                                        <option value="recursion" title="">Recursion</option>
+                                    </select>
+                                </div> -->
                             </div>
                         </div>
 
