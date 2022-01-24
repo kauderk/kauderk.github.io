@@ -166,18 +166,20 @@
                                 </div>
                                 <span class="dropdown-item pr-5" data-bind="timestamp-loop-opt" on="any">
                                     <div class="select" id="tm_loop_to">
-                                        <div class="select__item" selected value="start"
-                                            data-tooltip="Target {{[[start]]}} boundaries">Start</div>
-                                        <div class="select__item" value="end"
-                                            data-tooltip="Target {{[[end]]}} boundaries">End</div>
+                                        <span class="bp3-button bp3-minimal bp3-small select__item" selected
+                                            value="start" data-tooltip="Target {{[[start]]}} boundaries">Start</span>
+                                        <span class="bp3-button bp3-minimal bp3-small select__item" value="end"
+                                            data-tooltip="Target {{[[end]]}} boundaries">End</span>
                                     </div>
                                     <div class="select" id="tm_loop_options" multiple="">
-                                        <div class="select__item" selected value="skip"
+                                        <span class="bp3-button bp3-minimal bp3-small select__item" selected
+                                            value="skip"
                                             data-tooltip="Skip if next timestamp is out-of-bounds - Recomended">Skip
-                                        </div>
-                                        <div class="select__item" selected value="include_player"
+                                        </span>
+                                        <span class="bp3-button bp3-minimal bp3-small select__item" selected
+                                            value="include_player"
                                             data-tooltip="Include players' timestamp in the loop - If set to Last Active, it will make one loop back to the player and stop looping">
-                                            Player</div>
+                                            Player</span>
                                     </div>
                                 </span>
 
