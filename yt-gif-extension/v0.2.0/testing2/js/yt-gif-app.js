@@ -3954,6 +3954,7 @@ async function onPlayerReady(event)
 
         DeactivateTimestampsInHierarchy(closest_rm_container(tEl), parent);
         await ReloadYTVideo({ t, start: map.defaultStart, end: map.defaultEnd });
+        seekToUpdatedTime(map.defaultStart ?? 0);
 
         UpdateTimeDisplay();
         awaiting(false);
