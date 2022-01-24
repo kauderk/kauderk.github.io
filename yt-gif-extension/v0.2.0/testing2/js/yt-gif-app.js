@@ -2754,7 +2754,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             if (!UI.timestamps.tm_recovery.checked)
                 DeactivateTimestampsInHierarchy(rm_container, wrapper);
             if (!isRendered(rm_container) && rm_container?.closest('.rm-sidebar-outline'))
-                observedParameters.delete(blockID);
+                observedParameters.delete(getLocalBlockID());
         },
     }
     UTILS.ObserveRemovedEl_Smart(options);
@@ -3049,7 +3049,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
             // cleanup - since it's a rendered mismatch
             if (UI.timestamps.tm_restore.value == 'match' && !equals())
-                return observedParameters.delete(blockID);
+                return observedParameters.delete(getLocalBlockID());
 
             // value == 'any' - go ahead with anything in this position
             const assignObj = equals() ? { simMessage: 'visuals' } : {};
@@ -3188,10 +3188,15 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         if (!grandParentBlock) return null;
         return [...grandParentBlock.querySelectorAll('.yt-gif-wrapper')]?.pop();
     }
+    function getLocalBlockID()
+    {
+        return getBlockID(getTargetWrapper()) ?? blockID;
+    }
     function setObsTimestamp(commonObj)
     {
         if (!commonObj || !commonObj.blockID)
             return;
+        const blockID = getLocalBlockID();
         const lastActive = observedParameters.get(blockID)?.lastActiveTimestamp;
 
         const equals = commonObj.target?.timestamp === lastActive?.target?.timestamp;
@@ -3202,7 +3207,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     }
     function getObsTimestamp()
     {
-        const lastActive = observedParameters.get(blockID)?.lastActiveTimestamp;
+        const lastActive = observedParameters.get(getLocalBlockID())?.lastActiveTimestamp;
         if (lastActive && UI.timestamps.tm_recovery.checked)
         {
             return lastActive;
@@ -3265,7 +3270,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 configParams.start = e.detail.start ?? configParams.start;
                 configParams.end = e.detail.end ?? configParams.end;
 
-                lastBlockIDParameters.delete(blockID); // YIKES!!!
+                lastBlockIDParameters.delete(getLocalBlockID()); // YIKES!!!
                 const isBounded = (t) => t >= configParams.start && t <= configParams.end;
                 configParams.updateTime = e.detail.updateTime ?? configParams.updateTime;
 
@@ -4745,6 +4750,11 @@ function ValidateHierarchyTimestamps(wrapper, t)
     if (rm_container && typeof d == 'number')
         TimestampsInHierarchy(rm_container, wrapper, '[yt-gif-timestamp-emulation]')
             .forEach(tm => tm.validateSelf?.(d));
+}
+function getBlockID(wrapper)
+{
+    if (!wrapper) return null;
+    return closestYTGIFparentID(wrapper) + getWrapperUrlSufix(wrapper);
 }
 /* ***************** */
 function PulseObj(tEl)
