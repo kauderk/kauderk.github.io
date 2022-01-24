@@ -720,6 +720,7 @@ span.bp3-button.select__item {
   cursor: not-allowed !important;
   background: var(--sel-disabled-bg) !important;
 }
-.bp3-button.bp3-minimal.bp3-small.select__item {
-  color: var(--dropdown-c);
+.bp3-button.bp3-minimal.bp3-small.select__item[selected] {
+  color: var(--dropdown-c) !important;
 }
+

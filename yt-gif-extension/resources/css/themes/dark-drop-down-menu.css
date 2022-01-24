@@ -60,8 +60,8 @@
   --ddm-not-allowed-bg-h: rgba(255, 193, 7, 0.62);
   --ddm-updt-h: #02665d;
 
-  --sel-bg: #314d62;
-  --sel-sel: #2f414eb3;
+  --sel-bg: #2f414eb3;
+  --sel-sel: #314d62;
   --sel-disabled-bg: rgb(49 58 64);
   --sel-disabled-c: #607d8b;
 
