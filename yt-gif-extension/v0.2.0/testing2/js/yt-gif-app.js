@@ -4333,7 +4333,7 @@ async function onStateChange(state)
             }
         }
 
-        if (isSelected(UI.playerSettings.ps_options, 'minimize-on-video-ended') && (currentFullscreenPlayer === t.h.id)) // let's not talk about that this took at least 30 mins. Don't. Ughhhh
+        if (isSelected(UI.playerSettings.ps_options, 'minimize_on_video_ended') && (currentFullscreenPlayer === t.h.id)) // let's not talk about that this took at least 30 mins. Don't. Ughhhh
         {
             if (document.fullscreenElement)
             {
@@ -4373,7 +4373,7 @@ async function onStateChange(state)
         if (!iframe)
             return await RealoadThis();
 
-        const options = [...UI.timestamps.tm_loop_options.selectedOptions].map(o => o.value); // skip - include-player
+        const options = [...UI.timestamps.tm_loop_options.selectedOptions].map(o => o.value); // skip - include_player
         const page = UI.timestamps.tm_loop_to.value || 'start';
         const sel = `[timestamp-set][timestamp-style="${page}"]`;
         const boundedSel = `${sel}:not([out-of-bounds])`;
@@ -4395,7 +4395,7 @@ async function onStateChange(state)
         // else value == 'auto'
 
         let nextIndex = (index + 1) % targets.length;
-        if (options.includes('include-player')) // include player in the loop
+        if (options.includes('include_player')) // include player in the loop
         {
             if (index == targets.length - 1) // the only scenario where we need to go back to the beginning
                 return await ClickResetWrapper(targetWrapper, { message: 'update-timestamp' });
