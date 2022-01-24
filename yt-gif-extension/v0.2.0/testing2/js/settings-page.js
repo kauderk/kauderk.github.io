@@ -38,7 +38,7 @@ window.YT_GIF_SETTINGS_PAGE = {
     display: {
         baseKey: BaseSetting(chk),
         simulate_roam_research_timestamps: dom(),
-        ms_options: dom('clip-lifespan-format', sel),
+        ms_options: dom('clip_lifespan_format', sel),
     },
 
     timestamps: {
@@ -50,7 +50,7 @@ window.YT_GIF_SETTINGS_PAGE = {
 
         tm_loop_hierarchy: dom('disabled'),
         tm_loop_to: dom('start'),
-        tm_loop_options: dom('skip,include-player'),
+        tm_loop_options: dom('skip,include_player'),
         tm_seek_action: dom('disabled'),
 
         tm_workflow_display: dom('default'),
@@ -63,7 +63,7 @@ window.YT_GIF_SETTINGS_PAGE = {
 
         initialize_mode: dom('buffer'),
         awaiting_input_type: dom('mouseenter'),
-        xp_options: dom('thumbnail-as-bg'),
+        xp_options: dom('thumbnail_as_bg'),
     },
 
     playerSettings: {
@@ -76,7 +76,7 @@ window.YT_GIF_SETTINGS_PAGE = {
         url_boundaries: dom('strict'),
         url_volume: dom('strict'),
 
-        ps_options: dom('mantain-last-active-player'),
+        ps_options: dom('mantain_last_active_player'),
     },
 
     range: {

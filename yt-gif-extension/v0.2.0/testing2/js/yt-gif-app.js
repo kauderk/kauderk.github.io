@@ -3694,7 +3694,7 @@ async function onPlayerReady(event)
 
     function InState(e)
     {
-        if (isSelected(UI.playerSettings.ps_options, 'mantain-last-active-player'))
+        if (isSelected(UI.playerSettings.ps_options, 'mantain_last_active_player'))
             ToogleAllOthers(false, true)
 
         t.__proto__.globalHumanInteraction = true; // I'm afraid this event is slower to get attached than 200ms intervals... well 
@@ -3822,7 +3822,7 @@ async function onPlayerReady(event)
         UTILS.toggleAttribute(offsetClip, 'offset', timeDisplayEnd);
 
         // timeDisplay.innerHTML = '00:00/00:00'
-        if (isSelected(UI.display.ms_options, 'clip-lifespan-format')) // 'bounded tick'/'clip end'
+        if (isSelected(UI.display.ms_options, 'clip_lifespan_format')) // 'bounded tick'/'clip end'
         {
             const boundedTick = Math.abs(_clipSpan - (map.end - tick()));
             const validEnd = offsetClip ? map.end : _clipSpan;
@@ -3854,7 +3854,7 @@ async function onPlayerReady(event)
 
         let dir = tick() + (Math.sign(e.deltaY) * Math.round(UI.range.timestamp_display_scroll_offset.value) * -1);
 
-        if (isSelected(UI.display.ms_options, 'clip-lifespan-format'))
+        if (isSelected(UI.display.ms_options, 'clip_lifespan_format'))
         {
             if (dir <= map.start)
                 dir = map.end - 1; //can go beyond that
@@ -4083,7 +4083,7 @@ async function onPlayerReady(event)
         {
             if (
                 !parent.hasAttribute('yt-active') ||
-                !isSelected(UI.playerSettings.ps_options, 'mantain-last-active-player')
+                !isSelected(UI.playerSettings.ps_options, 'mantain_last_active_player')
             )
                 return togglePlay(false)
 
