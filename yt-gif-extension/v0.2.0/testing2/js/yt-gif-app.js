@@ -4396,7 +4396,8 @@ async function onStateChange(state)
         const activeSel = ElementsPerBlock(closestBlock(lastActive), tmSel)?.[0]; // go one level up and search for a "start" timestamp, bc does it makes sense to loop through "end" boundaries???
 
         const index = targets.indexOf(activeSel);
-        if (index === -1 && UI.timestamps.tm_loop_hierarchy.value == 'active')
+        if (index === -1 && // din't find any active
+            (UI.timestamps.tm_loop_hierarchy.value == 'active' || targets.length == 0)) // and ( only on active or there are no targets)
             return await RealoadThis();
         // else value == 'auto'
 
