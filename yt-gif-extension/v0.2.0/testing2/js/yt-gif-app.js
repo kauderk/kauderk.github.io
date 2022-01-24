@@ -544,7 +544,7 @@ async function Ready()
 
     // 7. simulate inline url btn
     //#region relevant variables
-    const s_u_f_key = 'simulate-url-formatter';
+    const s_u_f_key = 'simulate_url_formatter';
     const url_formatter_option = getOption(UI.display.ms_options, s_u_f_key);
     links.html.fetched.urlBtn = await UTILS.fetchTextTrimed(links.html.urlBtn);
     //#endregion
