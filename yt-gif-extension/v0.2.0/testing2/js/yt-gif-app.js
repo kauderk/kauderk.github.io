@@ -1749,7 +1749,7 @@ async function Ready()
 
             // 1.
             const { record, obsTimestamp, targetWrapper, timestampObj } = boundaryObj;
-            const { start, end, currentTime, seekTo, ok } = timestampObj;
+            const { start, end, currentTime, seekTo, page, ok } = timestampObj;
 
 
             // 3.0
@@ -1779,7 +1779,7 @@ async function Ready()
                 {
                     bubbles: true,
                     detail: {
-                        start, end, updateTime: currentTime ?? seekTo,
+                        start, end, updateTime: currentTime ?? seekTo, page,
                         ['play-right-away']: true,
                         mute: UI.timestamps.tm_seek_action.value == 'mute' && UI.display.simulate_roam_research_timestamps.checked,
                         obsTimestamp,
@@ -1852,7 +1852,7 @@ async function Ready()
                 const farEnough = ((tm = currentTime) => tm + 1 > seekTo)();
 
                 return {
-                    start, end,
+                    start, end, page: sec("end") ? "end" : "start",
                     seekTo, currentTime,
                     ok: bounded && farEnough
                 }
@@ -3164,6 +3164,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 const timestampPage = (page) => ({
                     timestamp: page?.getAttribute('timestamp'),
                     index: timestamps.indexOf(page),
+                    page, otherPage: page == 'start' ? 'end' : 'start',
                 });
 
                 const siblingIndex = (siblings, el) => Array.from(siblings).flat(Infinity).indexOf(el);
@@ -3193,10 +3194,10 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             return;
         const lastActive = observedParameters.get(blockID)?.lastActiveTimestamp;
 
-        const equals = commonObj?.target?.timestamp === lastActive?.target?.timestamp;
-        const ok = commonObj?.target?.timestamp;
+        const equals = commonObj.target?.timestamp === lastActive?.target?.timestamp;
+        const ok = commonObj.target?.timestamp;
 
-        if (ok && (!equals || !lastActive)) // newEntry || not even initialized
+        if (ok && (!equals || !lastActive)) // newEntry || not even initialized || it's pair is missing
             observedParameters.set(blockID, { lastActiveTimestamp: commonObj }); // Hmmm...
     }
     function getObsTimestamp()
@@ -3263,11 +3264,16 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             {
                 configParams.start = e.detail.start ?? configParams.start;
                 configParams.end = e.detail.end ?? configParams.end;
+
+                lastBlockIDParameters.delete(blockID); // YIKES!!!
+                const isBounded = (t) => t >= configParams.start && t <= configParams.end;
                 configParams.updateTime = e.detail.updateTime ?? configParams.updateTime;
+
                 configParams.mute = e.detail.mute ?? configParams.mute;
                 configParams['play-right-away'] = e.detail['play-right-away'] ?? configParams['play-right-away'];
 
                 setObsTimestamp(Object.assign(e.detail.obsTimestamp, { workflow: 'soft' }));
+                configParams.updateTime = isBounded(configParams.updateTime) ? configParams.updateTime : configParams[e.detail.page];
             }
 
             return await DeployYT_IFRAME();
