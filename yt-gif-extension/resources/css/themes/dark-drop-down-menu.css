@@ -55,4 +55,18 @@
 
   --url-btn-bg: #282828;
   --url-btn-bg-h: #213c4d;
+
+  --ddm-not-allowed-bg: rgb(129 97 0 / 90%);
+  --ddm-not-allowed-bg-h: rgba(255, 193, 7, 0.62);
+  --ddm-updt-h: #02665d;
+
+  --sel-bg: #314d62;
+  --sel-sel: #2f414eb3;
+  --sel-disabled-bg: rgb(49 58 64);
+  --sel-disabled-c: #607d8b;
+
+  --sel-h: rgb(40 120 184 / 30%);
+
+  --tm-start-bg: #308d9f;
+  --tm-end-bg: #30649f;
 }

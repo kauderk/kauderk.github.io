@@ -1,5 +1,5 @@
 :root {
-  --dropdown-main-btn-bg-h: rgb(14 118 199 / 30%);
+  --dropdown-main-btn-bg-h: rgb(171 195 212);
   --dropdown-shadow: rgb(105 119 131);
   --dropdown-c: black;
 
@@ -9,9 +9,9 @@
   --drop-menu-btn-f: rgb(148 161 171 / 10%);
   --dropdown--bg: #fff;
 
-  --submenu-message-bg: #a2c2df;
+  --submenu-message-bg: #93b1c9;
 
-  --submenu-styles-item-bg-h: #c5daef;
+  --submenu-styles-item-bg-h: #a2c2df;
   --submenu-styles-content-bg: #e3e5e7;
 
   --submenu-info-btn-bg: #2e7d32;
@@ -56,4 +56,18 @@
 
   --url-btn-bg: #e4e9ed;
   --url-btn-bg-h: #bee0fc;
+
+  --ddm-not-allowed-bg: rgb(129 97 0 / 90%);
+  --ddm-not-allowed-bg-h: rgba(255, 193, 7, 0.62);
+  --ddm-updt-h: #02665d;
+
+  --sel-bg: #c2d6eb;
+  --sel-sel: #95c2e6;
+  --sel-disabled-bg: #9daab5;
+  --sel-disabled-c: #5c7080;
+
+  --sel-h: rgb(40 120 184 / 30%);
+
+  --tm-start-bg: #308d9f;
+  --tm-end-bg: #30649f;
 }
