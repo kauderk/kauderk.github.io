@@ -5251,7 +5251,7 @@ class CustomSelect
 
         this._removeFakeSibling();
 
-        this.fakeSel.children.forEach((fake, idx, arr) =>
+        Array.from(this.fakeSel.children).forEach((fake, idx, arr) =>
         {
             const option = document.createElement("option"); // binded to the fake select
 
@@ -5315,7 +5315,7 @@ class CustomSelect
     _select(fake)
     {
         if (!this.fakeSel.hasAttribute('multiple'))
-            this.fakeSel.children.forEach((el) => this._vsSelected(false, el));
+            Array.from(this.fakeSel.children).forEach((el) => this._vsSelected(false, el));
 
         this._isSelected(true, fake);
         this._vsSelected(true, fake);
