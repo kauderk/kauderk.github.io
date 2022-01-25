@@ -3959,7 +3959,7 @@ async function onPlayerReady(event)
         UpdateTimeDisplay();
         awaiting(false);
 
-        if (!e.message == 'update-timestamp')
+        if (e.message != 'update-timestamp')
             return TimestampVisible(false);
 
         // update/visible until any interaction
