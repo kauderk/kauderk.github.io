@@ -1718,7 +1718,7 @@ async function Ready()
             else if (click)
                 await playLastBlockOnly_SimHover(root);
             else if (rghtclick)
-                pauseLastBlock_SimHoverOut(root);
+                await TogglePlayOnAtrr_SimHover(root);
 
             return NoLongerAwaiting();
         }
@@ -1767,24 +1767,21 @@ async function Ready()
 
 
             // 4.1
-            if (UI.display.simulate_roam_research_timestamps.checked)
-            {
-                record?.isSoundingFine?.(!(UI.timestamps.tm_seek_action.value == 'mute'));
-                record?.togglePlay?.(!(UI.timestamps.tm_seek_action.value == 'pause'));
-            }
+            record?.isSoundingFine?.(!(UI.timestamps.tm_seek_action.value == 'mute'));
+            record?.togglePlay?.(!(UI.timestamps.tm_seek_action.value == 'pause'));
 
 
             // 5.
             targetWrapper?.dispatchEvent(new CustomEvent('customPlayerReady',
                 {
-                    bubbles: true,
                     detail: {
-                        start, end, updateTime: currentTime ?? seekTo, page,
-                        ['play-right-away']: true,
-                        mute: UI.timestamps.tm_seek_action.value == 'mute' && UI.display.simulate_roam_research_timestamps.checked,
+                        start, end, page,
+                        updateTime: currentTime ?? seekTo,
+                        ['play-right-away']: !(UI.timestamps.tm_seek_action.value == 'pause'),
+                        mute: UI.timestamps.tm_seek_action.value == 'mute',
                         obsTimestamp,
                     },
-                }));
+                }))
 
 
             // 6.
@@ -1881,10 +1878,16 @@ async function Ready()
             }
         }
 
-        async function pauseLastBlock_SimHoverOut(r)
+        async function TogglePlayOnAtrr_SimHover(r)
         {
             pulse('blueViolet');
-            lastWrapperInBlock(r)?.dispatchEvent(UTILS.simHoverOut()); // hover out -> videoIsPlayingWithSound(false)
+            const lastWrapper = lastWrapperInBlock(r);
+            const iframe = lastWrapper?.querySelector('iframe');
+
+            if (iframe?.hasAttribute('yt-playing')) // pepega
+                lastWrapper?.dispatchEvent(UTILS.simHoverOut()); // hover out -> videoIsPlayingWithSound(false)
+            else if (iframe)
+                lastWrapper?.dispatchEvent(UTILS.simHover());
         }
 
 
@@ -3539,7 +3542,7 @@ async function onPlayerReady(event)
 
 
     // 11. well well well 
-    if (map.hasOwnProperty('play-right-away') && map.hasOwnProperty('updateTime'))
+    if (map['play-right-away'] && map.hasOwnProperty('updateTime'))
     {
         while (isRendered(iframe) && !t?.getCurrentTime?.())
             await RAP.sleep(500);
