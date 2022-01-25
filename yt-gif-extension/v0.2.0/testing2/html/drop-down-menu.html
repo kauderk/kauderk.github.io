@@ -258,7 +258,7 @@
                                     </span>
                                     <div class="yt-gifs-tuts">
                                         <div class="dropdown-item" select="0">
-                                            <div data-video-url="https://www.youtube.com/watch?v=L7ZT_71R9QQ"></div>
+                                            <div data-video-url="https://youtu.be/_96XDmFPzbU"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -275,17 +275,21 @@
                                         <option value="overflow"
                                             title="Set Automatically - To gain access to the buffer, either increase the limit or unload videos manually"
                                             disabled="">Handle Overflow</option>
+                                        <option value="disabled"
+                                            title="As soon as {{[[yt-gif]]}} components get rendered">Everything
+                                        </option>
                                     </select>
                                 </div>
                                 <span class="dropdown-item-separator"></span>
-                                <div class="dropdown-item-select">
+                                <div class="dropdown-item-select" data-bind="initialize-mode" not="disabled">
                                     <span class="ddm-info" for="">Input Type</span>
                                     <select class="ddm-select-item" id="awaiting_input_type">
                                         <option value="mousedown">Clicks</option>
                                         <option value="mouseenter">Hovering</option>
                                     </select>
                                 </div>
-                                <div class="select select-vertcial" multiple="" id="xp_options">
+                                <div class="select select-vertcial" multiple="" id="xp_options"
+                                    data-bind="initialize-mode" not="disabled">
                                     <span class="bp3-button bp3-minimal bp3-small select__item" value="thumbnail_as_bg"
                                         data-tooltip="Aesthetics - or - minimalism" selected="">Video thumbnail</span>
                                     <span
@@ -295,7 +299,7 @@
                                         data-bind="initialize-mode" on="input_x_buffer">Try to load when redered</span>
                                 </div>
                                 <span class="dropdown-item rangeOffset sub-dropdown--range dropdown--hidden"
-                                    data-bind="initialize-mode" not="input" style="max-width: 30ch;">
+                                    data-bind="initialize-mode" not="input,disabled" style="max-width: 30ch;">
                                     <div class="flex">
                                         <input type="range" min="1" max="30" value="15" class="slider"
                                             id="iframe_buffer_slider"
