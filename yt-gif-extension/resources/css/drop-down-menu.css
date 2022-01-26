@@ -585,7 +585,7 @@ max-width: fit-content;
 .yt-gif-url-btns.vertical{
   flex-direction: column-reverse;
   bottom: var(--v);
-  left: unset;
+  left: 0px;
   --ml: 0% !important;
   margin-top: var(--ml);
   margin-bottom: var(--ml);
