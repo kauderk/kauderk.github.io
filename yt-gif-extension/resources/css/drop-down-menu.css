@@ -747,13 +747,23 @@ select {
 
   transition: background 0.1s;
 }
-span.bp3-button.select__item {
+.select [class*="bp3-icon"]::before{
+  color: var(--drop-menu-btn-f) !important;
+}
+.select [selected] [class*="bp3-icon"]::before{
+  color: #8f8f8f !important;
+}
+.select [class*="bp3-icon"]:hover::before{
+  color: var(--dropdown-c) !important;
+}
+span.bp3-button.select__item,
+.select [class*="bp3-icon"] {
   border: 1px solid;
   border-color: var(--submenu-message-bg);
   background: var(--sel-bg);
 }
 .bp3-button.select__item[selected] {
-  background: var(--sel-sel);
+   background: var(--sel-sel); /* .select [selected] [class*="bp3-icon"] */
 }
 .bp3-button.select__item[selected]:hover {
  background-color: var(--sel-h);
