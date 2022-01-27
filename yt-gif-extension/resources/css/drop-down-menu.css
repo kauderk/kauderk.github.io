@@ -453,9 +453,10 @@ span.dropdown-item.yt-gif-wrapper-parent .yt-gif-wrapper.dont-focus-block {
 
 
 /* timestamp emulation */
-a.rm-video-timestamp[yt-gif-timestamp-emulation]
-{
+a.rm-video-timestamp[yt-gif-timestamp-emulation] * {
   color: var(--c);
+}
+a.rm-video-timestamp[yt-gif-timestamp-emulation] {
   position: relative;
 }
 a.rm-video-timestamp[active-timestamp]
@@ -568,18 +569,17 @@ max-width: fit-content;
 .yt-gif-url-btns{
  display: flex !important;
 }
-.rm-video-timestamp .vertical{
-  left: unset !important;
-  position: absolute;
-  top: -5ch !important;
-  bottom: 0px !important;
-  min-height: fit-content;
-  left: -.7ch !important;
-  right: 0px !important;
+.rm-video-timestamp > div {
+  /* background: red; */
+  width: 100%;
+  height: -webkit-fill-available;
+  position: absolute !important;
+  display: flex;
+  bottom: 0%;
+  width: -webkit-fill-available;
+  justify-content: center;
 }
-.rm-video-timestamp .yt-gif-url-btns{
-  min-width: fit-content;
-}
+.rm-video-timestamp .yt-gif-url-btns{/* width: inherit; *//* align-items: center; */position: relative;height: fit-content;/* transform: translate(-50%, -100%); */transform: translateY(-100%);min-width: 24px;}
 :is([class*="yt-gif"]) .bp3-button::before,
 .ty-gif-icon svg{
   margin: 0 !important;
@@ -592,7 +592,7 @@ max-width: fit-content;
 }
 .yt-gif-url-btns.vertical{
   flex-direction: column-reverse;
-  bottom: 100%;
+  /* bottom: 0%; */
   left: 0px;
 }
 /* pepega */
