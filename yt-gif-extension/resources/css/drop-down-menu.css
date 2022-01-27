@@ -456,6 +456,7 @@ span.dropdown-item.yt-gif-wrapper-parent .yt-gif-wrapper.dont-focus-block {
 a.rm-video-timestamp[yt-gif-timestamp-emulation]
 {
   color: var(--c);
+  position: relative;
 }
 a.rm-video-timestamp[active-timestamp]
 {
@@ -568,9 +569,16 @@ max-width: fit-content;
  display: flex !important;
 }
 .rm-video-timestamp .vertical{
-  --v: 1.75ch;
   left: unset !important;
-  transform: translateX(-30%);
+  position: absolute;
+  top: -5ch !important;
+  bottom: 0px !important;
+  min-height: fit-content;
+  left: -.7ch !important;
+  right: 0px !important;
+}
+.rm-video-timestamp .yt-gif-url-btns{
+  min-width: fit-content;
 }
 :is([class*="yt-gif"]) .bp3-button::before,
 .ty-gif-icon svg{
@@ -584,13 +592,8 @@ max-width: fit-content;
 }
 .yt-gif-url-btns.vertical{
   flex-direction: column-reverse;
-  bottom: var(--v);
+  bottom: 100%;
   left: 0px;
-  --ml: 0% !important;
-  margin-top: var(--ml);
-  margin-bottom: var(--ml);
-  margin-left: var(--ml);
-  margin-right: var(--ml);
 }
 /* pepega */
 .dropdown .yt-gif-url-btns{
@@ -607,16 +610,6 @@ span.bp3-button::before {
   transform: translateX(0%) 
   translateY(20%) scale(var(--ddm-scale-tooltip));
 }
-/**
-.yt-gif-url-btns 
-.yt-gif-url-btn-wrapper{
-  order: 1;
-}
-.yt-gif-controls
-.yt-gif-url-btns 
-.yt-gif-url-btn-wrapper:last-child{
-  order: 0;
-}*/
 .yt-gif-controls
 .yt-gif-url-btns 
 [data-tooltip*="yt-gif"]{
@@ -640,7 +633,6 @@ span.bp3-button::before {
   gap: .1ch;
 }
 .yt-gif-url-btns {
-  --v: 24px;
   display: none !important;
 }
 
