@@ -4679,6 +4679,14 @@ function awaitingAtrr(bol, el)
 //#region URL Formatter workflow
 function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
 /* ***************** */
+function appendVerticalUrlBtns(targetNode)
+{
+    const div = document.createElement('div');
+    div.insertAdjacentHTML('afterbegin', links.html.fetched.urlBtn);
+    div.querySelector('.yt-gif-url-btns').classList.add('vertical');
+    targetNode.insertAdjacentElement('afterbegin', div);
+}
+/* ***************** */
 function ExtractContentFromCmpt(capture)
 {
     return [...capture.matchAll(BlockRegexObj().componentRgx)][0]?.[5] || capture;
