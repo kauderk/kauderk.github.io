@@ -4769,6 +4769,11 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
                 contentObj.hidden += TryToAppendHiddenPear(pearCaptureObj, contentObj);
             }
         }
+        if (['url', 'yt-gif'].some(t => t == to))
+        {
+            // sometimes end comes before start, fix that
+            matchObj.match = TryToReorderTmParams(from.page, matchObj.match);
+        }
 async function TryToUpdateBlock_fmt({ block, targetNode, siblingSel, selfSel, getMap, isKey, fmtCmpnt_cb, tempUID, from })
 {
     // Grab, if any, nested block information
