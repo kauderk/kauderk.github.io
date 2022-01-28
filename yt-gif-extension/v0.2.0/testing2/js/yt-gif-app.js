@@ -2578,7 +2578,8 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         wrapper = UTILS.ChangeElementType(wrapper, 'div');
     wrapper.parentElement.classList.add(`${cssData.yt_gif_wrapper}-parent`);
     wrapper.className = `${cssData.yt_gif_wrapper} dont-focus-block`;
-    wrapper.style.setProperty('--yt-gif-player-span', parseFloat(configParams.sp) + "%");
+    if (configParams.sp)
+        wrapper.style.setProperty('--yt-gif-player-span', parseFloat(configParams.sp) + "%");
     wrapper.setAttribute(attrInfo.target, targetClass);
     wrapper.setAttribute(attrInfo.creation.name, dataCreation);
     wrapper.setAttribute(attrInfo.url.path, url);
@@ -2586,7 +2587,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     wrapper.innerHTML = '';
     wrapper.insertAdjacentHTML('afterbegin', links.html.fetched.playerControls);
     wrapper.querySelector('.yt-gif-player').id = newId;
-
+    appendVerticalUrlBtns(wrapper.querySelector('[formatter]'));
 
 
     // 5. Observe children containers and recover active timestamps respectively
@@ -2595,7 +2596,12 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
 
-    // 6. On removed from DOM clear Uid2Url map and deactivate timestamps
+    // 6. Set up btns
+    SetUpUrlFormatter();
+
+
+
+    // 7. On removed from DOM clear Uid2Url map and deactivate timestamps
     const options = {
         el: grandParentBlock?.querySelector('span'),
         OnRemmovedFromDom_cb: () =>
@@ -2611,7 +2617,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
 
-    // 7. 
+    // 8. 
     if (dataCreation == attrInfo.creation.forceAwaiting || isInput_selectedValid())
     {
         return await DeployYT_IFRAME_OnInteraction();
@@ -2759,82 +2765,8 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             resObj.preUrlIndex = uidResults[key].getUrlIndex();  // it also needs it's own urlIndex
         }
 
-        async function getUrlMap_smart(uid)
-        {
-            return await getMap_smart(uid, UIDtoURLInstancesMapMap, getComponentMap, uid, YTGIF_Config);
-        }
     }
 
-    // 3.1 extract params
-    function urlConfig(url)
-    {
-        let success = false;
-        const media = JSON.parse(JSON.stringify(videoParams));
-        if (YTGIF_Config.guardClause(url))
-        {
-            media.id = UTILS.getYouTubeVideoID(url);
-
-            media.start = media.defaultStart = ExtractFromURL('int', /(t=|start=)(?:\d+)/g);
-            media.end = media.defaultEnd = ExtractFromURL('int', /(end=)(?:\d+)/g);
-
-            media.speed = ExtractFromURL('float', /(s=|speed=)([-+]?\d*\.\d+|\d+)/g);
-
-            media.volume = ExtractFromURL('int', /(vl=|volume=)(?:\d+)/g);
-
-            media.hl = new RegExp(/(hl=)((?:\w+))/, 'gm').exec(url)?.[2];
-            media.cc = new RegExp(/(cc=|cc_lang_pref=)((?:\w+))/, 'gm').exec(url)?.[2];
-
-            media.sp = new RegExp(/(sp=|span=)((?:\w+))/, 'gm').exec(url)?.[2];
-            media.sp = media.sp ?? document.documentElement.style.getPropertyValue('--yt-gif-player-span');
-
-            media.src = url;
-            media.type = 'youtube';
-
-            success = true;
-
-            //#region util
-            function ExtractFromURL(key, regexedValue)
-            {
-                let pass;
-                let desiredValue;
-                let valueCallback = () => { };
-                switch (key)
-                {
-                    case 'int':
-                        valueCallback = (desiredValue, pass) =>
-                        {
-                            desiredValue = pass[0].match(/\d+/g).map(Number);
-                            desiredValue = parseInt(desiredValue);
-                            return desiredValue;
-                        }
-                        break;
-                    case 'float':
-                        valueCallback = (desiredValue, pass) =>
-                        {
-                            desiredValue = pass[0].match(/[+-]?\d+(\.\d+)?/g).map(function (v) { return parseFloat(v); });
-                            desiredValue = parseFloat(desiredValue);
-                            return desiredValue;
-                        }
-                        break;
-                }
-                //
-                while ((pass = regexedValue.exec(url)) != null)
-                {
-                    if (pass.index === regexedValue.lastIndex)
-                    {
-                        regexedValue.lastIndex++;
-                    }
-                    desiredValue = valueCallback(desiredValue, pass);
-                }
-                return desiredValue;
-            }
-            //#endregion
-        }
-
-        if (success) { return media; }
-        else { console.warn(`${newId}    Invalid youtube url detected for yt-gifs ${((uid))}`); }
-        return false;
-    }
 
     // 5.0 timestamp recovery
     function SetUpTimestampRecovery(rm_container)
@@ -3079,7 +3011,41 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             }
     }
 
-    // 7.0
+    // 6
+    function SetUpUrlFormatter()
+    {
+        const { startCmpt, endCmpt, startEndCmpt, compt2Url, urlBtn } = fmtTimestampsUrlObj(wrapper, '[formatter]');
+        urlBtn('url').onclick = async (e) => await OnYtGifUrlBtn(e, compt2Url)
+        urlBtn('start').onclick = async (e) => await OnYtGifUrlBtn(e, startCmpt)
+        urlBtn('end').onclick = async (e) => await OnYtGifUrlBtn(e, endCmpt)
+        urlBtn('start|end').onclick = async (e) => await OnYtGifUrlBtn(e, startEndCmpt)
+    }
+    async function OnYtGifUrlBtn(e, fmtCmpnt_cb)
+    {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const URL_formatter_settings = {
+            block: grandParentBlock,
+            targetNode: wrapper,
+
+            siblingSel: '.yt-gif-wrapper',
+            selfSel: `[data-video-url="${url}"]`,
+
+            getMap: async () => getUrlMap_smart(uid),
+            isKey: 'is component',
+
+            fmtCmpnt_cb,
+            tempUID: uid,
+
+            from: { caster: 'player', page: 'yt-gif', urlBtn: e.target },
+        }
+
+        await TryToUpdateBlock_fmt(URL_formatter_settings);
+    }
+
+
+    // 8.0
     async function DeployYT_IFRAME_OnInteraction()
     {
         const mainAnimation = setUpWrapperAwaitingAnimation();
@@ -3104,6 +3070,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         async function CreateYTPlayer(e)
         {
             e.preventDefault();
+            e.stopPropagation();
 
             UTILS.toggleClasses(false, mainAnimation, wrapper);
             UTILS.removeIMGbg(wrapper);
