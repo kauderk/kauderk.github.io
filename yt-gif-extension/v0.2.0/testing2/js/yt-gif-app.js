@@ -209,6 +209,8 @@ const attrData = {
     'initialize-mode': '',
     'timestamp-experience': '',
     'timestamp-loop-opt': '',
+    'ms_options': '',
+    'fmt_options': '',
 }
 const attrInfo = {
     url: {
