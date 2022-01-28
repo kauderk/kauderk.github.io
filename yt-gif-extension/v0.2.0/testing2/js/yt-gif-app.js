@@ -447,7 +447,7 @@ async function Ready()
     UpdateOnScroll_RTM(end_loop_sound_volume);
     UpdateOnScroll_RTM(iframe_buffer_slider);
 
-    ToggleThumbnails(thumbnail_as_bg, awaitng_input_with_thumbnail);
+    ToggleThumbnails(thumbnail_as_bg, awaitng_player_user_input);
 
     navigateToSettingsPageInSidebar();
     ToggleTheme_DDM_RTM(ddm_css_theme_input, themes, ddm_css_theme_stt, ddm_main_theme_id);
@@ -926,14 +926,14 @@ async function Ready()
         }
     }
 
-    function ToggleThumbnails(thumbnail_as_bg, awaitng_input_with_thumbnail)
+    function ToggleThumbnails(thumbnail_as_bg, awaiting_cls)
     {
         // BIND TO SETTINGS PAGE
 
         thumbnail_as_bg.addEventListener('customChange', handleIMGbgSwap);
         function handleIMGbgSwap(e)
         {
-            const awaitingGifs = [...document.querySelectorAll(`.${awaitng_input_with_thumbnail}`)];
+            const awaitingGifs = [...document.querySelectorAll(`.${awaiting_cls}`)];
             for (const el of awaitingGifs)
             {
                 if (e.target.selected)
@@ -3175,12 +3175,10 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             const awaitingAnimation = [awiting_player_pulse_anim, awaitng_player_user_input];
             const awaitingAnimationThumbnail = [...awaitingAnimation, awaitng_input_with_thumbnail];
 
-            let mainAnimation = awaitingAnimationThumbnail;
+            const mainAnimation = awaitingAnimationThumbnail;
 
             if (isSelected(UI.experience.xp_options, 'thumbnail_as_bg'))
                 UTILS.applyIMGbg(wrapper, url);
-            else
-                mainAnimation = awaitingAnimation;
 
             UTILS.toggleClasses(true, mainAnimation, wrapper);
             return mainAnimation;
