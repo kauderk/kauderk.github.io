@@ -4841,23 +4841,20 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
 {
     let uidMagazine = [];
     let indentFunc = 0;
-    const { targetStringRgx, componentPage } = _Config;
+    const { targetStringRgx, componentPage, scatteredMatch } = _Config;
 
     const orderObj = {
         order: -1,
         incrementIf: function (condition) { return condition ? Number(++this.order) : null },
         condition: (x) => false,
-    };
+    }
     const results = {
-        // 'has components aliases': { tone: '#37d5d6' },
-        // 'has components': { tone: '#36096d' },
-        // 'has any aliases': { tone: '#734ae8' },
-        // 'has any components': { tone: '#21d190' },
         'is tooltip card': { tone: '#21d190' },
+        'is substring': { tone: '#21d190' },
         'is component': { tone: '#20bf55' },
         'is alias': { tone: '#bfe299' },
         'is block reference': { tone: 'green' },
-    };
+    }
     Object.keys(results).forEach(key => Object.assign(results[key], orderObj));
 
     // componentsInOrderMap
@@ -4867,11 +4864,11 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
 
     async function TryToFindTargetStrings_Rec(objRes, parentObj, map)
     {
-        for (const { value, is, order } of objRes?.targetStringsWithUids) // loop through RENDERED targetStrings (components) and uids (references)
+        for (const { value, is, order, capture } of objRes?.targetStringsWithUids) // loop through RENDERED targetStrings (components) and uids (references)
         {
-            const generateUniqueKey = () => assertUniqueKey_while(objRes.uid, indentFunc, is, order);
+            const generateUniqueKey = () => assertUniqueKey_while(objRes.uid, indentFunc, is, order, capture);
 
-            if (['is alias', 'is component'].some(w => w === is))
+            if (['is alias', 'is component', 'is substring'].some(w => w === is))
             {
                 map.set(generateUniqueKey(), value);
             }
@@ -4901,7 +4898,7 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
 
         return map;
 
-        function assertUniqueKey_while(uid, indent, isKey, order)
+        function assertUniqueKey_while(uid, indent, isKey, order, capture)
         {
             uidMagazine = PushIfNewEntry(uidMagazine, uid); // clunky, but it works
 
@@ -4909,12 +4906,12 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
             return {
                 indent, uid, similarCount,
                 isKey, isKeyOrder: isCount(),
-                order,
+                order, capture
             }
 
             function isCount()
             {
-                const keys = ['is tooltip card', 'is alias', 'is component', 'is block reference'];
+                const keys = Object.keys(results);
                 for (const is of keys)
                     results[isKey].incrementIf(isKey === is)
 
@@ -4957,7 +4954,7 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
 
     function stringsWihtUidsObj(rawText)
     {
-        const { blockRgx, aliasPlusUidsRgx, tooltipCardRgx, componentRgx } = BlockRegexObj(componentPage);
+        const { blockRgx, aliasPlusUidsRgx, tooltipCardRgx, componentRgx } = BlockRegexObj(componentPage, targetStringRgx);
         const string = clean_rm_string(rawText);
 
         let blockReferencesAlone = [];
@@ -4969,43 +4966,57 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
         function getRenderedStuff(string)
         {
             const blockMatches = [...[...string.matchAll(new RegExp(blockRgx, 'gm'))].map(x => x = x[0])];
+            const indexPair = indexPairObj(blockRgx, string, 'block-matches');
             const siblingsOrderObj = {
                 'is block reference': {},
                 'is tooltip card': {},
                 'is alias': {},
+                'is substring': {},
                 'is component': {},
             }
             Object.keys(siblingsOrderObj).forEach(key => Object.assign(siblingsOrderObj[key], orderObj));
 
-            return blockMatches.map(val => isValueObj(val, siblingsOrderObj));
+            return blockMatches.map(val => isValueObj(val, siblingsOrderObj, indexPair));
 
-            function isValueObj(val, siblingsOrder)
+            function isValueObj(val, siblingsOrder, indexPair)
             {
                 const resObj = () =>
                 {
                     siblingsOrder[is].incrementIf(true);
-                    return { value: inOrderValue, is, order: siblingsOrder[is].order }
+                    return {
+                        value: inOrderValue,
+                        is,
+                        order: siblingsOrder[is].order,
+                        capture: rgxMatch,
+                    }
                 }
+                const match = (rgx) => val.match(rgx)?.[0];
+                const matchAll = (rgx) => [...val.matchAll(rgx)][0];
 
-                let is = 'is block reference', inOrderValue = val;
+                let is = 'is block reference', inOrderValue = val, rgxMatch = null;
 
-                if (val.match(tooltipCardRgx)?.[0]) // {{=:_rendered_by_roam_| -> string XXxxxx ... <- }}
+                if (rgxMatch = match(tooltipCardRgx)) // {{=:_rendered_by_roam_| -> string XXxxxx ... <- }}
                 {
                     is = 'is tooltip card';
-                    inOrderValue = [...val.matchAll(tooltipCardRgx)][0][2];
+                    inOrderValue = matchAll(tooltipCardRgx)[2];
 
-                    const blockLikeString = [...val.matchAll(tooltipCardRgx)][0][1];
+                    const blockLikeString = matchAll(tooltipCardRgx)[1];
                     return [resObj(), ...getRenderedStuff(blockLikeString),]
                 }
-                else if (val.match(aliasPlusUidsRgx)?.[0]) // [xxxanything goesxxx]((( -> xxxuidxxx <- )))
+                else if (rgxMatch = match(aliasPlusUidsRgx)) // [xxxanything goesxxx]((( -> xxxuidxxx <- )))
                 {
                     is = 'is alias';
-                    inOrderValue = [...val.matchAll(aliasPlusUidsRgx)][0][2];
+                    inOrderValue = matchAll(aliasPlusUidsRgx)[2];
                 }
-                else if (val.match(componentRgx)?.[0]) // {{componentPage: -> first target <- xxxxxx xxx... }}
+                else if (scatteredMatch && (rgxMatch = match(targetStringRgx)) && !(match(componentRgx))) //  -> ... .... ..... -> subStrings in the wild XXxxxx ... <-
+                {
+                    is = 'is substring';
+                    inOrderValue = match(targetStringRgx);
+                }
+                else if (!scatteredMatch && (rgxMatch = match(componentRgx))) // {{componentPage: -> first target <- xxxxxx xxx... }}
                 {
                     is = 'is component';
-                    inOrderValue = val.match(targetStringRgx)?.[0];
+                    inOrderValue = match(targetStringRgx);
                 }
                 else // xxxuidxxx
                 {
