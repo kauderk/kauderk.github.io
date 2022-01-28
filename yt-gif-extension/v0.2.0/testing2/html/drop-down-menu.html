@@ -459,24 +459,25 @@
                                         URL formatter</span>
                                 </div>
                                 <span class="dropdown-item pr-5" data-bind="ms_options" on="simulate_url_formatter">
-                                    <div class="select" multiple="" id="fmt_options">
-                                        <span class="" value="lift_pears"
-                                            data-tooltip="Lift timestamp pear when reseting to URL">
-                                            <span type="checkbox"
-                                                class="bp3-button bp3-minimal bp3-small m-0 appearance-none bp3-icon-link"></span>
-                                        </span>
-                                        <span class="" value="assemble_url_from_tms"
-                                            data-tooltip="Asseble URL from Timestamps">
-                                            <span type="checkbox"
-                                                class="bp3-button bp3-minimal bp3-small m-0 appearance-none bp3-icon-add-to-artifact"></span>
-                                        </span>
-                                        <span class="" value="minimal_url"
+                                    <div class="select" multiple="" id="fmt_options" data-main="fmt_options">
+                                        <span class="" value="avoid_redundancy"
                                             data-tooltip="Strip down redundant variables when formatting to components">
                                             <span type="checkbox"
                                                 class="bp3-button bp3-minimal bp3-small m-0 appearance-none bp3-icon-annotation"></span>
                                         </span>
+                                        <span class="" value="lift_pears"
+                                            data-tooltip="For Timestamp Sets: Lift/remove pear, then hide/append it's content within format target">
+                                            <span type="checkbox"
+                                                class="bp3-button bp3-minimal bp3-small m-0 appearance-none bp3-icon-link"></span>
+                                        </span>
+                                        <span class="" value="try_to_assemble_url" data-bind="fmt_options"
+                                            on="rely_on_hierarchy"
+                                            data-tooltip="For Timestamps Sets: Try to assemble URL/{{yt-gif}} even if the parent isn't rendered">
+                                            <span type="checkbox"
+                                                class="bp3-button bp3-minimal bp3-small m-0 appearance-none bp3-icon-add-to-artifact"></span>
+                                        </span>
                                         <span class="" value="rely_on_hierarchy"
-                                            data-tooltip="Don't insert video url inside components if it has a {{yt-gif}} parent">
+                                            data-tooltip="For Timestamps: Rely on rendered {{yt-gif}} parent to perform operations + don't write redundant url">
                                             <span type="checkbox"
                                                 class="bp3-button bp3-minimal bp3-small m-0 appearance-none bp3-icon-diagram-tree"></span>
                                         </span>

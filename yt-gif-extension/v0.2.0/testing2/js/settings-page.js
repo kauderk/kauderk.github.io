@@ -39,6 +39,7 @@ window.YT_GIF_SETTINGS_PAGE = {
         baseKey: BaseSetting(chk),
         simulate_roam_research_timestamps: dom(),
         ms_options: dom('clip_lifespan_format', sel),
+        fmt_options: dom('avoid_redundancy', sel),
     },
 
     timestamps: {
