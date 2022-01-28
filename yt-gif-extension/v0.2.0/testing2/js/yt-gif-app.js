@@ -1549,7 +1549,7 @@ async function Ready()
                 appendVerticalUrlBtns(targetNode); // https://gist.github.com/tonY1883/a3b85925081688de569b779b4657439b
 
 
-            const targetNodePpts = {
+            const tmSetObj = {
                 fromUniqueUid: fromUid + similarCountButRoot,
                 similarCount: parseInt(similarCount, 10),
                 page, indent, targetIndex, tempUID, fromUid,
@@ -1568,7 +1568,7 @@ async function Ready()
             }
 
             emulationArr = await getMap_smart(mapsKEY, succesfulEmulationMap, () => []);
-            emulationArr = UTILS.pushSame(emulationArr, targetNodePpts);
+            emulationArr = UTILS.pushSame(emulationArr, tmSetObj);
         }
 
         const { getDuration } = await durationObj(succesfulEmulationMap);
@@ -1738,7 +1738,7 @@ async function Ready()
     }
 
     // 6.1.1
-    async function PlayPauseOnClicks(e, uid, targetNodePpts)
+    async function PlayPauseOnClicks(e, uid, tmSetObj)
     {
         const { currentTarget: tEl } = e;
         const { which, seekToMessage, simMessage } = typeof e.detail == 'object' ? e.detail : e;
@@ -1912,21 +1912,20 @@ async function Ready()
                     ok: bounded && farEnough
                 }
 
-                function sec(p) { return targetNodePpts.self.page == p }
-                function pearSec() { return UTILS.HMSToSecondsOnly(targetNodePpts.pears?.find(o => o != targetNodePpts.self)?.timestamp || '') }
+                function sec(p) { return tmSetObj.self.page == p }
+                function pearSec() { return UTILS.HMSToSecondsOnly(tmSetObj.pear?.timestamp || '') }
             }
         }
 
 
         function ToggleBoundarySet(targetWrapper, bol = true)
         {
-            if (targetNodePpts.pears)
-                targetNodePpts.pears.forEach(o => toogleActiveAttr(bol, o.targetNode));
-
+            if (tmSetObj.pear)
+                tmSetObj.pear.forEach(o => toogleActiveAttr(bol, o.targetNode));
             else
-                toogleActiveAttr(bol, targetNodePpts.self.targetNode);
+                toogleActiveAttr(bol, tmSetObj.self.targetNode);
 
-            UTILS.toggleAttribute(bol, 'last-active-timestamp', targetNodePpts.self.targetNode);
+            UTILS.toggleAttribute(bol, 'last-active-timestamp', tmSetObj.self.targetNode);
             UTILS.toggleAttribute(bol, 'yt-active', targetWrapper);
 
             function toogleActiveAttr(bol, el)
