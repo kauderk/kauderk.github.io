@@ -2115,17 +2115,13 @@ async function Ready()
             rm_btn.insertAdjacentHTML('afterbegin', links.html.fetched.urlBtn);
 
 
-            const floatParam = (p, url) => new RegExp(`((?:${p})=)((\\d+)?[.]?\\d+)`, 'gm')?.exec(url)?.[2] || '0';
-            const getFmtPage = (p, url) => fmtTimestamp(UI.timestamps.tm_workflow_display.value)(floatParam(p, url)); // javascript is crazy!
-
-            const startParam = (url) => getFmtPage('t|start', url);
-            const endParam = (url) => getFmtPage('end', url);
+            const { startCmpt, endCmpt, startEndCmpt, ytGifCmpt, urlBtn } = fmtTimestampsUrlObj(rm_btn);
 
 
-            urlBtn('yt-gif').onclick = async (e) => await OnYtGifUrlBtn(e, (url) => `{{[[yt-gif]]: ${url} }}`);
-            urlBtn('start').onclick = async (e) => await OnYtGifUrlBtn(e, (url) => `{{[[yt-gif/start]]: ${startParam(url)} }}`);
-            urlBtn('end').onclick = async (e) => await OnYtGifUrlBtn(e, (url) => `{{[[yt-gif/end]]: ${endParam(url)} }}`);
-            urlBtn('start|end').onclick = async (e) => await OnYtGifUrlBtn(e, (url) => `{{[[yt-gif/start]]: ${startParam(url)} }} {{[[yt-gif/end]]: ${endParam(url)} }}`);
+            urlBtn('yt-gif').onclick = async (e) => await OnYtGifUrlBtn(e, ytGifCmpt)
+            urlBtn('start').onclick = async (e) => await OnYtGifUrlBtn(e, startCmpt)
+            urlBtn('end').onclick = async (e) => await OnYtGifUrlBtn(e, endCmpt)
+            urlBtn('start|end').onclick = async (e) => await OnYtGifUrlBtn(e, startEndCmpt)
 
 
 
@@ -2139,13 +2135,13 @@ async function Ready()
 
                 // 1. execute further if the user has valid keys
                 const block = closestBlock(rm_btn);
-                const uid = block?.id?.slice(-9);
+                const tempUID = block?.id?.slice(-9);
                 const { url, ytUrlEl } = getYTUrlObj(rm_btn);
 
                 if (!ValidUrlBtnUsage())
                     return console.warn('YT GIF Url Button: Invalid Simulation keys');
-                if (!uid || !url)
-                    return logUrlBtnWarning();
+                if (!tempUID || !url)
+                    return console.warn(`YT GIF Url Button: Couldn't find any url within the block: ((${tempUID}))`);
 
 
                 // 2. protect against spamming clicks
@@ -2156,129 +2152,28 @@ async function Ready()
 
                 awaiting(true);
 
+                const URL_formatter_settings = {
+                    block,
+                    targetNode: ytUrlEl,
 
-                // 3. execute further if the block and the urlBtn exist
-                const blockReq = await RAP.getBlockInfoByUIDM(uid);
-                const info = blockReq[0]?.[0];
-                if (!info) return;
+                    siblingSel: `.bp3-icon-video + a[href*="youtu"]`,
+                    selfSel: `.bp3-icon-video + a[href="${url}"]`,
 
-                const index = ElementsPerBlock(block, `.bp3-icon-video + a[href="${url}"]`).indexOf(ytUrlEl);
-                if (index == -1)
-                    return logUrlBtnWarning();
+                    getMap: async () => getComponentMap(tempUID, URL_Config),
+                    isKey: 'is substring',
 
+                    fmtCmpnt_cb,
+                    tempUID,
 
-                // 4. gather spots/boundaries where roam does NOT render information
-                const IndexObj = (rgx, type) => indexPairObj(rgx, info.string, type);
-                const BadIndexMatches = [
-                    ...IndexObj(/(`.+?`)|(`([\s\S]*?)`)/gm, 'codeBlocks'), // codeBlocks
-
-                    ...filterOutCode(IndexObj(/{{=:(.+?)\|(.+)}}/gm, 'tooltipPrompt'))
-                        .map(op =>
-                        {
-                            const y = { ...op };
-                            y.start = op.start + 4; // 4 = {{=:
-                            y.end = op.end - (1 + op.groups[2]?.length + 2); // 1 = |     +    [2].length = hiidden content   +    2 = }}
-                            y.match = op.groups[1]; // prompt
-                            return y;
-                        }), // tooltipPrompt
-
-                    ...filterOutCode(IndexObj(/({{.+})/gm, 'components')), // components
-                ];
-
-
-                // 5. valid spots where you can insert fmt components - user requests
-                const urlsMatches = IndexObj(new RegExp(`(${url.replace(/[?\\]/g, '\\$&')})`, 'gm'), 'urlsMatch');
-                const freeUrls = urlsMatches.filter(uo =>
-                {
-                    let specialCase = false;
-                    const badIndex = BadIndexMatches
-                        .some(bio =>
-                        {
-                            const bounded = uo.start >= bio.start && uo.end <= bio.end;
-                            specialCase = bio.type == 'tooltipPrompt';
-                            return bounded;
-                        });
-
-                    if (specialCase)
-                        return true;
-                    return !badIndex;
-                })
-
-
-                // 6. return if any errors
-                let string;
-                try
-                {
-                    string = replaceString(info.string, freeUrls[index].start, freeUrls[index].end, fmtCmpnt_cb(url));
-                }
-                catch (error)
-                {
-                    return logUrlBtnWarning();
+                    from: { caster: 'rm-btn', urlBtn: e.target },
                 }
 
-
-                // 7. FINALLY! update the block
-                UIDtoURLInstancesMapMap.delete(uid);
-                await RAP.updateBlock(uid, string, info.open);
+                await TryToUpdateBlock_fmt(URL_formatter_settings);
 
 
                 // 8. set free for any possible future clicks
                 awaiting(false);
-
-
-                function logUrlBtnWarning()
-                {
-                    console.warn(`YT GIF Url Button: couldn't find url within the block: ((${uid}))`);
-                }
             }
-            function urlBtn(page)
-            {
-                return rm_btn.querySelector(`[yt-gif-url-btn="${page}"]`);
-            }
-        }
-
-
-        function indexPairObj(regex, str, type)
-        {// https://www.designcise.com/web/tutorial/how-to-return-the-position-of-a-regular-expression-match-in-javascript#:~:text=matchArr%5B1%5D.length%5D)%3B%0A%7D-,console.log(indexPairs)%3B%20//%20output%3A%20%5B8%2C%2025%5D%2C%20%5B27%2C%2035%5D,-The%20exec()%20method
-            const matches = [...str.matchAll(regex)];
-
-            const indexPairs = [];
-
-            for (const matchArr of matches)
-            {
-                indexPairs.push(
-                    [
-                        matchArr.index,
-                        matchArr.index + matchArr[0]?.length,
-                        matchArr[0],
-                        matchArr
-                    ]
-                );
-            }
-            return [...indexPairs].map(mp => ({
-                type,
-                start: mp[0],
-                end: mp[1],
-                match: mp[2],
-                groups: mp[3],
-            }));
-        }
-        function filterOutCode(indexObj)
-        {
-            const inlindeCodeRgx = /(`.+?`)|(`([\s\S]*?)`)/gm;
-            return [...indexObj].filter(x => !inlindeCodeRgx.test(x.match))
-        }
-        function replaceString(str, start, end, replace)
-        {
-            if (start < 0 || start > str.length)
-            {
-                throw new RangeError(`start index ${start} is out of the range 0~${str.length}`);
-            }
-            if (end > str.length || end < start)
-            {
-                throw new RangeError(`end index ${end} is out of the range ${start}~${str.length}`);
-            }
-            return str.substring(0, start) + replace + str.substring(end);
         }
     }
     function getYTUrlObj(rm_btn)
