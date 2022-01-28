@@ -2204,7 +2204,7 @@ async function Ready()
                     targetNode: ytUrlEl,
 
                     siblingSel: `.bp3-icon-video + a[href*="youtu"]`,
-                    selfSel: `.bp3-icon-video + a[href="${url}"]`,
+                    selfSel: `.bp3-icon-video + a[href*="${url}"]`,
 
                     getMap: async () => getComponentMap(tempUID, URL_Config),
                     isKey: 'is substring',
