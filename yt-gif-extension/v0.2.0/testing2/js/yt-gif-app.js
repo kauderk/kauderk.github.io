@@ -642,9 +642,18 @@ async function Ready()
         {
             if (!fakeSel) return;
 
-            const { select } = new CustomSelect({ fakeSel });
-            select.id = fakeSel.id;
-            fakeSel.removeAttribute('id');
+            const { select, originalSelect } = new CustomSelect({ fakeSel });
+
+            const attrs = [...originalSelect.attributes].map(a => ({ name: a.name, value: a.value }));
+            const ignore = ['class', 'multiple'];
+
+            for (const { name, value } of attrs)
+            {
+                if (ignore.includes(name))
+                    continue;
+                select.setAttribute(name, value)
+                originalSelect.removeAttribute(name);
+            }
         })
 
         // this took a solid hour. thak you thank you
