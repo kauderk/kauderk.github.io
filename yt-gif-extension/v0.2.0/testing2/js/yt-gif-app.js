@@ -4678,6 +4678,53 @@ function awaitingAtrr(bol, el)
 
 //#region URL Formatter workflow
 function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
+{
+    const getFmtPage = (p, url) => fmtTimestamp(UI.timestamps.tm_workflow_display.value)(floatParam(p, url) || '0'); // javascript is crazy!
+
+    const startTm = (url) => getFmtPage('t|start', url);
+    const endTm = (url) => getFmtPage('end', url);
+
+    StopPropagations();
+
+
+    let u, h = '', su;
+    return {
+        startTm, endTm, urlBtn,
+        // h -> hidden content
+        // u -> url
+        // su -> simplified url
+        ytGifCmpt: async o =>
+        {
+            o.to = 'yt-gif';
+            await ExamineResObj(o);
+            return `{{[[yt-gif]]: ${u} ${h}}}`
+        },
+        startCmpt: async o =>
+        {
+            o.to = 'start';
+            await ExamineResObj(o);
+            return `{{[[yt-gif/start]]: ${startTm(u)} ${h}}}`
+        },
+        endCmpt: async o =>
+        {
+            o.to = 'end';
+            await ExamineResObj(o);
+            return `{{[[yt-gif/end]]: ${endTm(u)} ${h}}}`
+        },
+        startEndCmpt: async o =>
+        {
+            o.to = 'start';
+            await ExamineResObj(o);
+            return `{{[[yt-gif/start]]: ${startTm(u)} ${h}}} {{[[yt-gif/end]]: ${endTm(u)} }}`
+        },
+        compt2Url: async o =>
+        {
+            o.to = 'url';
+            await ExamineResObj(o);
+            h = h != '' ? ` ${h}` : '';
+            return `${u}${h}`
+        }
+    }
 async function TryToUpdateBlock_fmt({ block, targetNode, siblingSel, selfSel, getMap, isKey, fmtCmpnt_cb, tempUID, from })
 {
     // Grab, if any, nested block information
