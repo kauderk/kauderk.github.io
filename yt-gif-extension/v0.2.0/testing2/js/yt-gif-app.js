@@ -4774,6 +4774,150 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
             // sometimes end comes before start, fix that
             matchObj.match = TryToReorderTmParams(from.page, matchObj.match);
         }
+
+        return updateVars();
+
+        function TryToAppendHiddenPear(pearCaptureObj, contentObj)
+        {
+            const h = pearCaptureObj.contentObj?.hidden;
+            if (!h)
+                return '';
+            contentObj.hidden == contentObj.hidden ?? '';
+            const c = isSpace([...contentObj.hidden].pop()) ? '' : ' ';
+            return c + pearCaptureObj.contentObj?.hidden?.trim() + ' ';
+        }
+        function fmtTmParam(page, value, match)
+        {
+            // update url
+            const p = page == 'end' ? 'end' : 't';
+            const m = match;
+            const c = [...m].pop() == '?' ? '' : (m.includes('?') ? '&' : '?'); // ends on '?' then it is blank, else add '&' or '?' depending on which is missing
+            if (!value || value == '0')
+                return '';
+            return `${c}${p}=${value}`;
+        }
+        function CaptureInfoObj(capture, ExtractSubstringObj)
+        {
+            const content = ExtractContentFromCmpt(capture);
+
+            const matchObj = ExtractSubstringObj(content);
+
+            let hidden = matchObj?.match ? delSubstr(content, matchObj.start, matchObj.end) : '';
+            if (hidden && matchObj?.match)
+                if (isSpace(hidden[matchObj.start - 1]) && isSpace(hidden[matchObj.start]))
+                    hidden = delSubstr(hidden, matchObj.start - 1, matchObj.start)
+            hidden = hidden.trim();
+
+            const hiddenObj = hidden ? ExtractSubstringObj(hidden) : {};
+
+            return {
+                hiddenObj, matchObj,
+                contentObj: {
+                    match: matchObj?.match,
+                    hidden, content
+                },
+            }
+        }
+        function ExtractTmsObj_cb(string)
+        {
+            return indexPairObj(rgx2Gm(StartEnd_Config.targetStringRgx), string, 'timestamp')?.[0];
+        }
+        function updateVars()
+        {
+            u = matchObj.match;
+            h = contentObj.hidden ?? '';
+            h = h.trim() ? h.trim() + ' ' : '';
+        }
+        async function TryToFmtPearParam(pearCaptureObj, resObj, from)
+        {
+            const value = pearCaptureObj.matchObj?.match;
+            if (!value)
+                return '';
+
+            const p = from.tmSetObj?.pear.page;
+            if (typeof params[p] == 'undefined') // start - end
+                return fmtTmParam(p, value, matchObj.match);
+            return '';
+        }
+        async function RemovePearFromString(from, resObj)
+        {
+            if (!from.tmSetObj?.pear)
+                return {};
+
+            const { ObjAsKey, block, targetNode, timestamp: tm, page: p } = from.tmSetObj.pear;
+            const selfIndex = NonReferencedPerBlock(block, from.sel(tm, p), targetNode).indexOf(targetNode);
+
+            const { uid, capture } = ObjAsKey ?? {};
+            if (!uid || !capture || selfIndex == -1)
+                throw new Error(`YT GIF URL Formatter: Missing pear uid or capture...`);
+
+            const resPear = await TryToUpdateBlockSubString(uid, selfIndex, capture, resObj.recycledRequest);
+            if (!resPear.success)
+                throw new Error(`YT GIF URL Formatter: Failed to update pear...`);
+
+            resPear.replace = '';
+            resObj.string = replaceString(resPear);
+
+            const selfBound = resObj.start + resObj.end;
+            const pearBound = resPear.start + resPear.end;
+            if (selfBound > pearBound) // THIS could be dumb as fuck. People could acutually lose information if I fuck up
+            {
+                if (isSpace(resObj.string[resPear.start]) && isSpace(resObj.string[resPear.end + 1]))
+                    resObj.string = replaceString(Object.assign({ ...resPear }, { end: resPear.start + 1 }));
+                resObj.start -= capture.length;
+                resObj.end -= capture.length;
+            }
+            else if (isSpace(resObj.string[resPear.start - 1]) && isSpace(resObj.string[resPear.start]))
+            {
+                resObj.string = delSubstr(resObj.string, resPear.start - 1, resPear.start)
+            }
+            return CaptureInfoObj(capture, ExtractTmsObj_cb);
+        }
+        function getMinimalUrl(to, params)
+        {
+            const ignore = [to, 'type', 'src', 'defaultEnd', 'defaultStart', 'id',
+                'timeURLmapHistory', 'updateVolume', 'volumeURLmapHistory'];
+
+            let minimalUrl = '';
+            for (const key in params)
+            {
+                if (ignore.includes(key) || !params[key])
+                    continue;
+                const c = !minimalUrl ? '' : '&';
+                minimalUrl += `${c}${key}=${params[key]}`; // E.g. &t=10
+            }
+            const c = isSelected(UI.display.fmt_options, 'avoid_redundancy') ? '/' : 'https://youtu.be/';
+            const base = c + params.id;
+            const full = minimalUrl.slice(1);
+            minimalUrl = full ? `${base}?${minimalUrl}` : base;
+            return minimalUrl;
+        }
+        function TryToReorderTmParams(p, url)
+        {
+            const t = 'start|t'; // this is annoying...
+            p = p ?? t;
+            p = p.includes('t') ? t : 'end';
+            const o = p.includes('t') ? 'end' : t;
+            const wrongOrderRegex = new RegExp(`(${paramRgx(o).source})(.*)(${paramRgx(p).source})`);
+            if (wrongOrderRegex.test(url))
+                url = url.replace(wrongOrderRegex, '$5$4$1');
+            return url;
+        }
+    }
+    function urlBtn(page)
+    {
+        return targetNode.querySelector(`[yt-gif-url-btn="${page}"]`);
+    }
+    function StopPropagations()
+    {
+        let innerWrapper;
+        if (innerWrapperSel)
+            if (innerWrapper = targetNode.querySelector(innerWrapperSel))
+                innerWrapper.onmousedown = stopEvents;
+        const btns = ['yt-gif', 'url', 'start', 'end', 'start|end'].map(s => urlBtn(s))
+            .forEach(btn => btn.onmousedown = stopEvents);
+    }
+}
 async function TryToUpdateBlock_fmt({ block, targetNode, siblingSel, selfSel, getMap, isKey, fmtCmpnt_cb, tempUID, from })
 {
     // Grab, if any, nested block information
