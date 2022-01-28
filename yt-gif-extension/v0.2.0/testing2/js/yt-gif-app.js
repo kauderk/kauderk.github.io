@@ -1542,21 +1542,34 @@ async function Ready()
             targetNode.setAttribute(timestampObj.attr.emulation, '');
             targetNode.setAttribute(timestampObj.attr.timestamp, timestampContent);
             targetNode.className = timestampObj.roamClassName;
-            targetNode.innerHTML = timestampContent;
-            targetNode.innerHTML = fmtTimestamp(UI.timestamps.tm_workflow_display.value)(targetNode.innerHTML); // javascript is crazy!
+            const a = UTILS.elm('', 'a');
+            targetNode.appendChild(a);
+            targetNode.a = a;
+            targetNode.a.textContent = timestampContent;
+            targetNode.a.textContent = fmtTimestamp(UI.timestamps.tm_workflow_display.value)(targetNode.a.textContent); // javascript is crazy!
+
+            const hasAnyVideoUrl = ExtractUrlsObj(ExtractContentFromCmpt(ObjAsKey.capture))?.match;
+            if (hasAnyVideoUrl) // has any url
+                appendVerticalUrlBtns(targetNode); // https://gist.github.com/tonY1883/a3b85925081688de569b779b4657439b
 
 
             const targetNodePpts = {
                 fromUniqueUid: fromUid + similarCountButRoot,
                 similarCount: parseInt(similarCount, 10),
                 page, indent, targetIndex, tempUID, fromUid,
+
                 targetNode, appendToParent: () => targetNodeParent.appendChild(targetNode),
                 targetNodeParent,
-                timestamp: timestampContent,
-                color: window.getComputedStyle(targetNode).color,
-                ObjAsKey, blockUid: tempUID, blockID: mapsKEY, startEndComponentMap
-            }
 
+                timestamp: timestampContent,
+                hasAnyVideoUrl,
+
+                color: window.getComputedStyle(targetNode).color,
+                ObjAsKey,
+                blockUid: tempUID,
+                block, blockID: mapsKEY,
+                startEndComponentMap,
+            }
 
             emulationArr = await getMap_smart(mapsKEY, succesfulEmulationMap, () => []);
             emulationArr = UTILS.pushSame(emulationArr, targetNodePpts);
@@ -1581,24 +1594,33 @@ async function Ready()
                     if (!o?.targetNode)
                         return;
 
+
                     o.targetNode.oncontextmenu = e => e.preventDefault(); //https://codinhood.com/nano/dom/disable-context-menu-right-click-javascript
 
-                    const isPear = lastArr.includes(o); // both used inside these functions
+
+                    const isTmSet = lastArr.includes(o);
+                    const tmSetObj = { self: o, pear: (isTmSet && completePears) ? lastArr.find(po => po != o) : null };
+                    if (isTmSet)
+                        o.targetNode.setAttribute('timestamp-set', completePears ? 'pears' : 'single');
+
+
                     let duration = getDuration(o.blockID); // gain some performance
                     duration = (duration ?? 0) ? parseInt(fmtTimestamp('S')(duration)) : duration; // if it is anything else but null or undefined, then parse it to secondsOnly
-                    // changeSetIfPear();
                     validateSelf(duration);
 
-                    if (isPear)
-                    {
-                        const set = completePears ? 'pears' : 'single';
-                        o.targetNode.setAttribute('timestamp-set', set);
-                    }
+
+                    o.targetNode.addEventListener('customMousedown', OnClicks);
+                    o.targetNode.onmousedown = OnClicks;
+                    o.targetNode.OnClicks = OnClicks;
+                    o.targetNode.validateSelf = validateSelf;
+                    if (o.hasAnyVideoUrl)
+                        SetUpUrlFormatter(o, tmSetObj);
+                    o.appendToParent(); // I'm using observers and these functions take just a little bit of longer to get attached, NOW it should be ok
 
 
                     async function OnClicks(e)
                     {
-                        await PlayPauseOnClicks(e, o.tempUID, { self: o, pears: (isPear && completePears) ? lastArr : null });
+                        await PlayPauseOnClicks(e, o.tempUID, tmSetObj);
                     }
                     async function validateSelf(d)
                     {
@@ -1615,18 +1637,43 @@ async function Ready()
 
                         UTILS.toggleAttribute(!bounded, 'out-of-bounds', o.targetNode);
                     }
-
-                    o.targetNode.addEventListener('customMousedown', OnClicks);
-                    o.targetNode.onmousedown = OnClicks;
-                    o.targetNode.OnClicks = OnClicks;
-                    o.targetNode.validateSelf = validateSelf;
-                    o.appendToParent(); // I'm using observers and these functions take just a little bit of longer to get attached, NOW it should be ok
                 }
             }
         }
 
 
+        function SetUpUrlFormatter({ block, targetNode, page, timestamp, startEndComponentMap, blockUid }, tmSetObj)
+        {
+            const { ytGifCmpt, compt2Url, urlBtn } = fmtTimestampsUrlObj(targetNode);
 
+            urlBtn('url').onclick = async (e) => await OnYtGifUrlBtn(e, compt2Url)
+            urlBtn('yt-gif').onclick = async (e) => await OnYtGifUrlBtn(e, ytGifCmpt)
+
+            async function OnYtGifUrlBtn(e, fmtCmpnt_cb)
+            {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const sel = (tm, p) => `[timestamp="${tm}"][timestamp-style="${p}"]`;
+                const URL_formatter_settings = {
+                    block,
+                    targetNode,
+
+                    siblingSel: `[timestamp-style]`,
+                    selfSel: sel(timestamp, page),
+
+                    getMap: async () => startEndComponentMap,
+                    isKey: 'is component',
+
+                    fmtCmpnt_cb,
+                    tempUID: blockUid,
+
+                    from: { caster: 'timestamp', page, tmSetObj, urlBtn: e.target, sel },
+                }
+
+                await TryToUpdateBlock_fmt(URL_formatter_settings);
+            }
+        }
         function sortObjByKey(key, obj)
         {// https://gist.github.com/JamieMason/0566f8412af9fe6a1d470aa1e089a752
             const groupBy = key => array => array.reduce((objectsByKeyValue, obj) =>
