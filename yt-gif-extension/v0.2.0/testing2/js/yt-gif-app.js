@@ -4747,6 +4747,28 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
             if (!hiddenObj.match?.includes?.(minimalUrl))
                 contentObj.hidden += minimalUrl + ' ';
         }
+        else if (['start', 'end'].some(p => p == from.page))
+        {
+            matchObj.match = url;
+
+            // remove redundant tm
+            const value = fmtTimestamp('S')(from.tmSetObj?.self?.timestamp ?? '0');
+            const rawValue = fmtTimestamp('S')(contentObj.content?.match(StartEnd_Config.targetStringRgx)?.[0] ?? '-1');
+            if (rawValue === value && isSelected(UI.display.fmt_options, 'avoid_redundancy'))
+                contentObj.hidden = contentObj.hidden.replace(rawValue.toString(), '');
+
+            // append page param if missing
+            if (typeof params[from.page] == 'undefined') // start - end
+                matchObj.match += fmtTmParam(from.page, value, matchObj.match);
+
+            // append pear content
+            if (isSelected(UI.display.fmt_options, 'lift_pears'))
+            {
+                const pearCaptureObj = await RemovePearFromString(from, resObj);
+                matchObj.match += await TryToFmtPearParam(pearCaptureObj, resObj, from);
+                contentObj.hidden += TryToAppendHiddenPear(pearCaptureObj, contentObj);
+            }
+        }
 async function TryToUpdateBlock_fmt({ block, targetNode, siblingSel, selfSel, getMap, isKey, fmtCmpnt_cb, tempUID, from })
 {
     // Grab, if any, nested block information
