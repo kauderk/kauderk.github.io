@@ -4467,10 +4467,6 @@ async function getTimestampObj_smart(page)
         }
     }
 }
-function getCurrentInputBlock()
-{
-    return document.querySelector(".rm-block__input--active.rm-block-text")
-}
 function DeactivateTimestampsInHierarchy(rm_container, targetWrapper)
 {
     if (!rm_container) return;
@@ -4505,34 +4501,48 @@ function ValidateHierarchyTimestamps(wrapper, t)
         TimestampsInHierarchy(rm_container, wrapper, '[yt-gif-timestamp-emulation]')
             .forEach(tm => tm.validateSelf?.(d));
 }
-function getBlockID(wrapper)
-{
-    if (!wrapper) return null;
-    return closestYTGIFparentID(wrapper) + getWrapperUrlSufix(wrapper);
-}
 /* ***************** */
-function PulseObj(tEl)
+async function ReloadYTVideo({ t, start, end })
 {
-    const base = ['yt-timestamp-pulse-text-anim'];
-    const anims = {
-        green: [...base, 'yt-timestamp-success'],
-        red: [...base, 'yt-timestamp-warn'],
-        blue: [...base, 'yt-timestamp-opening'],
-        purple: [...base, 'yt-timestamp-reset'],
-        blueViolet: [...base, 'yt-timestamp-pause'],
-    }
-    anims['all'] = Object.values(anims).flat(Infinity).filter((v, i, a) => a.indexOf(v) === i); // remove duplicates on allAnim
+    if (!t)
+        return; //console.log(`YT GIF : Couldn't reload a video. Internal target is missing.`);
 
-    function pulse(anim = 'green')
-    {
-        UTILS.toggleClasses(false, anims['all'], tEl)
-        UTILS.toggleClasses(true, anims[anim], tEl)
-        setTimeout(() => UTILS.toggleClasses(false, anim, tEl), 500);
-    }
+    const vars = t.i.h;
+    const map = allVideoParameters.get(t.h.id);
+    const iframe = t?.getIframe?.();
 
-    return { pulse }
+    start = start || 0;
+    end = end || t.getDuration();
+
+    vars.playerVars.start = map.start = start;
+    vars.playerVars.end = map.end = end;
+
+    while (isRendered(iframe) && !t?.seekTo)
+        await RAP.sleep(50);
+
+    // https://stackoverflow.com/questions/60409231/why-does-my-youtube-react-component-fire-the-playerstate-ended-event-twice-befor
+    // t.l.h[5] = async () => { }; // the craziet shinanigans EVER!
+    // t.seekTo?.(start); // not only it was preserving it's state
+    // t.pauseVideo?.(); // and performing it's onStateChange func twice
+    if (t.playerInfo?.playerState ?? 0)
+        t.playerInfo.playerState = 'F';
+    if (t.l?.h?.[5])
+        t.l.h[5] = async () => { }; // the only way to prevent double fire...? man...
+    // though I'm waiting to see what bugs it's going to cause
+
+    await t?.loadVideoById?.({ // but it requieres you to load the video again to set "endSeconds" once again
+        'videoId': t.i.h.videoId,
+        'startSeconds': start,
+        'endSeconds': end,
+    });
+
+    while (isRendered(iframe) && !t?.getCurrentTime?.())
+        await RAP.sleep(50);
+
+    try { t.l.h[5] = onStateChange; } catch (error) { }
+
+    return t?.getCurrentTime?.();
 }
-/* ***************** */
 async function ClickOnTimestamp(target, assignObj = {})
 {
     const detail = { // cringe event object
@@ -4555,6 +4565,15 @@ async function ClickResetWrapper(targetWrapper, assignObj = {})
     await reset?.ResetBoundaries_smart?.(assignObj);
 }
 /* ***************** */
+function getBlockID(wrapper)
+{
+    if (!wrapper) return null;
+    return closestYTGIFparentID(wrapper) + getWrapperUrlSufix(wrapper);
+}
+function getCurrentInputBlock()
+{
+    return document.querySelector(".rm-block__input--active.rm-block-text")
+}
 function ElementsPerBlock(block, selector)
 {
     if (!block) return [];
@@ -4647,6 +4666,11 @@ function awaitingAtrr(bol, el)
 {
     return UTILS.toggleAttribute(bol, 'awaiting', el);
 }
+//#endregion
+
+
+
+
 /* ***************** */
 function ExtractParamsFromUrl(url)
 {
