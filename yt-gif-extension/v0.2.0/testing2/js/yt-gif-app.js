@@ -4676,6 +4676,8 @@ function awaitingAtrr(bol, el)
 
 
 
+//#region URL Formatter workflow
+function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
 /* ***************** */
 function ExtractParamsFromUrl(url)
 {
@@ -4709,20 +4711,70 @@ function ExtractParamsFromUrl(url)
     return false;
 }
 
-    while (isRendered(iframe) && !t?.getCurrentTime?.())
-        await RAP.sleep(50);
-
-    try { t.l.h[5] = onStateChange; } catch (error) { }
-
-    return t?.getCurrentTime?.();
+//#region helpers
+function replaceString({ string, start, end, replace })
+{
+    if (start < 0 || start > string.length)
+    {
+        throw new RangeError(`start index ${start} is out of the range 0~${string.length}`);
+    }
+    if (end > string.length || end < start)
+    {
+        throw new RangeError(`end index ${end} is out of the range ${start}~${string.length}`);
+    }
+    return string.substring(0, start) + replace + string.substring(end);
 }
-/* ***************** */
-function replace_nth(str = '', subStr = '', repStr = '', n = 1)
-{// https://stackoverflow.com/questions/35499498/replace-nth-occurrence-of-string#:~:text=with%20RegExp%20constructor-,const%20replace_nth%20%3D%20function%20(s%2C%20f%2C%20r%2C%20n)%20%7B,-//%20From%20the%20given
-    // From the given string s, replace f with r of nth occurrence
-    return str.replace(RegExp("^(?:.*?" + subStr + "){" + n + "}")
-        , x => x.replace(RegExp(subStr + "$"), repStr));
+function delSubstr(str, st, ed)
+{
+    return str.substr(0, st) + str.substr(ed);
 }
+function NonReferencedPerBlock(block, selector, targetNode)
+{
+    const inBlockEls = ElementsPerBlock(block, selector);
+    const closestRef = (el) => el.closest('.rm-block-ref[data-uid]');
+    const refParent = closestRef(targetNode);
+
+    const innerElms = ChildrenPerEml(refParent, selector);
+    const elemtToFilter = innerElms.length != 0 ? innerElms : inBlockEls;
+    const condition = (b) => refParent ? closestRef(b) : !closestRef(b);
+
+    return elemtToFilter.filter(condition);
+    function ChildrenPerEml(parent, selector)
+    {
+        if (!parent) return [];
+        return [...parent?.querySelectorAll(selector)]?.filter(b => b.closest(selector) == parent) || [];
+    }
+}
+function isSpace(s)
+{// // https://stackoverflow.com/questions/1496826/check-if-a-single-character-is-a-whitespace#:~:text=return%20/%5Cs/g.test(s)%3B
+    return /\s/g.test(s);
+}
+function anyVisibleChar(word)
+{
+    return [...word].some(c => !isSpace(c));
+    // const endOfString = !string[end + 1];
+    // const nextIsBlank = isSpace(string[end]);
+    // const alreadySpacedOut = !anyVisibleChar(hidden) && nextIsBlank;
+}
+function rgx2Gm(rgx)
+{
+    return new RegExp(rgx.source, 'gm');
+}
+function paramRgx(p, f = 'gm')
+{
+    return new RegExp(`((?:${p})=)([-+]?\\d*\\.\\d+|\\d+)`, f)
+}
+function floatParam(p, url)
+{
+    return paramRgx(p)?.exec(url)?.[2];
+}
+function stopEvents(e)
+{
+    e.preventDefault();
+    e.stopPropagation();
+}
+//#endregion
+
 //#endregion
 
 
