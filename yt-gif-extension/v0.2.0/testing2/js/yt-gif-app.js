@@ -117,7 +117,12 @@ const StartEnd_Config = {
 const YTGIF_Config = {
     componentPage: 'yt-gif|video',
     targetStringRgx: /https\:\/\/(www\.)?(youtu(be.com\/watch|.be\/))?(.*?(?=\s|$|\}|\]|\)))/,
+    minimalRgx: /(?<!\S)\/[^:|\s|}|\]|\)]{11,}/,
     guardClause: (url) => typeof url === 'string' && url.match('https://(www.)?youtube|youtu\.be'),
+}
+const URL_Config = {
+    scatteredMatch: true, // alright
+    targetStringRgx: YTGIF_Config.targetStringRgx
 }
 const UIDtoURLInstancesMapMap = new Map(); // since it store recursive maps, once per instance it's enough
 /*-----------------------------------*/
