@@ -2714,7 +2714,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
     // 2.1 OnPlayerReady video params point of reference
-    allVideoParameters.set(newId, urlConfig(url));
+    allVideoParameters.set(newId, ExtractParamsFromUrl(url));
     const configParams = allVideoParameters.get(newId);
 
     // 2.2 target's point of reference
@@ -4878,39 +4878,37 @@ function awaitingAtrr(bol, el)
     return UTILS.toggleAttribute(bol, 'awaiting', el);
 }
 /* ***************** */
-async function ReloadYTVideo({ t, start, end })
+function ExtractParamsFromUrl(url)
 {
-    if (!t)
-        return; //console.log(`YT GIF : Couldn't reload a video. Internal target is missing.`);
+    let success = false;
+    const media = JSON.parse(JSON.stringify(videoParams));
+    if (YTGIF_Config.guardClause(url))
+    {
+        const fParam = (p) => floatParam(p, url);
+        media.id = UTILS.getYouTubeVideoID(url);
 
-    const vars = t.i.h;
-    const map = allVideoParameters.get(t.h.id);
-    const iframe = t?.getIframe?.();
+        media.start = media.defaultStart = fParam('t|start');
+        media.end = media.defaultEnd = fParam('end');
 
-    start = start || 0;
-    end = end || t.getDuration();
+        media.speed = fParam('s|speed');
 
-    vars.playerVars.start = map.start = start;
-    vars.playerVars.end = map.end = end;
+        media.volume = new RegExp(/(vl=|volume=)(?:\d+)/).exec(url)?.[2];
 
-    while (isRendered(iframe) && !t?.seekTo)
-        await RAP.sleep(50);
+        media.hl = new RegExp(/(hl=)((?:\w+))/, 'gm').exec(url)?.[2];
+        media.cc = new RegExp(/(cc=|cc_lang_pref=)((?:\w+))/, 'gm').exec(url)?.[2];
 
-    // https://stackoverflow.com/questions/60409231/why-does-my-youtube-react-component-fire-the-playerstate-ended-event-twice-befor
-    // t.l.h[5] = async () => { }; // the craziet shinanigans EVER!
-    // t.seekTo?.(start); // not only it was preserving it's state
-    // t.pauseVideo?.(); // and performing it's onStateChange func twice
-    if (t.playerInfo?.playerState ?? 0)
-        t.playerInfo.playerState = 'F';
-    if (t.l?.h?.[5])
-        t.l.h[5] = async () => { }; // the only way to prevent double fire...? man...
-    // though I'm waiting to see what bugs it's going to cause
+        media.sp = new RegExp(/(sp=|span=)((?:\w+))/, 'gm').exec(url)?.[2];
 
-    await t?.loadVideoById?.({ // but it requieres you to load the video again to set "endSeconds" once again
-        'videoId': t.i.h.videoId,
-        'startSeconds': start,
-        'endSeconds': end,
-    });
+        media.src = url;
+        media.type = 'youtube';
+
+        success = true;
+    }
+
+    if (success) { return media; }
+    else { console.warn(`${newId}    Invalid youtube url detected for yt-gifs ${((uid))}`); }
+    return false;
+}
 
     while (isRendered(iframe) && !t?.getCurrentTime?.())
         await RAP.sleep(50);
