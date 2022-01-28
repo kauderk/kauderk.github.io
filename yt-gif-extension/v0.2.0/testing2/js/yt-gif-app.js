@@ -4725,6 +4725,28 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
             return `${u}${h}`
         }
     }
+
+
+    async function ExamineResObj(resObj) 
+    {
+        let { capture, from, to } = resObj; //  start, end, string,
+        let { contentObj, matchObj, hiddenObj } = CaptureInfoObj(capture, ExtractUrlsObj);
+
+
+        let { type, match } = matchObj;
+        if (!match)
+            throw new Error(`YT GIF URL Formatter: Missing video url...`);
+
+        const url = type == 'minimal' ? 'https://youtu.be' + match : match;
+        const params = ExtractParamsFromUrl(url);
+
+        if (['start', 'end'].some(p => p == to))
+        {
+            const minimalUrl = getMinimalUrl(to, params);
+
+            if (!hiddenObj.match?.includes?.(minimalUrl))
+                contentObj.hidden += minimalUrl + ' ';
+        }
 async function TryToUpdateBlock_fmt({ block, targetNode, siblingSel, selfSel, getMap, isKey, fmtCmpnt_cb, tempUID, from })
 {
     // Grab, if any, nested block information
