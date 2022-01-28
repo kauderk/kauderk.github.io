@@ -5250,20 +5250,20 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
 
 }
 
-function BlockRegexObj(componentPage, caputureGargabe = false)
+function BlockRegexObj(componentPage = '[^:]+', targetStringRgx)
 {
     const componentRgx = new RegExp(preRgxComp(componentPage), 'gm');
-    const inlindeCodeRgx = /(`.+?`)|(`([\s\S]*?)`)/gm;
-    const embedCompRgx = new RegExp(preRgxComp('embed'), 'gm');
     const anyPossibleComponentsRgx = /{{([^}]*)/gm; // https://stackoverflow.com/questions/30787438/how-to-stop-match-until-before-a-character-in-regex#:~:text=assisterId%3D-,(%5B%5E%22%5D*),-%5B%5E%22%5D*%20matches%20any%20character
     const aliasPlusUidsRgx = /\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm;
     const tooltipCardRgx = /{{=:(.+?)\|([^}]*)/gm;
     const anyUidRgx = /(?<=\(\()([^(].*?[^)])(?=\)\))/gm;
     // set in the order in which roam renders them - anyPossibleComponents is kinda like a joker card, it will trap components along with irrelevant uids
-    const baseBlockRgx = [tooltipCardRgx, componentRgx, anyPossibleComponentsRgx, aliasPlusUidsRgx, anyUidRgx]
-    const withGarbage = [inlindeCodeRgx, embedCompRgx, ...baseBlockRgx];
+    const baseBlockRgx = [tooltipCardRgx, componentRgx, anyPossibleComponentsRgx, aliasPlusUidsRgx, anyUidRgx];
+    if (targetStringRgx)
+        baseBlockRgx.push(targetStringRgx);
+    //const withGarbage = [inlindeCodeRgx, embedCompRgx, ...baseBlockRgx];
 
-    const blockRgx = reduceRgxArr(!caputureGargabe ? baseBlockRgx : withGarbage);
+    const blockRgx = reduceRgxArr(baseBlockRgx);
 
     return { blockRgx, aliasPlusUidsRgx, tooltipCardRgx, anyPossibleComponentsRgx, componentRgx };
 
