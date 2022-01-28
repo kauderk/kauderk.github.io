@@ -4678,6 +4678,94 @@ function awaitingAtrr(bol, el)
 
 //#region URL Formatter workflow
 function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
+async function TryToUpdateBlockSubString(tempUid, replaceIndex, toReplace, recycledRequest)
+{
+    const resObj = { success: false }
+    const blockReq = recycledRequest ?? await RAP.getBlockInfoByUIDM(tempUid);
+    const info = blockReq[0]?.[0];
+
+    if (!info || replaceIndex == -1)
+        return resObj;
+
+
+    // 1. gather spots/boundaries where roam does NOT render information
+    const IndexObj = (rgx, type) => indexPairObj(rgx, info.string, type);
+    const cmptRgx = /{{([^}]*)/gm; // anyPossibleComponentsRgx
+
+    const BadIndexMatches = [
+        ...IndexObj(/(`.+?`)|(`([\s\S]*?)`)/gm, 'codeBlocks'),
+
+        ...filterOutCode(IndexObj(/{{=:(.+?)\|(.+)}}/gm, 'tooltipPrompt'))
+            .map(op =>
+            {
+                const y = { ...op };
+                y.start = op.start + 4; // 4 = {{=:
+                y.end = op.end - (1 + op.groups[2]?.length + 2); // 1 = |     +    [2].length = hiidden content   +    2 = }}
+                y.match = op.groups[1]; // prompt
+                return y;
+            }),
+    ]
+    // 1.1 get out of your own way?
+    if (!toReplace.match(cmptRgx)?.[0]) // if it were to be component it would've have filter out itself later on
+        BadIndexMatches.push(...IndexObj(cmptRgx, 'components'))
+
+
+    // 2. valid spots where you can insert fmt components - user requests
+    // https://stackoverflow.com/questions/4009756/how-to-count-string-occurrence-in-string#:~:text=var%20m%20%3D%20this.match(new%20RegExp(search.toString().replace(/(%3F%3D%5B.%5C%5C%2B*%3F%5B%5E%5C%5D%24()%7B%7D%5C%7C%5D)/g%2C%20%22%5C%5C%22)%2C%20%22g%22))%3B
+    const PossibleMatches = IndexObj(new RegExp(`(${toReplace.replace(/(?=[.\\+*?[^\]$(){}\|])/g, "\\")})`, 'gm'), 'urlsMatch');
+    const validSubstrings = PossibleMatches.filter(good =>
+    {
+        let specialCase = false;
+        const badIndex = BadIndexMatches.some(bad =>
+        {
+            const bounded = good.start >= bad.start && good.end <= bad.end;
+            specialCase = bad.type == 'tooltipPrompt';
+            return bounded;
+        })
+
+        if (specialCase)
+            return true;
+        return !badIndex;
+    })
+
+
+    // 3. return if any errors
+    let start, end;
+    try
+    {
+        // I'm making a bet... if there is exactly one valid substring,
+        // And the same time if the replaceIndex is out of bounds ... >
+        // then I'm going to assume that the one "THING" the user clicked on
+        // is unique whitin that particular block.
+        if (validSubstrings.length == 1 && !validSubstrings[replaceIndex])
+        {
+            replaceIndex = 0;
+        }
+        start = validSubstrings[replaceIndex].start;
+        end = validSubstrings[replaceIndex].end;
+    }
+    catch (error)
+    {
+        debugger;
+        throw new Error(`YT GIF Formatter: Crashed because of out of bounds target...`);
+    }
+
+    // NICE!
+    return {
+        success: true,
+        uid: tempUid,
+        start, end,
+        open: info.open,
+        string: info.string,
+        recycledRequest: blockReq,
+    }
+
+    function filterOutCode(indexObj)
+    {
+        const inlindeCodeRgx = /(`.+?`)|(`([\s\S]*?)`)/gm;
+        return [...indexObj].filter(x => !inlindeCodeRgx.test(x.match))
+    }
+}
 function indexPairObj(regex, str, type)
 {// https://www.designcise.com/web/tutorial/how-to-return-the-position-of-a-regular-expression-match-in-javascript#:~:text=matchArr%5B1%5D.length%5D)%3B%0A%7D-,console.log(indexPairs)%3B%20//%20output%3A%20%5B8%2C%2025%5D%2C%20%5B27%2C%2035%5D,-The%20exec()%20method
     const matches = [...str.matchAll(regex)];
