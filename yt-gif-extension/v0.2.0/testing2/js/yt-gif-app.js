@@ -406,7 +406,7 @@ async function Ready()
     //#region relevant variables
     const { ddm_css_theme_input: ddm_css_theme_stt, player_span: player_span_stt } = Object.fromEntries(window.YT_GIF_DIRECT_SETTINGS);
     const { themes, playerStyle, dropDownMenuStyle } = links.css;
-    const { playerControls, dropDownMenu } = links.html;
+    const { playerControls, dropDownMenu, urlBtn } = links.html;
     const { yt_gif } = cssData; // CssThemes_UCS
     const { ddm_main_theme: ddm_main_theme_id } = cssData.id;
     //#endregion
@@ -417,7 +417,8 @@ async function Ready()
     //await smart_LoadCSS(themes.get(ddm_css_theme_stt.sessionValue), ddm_main_theme_id);
     await smart_CssPlayer_UCS(player_span_stt.sessionValue); // UCS - user customizations
 
-    links.html.fetched.playerControls = await PlayerHtml_UCS(playerControls);
+    links.html.fetched.playerControls = await await UTILS.fetchTextTrimed(playerControls);
+    links.html.fetched.urlBtn = await UTILS.fetchTextTrimed(urlBtn);
 
     await smart_Load_DDM_onTopbar(dropDownMenu); // DDM - drop down menu
 
@@ -431,7 +432,7 @@ async function Ready()
 
     // 3. set up events
     //#region relevant variables
-    const { ddm_icon, ddm_focus, ddm_info_message_selector, dropdown__hidden, awaitng_input_with_thumbnail } = cssData;
+    const { ddm_icon, ddm_focus, ddm_info_message_selector, dropdown__hidden, awaitng_player_user_input } = cssData;
     const { timestamp_display_scroll_offset, end_loop_sound_volume, iframe_buffer_slider } = UI.range;
     const initialize_mode = UI.experience.initialize_mode;
     const input_x_buffer_option = getOption(initialize_mode, 'input_x_buffer');
@@ -548,7 +549,6 @@ async function Ready()
     //#region relevant variables
     const s_u_f_key = 'simulate_url_formatter';
     const url_formatter_option = getOption(UI.display.ms_options, s_u_f_key);
-    links.html.fetched.urlBtn = await UTILS.fetchTextTrimed(links.html.urlBtn);
     //#endregion
 
     const urlObserver = new MutationObserver(InlineUrlBtnMutations_cb);
@@ -627,10 +627,6 @@ async function Ready()
         }
 
         rm_moreIcon.insertAdjacentHTML('afterend', htmlText);
-    }
-    async function PlayerHtml_UCS(playerControls)
-    {
-        return await UTILS.FetchText(playerControls);
     }
     //#endregion
 
