@@ -6,6 +6,7 @@
   --yt-gif-icon-bg: #696969;
 
   --drop-menu-btn-h: var(--dropdown-main-btn-bg-h);
+  --drop-menu-btn-f: red;
   --drop-menu-btn-f: rgba(167, 182, 194, 0.2);
   --dropdown--bg: #10161a;
 
@@ -64,6 +65,13 @@
   --sel-sel: #314d62;
   --sel-disabled-bg: rgb(49 58 64);
   --sel-disabled-c: #607d8b;
+
+  --sel-item-c: rgb(172 179 191);
+  --sel-item-c-sel: rgb(172 179 191);
+
+  --sel-btn-sel: #cecece;
+  --sel-btn-c: rgb(145 159 180);
+  --sel-btn-sel-c: rgb(135 135 135);
 
   --sel-h: rgb(40 120 184 / 30%);
 

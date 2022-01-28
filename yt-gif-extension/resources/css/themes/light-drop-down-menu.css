@@ -6,7 +6,7 @@
   --yt-gif-icon-bg: #5c7080;
 
   --drop-menu-btn-h: var(--dropdown-main-btn-bg-h);
-  --drop-menu-btn-f: rgb(148 161 171 / 10%);
+  --drop-menu-btn-f: #8093a3;
   --dropdown--bg: #fff;
 
   --submenu-message-bg: #93b1c9;
@@ -61,10 +61,17 @@
   --ddm-not-allowed-bg-h: rgba(255, 193, 7, 0.62);
   --ddm-updt-h: #02665d;
 
-  --sel-bg: #c2d6eb;
-  --sel-sel: #95c2e6;
-  --sel-disabled-bg: #9daab5;
+  --sel-bg: red;
+  --sel-sel: #a1c9e9;
+  --sel-disabled-bg: #889aa9;
   --sel-disabled-c: #5c7080;
+
+  --sel-item-c: #889bac;
+  --sel-item-c-sel: black;
+
+  --sel-btn-sel: black;
+  --sel-btn-c: #adadad;
+  --sel-btn-sel-c: #454545;
 
   --sel-h: rgb(40 120 184 / 30%);
 
