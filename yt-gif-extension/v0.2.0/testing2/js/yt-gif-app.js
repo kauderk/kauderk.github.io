@@ -4679,6 +4679,16 @@ function awaitingAtrr(bol, el)
 //#region URL Formatter workflow
 function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
 /* ***************** */
+function ExtractContentFromCmpt(capture)
+{
+    return [...capture.matchAll(BlockRegexObj().componentRgx)][0]?.[5] || capture;
+}
+function ExtractUrlsObj(string)
+{
+    const { targetStringRgx: urlRgx, minimalRgx } = YTGIF_Config;
+    return indexPairObj(rgx2Gm(urlRgx), string, 'url')?.[0] ||
+        indexPairObj(rgx2Gm(minimalRgx), string, 'minimal')?.[0] || {};
+}
 function ExtractParamsFromUrl(url)
 {
     let success = false;
