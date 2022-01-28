@@ -4859,6 +4859,20 @@ async function getWrapperInHierarchyObj(pointOfReferenceElm)
     // }, []);
 }
 /* ***************** */
+function fmtTimestamp(value)
+{
+    const str2sec = (str) => UTILS.HMSToSecondsOnly(str)
+    let fmt = (tms) => tms;
+
+    if (value == 'lessHMS')
+        fmt = (tms) => UTILS.seconds2time(str2sec(tms));
+    else if (value == 'HMS')
+        fmt = (tms) => UTILS.convertHMS(str2sec(tms));
+    else if (value == 'S')
+        fmt = (tms) => str2sec(tms);
+
+    return fmt;
+}
 function awaitingAtrr(bol, el)
 {
     return UTILS.toggleAttribute(bol, 'awaiting', el);
