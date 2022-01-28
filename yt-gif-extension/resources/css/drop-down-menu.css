@@ -565,8 +565,8 @@ max-width: fit-content;
 }
 
 /* row of url btns */
-:is(.bp3-button, .rm-video-timestamp):hover 
-.yt-gif-url-btns{
+:is(.bp3-button, .rm-video-timestamp):hover .yt-gif-url-btns,
+.hover .yt-gif-url-btns{
  display: flex !important;
 }
 .rm-video-timestamp > div {
