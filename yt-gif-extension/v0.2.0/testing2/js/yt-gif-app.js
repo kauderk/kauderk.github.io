@@ -5196,6 +5196,7 @@ class CustomSelect
                     this._select(fake)
                 else
                     this._deselect(fake)
+                this.customSelect.dispatchEvent(new Event('customBind'))
             }
         });
 
