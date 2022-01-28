@@ -4678,6 +4678,37 @@ function awaitingAtrr(bol, el)
 
 //#region URL Formatter workflow
 function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
+async function TryToUpdateBlock_fmt({ block, targetNode, siblingSel, selfSel, getMap, isKey, fmtCmpnt_cb, tempUID, from })
+{
+    // Grab, if any, nested block information
+    const siblingIndex = ElementsPerBlock(block, siblingSel).indexOf(targetNode);
+    const selfIndex = NonReferencedPerBlock(block, selfSel, targetNode).indexOf(targetNode);
+    const map = await getMap();
+    const ObjAsKey = MapAtIndex_ObjKey(map, siblingIndex, isKey);
+
+    // exit if the information isn't available
+    const { uid, capture } = ObjAsKey ?? {};
+    if (!capture || !uid || selfIndex == -1)
+        return;
+    const res = await TryToUpdateBlockSubString(uid, selfIndex, capture);
+    if (!res?.success)
+        return;
+
+    // update the block
+    try
+    {
+        const replaceObj = { ...res, capture, from };
+        replaceObj.replace = await fmtCmpnt_cb(replaceObj);
+        await RAP.updateBlock(uid, replaceString(replaceObj), res.open);
+        UIDtoURLInstancesMapMap.delete(uid);
+        UIDtoURLInstancesMapMap.delete(tempUID);
+    } catch (error)
+    {
+        const tp = from?.urlBtn?.closest('[data-tooltip]');
+        return tp?.setAttribute('data-tooltip', `${error?.message} ((${tempUID}))`);
+    }
+    return { success: true }
+}
 async function TryToUpdateBlockSubString(tempUid, replaceIndex, toReplace, recycledRequest)
 {
     const resObj = { success: false }
