@@ -684,7 +684,7 @@ async function Ready()
                             parentObj[childKey].value = Number(sessionValue);
                             break;
                         case 'label':
-                            parentObj[childKey].innerHTML = sessionValue;
+                            parentObj[childKey].textContent = sessionValue;
                             break;
                         default:
                             const input = parentObj[childKey];
@@ -905,7 +905,7 @@ async function Ready()
     function UpdateOnScroll_RTM(scroll)
     {
         const labelEl = scroll.nextElementSibling;
-        labelEl.innerHTML = scroll.value; // don't fire rendundant API calls on startup
+        labelEl.textContent = scroll.value; // don't fire rendundant API calls on startup
 
         // 📦
         scroll.addEventListener('click', (e) => UptLabel(e.currentTarget), true);
@@ -921,7 +921,7 @@ async function Ready()
         }
         function UptLabel(elScroll)
         {
-            labelEl.innerHTML = elScroll.value; // don't worry about overflowing the counter, html range takes care of it
+            labelEl.textContent = elScroll.value; // don't worry about overflowing the counter, html range takes care of it
             elScroll.dispatchEvent(new Event('change'));
         }
     }
@@ -1027,8 +1027,8 @@ async function Ready()
         const checkMenuParent = checkMenu.parentElement;
         const labelCheckMenu = checkMenu.previousElementSibling;
         //#region labelCheckMenu utils
-        function islabel(str) { return labelCheckMenu.innerHTML == str; }
-        function labelTxt(str) { return labelCheckMenu.innerHTML = str; }
+        function islabel(str) { return labelCheckMenu.textContent == str; }
+        function labelTxt(str) { return labelCheckMenu.textContent = str; }
         //#endregion
 
 
@@ -1061,7 +1061,7 @@ async function Ready()
             discharging: `** Disconecting Observers **`,
             loading: `** Setting up Observers **`,
         }
-        labelCheckMenu.innerHTML = deployInfo.suspend;
+        labelCheckMenu.textContent = deployInfo.suspend;
 
 
 
@@ -1455,7 +1455,7 @@ async function Ready()
             for (let i of foundToRemove)
             {
                 const key = i.getAttribute(timestampObj.attr.timestampStyle) || 'timestamp';
-                i.innerHTML = key;
+                i.textContent = key;
                 i = UTILS.ChangeElementType(i, 'button');
                 i.className = timestampObj[key].buttonClass;
             }
@@ -1820,7 +1820,7 @@ async function Ready()
 
 
             // 2. 
-            const validTimestamp = tEl.innerHTML.match(StartEnd_Config.targetStringRgx)?.[0];
+            const validTimestamp = tEl.a.textContent.match(StartEnd_Config.targetStringRgx)?.[0];
             const secondsOnly = UTILS.HMSToSecondsOnly(validTimestamp);
             if (!validTimestamp || typeof secondsOnly !== 'number')
             {
@@ -2092,21 +2092,7 @@ async function Ready()
         const fmt = fmtTimestamp(value);
 
         document.querySelectorAll('[yt-gif-timestamp-emulation]')
-            .forEach(tms => tms.innerHTML = fmt(tms.innerHTML));
-    }
-    function fmtTimestamp(value)
-    {
-        const str2sec = (str) => UTILS.HMSToSecondsOnly(str)
-        let fmt = (tms) => tms;
-
-        if (value == 'lessHMS')
-            fmt = (tms) => UTILS.seconds2time(str2sec(tms));
-        else if (value == 'HMS')
-            fmt = (tms) => UTILS.convertHMS(str2sec(tms));
-        else if (value == 'S')
-            fmt = (tms) => str2sec(tms);
-
-        return fmt;
+            .forEach(tms => tms.a.textContent = fmt(tms.a.textContent));
     }
 
     //#endregion
@@ -3688,19 +3674,19 @@ async function onPlayerReady(event)
         UTILS.toggleAttribute(tick() > map.end, 'tick-offset', timeDisplayStart);
         UTILS.toggleAttribute(offsetClip, 'offset', timeDisplayEnd);
 
-        // timeDisplay.innerHTML = '00:00/00:00'
+        // timeDisplay.textContent = '00:00/00:00'
         if (isSelected(UI.display.ms_options, 'clip_lifespan_format')) // 'bounded tick'/'clip end'
         {
             const boundedTick = Math.abs(_clipSpan - (map.end - tick()));
             const validEnd = offsetClip ? map.end : _clipSpan;
 
-            timeDisplayStart.innerHTML = fmtMSS(boundedTick);
-            timeDisplayEnd.innerHTML = fmtMSS(validEnd);
+            timeDisplayStart.textContent = fmtMSS(boundedTick);
+            timeDisplayEnd.textContent = fmtMSS(validEnd);
         }
         else // 'update'/'end'
         {
-            timeDisplayStart.innerHTML = fmtMSS(tick());
-            timeDisplayEnd.innerHTML = fmtMSS(map.end);
+            timeDisplayStart.textContent = fmtMSS(tick());
+            timeDisplayEnd.textContent = fmtMSS(map.end);
         }
 
 
