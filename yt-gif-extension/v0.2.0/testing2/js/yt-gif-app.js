@@ -1988,42 +1988,6 @@ async function Ready()
         }
     }
 
-    //#region 6.2.1
-    async function updateTimestampOnMouseleave(e, uid, nodePpts)
-    {
-        const { currentTarget: tEl } = e;
-        toogleDocumentScroll(tEl, false);
-        const { blockRgx } = BlockRegexObj(StartEnd_Config.componentPage, true);
-        const res = RAP.getBlockInfoByUID(nodePpts.fromUid);
-        const rawText = res[0]?.[0]?.string || 'F';
-    }
-    async function rawTimestampOnWheel(e, uid)
-    {
-        const { currentTarget: tEl } = e;
-        if (!tEl.parentNode.classList.contains('yt-gif-timestamp-prevent-scroll')) return;
-
-        const validTimestamp = tEl.innerHTML.match(StartEnd_Config.targetStringRgx)?.[0];
-        const secondsOnly = UTILS.HMSToSecondsOnly(validTimestamp);
-
-        if (!validTimestamp || typeof secondsOnly !== 'number') return;
-
-        const newTimestamp = SliderValue(secondsOnly);
-        tEl.innerHTML = UTILS.convertHMS(newTimestamp);
-
-        function SliderValue(value)
-        {
-            const dir = Math.sign(e.deltaY) * -1;
-            const parsed = parseInt(value, 10);
-            return Number(dir + parsed);
-        }
-    }
-    // 6.2.2
-    function toogleDocumentScroll(el, bol)
-    {
-        UTILS.toggleClasses(bol, ['yt-gif-timestamp-prevent-scroll'], el);
-    }
-    //#endregion
-
 
 
     // 6.3
