@@ -4678,6 +4678,31 @@ function awaitingAtrr(bol, el)
 
 //#region URL Formatter workflow
 function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
+function indexPairObj(regex, str, type)
+{// https://www.designcise.com/web/tutorial/how-to-return-the-position-of-a-regular-expression-match-in-javascript#:~:text=matchArr%5B1%5D.length%5D)%3B%0A%7D-,console.log(indexPairs)%3B%20//%20output%3A%20%5B8%2C%2025%5D%2C%20%5B27%2C%2035%5D,-The%20exec()%20method
+    const matches = [...str.matchAll(regex)];
+
+    const indexPairs = [];
+
+    for (const matchArr of matches)
+    {
+        indexPairs.push(
+            [
+                matchArr.index,
+                matchArr.index + matchArr[0]?.length,
+                matchArr[0],
+                matchArr
+            ]
+        )
+    }
+    return [...indexPairs].map(mp => ({
+        type,
+        start: mp[0],
+        end: mp[1],
+        match: mp[2],
+        groups: mp[3],
+    }))
+}
 /* ***************** */
 function appendVerticalUrlBtns(targetNode)
 {
