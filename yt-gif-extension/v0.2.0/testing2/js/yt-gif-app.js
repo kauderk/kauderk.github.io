@@ -4859,6 +4859,27 @@ async function getWrapperInHierarchyObj(pointOfReferenceElm)
     // }, []);
 }
 /* ***************** */
+function PulseObj(tEl)
+{
+    const base = ['yt-timestamp-pulse-text-anim'];
+    const anims = {
+        green: [...base, 'yt-timestamp-success'],
+        red: [...base, 'yt-timestamp-warn'],
+        blue: [...base, 'yt-timestamp-opening'],
+        purple: [...base, 'yt-timestamp-reset'],
+        blueViolet: [...base, 'yt-timestamp-pause'],
+    }
+    anims['all'] = Object.values(anims).flat(Infinity).filter((v, i, a) => a.indexOf(v) === i); // remove duplicates on allAnim
+
+    function pulse(anim = 'green')
+    {
+        UTILS.toggleClasses(false, anims['all'], tEl)
+        UTILS.toggleClasses(true, anims[anim], tEl)
+        setTimeout(() => UTILS.toggleClasses(false, anims[anim], tEl), 500);
+    }
+
+    return { pulse }
+}
 function fmtTimestamp(value)
 {
     const str2sec = (str) => UTILS.HMSToSecondsOnly(str)
