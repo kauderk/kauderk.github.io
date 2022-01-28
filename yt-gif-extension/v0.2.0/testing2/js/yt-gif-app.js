@@ -860,32 +860,36 @@ async function Ready()
             const main = document.querySelector(`[data-main='${key}']`);
             const binds = () => [...document.querySelectorAll(`[data-bind*='${key}']`)];
 
-            const toogleSingle = () => binds().forEach(b => UTILS.toggleClasses(!main.checked, toggleClassArr, b));
-            const toogleMultiple = () => binds().forEach(b =>
+            const toogleOnCheck = () => binds().forEach(b => UTILS.toggleClasses(!main.checked, toggleClassArr, b));
+            const toogleOnSelect = () => binds().forEach(b =>
             {
                 const on = b.getAttribute('on');
                 const not = b.getAttribute('not');
-                const equals = (s) => s.split(',').map(s => s.trim()).some(v => v == main.value);
-                const any = (v) => main.value != 'disabled' && v == 'any';
+
+                const selOpts = main.type == 'select-multiple' ? [...main.selectedOptions].map(o => o.value) : [main.value];
+                const is = (v) => selOpts.includes(v);
+
+                const equals = (s) => s.split(',').map(s => s.trim()).some(v => is(v));
+                const any = (v) => !is('disabled') && v == 'any';
 
                 if (on) // showMatch || showIfAny
                     UTILS.toggleClasses(!(equals(on) || any(on)), toggleClassArr, b);
                 else if (not) // hideMatch || hideIfAny
                     UTILS.toggleClasses((equals(not) || any(not)), toggleClassArr, b);
-            });
+            })
 
             if (!main) { debugger; continue; }
             if (main.tagName == 'INPUT')
             {
-                toogleSingle();
-                main.addEventListener('change', toogleSingle);
-                main.addEventListener('customBind', toogleSingle);
+                toogleOnCheck();
+                main.addEventListener('change', toogleOnCheck);
+                main.addEventListener('customBind', toogleOnCheck);
             }
             else if (main.tagName == 'SELECT')
             {
-                toogleMultiple();
-                main.addEventListener('change', toogleMultiple);
-                main.addEventListener('customBind', toogleMultiple);
+                toogleOnSelect();
+                main.addEventListener('change', toogleOnSelect);
+                main.addEventListener('customBind', toogleOnSelect);
             }
         }
     }
