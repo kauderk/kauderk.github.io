@@ -5045,7 +5045,10 @@ function FilterMapByIsKey(map, property)
     return [...map.keys()].filter(o => o['isKey'].includes(property));
 }
 
-
+async function getUrlMap_smart(uid)
+{
+    return await getMap_smart(uid, UIDtoURLInstancesMapMap, getComponentMap, uid, YTGIF_Config);
+}
 async function getMap_smart(key, map, callback, ...setMapCb_params)
 {// https://stackoverflow.com/questions/3458553/javascript-passing-parameters-to-a-callback-function#:~:text=console.log(param1)%3B%0A%7D-,function%20callbackTester(callback%2C%20...params)%20%7B,-callback(...params)%3B%0A%7D%0A%0A%0A%0AcallbackTester
     // since it store recursive maps, once per instance it's enough
