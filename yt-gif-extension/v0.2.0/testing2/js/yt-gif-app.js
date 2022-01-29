@@ -4757,7 +4757,7 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
         if (['start', 'end'].some(p => p == to))
         {
             const { fmtUrl } = fmtUrlsObj(to, params);
-            const match = (u) => u.match(YTGIF_Config.targetStringRgx)?.[4];
+            const match = (u) => u?.match(YTGIF_Config.targetStringRgx)?.[4];
 
             // different urls?
             if (!hiddenObj.match?.includes?.(fmtUrl) && match(lastUrl) != match(url))
