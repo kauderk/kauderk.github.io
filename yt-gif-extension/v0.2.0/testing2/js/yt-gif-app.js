@@ -1549,9 +1549,7 @@ async function Ready()
             targetNode.a.textContent = timestampContent;
             targetNode.a.textContent = fmtTimestamp()(targetNode.a.textContent); // javascript is crazy!
 
-            const hasAnyVideoUrl = ExtractUrlsObj(ExtractContentFromCmpt(ObjAsKey.capture))?.match;
-            if (hasAnyVideoUrl) // has any url
-                appendVerticalUrlBtns(targetNode); // https://gist.github.com/tonY1883/a3b85925081688de569b779b4657439b
+            const hasAnyVideoUrl = ExtractUrlsObj(ExtractContentFromCmpt(ObjAsKey.capture))?.match; // https://gist.github.com/tonY1883/a3b85925081688de569b779b4657439b
 
 
             const tmSetObj = {
@@ -1614,8 +1612,8 @@ async function Ready()
                     o.targetNode.onmousedown = OnClicks;
                     o.targetNode.OnClicks = OnClicks;
                     o.targetNode.validateSelf = validateSelf;
-                    if (o.hasAnyVideoUrl)
-                        SetUpUrlFormatter(o, tmSetObj);
+                    o.targetNode.tryToAppendUrlBtns = tryToAppendUrlBtns;
+                    tryToAppendUrlBtns();
                     o.appendToParent(); // I'm using observers and these functions take just a little bit of longer to get attached, NOW it should be ok
 
 
@@ -1637,6 +1635,13 @@ async function Ready()
                         const bounded = tm >= 0 && tm <= parseInt(duration);
 
                         UTILS.toggleAttribute(!bounded, 'out-of-bounds', o.targetNode);
+                    }
+                    async function tryToAppendUrlBtns()
+                    {
+                        if (!o.hasAnyVideoUrl || !valid_url_formatter())
+                            return;
+                        appendVerticalUrlBtns(o.targetNode);
+                        SetUpUrlFormatter(o, tmSetObj);
                     }
                 }
             }
@@ -2159,7 +2164,7 @@ async function Ready()
         for (const rm_btn of added)
         {
             UTILS.toggleClasses(true, ['yt-gif'], rm_btn);
-            rm_btn.insertAdjacentHTML('afterbegin', links.html.fetched.urlBtn);
+            appendlUrlBtns(rm_btn);
 
 
             const { startCmpt, endCmpt, startEndCmpt, ytGifCmpt, urlBtn } = fmtTimestampsUrlObj(rm_btn);
@@ -2529,7 +2534,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     wrapper.innerHTML = '';
     wrapper.insertAdjacentHTML('afterbegin', links.html.fetched.playerControls);
     wrapper.querySelector('.yt-gif-player').id = newId;
-    appendVerticalUrlBtns(wrapper.querySelector('[formatter]'));
+    wrapper.querySelector('[formatter]').tryToAppendUrlBtns = tryToAppendUrlBtns;
 
 
     // 5. Observe children containers and recover active timestamps respectively
@@ -2539,7 +2544,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
     // 6. Set up btns
-    SetUpUrlFormatter();
+    tryToAppendUrlBtns();
 
 
 
@@ -2954,9 +2959,15 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     }
 
     // 6
-    function SetUpUrlFormatter()
+    function tryToAppendUrlBtns()
     {
+        if (!valid_url_formatter())
+            return;
+
+        appendVerticalUrlBtns(wrapper.querySelector('[formatter]'));
+
         const { startCmpt, endCmpt, startEndCmpt, compt2Url, urlBtn } = fmtTimestampsUrlObj(wrapper, '[formatter]');
+
         urlBtn('url').onclick = async (e) => await OnYtGifUrlBtn(e, compt2Url)
         urlBtn('start').onclick = async (e) => await OnYtGifUrlBtn(e, startCmpt)
         urlBtn('end').onclick = async (e) => await OnYtGifUrlBtn(e, endCmpt)
@@ -5073,10 +5084,22 @@ function indexPairObj(regex, str, type)
 /* ***************** */
 function appendVerticalUrlBtns(targetNode)
 {
-    const div = document.createElement('div');
-    div.insertAdjacentHTML('afterbegin', links.html.fetched.urlBtn);
-    div.querySelector('.yt-gif-url-btns').classList.add('vertical');
-    targetNode.insertAdjacentElement('afterbegin', div);
+    const urlBtns = appendlUrlBtns(targetNode);
+    UTILS.toggleClasses(true, ['vertical'], urlBtns);
+}
+function appendlUrlBtns(targetNode)
+{
+    const c = 'yt-gif-url-btns-wrapper';
+    const div = targetNode.querySelector(`.${c}`) ?? UTILS.div([c]);
+
+    if (!div.querySelector('.yt-gif-url-btns'))
+        div.insertAdjacentHTML('afterbegin', links.html.fetched.urlBtn);
+    if (!isRendered(div))
+        targetNode.insertAdjacentElement('afterbegin', div);
+
+    UTILS.toggleClasses(true, [c], div);
+    return targetNode.querySelector('.yt-gif-url-btns')
+}
 }
 /* ***************** */
 function ExtractContentFromCmpt(capture)
