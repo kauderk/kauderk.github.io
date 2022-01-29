@@ -1998,7 +1998,7 @@ async function Ready()
     }
     async function getYTwrapperRootObj(uid, tEl)
     {
-        const { foundBlock } = await getLastComponentInHierarchy(uid);
+        const { foundBlock } = await getLastYTGIFCmptInHierarchy(uid);
         if (!foundBlock?.uid) console.warn(`YT GIF Timestamps: couldn't find YT GIFs within the Hierarchy: ((${uid}))`);
         const { uid: f_uid } = foundBlock || { uid: '' };
 
@@ -4453,7 +4453,7 @@ async function getTimestampObj_smart(page)
 
     async function getTimestampObj(page, uid)
     {
-        const { formats, foundBlock, targetBlock } = await getLastComponentInHierarchy(uid);
+        const { formats, foundBlock, targetBlock } = await getLastYTGIFCmptInHierarchy(uid);
         if (!foundBlock) return failObj;
 
         const { lestHMS, HMS, S } = formats;
@@ -5221,7 +5221,7 @@ function stopEvents(e)
 
 
 //#region  backend/frontend communication - XXX_Config = {...}
-async function getLastComponentInHierarchy(tempUID, _Config = YTGIF_Config, includeOrigin = true)
+async function getLastYTGIFCmptInHierarchy(tempUID, includeOrigin = true)
 {
     const original = await RAP.getBlockInfoByUID(tempUID);
     const ParentHierarchy = await RAP.getBlockParentUids_custom(tempUID);
@@ -5256,10 +5256,10 @@ async function getLastComponentInHierarchy(tempUID, _Config = YTGIF_Config, incl
 
     for (const { string, uid } of blockStrings.reverse())
     {
-        const componentMap = await getComponentMap(uid, _Config);
+        const componentMap = await getUrlMap_smart(uid); // careful bud
         const reverseValues = [...componentMap.values()].reverse();
 
-        const lastUrl = reverseValues?.find(v => _Config.guardClause(v));
+        const lastUrl = reverseValues?.find(v => YTGIF_Config.guardClause(v));
         if (!lastUrl) continue;
 
         const lastUrlIndex = reverseValues.indexOf(lastUrl);
@@ -5274,8 +5274,8 @@ async function getLastComponentInHierarchy(tempUID, _Config = YTGIF_Config, incl
         return {
             formats: boundaryObj(crrTime),
             foundBlock: {
-                string,
-                uid,
+                lastUrl, lastUrlIndex, componentMap,
+                string, uid,
                 blockID: iframeMaps[key]?.blockID,
                 possibleBlockIDSufix,
             },
