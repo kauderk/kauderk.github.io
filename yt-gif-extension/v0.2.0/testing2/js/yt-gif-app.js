@@ -1638,8 +1638,11 @@ async function Ready()
                     }
                     async function tryToAppendUrlBtns()
                     {
-                        if (!o.hasAnyVideoUrl || !valid_url_formatter())
+                        if (!valid_url_formatter())
                             return;
+                        if (!isSelected(UI.display.fmt_options, 'rely_on_hierarchy') && !o.hasAnyVideoUrl)
+                            return;
+
                         appendVerticalUrlBtns(o.targetNode);
                         SetUpUrlFormatter(o, tmSetObj);
                     }
@@ -4740,18 +4743,28 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
 
 
         let { type, match } = matchObj;
+        const rely_on_hierarchy = isSelected(UI.display.fmt_options, 'rely_on_hierarchy');
+        const lastUrl = await TryToAssertHierarchyUrl(false);
+        if (!match && rely_on_hierarchy)
+            match = lastUrl;
         if (!match)
             throw new Error(`YT GIF URL Formatter: Missing video url...`);
 
+        matchObj.match = match;
         const url = type == 'minimal' ? 'https://youtu.be' + match : match;
         const params = ExtractParamsFromUrl(url);
 
         if (['start', 'end'].some(p => p == to))
         {
-            const minimalUrl = getMinimalUrl(to, params);
+            const { fmtUrl } = fmtUrlsObj(to, params);
+            const match = (u) => u.match(YTGIF_Config.targetStringRgx)?.[4];
 
-            if (!hiddenObj.match?.includes?.(minimalUrl))
-                contentObj.hidden += minimalUrl + ' ';
+            // different urls?
+            if (!hiddenObj.match?.includes?.(fmtUrl) && match(lastUrl) != match(url))
+            {
+                const c = getConcatS(contentObj.hidden)
+                contentObj.hidden += `${c + fmtUrl} `;
+            }
         }
         else if (['start', 'end'].some(p => p == from.page))
         {
@@ -4787,7 +4800,7 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
             if (!h)
                 return '';
             contentObj.hidden == contentObj.hidden ?? '';
-            const c = isSpace([...contentObj.hidden].pop()) ? '' : ' ';
+            const c = getConcatS(contentObj.hidden)
             return c + pearCaptureObj.contentObj?.hidden?.trim() + ' ';
         }
         function fmtTmParam(page, value, match)
@@ -4878,24 +4891,29 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
             }
             return CaptureInfoObj(capture, ExtractTmsObj_cb);
         }
-        function getMinimalUrl(to, params)
+        function fmtUrlsObj(to, params)
         {
             const ignore = [to, 'type', 'src', 'defaultEnd', 'defaultStart', 'id',
                 'timeURLmapHistory', 'updateVolume', 'volumeURLmapHistory'];
 
-            let minimalUrl = '';
+            let urlPms = '';
             for (const key in params)
             {
                 if (ignore.includes(key) || !params[key])
                     continue;
-                const c = !minimalUrl ? '' : '&';
-                minimalUrl += `${c}${key}=${params[key]}`; // E.g. &t=10
+                const c = !urlPms ? '' : '&';
+                urlPms += `${c}${key}=${params[key]}`; // E.g. &t=10
             }
             const c = isSelected(UI.display.fmt_options, 'avoid_redundancy') ? '/' : 'https://youtu.be/';
-            const base = c + params.id;
-            const full = minimalUrl.slice(1);
-            minimalUrl = full ? `${base}?${minimalUrl}` : base;
-            return minimalUrl;
+            const base = (c) => c + params.id;
+            const full = urlPms.slice(1);
+            const url = full ? `${base(c)}?${urlPms}` : base(c);
+
+            return {
+                minimal: `${base('/')}?${urlPms}`,
+                full: `${base('https://youtu.be/')}?${urlPms}`,
+                fmtUrl: url
+            }
         }
         function TryToReorderTmParams(p, url)
         {
@@ -4911,11 +4929,21 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
         function TryToRemoveRedudantTmParam(pear = 'self', contentObj)
         {
             const tm = from.tmSetObj?.[pear]?.timestamp;
-            const value = fmtTimestamp()(tm ?? '0');
+            if (!tm || !contentObj.match)
+                return contentObj.hidden;
+            const value = fmtTimestamp()(tm);
             const rawValue = fmtTimestamp()(contentObj.content?.match(StartEnd_Config.targetStringRgx)?.[0] ?? '-1');
             if (rawValue === value && isSelected(UI.display.fmt_options, 'avoid_redundancy'))
                 return contentObj.hidden.replace(tm.toString(), '');
             return contentObj.hidden;
+        }
+        async function TryToAssertHierarchyUrl(origin = true)
+        {
+            const { foundBlock } = await getLastYTGIFCmptInHierarchy(resObj.uid, origin);
+            if (!foundBlock?.lastUrl)
+                return null;
+
+            return foundBlock.lastUrl;
         }
     }
     function urlBtn(page)
@@ -5186,15 +5214,16 @@ function NonReferencedPerBlock(block, selector, targetNode)
     }
 }
 function isSpace(s)
-{// // https://stackoverflow.com/questions/1496826/check-if-a-single-character-is-a-whitespace#:~:text=return%20/%5Cs/g.test(s)%3B
+{// https://stackoverflow.com/questions/1496826/check-if-a-single-character-is-a-whitespace#:~:text=return%20/%5Cs/g.test(s)%3B
     return /\s/g.test(s);
+}
+function getConcatS(string)
+{
+    return isSpace([...string].pop()) ? '' : ' ';
 }
 function anyVisibleChar(word)
 {
     return [...word].some(c => !isSpace(c));
-    // const endOfString = !string[end + 1];
-    // const nextIsBlank = isSpace(string[end]);
-    // const alreadySpacedOut = !anyVisibleChar(hidden) && nextIsBlank;
 }
 function rgx2Gm(rgx)
 {
