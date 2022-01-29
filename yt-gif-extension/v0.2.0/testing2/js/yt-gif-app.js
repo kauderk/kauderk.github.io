@@ -152,9 +152,11 @@ const links = {
         dropDownMenu: self_urlFolder('html/drop-down-menu.html'),
         playerControls: self_urlFolder('html/player-controls.html'),
         urlBtn: self_urlFolder('html/url-btn.html'),
+        anchor: self_urlFolder('html/yt-gif-anchor.html'),
         fetched: {
             playerControls: '',
             urlBtn: '',
+            anchor: '',
         },
     },
     js: {
@@ -417,7 +419,7 @@ async function Ready()
     //#region relevant variables
     const { ddm_css_theme_input: ddm_css_theme_stt, player_span: player_span_stt } = Object.fromEntries(window.YT_GIF_DIRECT_SETTINGS);
     const { themes, playerStyle, dropDownMenuStyle } = links.css;
-    const { playerControls, dropDownMenu, urlBtn } = links.html;
+    const { playerControls, dropDownMenu, urlBtn, anchor } = links.html;
     const { yt_gif } = cssData; // CssThemes_UCS
     const { ddm_main_theme: ddm_main_theme_id } = cssData.id;
     //#endregion
@@ -430,6 +432,7 @@ async function Ready()
 
     links.html.fetched.playerControls = await await UTILS.fetchTextTrimed(playerControls);
     links.html.fetched.urlBtn = await UTILS.fetchTextTrimed(urlBtn);
+    links.html.fetched.anchor = await UTILS.fetchTextTrimed(anchor);
 
     await smart_Load_DDM_onTopbar(dropDownMenu); // DDM - drop down menu
 
@@ -556,6 +559,7 @@ async function Ready()
     tm_workflow_display.addEventListener('change', e => ChangeTimestamapsDisplay(e.currentTarget.value));
 
 
+
     // 7. simulate inline url btn
     //#region relevant variables
     const url_formatter_option = getOption(UI.display.ms_options, s_u_f_key);
@@ -568,6 +572,18 @@ async function Ready()
     ToogleUrlBtnObserver(s_u_f_startUp, urlObserver);
     url_formatter_option.addEventListener('customChange', (e) => confirmUrlBtnUsage(e.detail.currentValue, e));
     url_formatter_option.addEventListener('customChange', (e) => ToogleUrlBtnObserver(e.currentTarget.selected, urlObserver));
+
+
+
+    // 8. observe anchor components
+    //#region relevant variables
+    const anchorCs = 'rm-xparser-default-anchor';
+    //#endregion
+
+    const anchors = [...document.querySelectorAll(anchorCs)].forEach(cmpt => onRenderedCmpt_cb(cmpt));
+    const anchorObs = new MutationObserver(mutations => Mutation_cb_raw_rm_cmpts(mutations, anchorCs, onRenderedCmpt_cb));
+    anchorObs.observe(targetNode, config);
+
 
 
 
@@ -2346,6 +2362,16 @@ async function Ready()
     }
     //#endregion
 
+
+    //#region 8. observe anchor components
+    function onRenderedCmpt_cb(cmpt)
+    {
+        const div = UTILS.div(['yt-gif-anchor-wrapper']);
+        div.insertAdjacentHTML('afterbegin', links.html.fetched.anchor);
+
+        cmpt.parentElement.replaceChild(div, cmpt);
+    }
+    //#endregion
 
     //#region local utils
     function DDM_Els()
