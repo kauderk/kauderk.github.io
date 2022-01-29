@@ -125,6 +125,11 @@ const URL_Config = {
     scatteredMatch: true, // alright
     targetStringRgx: YTGIF_Config.targetStringRgx
 }
+const Anchor_Config = {
+    componentPage: 'yt-gif\/anchor',
+    targetStringRgx: BlockRegexObj().anyUidRgx,
+    guardClause: (uid) => !!uid,
+}
 const UIDtoURLInstancesMapMap = new Map(); // since it store recursive maps, once per instance it's enough
 /*-----------------------------------*/
 const urlFolder = (f) => `https://kauderk.github.io/yt-gif-extension/resources/${f}`;
@@ -2001,7 +2006,7 @@ async function Ready()
     }
     async function getYTwrapperRootObj(uid, tEl)
     {
-        const { foundBlock } = await getLastYTGIFCmptInHierarchy(uid);
+        const { foundBlock } = await getLastCmptInHierarchy(uid);
         if (!foundBlock?.uid) console.warn(`YT GIF Timestamps: couldn't find YT GIFs within the Hierarchy: ((${uid}))`);
         const { uid: f_uid } = foundBlock || { uid: '' };
 
@@ -4456,7 +4461,7 @@ async function getTimestampObj_smart(page)
 
     async function getTimestampObj(page, uid)
     {
-        const { formats, foundBlock, targetBlock } = await getLastYTGIFCmptInHierarchy(uid);
+        const { formats, foundBlock, targetBlock } = await getLastCmptInHierarchy(uid);
         if (!foundBlock) return failObj;
 
         const { lessHMS, HMS, S } = formats;
@@ -4939,7 +4944,7 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
         }
         async function TryToAssertHierarchyUrl(origin = true)
         {
-            const { foundBlock } = await getLastYTGIFCmptInHierarchy(resObj.uid, origin);
+            const { foundBlock } = await getLastCmptInHierarchy(resObj.uid, origin);
             if (!foundBlock?.lastUrl)
                 return null;
 
@@ -5252,80 +5257,106 @@ function stopEvents(e)
 //#region  backend/frontend communication - XXX_Config = {...}
 async function getLastYTGIFCmptInHierarchy(tempUID, includeOrigin = true)
 {
-    const original = await RAP.getBlockInfoByUID(tempUID);
-    const ParentHierarchy = await RAP.getBlockParentUids_custom(tempUID);
-    if (!ParentHierarchy && !original) { return {}; }
-    const originalStr = original[0]?.[0]?.string || '';
+    const { iframeMaps, getBoundaryObj } = AssembleFilterObjs();
+
+    return await getLastCmptInHierarchy({
+        tempUID, includeOrigin,
+        _Config: YTGIF_Config,
+        return_cb,
+        getMap_cb: async (uid) => await getUrlMap_smart(uid),
+    })
 
 
-    const baseObj = {
-        blockID: null, start: 0, end: 0, HMS: 000, crrTime: null,
-    }
-    const iframeMaps = {
-        targets: {
-            condition: function (sufix)
-            {
-                this.blockID = [...recordedIDs.keys()].find(k => k?.endsWith(sufix));
-                return this.crrTime = recordedIDs.get(this.blockID)?.target?.getCurrentTime() || false;
-            },
-        },
-        lastParams: {
-            condition: function (sufix)
-            {
-                this.blockID = [...lastBlockIDParameters.keys()].find(k => k?.endsWith(sufix));
-                return this.crrTime = lastBlockIDParameters.get(this.blockID)?.updateTime || false;
-            },
-        },
-    }
-    Object.keys(iframeMaps).forEach(key => Object.assign(iframeMaps[key], baseObj));
-
-    const Hierarchy = !includeOrigin ? ParentHierarchy : [...ParentHierarchy, [{ uid: tempUID, string: originalStr }, { title: 'made-up', uid: 'invalid' }]];
-    const blockStrings = Hierarchy.map(arr => arr[0]).map(o => res = { string: clean_rm_string(o.string), uid: o.uid });
-
-
-    for (const { string, uid } of blockStrings.reverse())
+    async function return_cb({ lastMatch, lastIndex, componentMap, string, uid, originalStr })
     {
-        const componentMap = await getUrlMap_smart(uid); // careful bud
-        const reverseValues = [...componentMap.values()].reverse();
-
-        const lastUrl = reverseValues?.find(v => YTGIF_Config.guardClause(v));
-        if (!lastUrl) continue;
-
-        const lastUrlIndex = reverseValues.indexOf(lastUrl);
-        const possibleBlockIDSufix = uid + properBlockIDSufix(lastUrl, lastUrlIndex);
-
+        const possibleBlockIDSufix = uid + properBlockIDSufix(lastMatch, lastIndex);
         const key = Object.keys(iframeMaps).find(x => iframeMaps[x].condition(possibleBlockIDSufix));
-
         const crrTime = iframeMaps[key]?.crrTime;
-        const startObj = boundaryObj(lastUrl.match(/(t=|start=)(?:(\d+))/)?.[2] || 0);
-        const endObj = boundaryObj(lastUrl.match(/(end=)(?:(\d+))/)?.[2] || 0);
+        const startObj = getBoundaryObj(floatParam('t|start', lastMatch) ?? '0');
+        const endObj = getBoundaryObj(floatParam('end', lastMatch) ?? '0');
 
         return {
-            formats: boundaryObj(crrTime),
+            formats: getBoundaryObj(crrTime),
             foundBlock: {
-                lastUrl, lastUrlIndex, componentMap,
-                string, uid,
+                lastUrl: lastMatch, lastIndex,
+                componentMap, string, uid,
                 blockID: iframeMaps[key]?.blockID,
                 possibleBlockIDSufix,
             },
             targetBlock: {
-                string: originalStr,
-                uid: tempUID,
+                string: originalStr, uid: tempUID,
                 start: startObj,
                 end: endObj,
             },
-        };
-
-        function boundaryObj(value)
-        {
-            return {
-                lessHMS: UTILS.seconds2time(parseInt(value)),
-                HMS: UTILS.convertHMS(value),
-                S: value,
-            }
         }
     }
-    return {};
+
+    function AssembleFilterObjs()
+    {
+        const baseObj = { blockID: null, start: 0, end: 0, HMS: 000, crrTime: null, };
+
+        const endsWith = (sfx, map) => [...map.keys()].find(k => k?.endsWith(sfx));
+        const iframeMaps = {
+            targets: {
+                condition: function (sfx)
+                {
+                    this.blockID = endsWith(sfx, recordedIDs);
+                    return this.crrTime = recordedIDs.get(this.blockID)?.target?.getCurrentTime?.() || false;
+                },
+            },
+            lastParams: {
+                condition: function (sfx)
+                {
+                    this.blockID = endsWith(sfx, lastBlockIDParameters);
+                    return this.crrTime = lastBlockIDParameters.get(this.blockID)?.updateTime || false;
+                },
+            },
+        };
+
+        Object.keys(iframeMaps).forEach(key => Object.assign(iframeMaps[key], baseObj));
+
+        const getBoundaryObj = (v) => ({
+            lessHMS: UTILS.seconds2time(parseInt(v)),
+            HMS: UTILS.convertHMS(v),
+            S: v,
+        })
+
+        return { iframeMaps, getBoundaryObj }
+    }
+}
+async function getLastAnchorCmptInHierchy(tempUID, includeOrigin = true)
+{
+    const _Config = Anchor_Config;
+
+    return await getLastCmptInHierarchy({
+        tempUID, includeOrigin,
+        _Config,
+        getMap_cb: async (uid) => await getComponentMap(uid, _Config),
+    })
+}
+async function getLastCmptInHierarchy({ tempUID, includeOrigin, _Config, return_cb, getMap_cb })
+{
+    const original = await RAP.getBlockInfoByUID(tempUID);
+    const ParentHierarchy = await RAP.getBlockParentUids_custom(tempUID);
+    if (!ParentHierarchy && !original) { return {}; }
+
+    const originalStr = original[0]?.[0]?.string || '';
+    const Hierarchy = !includeOrigin ? ParentHierarchy : [...ParentHierarchy, [{ uid: tempUID, string: originalStr }, { title: 'made-up', uid: 'invalid' }]];
+    const blockStrings = Hierarchy.map(arr => arr[0]).map(o => ({ string: clean_rm_string(o.string), uid: o.uid }));
+
+    for (const { string, uid } of blockStrings.reverse())
+    {
+        const componentMap = await getMap_cb(uid);
+        const reverseValues = [...componentMap.values()].reverse();
+
+        const lastMatch = reverseValues?.find(str => _Config.guardClause(str));
+        if (!lastMatch) continue;
+        const lastIndex = reverseValues.indexOf(lastMatch);
+
+        const resObj = { lastMatch, lastIndex, componentMap, string, uid, originalStr };
+        return return_cb?.(resObj) ?? resObj
+    }
+    return {}
 }
 
 
@@ -5575,7 +5606,7 @@ function BlockRegexObj(componentPage = '[^:]+', targetStringRgx)
 
     const blockRgx = reduceRgxArr(baseBlockRgx);
 
-    return { blockRgx, aliasPlusUidsRgx, tooltipCardRgx, anyPossibleComponentsRgx, componentRgx };
+    return { blockRgx, aliasPlusUidsRgx, tooltipCardRgx, anyPossibleComponentsRgx, componentRgx, anyUidRgx };
 
     function reduceRgxArr(regexArr)
     {// https://masteringjs.io/tutorials/fundamentals/concat-regexp
