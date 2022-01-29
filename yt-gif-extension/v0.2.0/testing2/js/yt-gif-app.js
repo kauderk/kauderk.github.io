@@ -1930,10 +1930,9 @@ async function Ready()
 
         function ToggleBoundarySet(targetWrapper, bol = true)
         {
+            toogleActiveAttr(bol, tmSetObj.self.targetNode);
             if (tmSetObj.pear)
-                tmSetObj.pear.forEach(o => toogleActiveAttr(bol, o.targetNode));
-            else
-                toogleActiveAttr(bol, tmSetObj.self.targetNode);
+                toogleActiveAttr(bol, tmSetObj.pear.targetNode);
 
             UTILS.toggleAttribute(bol, 'last-active-timestamp', tmSetObj.self.targetNode);
             UTILS.toggleAttribute(bol, 'yt-active', targetWrapper);
