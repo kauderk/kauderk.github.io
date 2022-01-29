@@ -1547,7 +1547,7 @@ async function Ready()
             targetNode.appendChild(a);
             targetNode.a = a;
             targetNode.a.textContent = timestampContent;
-            targetNode.a.textContent = fmtTimestamp(UI.timestamps.tm_workflow_display.value)(targetNode.a.textContent); // javascript is crazy!
+            targetNode.a.textContent = fmtTimestamp()(targetNode.a.textContent); // javascript is crazy!
 
             const hasAnyVideoUrl = ExtractUrlsObj(ExtractContentFromCmpt(ObjAsKey.capture))?.match;
             if (hasAnyVideoUrl) // has any url
@@ -4653,7 +4653,7 @@ function PulseObj(tEl)
 
     return { pulse }
 }
-function fmtTimestamp(value)
+function fmtTimestamp(value = UI.timestamps.tm_workflow_display.value)
 {
     const str2sec = (str) => UTILS.HMSToSecondsOnly(str)
     let fmt = (tms) => tms;
@@ -4679,7 +4679,7 @@ function awaitingAtrr(bol, el)
 //#region URL Formatter workflow
 function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
 {
-    const getFmtPage = (p, url) => fmtTimestamp(UI.timestamps.tm_workflow_display.value)(floatParam(p, url) || '0'); // javascript is crazy!
+    const getFmtPage = (p, url) => fmtTimestamp()(floatParam(p, url) || '0'); // javascript is crazy!
 
     const startTm = (url) => getFmtPage('t|start', url);
     const endTm = (url) => getFmtPage('end', url);
@@ -4752,14 +4752,11 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
             matchObj.match = url;
 
             // remove redundant tm
-            const value = fmtTimestamp('S')(from.tmSetObj?.self?.timestamp ?? '0');
-            const rawValue = fmtTimestamp('S')(contentObj.content?.match(StartEnd_Config.targetStringRgx)?.[0] ?? '-1');
-            if (rawValue === value && isSelected(UI.display.fmt_options, 'avoid_redundancy'))
-                contentObj.hidden = contentObj.hidden.replace(rawValue.toString(), '');
+            contentObj.hidden = TryToRemoveRedudantTmParam('self', contentObj);
 
             // append page param if missing
             if (typeof params[from.page] == 'undefined') // start - end
-                matchObj.match += fmtTmParam(from.page, value, matchObj.match);
+                matchObj.match += fmtTmParam(from.page, from.tmSetObj?.self?.timestamp, matchObj.match);
 
             // append pear content
             if (isSelected(UI.display.fmt_options, 'lift_pears'))
@@ -4767,6 +4764,7 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
                 const pearCaptureObj = await RemovePearFromString(from, resObj);
                 matchObj.match += await TryToFmtPearParam(pearCaptureObj, resObj, from);
                 contentObj.hidden += TryToAppendHiddenPear(pearCaptureObj, contentObj);
+                contentObj.hidden = TryToRemoveRedudantTmParam('pear', contentObj);
             }
         }
         if (['url', 'yt-gif'].some(t => t == to))
@@ -4792,6 +4790,7 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
             const p = page == 'end' ? 'end' : 't';
             const m = match;
             const c = [...m].pop() == '?' ? '' : (m.includes('?') ? '&' : '?'); // ends on '?' then it is blank, else add '&' or '?' depending on which is missing
+            value = fmtTimestamp('S')(value ?? '0');
             if (!value || value == '0')
                 return '';
             return `${c}${p}=${value}`;
@@ -4902,6 +4901,15 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
             if (wrongOrderRegex.test(url))
                 url = url.replace(wrongOrderRegex, '$5$4$1');
             return url;
+        }
+        function TryToRemoveRedudantTmParam(pear = 'self', contentObj)
+        {
+            const tm = from.tmSetObj?.[pear]?.timestamp;
+            const value = fmtTimestamp()(tm ?? '0');
+            const rawValue = fmtTimestamp()(contentObj.content?.match(StartEnd_Config.targetStringRgx)?.[0] ?? '-1');
+            if (rawValue === value && isSelected(UI.display.fmt_options, 'avoid_redundancy'))
+                return contentObj.hidden.replace(tm.toString(), '');
+            return contentObj.hidden;
         }
     }
     function urlBtn(page)
