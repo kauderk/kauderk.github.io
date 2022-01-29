@@ -4459,7 +4459,7 @@ async function getTimestampObj_smart(page)
         const { formats, foundBlock, targetBlock } = await getLastYTGIFCmptInHierarchy(uid);
         if (!foundBlock) return failObj;
 
-        const { lestHMS, HMS, S } = formats;
+        const { lessHMS, HMS, S } = formats;
 
         const obj = (v) => ({
             value: v,
@@ -4467,7 +4467,7 @@ async function getTimestampObj_smart(page)
         });
 
         return {
-            lessHMS: obj(fmt({ lestHMS })),
+            lessHMS: obj(fmt({ lessHMS })),
             HMS: obj(fmt({ HMS })),
             S: obj(parseInt(S ?? targetBlock[page].S)),
             uid: targetBlock?.uid,
@@ -5319,7 +5319,7 @@ async function getLastYTGIFCmptInHierarchy(tempUID, includeOrigin = true)
         function boundaryObj(value)
         {
             return {
-                lestHMS: UTILS.seconds2time(parseInt(value)),
+                lessHMS: UTILS.seconds2time(parseInt(value)),
                 HMS: UTILS.convertHMS(value),
                 S: value,
             }
