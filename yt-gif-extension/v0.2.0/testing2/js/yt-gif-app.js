@@ -2410,7 +2410,7 @@ function ObserveIframesAndDelployYTPlayers(targetClass)
     // 3. ready to observe and deploy iframes
     const targetNode = document.querySelector('body');
     const config = { childList: true, subtree: true };
-    const observer = new MutationObserver(mutation_callback);
+    const observer = new MutationObserver(mutations => Mutation_cb_raw_rm_cmpts(mutations, targetClass, onRenderedCmpt_cb));
     observer.observe(targetNode, config);
 
     return observer
@@ -2444,36 +2444,11 @@ function ObserveIframesAndDelployYTPlayers(targetClass)
 
         return yobs;
     }
-    // ObserveIntersectToSetUpPlaye when cssClass is added to the DOM
-    function mutation_callback(mutationsList, observer)
+    // ObserveIntersectToSetUpPlayer when cssClass is added to the DOM
+    function onRenderedCmpt_cb(cmpt)
     {
-        const found = [];
-        for (const { addedNodes } of mutationsList)
-        {
-            for (const node of addedNodes)
-            {
-                if (!node.tagName) continue; // not an element
-
-                if (node.classList.contains(targetClass))
-                {
-                    found.push(node);
-                }
-                else if (node.firstElementChild)
-                {
-                    // javascript is crazy and i don't get how or what this is doing... man...
-                    found.push(...node.getElementsByClassName(targetClass));
-                }
-            }
-        }
-        for (const node of found)
-        {
-            if (UTILS.isNotZoomPath(node))
-            {
-                window.YT_GIF_OBSERVERS.masterIntersectionObservers.push(ObserveIntersectToSetUpPlayer(node, 'valid entries MutationObserver'));
-            }
-        }
-    };
-
+        window.YT_GIF_OBSERVERS.masterIntersectionObservers.push(ObserveIntersectToSetUpPlayer(cmpt, 'valid entries MutationObserver'));
+    }
 
     //#region local utils
     function AvoidAllZoomChilds()
@@ -5796,6 +5771,25 @@ function isSelected(select, ...value)
 function getOption(select, value)
 {
     return [...select.options].find(o => o.value == value)
+}
+/* ********************* */
+function Mutation_cb_raw_rm_cmpts(mutationsList, targetClass, onRenderedCmpt_cb,)
+{
+    const found = [];
+    for (const { addedNodes } of mutationsList)
+        for (const node of addedNodes)
+        {
+            if (!node.tagName) continue; // not an element
+
+            if (node.classList.contains(targetClass))
+                found.push(node);
+            else if (node.firstElementChild)
+                found.push(...node.getElementsByClassName(targetClass));
+        }
+
+    for (const node of found)
+        if (UTILS.isNotZoomPath(node))
+            onRenderedCmpt_cb(node);
 }
 //#endregion
 
