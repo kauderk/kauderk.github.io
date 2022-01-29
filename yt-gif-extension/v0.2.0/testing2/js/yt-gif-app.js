@@ -24,6 +24,7 @@ UI.deploymentStyle = {
 }
 /*-----------------------------------*/
 const iframeIDprfx = 'player_';
+const s_u_f_key = 'simulate_url_formatter';
 let currentFullscreenPlayer = null;
 /*-----------------------------------*/
 const YT_GIF_OBSERVERS_TEMP = {
@@ -552,13 +553,12 @@ async function Ready()
 
     // 7. simulate inline url btn
     //#region relevant variables
-    const s_u_f_key = 'simulate_url_formatter';
     const url_formatter_option = getOption(UI.display.ms_options, s_u_f_key);
     //#endregion
 
     const urlObserver = new MutationObserver(InlineUrlBtnMutations_cb);
 
-    const s_u_f_startUp = url_formatter_option.selected && ValidUrlBtnUsage();
+    const s_u_f_startUp = valid_url_formatter();
     url_formatter_option.customSelect?.(s_u_f_startUp);
     ToogleUrlBtnObserver(s_u_f_startUp, urlObserver);
     url_formatter_option.addEventListener('customChange', (e) => confirmUrlBtnUsage(e.detail.currentValue, e));
@@ -2280,11 +2280,15 @@ async function Ready()
                 });
 
             ReadyUrlBtns(allUrlBtns_rm);
+
+            const ytElms = [...document.querySelectorAll('.yt-gif-controls [formatter], [yt-gif-timestamp-emulation]')]
+                .forEach(el => el?.tryToAppendUrlBtns?.()); // YIKES!
+
             obs.observe(targetNode, config);
         }
         else
         {
-            const allUrlBtns = [...document.querySelectorAll(`.yt-gif-url-btns,.yt-gif-url-btn-wrapper`)]
+            const allUrlBtns = [...document.querySelectorAll(`.yt-gif-url-btns-wrapper`)]
                 .forEach(el => el.remove());
             const allUrlBtns_rm = [...document.querySelectorAll('.bp3-icon-video')]
                 .forEach(el => el.classList.remove('yt-gif'));
@@ -2332,14 +2336,6 @@ async function Ready()
             localStorage.removeItem(s_u_f_key);
         }
         return userMind;
-    }
-    function ValidUrlBtnUsage()
-    {
-        const key = s_u_f_key;
-        const binarySessionVal = (k) => UTILS.isTrue(window.YT_GIF_DIRECT_SETTINGS?.get('ms_options')?.sessionValue?.includes?.(k));
-        const usageKey = binarySessionVal('override_' + key) || UTILS.isTrue(localStorage.getItem(key));
-
-        return usageKey && binarySessionVal(key)
     }
     //#endregion
 
@@ -5100,6 +5096,18 @@ function appendlUrlBtns(targetNode)
     UTILS.toggleClasses(true, [c], div);
     return targetNode.querySelector('.yt-gif-url-btns')
 }
+/* ***************** */
+function ValidUrlBtnUsage()
+{
+    const key = s_u_f_key;
+    const binarySessionVal = (k) => UTILS.isTrue(window.YT_GIF_DIRECT_SETTINGS?.get('ms_options')?.sessionValue?.includes?.(k));
+    const usageKey = binarySessionVal('override_' + key) || UTILS.isTrue(localStorage.getItem(key));
+
+    return usageKey && binarySessionVal(key)
+}
+function valid_url_formatter()
+{
+    return isSelected(UI.display.ms_options, s_u_f_key) && ValidUrlBtnUsage();
 }
 /* ***************** */
 function ExtractContentFromCmpt(capture)
