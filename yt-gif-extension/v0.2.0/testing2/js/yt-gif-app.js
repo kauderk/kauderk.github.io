@@ -2025,7 +2025,7 @@ async function Ready()
     }
     async function getYTwrapperRootObj(uid, tEl)
     {
-        const { foundBlock } = await getLastYTGIFCmptInHierarchy(uid);
+        const { foundBlock } = await getLastAnchorCmptInHierarchy(uid);
         if (!foundBlock?.uid) console.warn(`YT GIF Timestamps: couldn't find YT GIFs within the Hierarchy: ((${uid}))`);
         const { uid: f_uid } = foundBlock || { uid: '' };
 
@@ -4484,7 +4484,7 @@ async function getTimestampObj_smart(page)
 
     async function getTimestampObj(page, uid)
     {
-        const { formats, foundBlock, targetBlock } = await getLastYTGIFCmptInHierarchy(uid);
+        const { formats, foundBlock, targetBlock } = await getLastAnchorCmptInHierarchy(uid);
         if (!foundBlock) return failObj;
 
         const { lessHMS, HMS, S } = formats;
@@ -4967,7 +4967,7 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
         }
         async function TryToAssertHierarchyUrl(origin = true)
         {
-            const { foundBlock } = await getLastYTGIFCmptInHierarchy(resObj.uid, origin);
+            const { foundBlock } = await getLastAnchorCmptInHierarchy(resObj.uid, origin);
             if (!foundBlock?.lastUrl)
                 return null;
 
@@ -5302,7 +5302,7 @@ async function getLastYTGIFCmptInHierarchy(tempUID, includeOrigin = true)
     }
     return {}
 }
-async function getLastAnchorCmptInHierchy(tempUID, includeOrigin = true)
+async function getLastAnchorCmptInHierarchy(tempUID, includeOrigin = true)
 {
     // the anchor workflow is to find itself and any valid urls in the process
     const filterUrlObj = AssembleFilterObjs();
