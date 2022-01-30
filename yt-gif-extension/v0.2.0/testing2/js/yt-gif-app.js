@@ -127,8 +127,8 @@ const URL_Config = {
 }
 const Anchor_Config = {
     componentPage: 'yt-gif\/anchor',
-    targetStringRgx: BlockRegexObj().anyUidRgx,
-    guardClause: (uid) => !!uid,
+    uidRefRgx: new RegExp(`\\(\\(${BlockRegexObj().anyUidRgx.source}\\)\\)`, 'gm'),
+    targetStringRgx: new RegExp(`${YTGIF_Config.targetStringRgx.source}|${BlockRegexObj().anyUidRgx.source}`, 'gm'),
 }
 const UIDtoURLInstancesMapMap = new Map(); // since it store recursive maps, once per instance it's enough
 /*-----------------------------------*/
@@ -5605,6 +5605,14 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
 
 function BlockRegexObj(componentPage = '[^:]+', targetStringRgx)
 {
+    // {{(\[\[)?(yt-gif|yt-gif\/anchor)()(?!\/)(?!\/)(?:(\]\])([^{]+?(?::|))|:)(?:(?<=:)|)(|[^{]+)}}
+    // {{(.+)?(yt-gif|yt-gif\/anchor)()(?:(\]\])([^{]+?(?::|))|:)(|[^{]+)}}
+    // {{(.+)?(yt-gif|yt-gif\/anchor|yt-gif\/end):(|[^{]+)}}
+    // {{(.+)?(yt-gif|yt-gif\/anchor)()(?:(\]\])([^{]+?(?::|))|:)(|[^{]+)}}
+    // {{(.+)?(yt-gif\/anchor|yt-gif)()(.+)?(:)(|[^{]+)}}
+    // {{(\[\[)?(yt-gif)():(|[^{]+)}}
+    // {{(\[\[)?(yt-gif)()(?(?=:):|[^:|\/]+?(:))(|[^{]+)}}
+    // {{(\[\[)?([^:]+)((?=:):|[^:|\/]+?(:))(|[^{]+)}}
     const componentRgx = new RegExp(preRgxComp(componentPage), 'gm');
     const anyPossibleComponentsRgx = /{{([^}]*)/gm; // https://stackoverflow.com/questions/30787438/how-to-stop-match-until-before-a-character-in-regex#:~:text=assisterId%3D-,(%5B%5E%22%5D*),-%5B%5E%22%5D*%20matches%20any%20character
     const aliasPlusUidsRgx = /\[(.*?(?=\]))]\(\(\((.*?(?=\)))\)\)\)/gm;
@@ -5629,7 +5637,7 @@ function BlockRegexObj(componentPage = '[^:]+', targetStringRgx)
 
 function preRgxComp(rgxPage)
 {
-    return `{{(\\[\\[)?(${rgxPage})(?!\\/)(?!\\/)(?:(\\]\\])(.*?(?::|))|:|\\s)(?:(?<=:)|)(.+?)(\\}\\})`
+    return `{{(\\[\\[)?(${rgxPage})((?=:):|[^:|\\/]+?(:))(|[^{]+)}}`
 }
 function clean_rm_string(rawText)
 {
