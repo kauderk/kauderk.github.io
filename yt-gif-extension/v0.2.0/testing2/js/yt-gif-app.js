@@ -1520,7 +1520,7 @@ async function Ready()
             const block = closestBlock(node);
             if (!block) continue;
 
-            const tempUID = block?.id?.slice(-9);
+            const tempUID = getUidFromBlock(block);
             const mapsKEY = block.id;
             const update_startEndComponentMap = async () => startEndComponentMap = await getMap_smart(mapsKEY, componentMapMap, getComponentMap, tempUID, StartEnd_Config);
 
@@ -2022,7 +2022,7 @@ async function Ready()
     }
     async function getYTwrapperRootObj(uid, tEl)
     {
-        const { foundBlock } = await getLastCmptInHierarchy(uid);
+        const { foundBlock } = await getLastYTGIFCmptInHierarchy(uid);
         if (!foundBlock?.uid) console.warn(`YT GIF Timestamps: couldn't find YT GIFs within the Hierarchy: ((${uid}))`);
         const { uid: f_uid } = foundBlock || { uid: '' };
 
@@ -2210,7 +2210,7 @@ async function Ready()
 
                 // 1. execute further if the user has valid keys
                 const block = closestBlock(rm_btn);
-                const tempUID = block?.id?.slice(-9);
+                const tempUID = getUidFromBlock(block);
                 const { url, ytUrlEl } = getYTUrlObj(rm_btn);
 
                 if (!ValidUrlBtnUsage())
@@ -2366,8 +2366,12 @@ async function Ready()
     //#region 8. observe anchor components
     function onRenderedCmpt_cb(cmpt)
     {
-        const div = UTILS.div(['yt-gif-anchor-wrapper']);
+        const div = UTILS.span(['yt-gif-anchor-wrapper']);
         div.insertAdjacentHTML('afterbegin', links.html.fetched.anchor);
+
+        const uid = getUidFromBlock(cmpt, true);
+        const anchor = div.querySelector('.yt-gif-anchor');
+        const tooltipObj = getTooltipFlipObj(anchor);
 
         cmpt.parentElement.replaceChild(div, cmpt);
     }
@@ -2585,7 +2589,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     async function tempUidResultsObj(el)
     {
         const grandParentBlock = function () { return closestBlock(this.el) };
-        const condition = function () { return this.uid = this.grandParentBlock()?.id?.slice(-9) };
+        const condition = function () { return this.uid = getUidFromBlock(this.grandParentBlock()) };
 
         //#region alias like properties
         const aliasSel = {
@@ -4422,6 +4426,13 @@ function closestBlock(el)
 {
     return el?.closest('.rm-block__input')
 }
+function getUidFromBlock(el, closest = false)
+{
+    let block = el;
+    if (closest)
+        block = closestBlock(el);
+    return block?.id?.slice(-9)
+}
 function closest_rm_container(el)
 {
     return el?.closest('.roam-block-container')
@@ -4453,7 +4464,7 @@ window.YTGIF = {
 async function getTimestampObj_smart(page)
 {
     const openInputBlock = getCurrentInputBlock();
-    const uid = openInputBlock?.id?.slice(-9);
+    const uid = getUidFromBlock(openInputBlock);
     const failObj = { S: null, HMS: null, };
 
     if (!page || !uid || !openInputBlock)
@@ -4462,7 +4473,7 @@ async function getTimestampObj_smart(page)
 
     async function getTimestampObj(page, uid)
     {
-        const { formats, foundBlock, targetBlock } = await getLastCmptInHierarchy(uid);
+        const { formats, foundBlock, targetBlock } = await getLastYTGIFCmptInHierarchy(uid);
         if (!foundBlock) return failObj;
 
         const { lessHMS, HMS, S } = formats;
@@ -4945,7 +4956,7 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
         }
         async function TryToAssertHierarchyUrl(origin = true)
         {
-            const { foundBlock } = await getLastCmptInHierarchy(resObj.uid, origin);
+            const { foundBlock } = await getLastYTGIFCmptInHierarchy(resObj.uid, origin);
             if (!foundBlock?.lastUrl)
                 return null;
 
