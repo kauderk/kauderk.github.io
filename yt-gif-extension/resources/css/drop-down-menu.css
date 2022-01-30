@@ -626,13 +626,17 @@ span.bp3-button::before {
   --btn-comment: var(--url-btn-bg-h);
 }
 /* emebeded row */
-.btn-row.yt-gif-url-btn-wrapper :first-child{
-  display: flex !important;
-}
+
 .btn-row.yt-gif-url-btn-wrapper .yt-gif-url-btn-wrapper {
   display: none;
 }
 .btn-row.yt-gif-url-btn-wrapper:hover .yt-gif-url-btn-wrapper{
+  display: flex;
+}
+.btn-row.yt-gif-url-btn-wrapper :first-child{
+  display: flex;
+}
+.bp3-icon-video .btn-row.yt-gif-url-btn-wrapper{
   display: flex;
 }
 
