@@ -607,21 +607,6 @@ span.bp3-button::before {
   transform: translateX(0%) 
   translateY(20%) scale(var(--ddm-scale-tooltip));
 }
-.yt-gif-controls
-.yt-gif-url-btns 
-[data-tooltip*="yt-gif"]{
-  display: none;
-}
-.bp3-button.yt-gif
-.yt-gif-url-btns 
-[data-tooltip*="URL"]{
-  display: none;
-}
-.rm-video-timestamp 
-.yt-gif-url-btns 
-:is([data-tooltip*="end"],[data-tooltip*="start"]){
-  display: none;
-}
 /* pepega */
 .yt-gif-url-btns{
   position: absolute;
@@ -640,7 +625,16 @@ span.bp3-button::before {
 [yt-gif-url-btn]:hover{
   --btn-comment: var(--url-btn-bg-h);
 }
-
+/* emebeded row */
+.btn-row.yt-gif-url-btn-wrapper :first-child{
+  display: flex !important;
+}
+.btn-row.yt-gif-url-btn-wrapper .yt-gif-url-btn-wrapper {
+  display: none;
+}
+.btn-row.yt-gif-url-btn-wrapper:hover .yt-gif-url-btn-wrapper{
+  display: flex;
+}
 
 /* ddm select row - mid */
 .dropdown.yt-gif-style-mid {
@@ -795,3 +789,4 @@ span.bp3-button.select__item,
 span.yt-gif-anchor .bp3-button.bp3-minimal:hover {
   background: transparent !important;
 }
+
