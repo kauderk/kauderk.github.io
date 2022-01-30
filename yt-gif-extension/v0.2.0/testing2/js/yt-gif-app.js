@@ -577,11 +577,11 @@ async function Ready()
 
     // 8. observe anchor components
     //#region relevant variables
-    const anchorCs = 'rm-xparser-default-anchor';
+    const anchorSel = 'rm-xparser-default-anchor';
     //#endregion
 
-    const anchors = [...document.querySelectorAll(anchorCs)].forEach(cmpt => onRenderedCmpt_cb(cmpt));
-    const anchorObs = new MutationObserver(mutations => Mutation_cb_raw_rm_cmpts(mutations, anchorCs, onRenderedCmpt_cb));
+    const anchors = [...document.querySelectorAll(`.${anchorSel}`)].forEach(cmpt => onRenderedCmpt_cb(cmpt));
+    const anchorObs = new MutationObserver(mutations => Mutation_cb_raw_rm_cmpts(mutations, anchorSel, onRenderedCmpt_cb));
     anchorObs.observe(targetNode, config);
 
 
