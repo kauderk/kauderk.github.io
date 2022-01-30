@@ -125,10 +125,12 @@ const URL_Config = {
     scatteredMatch: true, // alright
     targetStringRgx: YTGIF_Config.targetStringRgx
 }
+const anchorsRgx = BlockRegexObj('yt-gif\/anchor|yt-gif');
 const Anchor_Config = {
-    componentPage: 'yt-gif\/anchor',
-    uidRefRgx: new RegExp(`\\(\\(${BlockRegexObj().anyUidRgx.source}\\)\\)`, 'gm'),
-    targetStringRgx: new RegExp(`${YTGIF_Config.targetStringRgx.source}|${BlockRegexObj().anyUidRgx.source}`, 'gm'),
+    componentPage: 'yt-gif\/anchor|yt-gif',
+    componentRgx: anchorsRgx.componentRgx,
+    uidRefRgx: new RegExp(`\\(\\(${anchorsRgx.anyUidRgx.source}\\)\\)`, 'gm'),
+    targetStringRgx: new RegExp(`${YTGIF_Config.targetStringRgx.source}|${anchorsRgx.anyUidRgx.source}`, 'gm'),
 }
 const UIDtoURLInstancesMapMap = new Map(); // since it store recursive maps, once per instance it's enough
 /*-----------------------------------*/
@@ -5269,112 +5271,161 @@ function stopEvents(e)
 //#region  backend/frontend communication - XXX_Config = {...}
 async function getLastYTGIFCmptInHierarchy(tempUID, includeOrigin = true)
 {
-    const { iframeMaps, getBoundaryObj } = AssembleFilterObjs();
+    const filterUrlObj = AssembleFilterObjs();
+    const { blockStrings, originBlockObj } = await getParentsHierarchy(tempUID, includeOrigin)
 
-    return await getLastCmptInHierarchy({ tempUID, includeOrigin, return_cb, })
-
-
-    async function return_cb({ blockStrings, originalStr })
+    for (const blockObj of blockStrings.reverse())
     {
-        for (const { string, uid } of blockStrings.reverse())
-        {
-            const componentMap = await getUrlMap_smart(uid);
-            const reverseValues = [...componentMap.values()].reverse();
+        const lastUrlObj = await getLastUrlObjInMap(blockObj.uid);
+        if (!lastUrlObj.match) continue;
 
-            const lastMatch = reverseValues?.find(str => YTGIF_Config.guardClause(str));
-            if (!lastMatch) continue;
-            const lastIndex = reverseValues.indexOf(lastMatch);
-            const possibleBlockIDSufix = uid + properBlockIDSufix(lastMatch, lastIndex);
-
-            const key = Object.keys(iframeMaps).find(x => iframeMaps[x].condition(possibleBlockIDSufix));
-            const crrTime = iframeMaps[key]?.crrTime;
-            const startObj = getBoundaryObj(floatParam('t|start', lastMatch) ?? '0');
-            const endObj = getBoundaryObj(floatParam('end', lastMatch) ?? '0');
-
-            return {
-                formats: getBoundaryObj(crrTime),
-                foundBlock: {
-                    lastUrl: lastMatch, lastIndex,
-                    componentMap, string, uid,
-                    blockID: iframeMaps[key]?.blockID,
-                    possibleBlockIDSufix,
-                },
-                targetBlock: {
-                    string: originalStr, uid: tempUID,
-                    start: startObj,
-                    end: endObj,
-                },
-            }
-        }
-        return {}
+        return getYTGIFparams(blockObj, lastUrlObj, filterUrlObj, originBlockObj);
     }
-
-    function AssembleFilterObjs()
-    {
-        const baseObj = { blockID: null, start: 0, end: 0, HMS: 000, crrTime: null, };
-
-        const endsWith = (sfx, map) => [...map.keys()].find(k => k?.endsWith(sfx));
-        const iframeMaps = {
-            targets: {
-                condition: function (sfx)
-                {
-                    this.blockID = endsWith(sfx, recordedIDs);
-                    return this.crrTime = recordedIDs.get(this.blockID)?.target?.getCurrentTime?.() || false;
-                },
-            },
-            lastParams: {
-                condition: function (sfx)
-                {
-                    this.blockID = endsWith(sfx, lastBlockIDParameters);
-                    return this.crrTime = lastBlockIDParameters.get(this.blockID)?.updateTime || false;
-                },
-            },
-        };
-
-        Object.keys(iframeMaps).forEach(key => Object.assign(iframeMaps[key], baseObj));
-
-        const getBoundaryObj = (v) => ({
-            lessHMS: UTILS.seconds2time(parseInt(v)),
-            HMS: UTILS.convertHMS(v),
-            S: v,
-        })
-
-        return { iframeMaps, getBoundaryObj }
-    }
+    return {}
 }
 async function getLastAnchorCmptInHierchy(tempUID, includeOrigin = true)
 {
-    return await getLastCmptInHierarchy({ tempUID, includeOrigin, return_cb })
+    // the anchor workflow is to find itself and any valid urls in the process
+    const filterUrlObj = AssembleFilterObjs();
+    const { blockStrings, originBlockObj } = await getParentsHierarchy(tempUID, includeOrigin)
 
-    async function return_cb({ blockStrings })
+    for (const blockObj of blockStrings.reverse())
     {
-        for (const { uid } of blockStrings.reverse())
+        const componentMap = await getComponentMap(blockObj.uid, Anchor_Config);
+        const reverseEntries = [...componentMap.entries()].reverse();
+        const lastUrlObj = await findLastAnchorObj(reverseEntries, componentMap); // this right here
+
+        if (!lastUrlObj?.match)
+            continue;
+
+        return getYTGIFparams(blockObj, lastUrlObj, filterUrlObj, originBlockObj);
+    }
+    return {}
+
+    async function findLastAnchorObj(reverseEntries, map)
+    {
+        const resObj = (str, entry) => ({ match: str, index: reverseEntries.indexOf(entry), componentMap: map, from: 'anchor' })
+
+        for (const entry of reverseEntries)
         {
-            const componentMap = await getComponentMap(uid, Anchor_Config);
-            const reverseEntries = [...componentMap.entries()].reverse();
+            const [obj, str] = entry;
+            // str could be either an xxxuidxxx or an url, bc Anchor_Config pages are those... 'yt-gif' or 'yt-gif/anchor'
+            const match = obj?.capture ? [...obj?.capture.matchAll(Anchor_Config.componentRgx)][0] : [];
+            const page = match?.[2];
+            const content = match?.[5];
 
-            const lastMatch = reverseEntries?.find(([obj, str]) =>
-            {
-                YTGIF_Config.guardClause(str)
-            })
+            if (page == 'yt-gif' && YTGIF_Config.guardClause(str)) // it is an url
+                return resObj(str, entry)
+            if (page != 'yt-gif/anchor' || !content) // is not an anchor
+                return {}
+            if (YTGIF_Config.guardClause(str)) // it is an url inside an anchor
+                return resObj(str, entry)
+            if (str.length != 9) // is it a valid uid?
+                return {}
 
-            if (!lastMatch?.[1]) continue;
+            return await getLastUrlObjInMap(str)
         }
         return {}
     }
 }
-async function getLastCmptInHierarchy({ tempUID, includeOrigin, return_cb })
+async function getParentsHierarchy(tempUID, includeOrigin)
 {
-    const original = await RAP.getBlockInfoByUID(tempUID);
     const ParentHierarchy = await RAP.getBlockParentUids_custom(tempUID);
-    if (!ParentHierarchy && !original) { return {}; }
+    if (!ParentHierarchy) { return {} }
 
-    const originalStr = original[0]?.[0]?.string || '';
-    const Hierarchy = !includeOrigin ? ParentHierarchy : [...ParentHierarchy, [{ uid: tempUID, string: originalStr }, { title: 'made-up', uid: 'invalid' }]];
-    const blockStrings = Hierarchy.map(arr => arr[0]).map(o => ({ string: clean_rm_string(o.string), uid: o.uid }));
+    let Hierarchy = null, originalStr;
 
-    return await return_cb?.({ blockStrings, originalStr })
+    if (!includeOrigin)
+    {
+        Hierarchy = ParentHierarchy
+    }
+    else
+    {
+        const original = await RAP.getBlockInfoByUID(tempUID);
+        originalStr = original[0]?.[0]?.string || '';
+        Hierarchy = [...ParentHierarchy, [{ uid: tempUID, string: originalStr }, { title: 'made-up', uid: 'invalid' }]];
+    }
+
+    return {
+        blockStrings: Hierarchy.map(arr => arr[0]).map(o => ({ string: clean_rm_string(o.string), uid: o.uid })),
+        originBlockObj: {
+            string: originalStr,
+            uid: tempUID
+        }
+    }
 }
+
+//#region get last cmpts utils
+function getYTGIFparams(blockObj, lastUrlObj, filterUrlObj, originBlockObj)
+{
+    const { match, index, componentMap } = lastUrlObj;
+    const { iframeMaps, getBoundaryObj } = filterUrlObj;
+
+    const possibleIDsfx = blockObj.uid + properBlockIDSufix(match, index);
+
+    const key = Object.keys(iframeMaps).find(x => iframeMaps[x].condition(possibleIDsfx));
+    const crrTime = iframeMaps[key]?.crrTime;
+    const startObj = getBoundaryObj(floatParam('t|start', match) ?? '0');
+    const endObj = getBoundaryObj(floatParam('end', match) ?? '0');
+
+    return {
+        formats: getBoundaryObj(crrTime),
+        foundBlock: {
+            ...blockObj,
+            lastUrl: match, lastIndex: index,
+            componentMap: componentMap,
+            blockID: iframeMaps[key]?.blockID,
+            possibleBlockIDSufix: possibleIDsfx,
+        },
+        targetBlock: {
+            ...originBlockObj,
+            start: startObj,
+            end: endObj,
+        },
+    };
+}
+function AssembleFilterObjs()
+{
+    const baseObj = { blockID: null, start: 0, end: 0, HMS: 000, crrTime: null, };
+
+    const endsWith = (sfx, map) => [...map.keys()].find(k => k?.endsWith(sfx));
+    const iframeMaps = {
+        targets: {
+            condition: function (sfx)
+            {
+                this.blockID = endsWith(sfx, recordedIDs);
+                return this.crrTime = recordedIDs.get(this.blockID)?.target?.getCurrentTime?.() || false;
+            },
+        },
+        lastParams: {
+            condition: function (sfx)
+            {
+                this.blockID = endsWith(sfx, lastBlockIDParameters);
+                return this.crrTime = lastBlockIDParameters.get(this.blockID)?.updateTime || false;
+            },
+        },
+    };
+
+    Object.keys(iframeMaps).forEach(key => Object.assign(iframeMaps[key], baseObj));
+
+    const getBoundaryObj = (v) => ({
+        lessHMS: UTILS.seconds2time(parseInt(v)),
+        HMS: UTILS.convertHMS(v),
+        S: v,
+    })
+
+    return { iframeMaps, getBoundaryObj }
+}
+async function getLastUrlObjInMap(uid)
+{
+    const componentMap = await getUrlMap_smart(uid);
+    const reverseValues = [...componentMap.values()].reverse();
+    const match = reverseValues?.find(str => YTGIF_Config.guardClause(str));
+    const index = reverseValues.indexOf(match)
+    return { match, index, componentMap }
+}
+//#endregion
+
 
 
 function MapAtIndex_Value(map, valueAtIndex, property = 'is')
