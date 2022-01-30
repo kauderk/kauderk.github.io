@@ -1676,10 +1676,11 @@ async function Ready()
 
         function SetUpUrlFormatter({ block, targetNode, page, timestamp, startEndComponentMap, blockUid }, tmSetObj)
         {
-            const { ytGifCmpt, compt2Url, urlBtn } = fmtTimestampsUrlObj(targetNode);
+            const { ytGifCmpt, compt2Url, urlBtn, confirmBtns } = fmtTimestampsUrlObj(targetNode);
 
             urlBtn('url').onclick = async (e) => await OnYtGifUrlBtn(e, compt2Url)
             urlBtn('yt-gif').onclick = async (e) => await OnYtGifUrlBtn(e, ytGifCmpt)
+            confirmBtns();
 
             async function OnYtGifUrlBtn(e, fmtCmpnt_cb)
             {
@@ -2192,13 +2193,14 @@ async function Ready()
             appendlUrlBtns(rm_btn);
 
 
-            const { startCmpt, endCmpt, startEndCmpt, ytGifCmpt, urlBtn } = fmtTimestampsUrlObj(rm_btn);
+            const { startCmpt, endCmpt, startEndCmpt, ytGifCmpt, urlBtn, confirmBtns } = fmtTimestampsUrlObj(rm_btn);
 
 
             urlBtn('yt-gif').onclick = async (e) => await OnYtGifUrlBtn(e, ytGifCmpt)
             urlBtn('start').onclick = async (e) => await OnYtGifUrlBtn(e, startCmpt)
             urlBtn('end').onclick = async (e) => await OnYtGifUrlBtn(e, endCmpt)
             urlBtn('start|end').onclick = async (e) => await OnYtGifUrlBtn(e, startEndCmpt)
+            confirmBtns();
 
 
 
@@ -2976,12 +2978,13 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
         appendVerticalUrlBtns(wrapper.querySelector('[formatter]'));
 
-        const { startCmpt, endCmpt, startEndCmpt, compt2Url, urlBtn } = fmtTimestampsUrlObj(wrapper, '[formatter]');
+        const { startCmpt, endCmpt, startEndCmpt, compt2Url, urlBtn, confirmBtns } = fmtTimestampsUrlObj(wrapper, '[formatter]');
 
         urlBtn('url').onclick = async (e) => await OnYtGifUrlBtn(e, compt2Url)
         urlBtn('start').onclick = async (e) => await OnYtGifUrlBtn(e, startCmpt)
         urlBtn('end').onclick = async (e) => await OnYtGifUrlBtn(e, endCmpt)
         urlBtn('start|end').onclick = async (e) => await OnYtGifUrlBtn(e, startEndCmpt)
+        confirmBtns();
     }
     async function OnYtGifUrlBtn(e, fmtCmpnt_cb)
     {
@@ -4723,7 +4726,7 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
 
     let u, h = '', su;
     return {
-        startTm, endTm, urlBtn,
+        startTm, endTm, urlBtn, confirmBtns,
         // h -> hidden content
         // u -> url
         // su -> simplified url
@@ -4983,6 +4986,16 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
                 innerWrapper.onmousedown = stopEvents;
         const btns = ['yt-gif', 'url', 'start', 'end', 'start|end'].map(s => urlBtn(s))
             .forEach(btn => btn.onmousedown = stopEvents);
+    }
+    function confirmBtns()
+    { // how do you know which ppts are being used before hand?
+        const btns = ['yt-gif', 'url', 'start', 'end', 'start|end'].map(s => urlBtn(s))
+            .forEach(btn =>
+            {
+                const p = btn.closest('.btn-row') || btn.closest('.yt-gif-url-btn-wrapper');
+                if (!btn.onclick && p)
+                    p.style.display = 'none';
+            });
     }
 }
 async function TryToUpdateBlock_fmt({ block, targetNode, siblingSel, selfSel, getMap, isKey, fmtCmpnt_cb, tempUID, from })
