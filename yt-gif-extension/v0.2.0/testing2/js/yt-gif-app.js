@@ -5271,36 +5271,42 @@ async function getLastYTGIFCmptInHierarchy(tempUID, includeOrigin = true)
 {
     const { iframeMaps, getBoundaryObj } = AssembleFilterObjs();
 
-    return await getLastCmptInHierarchy({
-        tempUID, includeOrigin,
-        _Config: YTGIF_Config,
-        return_cb,
-        getMap_cb: async (uid) => await getUrlMap_smart(uid),
-    })
+    return await getLastCmptInHierarchy({ tempUID, includeOrigin, return_cb, })
 
 
-    async function return_cb({ lastMatch, lastIndex, componentMap, string, uid, originalStr })
+    async function return_cb({ blockStrings, originalStr })
     {
-        const possibleBlockIDSufix = uid + properBlockIDSufix(lastMatch, lastIndex);
-        const key = Object.keys(iframeMaps).find(x => iframeMaps[x].condition(possibleBlockIDSufix));
-        const crrTime = iframeMaps[key]?.crrTime;
-        const startObj = getBoundaryObj(floatParam('t|start', lastMatch) ?? '0');
-        const endObj = getBoundaryObj(floatParam('end', lastMatch) ?? '0');
+        for (const { string, uid } of blockStrings.reverse())
+        {
+            const componentMap = await getUrlMap_smart(uid);
+            const reverseValues = [...componentMap.values()].reverse();
 
-        return {
-            formats: getBoundaryObj(crrTime),
-            foundBlock: {
-                lastUrl: lastMatch, lastIndex,
-                componentMap, string, uid,
-                blockID: iframeMaps[key]?.blockID,
-                possibleBlockIDSufix,
-            },
-            targetBlock: {
-                string: originalStr, uid: tempUID,
-                start: startObj,
-                end: endObj,
-            },
+            const lastMatch = reverseValues?.find(str => YTGIF_Config.guardClause(str));
+            if (!lastMatch) continue;
+            const lastIndex = reverseValues.indexOf(lastMatch);
+            const possibleBlockIDSufix = uid + properBlockIDSufix(lastMatch, lastIndex);
+
+            const key = Object.keys(iframeMaps).find(x => iframeMaps[x].condition(possibleBlockIDSufix));
+            const crrTime = iframeMaps[key]?.crrTime;
+            const startObj = getBoundaryObj(floatParam('t|start', lastMatch) ?? '0');
+            const endObj = getBoundaryObj(floatParam('end', lastMatch) ?? '0');
+
+            return {
+                formats: getBoundaryObj(crrTime),
+                foundBlock: {
+                    lastUrl: lastMatch, lastIndex,
+                    componentMap, string, uid,
+                    blockID: iframeMaps[key]?.blockID,
+                    possibleBlockIDSufix,
+                },
+                targetBlock: {
+                    string: originalStr, uid: tempUID,
+                    start: startObj,
+                    end: endObj,
+                },
+            }
         }
+        return {}
     }
 
     function AssembleFilterObjs()
@@ -5338,15 +5344,26 @@ async function getLastYTGIFCmptInHierarchy(tempUID, includeOrigin = true)
 }
 async function getLastAnchorCmptInHierchy(tempUID, includeOrigin = true)
 {
-    const _Config = Anchor_Config;
+    return await getLastCmptInHierarchy({ tempUID, includeOrigin, return_cb })
 
-    return await getLastCmptInHierarchy({
-        tempUID, includeOrigin,
-        _Config,
-        getMap_cb: async (uid) => await getComponentMap(uid, _Config),
-    })
+    async function return_cb({ blockStrings })
+    {
+        for (const { uid } of blockStrings.reverse())
+        {
+            const componentMap = await getComponentMap(uid, Anchor_Config);
+            const reverseEntries = [...componentMap.entries()].reverse();
+
+            const lastMatch = reverseEntries?.find(([obj, str]) =>
+            {
+                YTGIF_Config.guardClause(str)
+            })
+
+            if (!lastMatch?.[1]) continue;
+        }
+        return {}
+    }
 }
-async function getLastCmptInHierarchy({ tempUID, includeOrigin, _Config, return_cb, getMap_cb })
+async function getLastCmptInHierarchy({ tempUID, includeOrigin, return_cb })
 {
     const original = await RAP.getBlockInfoByUID(tempUID);
     const ParentHierarchy = await RAP.getBlockParentUids_custom(tempUID);
@@ -5356,19 +5373,7 @@ async function getLastCmptInHierarchy({ tempUID, includeOrigin, _Config, return_
     const Hierarchy = !includeOrigin ? ParentHierarchy : [...ParentHierarchy, [{ uid: tempUID, string: originalStr }, { title: 'made-up', uid: 'invalid' }]];
     const blockStrings = Hierarchy.map(arr => arr[0]).map(o => ({ string: clean_rm_string(o.string), uid: o.uid }));
 
-    for (const { string, uid } of blockStrings.reverse())
-    {
-        const componentMap = await getMap_cb(uid);
-        const reverseValues = [...componentMap.values()].reverse();
-
-        const lastMatch = reverseValues?.find(str => _Config.guardClause(str));
-        if (!lastMatch) continue;
-        const lastIndex = reverseValues.indexOf(lastMatch);
-
-        const resObj = { lastMatch, lastIndex, componentMap, string, uid, originalStr };
-        return return_cb?.(resObj) ?? resObj
-    }
-    return {}
+    return await return_cb?.({ blockStrings, originalStr })
 }
 
 
@@ -5433,9 +5438,10 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
 
     async function TryToFindTargetStrings_Rec(objRes, parentObj, map)
     {
-        for (const { value, is, order, capture } of objRes?.targetStringsWithUids) // loop through RENDERED targetStrings (components) and uids (references)
+        for (const matchObj of objRes?.targetStringsWithUids) // loop through RENDERED targetStrings (components) and uids (references)
         {
-            const generateUniqueKey = () => assertUniqueKey_while(objRes.uid, indentFunc, is, order, capture);
+            const { value, is } = matchObj;
+            const generateUniqueKey = () => assertUniqueKey_while(objRes.uid, indentFunc, matchObj);
 
             if (['is alias', 'is component', 'is substring'].some(w => w === is))
             {
@@ -5467,32 +5473,25 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
 
         return map;
 
-        function assertUniqueKey_while(uid, indent, isKey, order, capture)
+        function assertUniqueKey_while(uid, indent, { is, order, capture })
         {
             uidMagazine = PushIfNewEntry(uidMagazine, uid); // clunky, but it works
 
             const similarCount = uidMagazine.filter(x => x === uid).length; // uniqueKey among non siblings
             return {
                 indent, uid, similarCount,
-                isKey, isKeyOrder: isCount(),
+                isKey: is, isKeyOrder: isCount(),
                 order, capture
             }
 
             function isCount()
             {
                 const keys = Object.keys(results);
-                for (const is of keys)
-                    results[isKey].incrementIf(isKey === is)
+                for (const _is of keys)
+                    results[_is].incrementIf(_is === is)
 
-                return results[isKey].order;
+                return results[is].order;
             }
-        }
-        function cleanIndentedBlock()
-        {
-            const tab = '\t'.repeat(indentFunc);
-            const cleanLineBrakes = objRes.string.replace(/(\n)/gm, ". ");
-            const indentedBlock = tab + cleanLineBrakes.replace(/.{70}/g, '$&\n' + tab);
-            return indentedBlock;
         }
         function PushIfNewEntry(arr, item)
         {
@@ -5536,13 +5535,8 @@ async function getComponentMap(tempUID, _Config = YTGIF_Config)
         {
             const blockMatches = [...[...string.matchAll(new RegExp(blockRgx, 'gm'))].map(x => x = x[0])];
             const indexPair = indexPairObj(blockRgx, string, 'block-matches');
-            const siblingsOrderObj = {
-                'is block reference': {},
-                'is tooltip card': {},
-                'is alias': {},
-                'is substring': {},
-                'is component': {},
-            }
+            const siblingsOrderObj = [...Object.keys(results)].reduce((acc, key) => Object.assign(acc, { [key]: {} }), {});
+
             Object.keys(siblingsOrderObj).forEach(key => Object.assign(siblingsOrderObj[key], orderObj));
 
             return blockMatches.map(val => isValueObj(val, siblingsOrderObj, indexPair));
