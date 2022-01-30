@@ -4923,15 +4923,21 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
         {
             const ignore = [to, 'type', 'src', 'defaultEnd', 'defaultStart', 'id',
                 'timeURLmapHistory', 'updateVolume', 'volumeURLmapHistory'];
+            const minVers = {
+                speed: ['s'],
+                volume: ['vl'],
+                start: ['t'],
+            }
 
             let urlPms = '';
             for (const key in params)
             {
                 if (ignore.includes(key) || !params[key])
                     continue;
-                const c = !urlPms ? '' : '&';
-                urlPms += `${c}${key}=${params[key]}`; // E.g. &t=10
+                const min = minVers[key]?.[0] ?? key;
+                urlPms += `&${min}=${params[key]}`; // E.g. &t=10
             }
+            urlPms = urlPms.slice(1); // remove first '&'
             const c = isSelected(UI.display.fmt_options, 'avoid_redundancy') ? '/' : 'https://youtu.be/';
             const base = (c) => c + params.id;
             const full = urlPms.slice(1);
