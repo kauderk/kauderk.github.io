@@ -3170,16 +3170,16 @@ async function onPlayerReady(event)
     const parent = getParent(iframe);
 
     const map = allVideoParameters.get(key); //videoParams
-    map.start = map?.start || 0;
-    map.end = map?.end || t.getDuration();
+    map.start = map.start || 0;
+    map.end = map.end || t.getDuration();
     const clipSpan = () => map.end - map.start;
 
     const loadingMarginOfError = 1; //seconds
     let updateStartTime = map.start;
 
-    const speed = map?.speed || 1;
+    map.speed = closestRate(map.speed || 1);
     const entryVolume = validVolumeURL();
-    const tickOffset = 1000 / speed;
+    const tickOffset = 1000 / map.speed;
 
     const blockID = getBlockID(iframe);
     const canBeCleanedByBuffer = UTILS.closestBlockID(iframe);
@@ -3242,7 +3242,7 @@ async function onPlayerReady(event)
 
     iframe.removeAttribute('title');
     t.setVolume(entryVolume);
-    t.setPlaybackRate(speed);
+    t.setPlaybackRate(map.speed);
 
 
     const timeDisplay = parent.querySelector('div.' + cssData.yt_gif_timestamp);
@@ -3964,6 +3964,12 @@ async function onPlayerReady(event)
     function tick(target = t)
     {
         return target?.getCurrentTime();
+    }
+    function closestRate(s)
+    {// https://stackoverflow.com/questions/8584902/get-the-closest-number-out-of-an-array#:~:text=return%20Math.abs(a%20%2D%20needle)%20%2D%20Math.abs(b%20%2D%20needle)%3B
+        const rates = t?.getAvailablePlaybackRates?.() || [];
+        let closest = rates?.sort?.((a, b) => Math.abs(a - s) - Math.abs(b - s))?.[0];
+        return parseFloat(closest ?? 1)
     }
     //#endregion
 
