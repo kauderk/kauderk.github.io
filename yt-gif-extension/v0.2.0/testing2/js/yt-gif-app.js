@@ -4724,12 +4724,11 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
     StopPropagations();
 
 
-    let u, h = '', su;
+    let u, h = '';
     return {
         startTm, endTm, urlBtn, confirmBtns,
         // h -> hidden content
         // u -> url
-        // su -> simplified url
         ytGifCmpt: async o =>
         {
             o.to = 'yt-gif';
@@ -4758,7 +4757,7 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
         {
             o.to = 'url';
             await ExamineResObj(o);
-            h = h != '' ? ` ${h}` : '';
+            concatNoCmpt(o);
             return `${u}${h}`
         }
     }
@@ -4778,17 +4777,27 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
         if (!match)
             throw new Error(`YT GIF URL Formatter: Missing video url...`);
 
-        matchObj.match = match;
+
         const url = type == 'minimal' ? 'https://youtu.be' + match : match;
+        matchObj.match = url;
         const params = ExtractParamsFromUrl(url);
+
+        if (typeof contentObj.match == 'undefined')
+            contentObj.hidden = contentObj.content;
+
+        // remove redundant tm
+        contentObj.hidden = TryToRemoveRedudantTmParam('self', contentObj);
+
+        // append page param if missing
+        matchObj.match = tryFmtTmParam(from.page, from.tmSetObj?.self?.timestamp, matchObj.match);
 
         if (['start', 'end'].some(p => p == to))
         {
             const { fmtUrl } = fmtUrlsObj(to, params);
-            const match = (u) => u?.match(YTGIF_Config.targetStringRgx)?.[4];
+            const { fmtUrl: _fmtUrl } = !lastUrl ? {} : fmtUrlsObj(to, ExtractParamsFromUrl(lastUrl));
 
             // different urls?
-            if (!hiddenObj.match?.includes?.(fmtUrl) && match(lastUrl) != match(url))
+            if (!hiddenObj.match?.includes?.(fmtUrl) && fmtUrl != _fmtUrl)
             {
                 const c = getConcatS(contentObj.hidden)
                 contentObj.hidden += `${c + fmtUrl} `;
@@ -4796,21 +4805,12 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
         }
         else if (['start', 'end'].some(p => p == from.page))
         {
-            matchObj.match = url;
-
-            // remove redundant tm
-            contentObj.hidden = TryToRemoveRedudantTmParam('self', contentObj);
-
-            // append page param if missing
-            if (typeof params[from.page] == 'undefined') // start - end
-                matchObj.match += fmtTmParam(from.page, from.tmSetObj?.self?.timestamp, matchObj.match);
-
             // append pear content
             if (isSelected(UI.display.fmt_options, 'lift_pears'))
             {
                 const pearCaptureObj = await RemovePearFromString(from, resObj);
-                matchObj.match += await TryToFmtPearParam(pearCaptureObj, resObj, from);
-                contentObj.hidden += TryToAppendHiddenPear(pearCaptureObj, contentObj);
+                matchObj.match = await TryToFmtPearParam(pearCaptureObj, resObj, from, matchObj.match);
+                contentObj.hidden += TryToAppendHiddenPearContent(pearCaptureObj, contentObj);
                 contentObj.hidden = TryToRemoveRedudantTmParam('pear', contentObj);
             }
         }
@@ -4822,25 +4822,37 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
 
         return updateVars();
 
-        function TryToAppendHiddenPear(pearCaptureObj, contentObj)
+        function updateVars()
+        {
+            debugger;
+            u = matchObj.match;
+            h = contentObj.hidden ?? '';
+            h = h.trim() ? (h.trim() + ' ') : '';
+            return;
+        }
+        function TryToAppendHiddenPearContent(pearCaptureObj, contentObj)
         {
             const h = pearCaptureObj.contentObj?.hidden;
             if (!h)
                 return '';
-            contentObj.hidden == contentObj.hidden ?? '';
-            const c = getConcatS(contentObj.hidden)
-            return c + pearCaptureObj.contentObj?.hidden?.trim() + ' ';
+            contentObj.content == contentObj.content ?? '';
+            const c = getConcatS(contentObj.content)
+            return c + pearCaptureObj.contentObj?.content?.trim() + ' ';
         }
-        function fmtTmParam(page, value, match)
+        function tryFmtTmParam(page, value, match)
         {
             // update url
             const p = page == 'end' ? 'end' : 't';
-            const m = match;
+            let m = match;
             const c = [...m].pop() == '?' ? '' : (m.includes('?') ? '&' : '?'); // ends on '?' then it is blank, else add '&' or '?' depending on which is missing
             value = fmtTimestamp('S')(value ?? '0');
             if (!value || value == '0')
-                return '';
-            return `${c}${p}=${value}`;
+                return match;
+            const replace = new RegExp(`(${paramRgx(p).source})`);
+            if (replace.test(match))
+                return m.replace(replace, `${p}=${value}`);
+            else
+                return m += `${c}${p}=${value}`;
         }
         function CaptureInfoObj(capture, ExtractSubstringObj)
         {
@@ -4868,22 +4880,15 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
         {
             return indexPairObj(rgx2Gm(StartEnd_Config.targetStringRgx), string, 'timestamp')?.[0];
         }
-        function updateVars()
-        {
-            u = matchObj.match;
-            h = contentObj.hidden ?? '';
-            h = h.trim() ? h.trim() + ' ' : '';
-        }
-        async function TryToFmtPearParam(pearCaptureObj, resObj, from)
+        async function TryToFmtPearParam(pearCaptureObj, resObj, from, match)
         {
             const value = pearCaptureObj.matchObj?.match;
             if (!value)
-                return '';
+                return matchObj.match;
 
             const p = from.tmSetObj?.pear.page;
-            if (typeof params[p] == 'undefined') // start - end
-                return fmtTmParam(p, value, matchObj.match);
-            return '';
+            // if (typeof params[p] == 'undefined') // start - end
+            return tryFmtTmParam(p, value, matchObj.match);
         }
         async function RemovePearFromString(from, resObj)
         {
@@ -4963,12 +4968,16 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
         function TryToRemoveRedudantTmParam(pear = 'self', contentObj)
         {
             const tm = from.tmSetObj?.[pear]?.timestamp;
-            if (!tm || !contentObj.match)
+            if (!tm)//|| !contentObj.match)
                 return contentObj.hidden;
             const value = fmtTimestamp()(tm);
             const rawValue = fmtTimestamp()(contentObj.content?.match(StartEnd_Config.targetStringRgx)?.[0] ?? '-1');
             if (rawValue === value && isSelected(UI.display.fmt_options, 'avoid_redundancy'))
+            {
+                if (pear == 'self')
+                    contentObj.content = contentObj.content.trim().replace(tm.toString(), '');
                 return contentObj.hidden.replace(tm.toString(), '');
+            }
             return contentObj.hidden;
         }
         async function TryToAssertHierarchyUrl(origin = true)
@@ -4979,6 +4988,14 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
 
             return foundBlock.lastUrl;
         }
+    }
+    function concatNoCmpt(resObj)
+    {
+        debugger;
+        h = h.trim();
+        const cs = !h ? '' : ' ';
+        const ce = isSpace(resObj.string[resObj.end]) ? '' : cs;
+        h = cs + h + ce;
     }
     function urlBtn(page)
     {
