@@ -579,11 +579,13 @@ async function Ready()
 
     // 8. observe anchor components
     //#region relevant variables
-    const anchorSel = 'rm-xparser-default-anchor';
+    const anchor_opt = getOption(UI.timestamps.tm_options, 'anchor');
+    const raw_anchorSel = 'rm-xparser-default-anchor';
     //#endregion
 
-    const anchors = [...document.querySelectorAll(`.${anchorSel}`)].forEach(cmpt => onRenderedCmpt_cb(cmpt));
-    const anchorObs = new MutationObserver(mutations => Mutation_cb_raw_rm_cmpts(mutations, anchorSel, onRenderedCmpt_cb));
+    anchor_opt.addEventListener('customChange', OnAnchorOpt_sel)
+    const anchors = [...document.querySelectorAll(`.${raw_anchorSel}`)].forEach(async cmpt => await onRenderedCmpt_cb(cmpt));
+    const anchorObs = new MutationObserver(async mutations => await Mutation_cb_raw_rm_cmpts(mutations, raw_anchorSel, onRenderedCmpt_cb));
     anchorObs.observe(targetNode, config);
 
 
@@ -2368,17 +2370,75 @@ async function Ready()
 
 
     //#region 8. observe anchor components
-    function onRenderedCmpt_cb(cmpt)
+    async function onRenderedCmpt_cb(cmpt)
     {
-        const div = UTILS.span(['yt-gif-anchor-wrapper']);
-        div.insertAdjacentHTML('afterbegin', links.html.fetched.anchor);
+        if (!isRendered(cmpt))
+            return;
 
-        const uid = getUidFromBlock(cmpt, true);
-        const anchor = div.querySelector('.yt-gif-anchor');
+        const anchorWrp = UTILS.span(['yt-gif-anchor-wrapper']);
+        anchorWrp.insertAdjacentHTML('afterbegin', links.html.fetched.anchor);
+
+        //
+        const tempUID = getUidFromBlock(cmpt, true);
+        const componentMap = await getAnchor_smart(tempUID);
+        const uid = [...componentMap.values()]?.[0];
+
+        //
+        const anchor = anchorWrp.querySelector('.yt-gif-anchor');
         const tooltipObj = getTooltipFlipObj(anchor);
+        tooltipObj.trueVal = tooltipObj.falseVal?.replace(Anchor_Config.uidRefRgx, `((${uid}))`);
+        toogleTooltips(true, tooltipObj);
+        cmpt.parentElement.replaceChild(anchorWrp, cmpt);
 
-        cmpt.parentElement.replaceChild(div, cmpt);
+        //
+        const { toggle_anchor } = await NotifyReferencedTmObserver(anchor);
+
+        //
+        const options = {
+            el: anchorWrp,
+            OnRemmovedFromDom_cb: () =>
+            {
+                anchorInstanceMap.delete(tempUID)
+                toggle_anchor?.(false);
+            },
+        }
+        UTILS.ObserveRemovedEl_Smart(options);
     }
+    async function OnAnchorOpt_sel()
+    {
+        const anchors = [...document.querySelectorAll('.yt-gif-anchor')]
+        for (const anc of anchors)
+        {
+            // what's going on?
+            const { anchor_container, possibleWrapper } = await NotifyReferencedTmObserver(anc);
+            DeactivateTimestampsInHierarchy(anchor_container, possibleWrapper);
+        }
+    }
+    async function NotifyReferencedTmObserver(anchorElm)
+    {
+        const tempUID = getUidFromBlock(anchorElm, true);
+        const { foundBlock } = await getLastAnchorCmptInHierarchy(tempUID);
+        if (!foundBlock?.uid)
+            return {};
+
+        const uid = foundBlock.uid;
+        const { lastWrapperInBlock, root } = await _getYTwrapperRootObj(uid, anchorElm);
+        const possibleWrapper = lastWrapperInBlock(root);
+        const possible_container = closest_container(possibleWrapper);
+
+        const anchor_container = closest_container(anchorElm);
+        const validContainers = () => isRendered(possible_container) && isRendered(anchor_container);
+
+        //
+        const toggle_anchor = (bol) => isRendered(anchor_container) ? UTILS.toggleAttribute(bol, 'yt-gif-anchor-container', anchor_container, uid) : null;
+
+        if (validContainers())
+            possible_container.switchObserverTo?.(anchor_container);
+
+        toggle_anchor(true);
+        return { toggle_anchor, anchor_container, possible_container };
+    }
+
     //#endregion
 
     //#region local utils
