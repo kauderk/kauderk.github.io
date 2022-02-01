@@ -2633,7 +2633,8 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
     // 5. Observe children containers and recover active timestamps respectively
-    const rm_container = closest_rm_container(grandParentBlock);
+    const rm_container = closest_container(grandParentBlock);
+    rm_container?.setAttribute('yt-gif-block-uid', uid);
     SetUpTimestampRecovery(rm_container);
 
 
@@ -2811,6 +2812,17 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
     // 5.0 timestamp recovery
+    function switchObserverTo(target = null)
+    {
+        const isAnchor = isSelected(UI.timestamps.tm_options, 'anchor');
+
+
+        rm_container?.tmhObserver?.disconnect();
+        target?.tmhObserver?.disconnect();
+        const t = isAnchor ? target : rm_container;
+        t?.removeAttribute('active-timestamp-observer')
+        SetUpTimestampRecovery(t);
+    }
     function SetUpTimestampRecovery(rm_container)
     {
         if (!rm_container || rm_container?.hasAttribute('active-timestamp-observer'))
@@ -2835,6 +2847,9 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         });
 
         observer.observe(rm_container, { childList: true, subtree: true, attributes: true });
+        rm_container.obsTarget = rm_container;
+        rm_container.tmhObserver = observer;
+        rm_container.switchObserverTo = switchObserverTo;
     }
     async function TimestampsInHierarchyMutation_cb(mutationsList, MutationObj)
     {
