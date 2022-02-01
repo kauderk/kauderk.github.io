@@ -1917,7 +1917,7 @@ async function Ready()
 
 
             // 3.
-            DeactivateTimestampsInHierarchy(closest_rm_container(targetWrapper), targetWrapper);
+            DeactivateTimestampsInHierarchy(closest_anchor_container(targetWrapper), targetWrapper);
             ToggleBoundarySet(targetWrapper, true);
 
 
@@ -3733,7 +3733,7 @@ async function onPlayerReady(event)
         TimestampVisible(true);
         awaiting(true);
 
-        DeactivateTimestampsInHierarchy(closest_rm_container(tEl), parent);
+        DeactivateTimestampsInHierarchy(closest_anchor_container(tEl), parent);
         await ReloadYTVideo({ t, start: map.defaultStart, end: map.defaultEnd });
         seekToUpdatedTime(map.defaultStart ?? 0);
 
@@ -4173,7 +4173,7 @@ async function onStateChange(state)
         const tmSel = options.includes('skip') ? boundedSel : sel; // Skip if target is missing or if it is out of bounds
 
         const targetWrapper = iframe.closest('.yt-gif-wrapper');
-        const rm_container = closest_rm_container(iframe);
+        const rm_container = closest_container_request(iframe);
 
         if (!rm_container)
             return await RealoadThis();
@@ -4444,7 +4444,18 @@ function getUidFromBlock(el, closest = false)
         block = closestBlock(el);
     return block?.id?.slice(-9)
 }
-function closest_rm_container(el)
+function closest_container_request(el)
+{
+    if (isSelected(UI.timestamps.tm_options, 'anchor'))
+        return closest_anchor_container(el)
+    else
+        return closest_container(el)
+}
+function closest_anchor_container(el)
+{
+    return el?.closest('[yt-gif-anchor-container]') || closest_container(el)
+}
+function closest_container(el)
 {
     return el?.closest('.roam-block-container')
 }
@@ -4524,7 +4535,7 @@ function TimestampsInHierarchy(rm_container, targetWrapper, allSelector)
 {
     const badSets = [...rm_container.querySelectorAll('.yt-gif-wrapper')]
         .filter(w => w != targetWrapper)
-        .map(w => [...closest_rm_container(w).querySelectorAll(allSelector)])
+        .map(w => [...closest_anchor_container(w).querySelectorAll(allSelector)])
         .flat(Infinity);
 
     const actives = [...rm_container.querySelectorAll(allSelector)]
@@ -4537,7 +4548,7 @@ function ValidateHierarchyTimestamps(wrapper, t)
     YTvideoIDs.set(videoId, t.getDuration?.());
 
     const d = parseInt(YTvideoIDs.get(videoId));
-    const rm_container = closest_rm_container(wrapper);
+    const rm_container = closest_anchor_container(wrapper);
 
     if (rm_container && typeof d == 'number')
         TimestampsInHierarchy(rm_container, wrapper, '[yt-gif-timestamp-emulation]')
