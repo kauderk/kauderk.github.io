@@ -565,6 +565,7 @@ async function Ready()
     // 7. simulate inline url btn
     //#region relevant variables
     const url_formatter_option = getOption(UI.display.ms_options, s_u_f_key);
+    const rely_on_hierarchy = getOption(UI.display.fmt_options, 'rely_on_hierarchy');
     //#endregion
 
     const urlObserver = new MutationObserver(InlineUrlBtnMutations_cb);
@@ -572,10 +573,11 @@ async function Ready()
     const s_u_f_startUp = valid_url_formatter();
     url_formatter_option.customSelect?.(s_u_f_startUp);
     ToogleUrlBtnObserver(s_u_f_startUp, urlObserver);
+    ToggleBtnsWithNoUrl(rely_on_hierarchy.selected);
+
     url_formatter_option.addEventListener('customChange', (e) => confirmUrlBtnUsage(e.detail.currentValue, e));
-    url_formatter_option.addEventListener('customChange', (e) => ToogleUrlBtnObserver(e.currentTarget.selected, urlObserver));
-
-
+    url_formatter_option.addEventListener('customChange', (e) => ToogleUrlBtnObserver(e.target.selected, urlObserver));
+    rely_on_hierarchy.addEventListener('customChange', (e) => ToggleBtnsWithNoUrl(e.target.selected));
 
     // 8. observe anchor components
     //#region relevant variables
@@ -1665,11 +1667,17 @@ async function Ready()
                     {
                         if (!valid_url_formatter())
                             return;
-                        if (!isSelected(UI.display.fmt_options, 'rely_on_hierarchy') && !o.hasAnyVideoUrl)
-                            return;
 
                         appendVerticalUrlBtns(o.targetNode);
                         SetUpUrlFormatter(o, tmSetObj);
+
+                        if (!o.hasAnyVideoUrl)
+                        {
+                            const wrp = o.targetNode.querySelector('.yt-gif-url-btns-wrapper');
+                            const valid = isSelected(UI.display.fmt_options, 'rely_on_hierarchy');
+                            UTILS.toggleAttribute(!valid, 'style', wrp, 'display: none');
+                            return UTILS.toggleAttribute(true, 'no-url', wrp);
+                        }
                     }
                 }
             }
@@ -2322,6 +2330,14 @@ async function Ready()
             const allUrlBtns_rm = [...document.querySelectorAll('.bp3-icon-video')]
                 .forEach(el => el.classList.remove('yt-gif'));
         }
+    }
+    function ToggleBtnsWithNoUrl(bol)
+    {
+        const noUrlBtns = [...document.querySelectorAll('.yt-gif-url-btns-wrapper[no-url]')]
+            .forEach(wrp =>
+            {
+                UTILS.toggleAttribute(!bol, 'style', wrp, 'display: none');
+            })
     }
     function hasYTGifClass(b)
     {
