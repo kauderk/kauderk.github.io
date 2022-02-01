@@ -2082,8 +2082,8 @@ async function Ready()
             if (r == PagesObj.main.crossRoot)
                 return wrappers; // they don't have this tEl
 
-            return wrappers.map(pw => closest_rm_container(pw))
-                .filter(pc => pc.contains(tEl))
+            return wrappers.map(pw => closest_anchor_container(pw))
+                // .filter(pc => pc.contains(tEl))
                 .map(c => [...c.querySelectorAll(`[id$="${f_uid}"] .yt-gif-wrapper`)])
                 .flat(Infinity);
         }
