@@ -5314,14 +5314,20 @@ async function getLastAnchorCmptInHierarchy(tempUID, includeOrigin = true)
     const filterUrlObj = AssembleFilterObjs();
     const { blockStrings, originBlockObj } = await getParentsHierarchy(tempUID, includeOrigin)
 
-    for (const blockObj of blockStrings.reverse())
+    for (let blockObj of blockStrings.reverse())
     {
-        const componentMap = await getComponentMap(blockObj.uid, Anchor_Config);
+        const componentMap = await getMap_smart(blockObj.uid, anchorInstanceMap, getComponentMap, blockObj.uid, Anchor_Config);
         const reverseEntries = [...componentMap.entries()].reverse();
         const lastUrlObj = await findLastAnchorObj(reverseEntries, componentMap); // this right here
 
         if (!lastUrlObj?.match)
             continue;
+
+        if (lastUrlObj?.from == 'yt-gif')
+            blockObj = {
+                ...lastUrlObj.ObjAsKey,
+                anchor: { ...blockObj },
+            }
 
         return getYTGIFparams(blockObj, lastUrlObj, filterUrlObj, originBlockObj);
     }
@@ -5342,13 +5348,15 @@ async function getLastAnchorCmptInHierarchy(tempUID, includeOrigin = true)
             if (page == 'yt-gif' && YTGIF_Config.guardClause(str)) // it is an url
                 return resObj(str, entry)
             if (page != 'yt-gif/anchor' || !content) // is not an anchor
-                return {}
+                continue;
             if (YTGIF_Config.guardClause(str)) // it is an url inside an anchor
                 return resObj(str, entry)
-            if (str.length != 9) // is it a valid uid?
-                return {}
+            if (!str || str.length != 9) // is it a valid uid?
+                continue;
 
-            return await getLastUrlObjInMap(str)
+            const res = await getLastUrlObjInMap(str);
+            res.from = 'yt-gif';
+            return res
         }
         return {}
     }
@@ -5445,9 +5453,14 @@ async function getLastUrlObjInMap(uid)
 {
     const componentMap = await getUrlMap_smart(uid);
     const reverseValues = [...componentMap.values()].reverse();
-    const match = reverseValues?.find(str => YTGIF_Config.guardClause(str));
-    const index = reverseValues.indexOf(match)
-    return { match, index, componentMap }
+    const match = reverseValues.find(str => YTGIF_Config.guardClause(str));
+    const index = reverseValues.indexOf(match);
+
+    return {
+        match, index,
+        ObjAsKey: [...componentMap.keys()].reverse()[index],
+        componentMap,
+    }
 }
 //#endregion
 
@@ -5468,6 +5481,10 @@ function FilterMapByIsKey(map, property)
     return [...map.keys()].filter(o => o['isKey'].includes(property));
 }
 
+async function getAnchor_smart(uid)
+{
+    return await getMap_smart(uid, anchorInstanceMap, getComponentMap, uid, Anchor_Config);
+}
 async function getUrlMap_smart(uid)
 {
     return await getMap_smart(uid, UIDtoURLInstancesMapMap, getComponentMap, uid, YTGIF_Config);
