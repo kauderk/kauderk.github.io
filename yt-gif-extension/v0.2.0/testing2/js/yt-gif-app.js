@@ -2444,7 +2444,7 @@ function ObserveIframesAndDelployYTPlayers(targetClass)
     // 3. ready to observe and deploy iframes
     const targetNode = document.querySelector('body');
     const config = { childList: true, subtree: true };
-    const observer = new MutationObserver(mutations => Mutation_cb_raw_rm_cmpts(mutations, targetClass, onRenderedCmpt_cb));
+    const observer = new MutationObserver(async mutations => await Mutation_cb_raw_rm_cmpts(mutations, targetClass, onRenderedCmpt_cb));
     observer.observe(targetNode, config);
 
     return observer
@@ -2479,7 +2479,7 @@ function ObserveIframesAndDelployYTPlayers(targetClass)
         return yobs;
     }
     // ObserveIntersectToSetUpPlayer when cssClass is added to the DOM
-    function onRenderedCmpt_cb(cmpt)
+    async function onRenderedCmpt_cb(cmpt)
     {
         window.YT_GIF_OBSERVERS.masterIntersectionObservers.push(ObserveIntersectToSetUpPlayer(cmpt, 'valid entries MutationObserver'));
     }
@@ -5933,7 +5933,7 @@ function getOption(select, value)
     return [...select.options].find(o => o.value == value)
 }
 /* ********************* */
-function Mutation_cb_raw_rm_cmpts(mutationsList, targetClass, onRenderedCmpt_cb,)
+async function Mutation_cb_raw_rm_cmpts(mutationsList, targetClass, onRenderedCmpt_cb,)
 {
     const found = [];
     for (const { addedNodes } of mutationsList)
@@ -5949,7 +5949,7 @@ function Mutation_cb_raw_rm_cmpts(mutationsList, targetClass, onRenderedCmpt_cb,
 
     for (const node of found)
         if (UTILS.isNotZoomPath(node))
-            onRenderedCmpt_cb(node);
+            await onRenderedCmpt_cb(node);
 }
 //#endregion
 
