@@ -109,6 +109,8 @@ const obsParams = {
     lastActiveTimestamp: null,
 }
 //
+const anchorInstanceMap = new Map();
+//
 const YTvideoIDs = new Map();
 /*-----------------------------------*/
 const StartEnd_Config = {
@@ -1796,12 +1798,15 @@ async function Ready()
 
         const { pulse } = PulseObj(tEl);
         const { click, rghtclick, mdlclick } = getClicks();
+        const anchorUid = closest_anchor_container(tmSetObj.self.targetNode)?.getAttribute('yt-gif-anchor-container') || tEl?.closest('[yt-gif-block-uid]')?.getAttribute('yt-gif-block-uid');
+        const m_uid = anchorUid || uid;
+        const getWrapperObj = m_uid != uid ? _getYTwrapperRootObj : getYTwrapperRootObj;
 
         const {
             lastWrapperInBlock, WrappersInBlock,
             f_uid, blockExist,
             root, crossRoot, mainRoot,
-        } = await getYTwrapperRootObj(uid, tEl);
+        } = await getWrapperObj(m_uid, tEl);
 
 
 
@@ -2038,8 +2043,10 @@ async function Ready()
         const { foundBlock } = await getLastAnchorCmptInHierarchy(uid);
         if (!foundBlock?.uid) console.warn(`YT GIF Timestamps: couldn't find YT GIFs within the Hierarchy: ((${uid}))`);
         const { uid: f_uid } = foundBlock || { uid: '' };
-
-
+        return _getYTwrapperRootObj(f_uid, tEl);
+    }
+    async function _getYTwrapperRootObj(f_uid, tEl)
+    {
         const barObj = {
             tEl,
             condition: function () { return this.tEl.closest(`.${this.root}`) },
