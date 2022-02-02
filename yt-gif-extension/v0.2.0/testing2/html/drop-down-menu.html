@@ -5,17 +5,18 @@
             <span class="bp3-popover-target">
                 <div class="dropdown">
                     <!-- THE > id < NAMING convention for this element: they_must_be_separated_by_underscores-->
-                    <span class="dropbtn bp3-button bp3-minimal bp3-small bp3-icon-more ty-gif-icon">
+                    <span class="bp3-button bp3-icon-more bp3-minimal bp3-small dropbtn ty-gif-icon" tabindex="-1">
                         <svg class="yt-gif-svg" width="24px" height="24px" viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg">
+                            xmlns="http://www.w3.org/2000/svg" style="display: none;">
                             <path class="yt-gif-svg-bg-none" fill="none" d="m11 14 7-4-7-4z"></path>
                             <path class="yt-gif-svg-bg" d="M4 8H2v12c0 1.103.897 2 2 2h12v-2H4V8z"></path>
                             <path class="yt-gif-svg-bg"
                                 d="M20 2H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zm-9 12V6l7 4-7 4z">
                             </path>
                         </svg>
+                        <span class="bp3-button bp3-minimal bp3-small bp3-icon-video" tabindex="0"></span>
                     </span>
-                    <div class="dropdown-content">
+                    <div class="dropdown-content bp3-elevation-3 bp3-popover-content">
                         <span class="dropdown-item">
                             <label for="" class="dropdown-item-description"
                                 data-tooltip="STOP or CHANGE the behaviour of the extension">Suspend Observers</label>
@@ -32,7 +33,7 @@
                         <div class="dropdown yt-gif-style dropdown--hidden dropdown_deployment-style">
                             <span class="dropdown-info-message" data-tooltip="Look for components to create YT GIFs">YT
                                 GIFs Deployment Style</span>
-                            <div class="dropdown-content dropdown-info-box">
+                            <div class="dropdown-content bp3-elevation-3 bp3-popover-content dropdown-info-box">
                                 <span class="dropdown-item">
                                     <label for="" class="dropdown-item-description"
                                         data-tooltip="">{{[[yt-gif]]}}</label>
@@ -59,7 +60,7 @@
                         <div class="dropdown yt-gif-style dropdown_timestamp-style">
                             <span class="dropdown-info-message" data-tooltip="Set timestamps per Block and Hierarchy">YT
                                 GIF timestamps</span>
-                            <div class="dropdown-content dropdown-info-box">
+                            <div class="dropdown-content bp3-elevation-3 bp3-popover-content dropdown-info-box">
                                 <div class="ddm-tut" id="tut_timestamps_sel">
                                     <span class="tut-sel-wpr">
                                         <span class="ddm-tut-icon" data-tooltip="How to use">
@@ -212,7 +213,7 @@
                                             Only</option>
                                     </select>
                                 </div>
-                                <span class="dropdown-item pr-1">
+                                <span class="pr-1">
                                     <div class="select" multiple="" id="tm_options">
                                         <span class="bp3-button bp3-minimal bp3-small select__item" value="anchor"
                                             data-tooltip="Gain the scope of a {{[[yt-gif/anchor]]}} parent and perform operations E.g. looping... Recovery...">
@@ -247,7 +248,7 @@
                         <div class="dropdown yt-gif-style yt-gif-experience-style">
                             <span class="dropdown-info-message" data-tooltip="Quality of life Features">
                                 Experience</span>
-                            <div class="dropdown-content dropdown-info-box">
+                            <div class="dropdown-content bp3-elevation-3 bp3-popover-content dropdown-info-box">
                                 <div class="ddm-tut" id="tut_experience_sel">
                                     <span class="tut-sel-wpr">
                                         <span class="ddm-tut-icon" data-tooltip="How to use">
@@ -316,7 +317,7 @@
 
                         <div class="dropdown yt-gif-style yt-gif-style-player-settings">
                             <span class="dropdown-info-message">Player Settings</span>
-                            <div class="dropdown-content dropdown-info-box">
+                            <div class="dropdown-content bp3-elevation-3 bp3-popover-content dropdown-info-box">
                                 <div class="ddm-tut" id="tut_player_settings_sel">
                                     <span class="tut-sel-wpr">
                                         <span class="ddm-tut-icon" data-tooltip="How to use">
@@ -427,7 +428,7 @@
 
                         <div class="dropdown yt-gif-style">
                             <span class="dropdown-info-message">Miscellaneous</span>
-                            <div class="dropdown-content dropdown-info-box">
+                            <div class="dropdown-content bp3-elevation-3 bp3-popover-content dropdown-info-box">
                                 <div class="ddm-tut" id="tut_miscellaneous_sel">
                                     <span class="tut-sel-wpr">
                                         <span class="ddm-tut-icon" data-tooltip="How to use">
@@ -536,7 +537,7 @@
                                         class="bp3-button bp3-minimal bp3-small m-0 appearance-none bp3-icon-manual"
                                         style="cursor: help;"></a>
                                 </span>
-                                <div class="dropdown-content dropdown-info-box">
+                                <div class="dropdown-content bp3-elevation-3 bp3-popover-content dropdown-info-box">
                                     <span class="dropdown-item">
                                         <label for="" class="dropdown-item-description">Some Features need more
                                             guidelines
@@ -579,7 +580,7 @@
                                         class="bp3-button bp3-minimal bp3-small m-0 appearance-none bp3-icon-info-sign"
                                         style="cursor: help;"></a>
                                 </span>
-                                <div class="dropdown-content dropdown-info-box">
+                                <div class="dropdown-content bp3-elevation-3 bp3-popover-content dropdown-info-box">
                                     <span class="dropdown-item">
                                         <label for="" class="dropdown-item-description">💡 Hover over the YT GIFs to
                                             enable them. Unmute. Start Playing.</label>
@@ -620,7 +621,7 @@
                                         class="appearance-none bp3-button bp3-icon-notifications bp3-minimal bp3-small m-0"
                                         flip-icon="bookmark">
                                 </span>
-                                <div class="dropdown-content dropdown-info-box">
+                                <div class="dropdown-content bp3-elevation-3 bp3-popover-content dropdown-info-box">
                                     <span class="dropdown-item">
                                         <label for="" class="dropdown-item-description"><a
                                                 href="https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/install/README.md#update"
