@@ -4969,7 +4969,6 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
 
         function updateVars()
         {
-            debugger;
             u = matchObj.match;
             h = contentObj.hidden ?? '';
             h = h.trim() ? (h.trim() + ' ') : '';
@@ -5136,7 +5135,6 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
     }
     function concatNoCmpt(resObj)
     {
-        debugger;
         h = h.trim();
         const cs = !h ? '' : ' ';
         const ce = isSpace(resObj.string[resObj.end]) ? '' : cs;
@@ -5257,9 +5255,7 @@ async function TryToUpdateBlockSubString(tempUid, replaceIndex, toReplace, recyc
         // then I'm going to assume that the one "THING" the user clicked on
         // is unique whitin that particular block.
         if (validSubstrings.length == 1 && !validSubstrings[replaceIndex])
-        {
             replaceIndex = 0;
-        }
         start = validSubstrings[replaceIndex].start;
         end = validSubstrings[replaceIndex].end;
     }
