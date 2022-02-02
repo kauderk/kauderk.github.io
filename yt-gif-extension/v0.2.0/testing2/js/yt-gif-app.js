@@ -4290,7 +4290,7 @@ async function onStateChange(state)
         const tmSel = options.includes('skip') ? boundedSel : sel; // Skip if target is missing or if it is out of bounds
 
         const targetWrapper = iframe.closest('.yt-gif-wrapper');
-        const rm_container = closest_container_request(iframe);
+        const rm_container = closest_container_request(iframe);//closest_container(iframe) || closest_anchor_container(iframe);
 
         if (!rm_container)
             return await RealoadThis();
@@ -4570,7 +4570,14 @@ function closest_container_request(el)
 }
 function closest_anchor_container(el)
 {
-    return el?.closest('[yt-gif-anchor-container]') || closest_container(el)
+    const anc = (el) => el?.closest('[yt-gif-anchor-container]');
+    const yuid = (el) => el?.getAttribute('yt-gif-anchor-container');
+    const buid = (el) => el?.getAttribute('yt-gif-block-uid')
+    const rm = closest_container(el);
+    const yt = anc(el);
+    if (buid(rm) == yuid(anc(rm)))
+        return anc(rm)
+    return rm || yt
 }
 function closest_container(el)
 {
@@ -4652,7 +4659,7 @@ function TimestampsInHierarchy(rm_container, targetWrapper, allSelector)
 {
     const badSets = [...rm_container.querySelectorAll('.yt-gif-wrapper')]
         .filter(w => w != targetWrapper)
-        .map(w => [...closest_anchor_container(w).querySelectorAll(allSelector)])
+        .map(w => [...closest_container_request(w).querySelectorAll(allSelector)])
         .flat(Infinity);
 
     const actives = [...rm_container.querySelectorAll(allSelector)]
