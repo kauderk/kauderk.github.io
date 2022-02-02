@@ -4691,8 +4691,17 @@ async function ReloadYTVideo({ t, start, end })
     start = start || 0;
     end = end || t.getDuration();
 
+    if (map.start == start && map.end == end)
+    {
+        while (isRendered(iframe) && !t?.seekTo)
+            await RAP.sleep(50);
+        t?.seekTo(start);
+        return;
+    }
+
     vars.playerVars.start = map.start = start;
     vars.playerVars.end = map.end = end;
+    const vol = t?.getVolume?.();
 
     while (isRendered(iframe) && !t?.seekTo)
         await RAP.sleep(50);
@@ -4715,6 +4724,7 @@ async function ReloadYTVideo({ t, start, end })
 
     while (isRendered(iframe) && !t?.getCurrentTime?.())
         await RAP.sleep(50);
+    t?.setVolume?.(vol);
 
     try { t.l.h[5] = onStateChange; } catch (error) { }
 
