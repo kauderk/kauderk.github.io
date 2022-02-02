@@ -1810,7 +1810,7 @@ async function Ready()
         if (!blockExist) // fail
         {
             if (click || rghtclick || !f_uid)
-                pulse('red');
+                TryToDeactivateSet();
             else if (mdlclick)
                 return await openingOnCrossRoot();
 
@@ -2101,8 +2101,8 @@ async function Ready()
             if (r == PagesObj.main.crossRoot)
                 return wrappers; // they don't have this tEl
 
-            return wrappers.map(pw => closest_anchor_container(pw))
-                // .filter(pc => pc.contains(tEl))
+            return wrappers.map(pw => closest_container_request(pw))
+                .filter(pc => pc.contains(tEl))
                 .map(c => [...c.querySelectorAll(`[id$="${f_uid}"] .yt-gif-wrapper`)])
                 .flat(Infinity);
         }
@@ -2112,7 +2112,7 @@ async function Ready()
 
         return {
             lastWrapperInBlock, WrappersInBlock,
-            f_uid, blockExist,
+            f_uid, blockExist: !!blockExist && lastWrapperInBlock(root),
             root, crossRoot, mainRoot: PagesObj.main.root,
         }
     }
