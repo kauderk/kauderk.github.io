@@ -1946,7 +1946,7 @@ async function Ready()
 
             // 3.
             DeactivateTimestampsInHierarchy(closest_anchor_container(targetWrapper), targetWrapper);
-            ToggleBoundarySet(targetWrapper, true);
+            ToggleBoundarySet(true, targetWrapper);
 
 
             return {
@@ -1983,14 +1983,20 @@ async function Ready()
         }
 
 
-        function ToggleBoundarySet(targetWrapper, bol = true)
+        function TryToDeactivateSet()
+        {
+            pulse('red');
+            ToggleBoundarySet(false, lastWrapperInBlock(root));
+        }
+        function ToggleBoundarySet(bol = true, targetWrapper)
         {
             toogleActiveAttr(bol, tmSetObj.self.targetNode);
             if (tmSetObj.pear)
                 toogleActiveAttr(bol, tmSetObj.pear.targetNode);
 
             UTILS.toggleAttribute(bol, 'last-active-timestamp', tmSetObj.self.targetNode);
-            UTILS.toggleAttribute(bol, 'yt-active', targetWrapper);
+            if (targetWrapper)
+                UTILS.toggleAttribute(bol, 'yt-active', targetWrapper);
 
             function toogleActiveAttr(bol, el)
             {
