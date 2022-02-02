@@ -719,7 +719,7 @@ select {
   align-items: center;
 }
 .select[multiple] .bp3-button.bp3-small{
-  padding: 0px;
+  padding: 0px 2px;
 }
 .select.select-vertcial {
   display: flex;
