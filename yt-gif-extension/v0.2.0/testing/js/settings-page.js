@@ -327,7 +327,7 @@ async function assignChildrenMissingValues()
 async function Read_Write_SettingsPage(UID, keyObjMap = new Map())
 {
     // 0.
-    const ChildrenHierarchy = await RAP.getBlockOrPageInfo(UID, true);
+    const ChildrenHierarchy = await RAP.getBlockInfoByUIDM(UID, true);
     const accObj = { accStr: '' };
     let FinishRec_thenDisplace_cbArr = []; // acc inside the Rec_Func
 
@@ -379,7 +379,7 @@ async function Read_Write_SettingsPage(UID, keyObjMap = new Map())
         // 2.
         if (nextChildObj.children)
         {
-            const object = await RAP.getBlockOrPageInfo(nextChildObj.uid);
+            const object = await RAP.getBlockInfoByUIDM(nextChildObj.uid, true);
             const children = RAP.sortObjectsByOrder(object[0][0].children);
 
             // 3. rec
@@ -563,11 +563,21 @@ async function Read_Write_SettingsPage(UID, keyObjMap = new Map())
 
                 if (obj.string != caputuredString && obj.join == PmtSplit) // kinda hardcoded...
                 {
-                    debugger;
                     if (obj.uid != '' || obj.string.includes(" / ") || splitedStrArr[3] != undefined)
                     {
                         debugger;
-                        throw new Error(`STOP! the string is invalid =>         ${obj.string}`);
+                        /* 
+                        If you are running this script twice in the same session
+                            you will get an error here,
+                            But you were to ...
+                            window.YT_GIF_DIRECT_SETTINGS = null
+                            then you can run the script again
+                            Keep in mind, the script is ment to be executed once PER SESSION
+                        But If you get this error on startup,
+                            Then it is a FATAL ERROR, please report it to the developer
+                            https://github.com/kauderk/kauderk.github.io/issues
+                        */
+                        throw new Error(`YT GIF Settings Page: STOP! the string is invalid or was already set...`);
                     }
                     v_string = obj.string;
                     stringOK = false;
@@ -640,6 +650,9 @@ async function Read_Write_SettingsPage(UID, keyObjMap = new Map())
         // 1.1
         function HandleFutureMove(uidToMove)
         {
+            if (!uidToMove)
+                throw new Error(`YT GIF Settings Page: STOP! a future block will try to move to an undefined place`);
+
             let Recylce_cb = null;
             if (keyFromLevel0 != 'DisplacedBlocks' && key)
             {
@@ -665,7 +678,7 @@ async function Read_Write_SettingsPage(UID, keyObjMap = new Map())
             {
                 if (parentUid && selfUid && parentUid == selfUid)
                 {
-                    throw new Error(`STOP! Don't move block to itself =>         ${parentUid} ${childObjToMoveUID.string}`);
+                    throw new Error(`YT GIF Settings Page: STOP! Don't move block to itself =>         ${parentUid} ${childObjToMoveUID.string}`);
                 }
                 RAP.moveBlock(parentUid, order, selfUid);
             }
