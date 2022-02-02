@@ -1,6 +1,7 @@
 
 (async function ()
 {
+    return; // settings-page.js all of a sudden has major bugs - the extension needs to be shut down
     await LoadExternalResources();
     await window.YT_GIF_SETTINGS_PAGE_INIT();
     await createXload('https://kauderk.github.io/yt-gif-extension/v0.2.0/testing2/js/yt-gif-app.js');
