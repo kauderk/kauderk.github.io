@@ -1798,15 +1798,12 @@ async function Ready()
 
         const { pulse } = PulseObj(tEl);
         const { click, rghtclick, mdlclick } = getClicks();
-        const anchorUid = closest_anchor_container(tmSetObj.self.targetNode)?.getAttribute('yt-gif-anchor-container') || tEl?.closest('[yt-gif-block-uid]')?.getAttribute('yt-gif-block-uid');
-        const m_uid = anchorUid || uid;
-        const getWrapperObj = m_uid != uid ? _getYTwrapperRootObj : getYTwrapperRootObj;
 
         const {
             lastWrapperInBlock, WrappersInBlock,
             f_uid, blockExist,
             root, crossRoot, mainRoot,
-        } = await getWrapperObj(m_uid, tEl);
+        } = await getRelevantWrapperObjFunc();
 
 
 
@@ -1844,6 +1841,22 @@ async function Ready()
         return NoLongerAwaiting();
 
 
+
+        async function getRelevantWrapperObjFunc()
+        {
+            const anc = (el) => el?.closest('[yt-gif-anchor-container]');
+            const yuid = (el) => el?.getAttribute('yt-gif-anchor-container');
+            const buid = (el) => el?.getAttribute('yt-gif-block-uid')
+
+            let anchorUid;
+            if (isSelected(UI.timestamps.tm_options, 'anchor'))
+                anchorUid = buid(tEl?.closest('[yt-gif-block-uid]')) || yuid(closest_anchor_container(tmSetObj.self.targetNode));
+
+            const m_uid = anchorUid || uid;
+            const getWrapperObj = m_uid != uid ? _getYTwrapperRootObj : getYTwrapperRootObj;
+
+            return await getWrapperObj(m_uid, tEl);
+        }
 
         async function playLastBlockOnly_SimHover(r)
         {
