@@ -1,5 +1,11 @@
 # YT GIF Extension v0.2.0
 
+
+# **DISCLAIMER**
+## I've shut down any link/version with the `settings-page.js` file attached to them. A major bug is happening after the most recent Roam Research Update. I'm already trying to solve this. Don't try to use it or run it. The YT GIF Extension is deactivated.
+
+
+
 ## [Features](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/README.md#features)
 
 # Installation
