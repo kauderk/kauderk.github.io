@@ -1631,7 +1631,7 @@ async function Ready()
 
 
                     let duration = getDuration(o.blockID); // gain some performance
-                    duration = (duration ?? 0) ? parseInt(fmtTimestamp('S')(duration)) : duration; // if it is anything else but null or undefined, then parse it to secondsOnly
+                    duration = (duration ?? false) ? parseInt(fmtTimestamp('S')(duration + '')) : duration; // if it is anything else but null or undefined, then parse it to secondsOnly
                     validateSelf(duration);
 
 
@@ -4683,14 +4683,13 @@ async function ReloadYTVideo({ t, start, end })
     const iframe = t?.getIframe?.();
 
     start = start || 0;
-    end = end || t.getDuration();
+    end = end || t?.getDuration?.();
 
     if (map.start == start && map.end == end)
     {
         while (isRendered(iframe) && !t?.seekTo)
             await RAP.sleep(50);
-        t?.seekTo(start);
-        return;
+        return t?.seekTo(start);
     }
 
     vars.playerVars.start = map.start = start;
@@ -4786,8 +4785,9 @@ async function getWrapperInHierarchyObj(pointOfReferenceElm)
             return {} // if you get to the top of the DOM, stop
 
         let wrapper = getWrapper();
-        if (!wrapper || !classIs(el, 'roam-block-container'))
-            continue; // F
+        if (!wrapper)
+            if (!classIs(el, 'roam-block-container'))
+                continue; // F
 
         // await if the RAW wrapper exists
         while (isRendered(wrapper) && !wrapper.hasAttribute('invalid-yt-gif') && classIs(wrapper, 'rm-xparser-default-yt-gif'))
