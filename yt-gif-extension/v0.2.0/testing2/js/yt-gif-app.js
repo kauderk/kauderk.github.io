@@ -2624,6 +2624,8 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     // 5. Observe children containers and recover active timestamps respectively
     const rm_container = closest_container(grandParentBlock);
     rm_container?.setAttribute('yt-gif-block-uid', uid);
+    let getCrrContainer = () => rm_container;
+    let switchTimestampObsOnAchor = () => { };
     SetUpTimestampRecovery(rm_container);
 
 
@@ -2638,11 +2640,14 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         el: grandParentBlock?.querySelector('span'),
         OnRemmovedFromDom_cb: () =>
         {
+            const rm_container = getCrrContainer();
             UIDtoURLInstancesMapMap.delete(uid);
             if (!UI.timestamps.tm_recovery.checked)
                 DeactivateTimestampsInHierarchy(rm_container, wrapper);
             if (!isRendered(rm_container) && rm_container?.closest('.rm-sidebar-outline'))
-                observedParameters.delete(getLocalBlockID());
+                delObsTimestmp();
+            if (!isRendered(rm_container))
+                getOption(UI.timestamps.tm_options, 'anchor').removeEventListener('customChange', switchTimestampObsOnAchor);
         },
     }
     UTILS.ObserveRemovedEl_Smart(options);
@@ -2801,23 +2806,13 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
     // 5.0 timestamp recovery
-    function switchObserverTo(target = null)
-    {
-        const isAnchor = isSelected(UI.timestamps.tm_options, 'anchor');
-
-
-        rm_container?.tmhObserver?.disconnect();
-        target?.tmhObserver?.disconnect();
-        const t = isAnchor ? target : rm_container;
-        t?.removeAttribute('active-timestamp-observer')
-        SetUpTimestampRecovery(t);
-    }
     function SetUpTimestampRecovery(rm_container)
     {
         if (!rm_container || rm_container?.hasAttribute('active-timestamp-observer'))
             return;
-
         rm_container.setAttribute('active-timestamp-observer', '');
+        rm_container.addEventListener('customDelObsTimestmp', delObsTimestmp);
+
 
         const arr = [getObsTimestamp()];
         const MutationObj = { removed: arr, lastActive: arr };
@@ -2835,10 +2830,31 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             awaiting == false;
         });
 
-        observer.observe(rm_container, { childList: true, subtree: true, attributes: true });
-        rm_container.obsTarget = rm_container;
-        rm_container.tmhObserver = observer;
-        rm_container.switchObserverTo = switchObserverTo;
+        const config = { attributes: true, childList: true, subtree: true };
+        const anchor_opt = getOption(UI.timestamps.tm_options, 'anchor');
+        const target = getTarget2Observer(anchor_opt.selected);
+        getCrrContainer = () => target;
+        observer.observe(target, config);
+
+
+        switchTimestampObsOnAchor = (e) =>
+        {
+            const bol = e.target.selected;
+            DeactivateTimestampsInHierarchy(getTarget2Observer(true), getTargetWrapper());
+            getTarget2Observer(!bol)?.removeEventListener('customDelObsTimestmp', delObsTimestmp);
+
+            observer.disconnect(); // self or anchor?
+            const target = getTarget2Observer(bol);
+            target.addEventListener('customDelObsTimestmp', delObsTimestmp);
+            observer.observe(target, config);
+            getCrrContainer = () => target;
+        }
+        anchor_opt.addEventListener('customChange', switchTimestampObsOnAchor);
+
+        function getTarget2Observer(bol)
+        {
+            return !bol ? rm_container : (closest_anchor_container(rm_container) ?? rm_container);
+        }
     }
     async function TimestampsInHierarchyMutation_cb(mutationsList, MutationObj)
     {
@@ -2877,7 +2893,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
             // cleanup - since it's a rendered mismatch
             if (UI.timestamps.tm_restore.value == 'match' && !equals())
-                return observedParameters.delete(getLocalBlockID());
+                return delObsTimestmp();
 
             // value == 'any' - go ahead with anything in this position
             const assignObj = equals() ? { simMessage: 'visuals' } : {};
@@ -2912,6 +2928,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     async function TryToRecoverActiveTimestamp(commonObj, assignObj)
     {
         await RAP.sleep(10);
+        const rm_container = getCrrContainer();
 
         const children = (sel, self) => !self ? rm_container?.querySelectorAll(sel) : [rm_container, ...rm_container?.querySelectorAll(sel)];
         const atIndex = (siblings, index) => Array.from(siblings).flat(Infinity)[index];
@@ -2941,7 +2958,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         for (const record of mutationsList)
         {
             const t = record.target;
-            if (t == rm_container)
+            if (t == getCrrContainer())
                 continue;
             if (record.type == "attributes")
             {
@@ -2985,6 +3002,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             .filter((v, i, a) => a.indexOf(v) === i)// remove duplicates
             .map(block => 
             {
+                const rm_container = getCrrContainer();
                 const timestamps = ElementsPerBlock(block, '[yt-gif-timestamp-emulation]') || [];
                 const activeTimestamps = timestamps.filter(x => x.hasAttribute(attr)) || [];
 
@@ -3013,8 +3031,9 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     }
     function getTargetWrapper()
     {
-        if (!grandParentBlock) return null;
-        return [...grandParentBlock.querySelectorAll('.yt-gif-wrapper')]?.pop();
+        const block = document.getElementById(grandParentBlock.id) ?? grandParentBlock;
+        if (!block) return null;
+        return [...block.querySelectorAll('.yt-gif-wrapper')]?.pop();
     }
     function getLocalBlockID()
     {
@@ -3042,6 +3061,11 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         }
         return null;
     }
+    function delObsTimestmp(e)
+    {
+        let id = getLocalBlockID();
+        observedParameters.delete(id);
+    }
     async function AssertParamsClickTimestamp()
     {
         const lastActive = getObsTimestamp();
@@ -3051,7 +3075,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
                 await TryToRecoverActiveTimestamp(lastActive);
                 await RAP.sleep(10);
 
-                const TryActiveTimestamp = (p) => rm_container?.querySelector(`.rm-video-timestamp[timestamp-style="${p}"][active-timestamp]`)?.getAttribute('timestamp') || '';
+                const TryActiveTimestamp = (p) => getCrrContainer()?.querySelector(`.rm-video-timestamp[timestamp-style="${p}"][active-timestamp]`)?.getAttribute('timestamp') || '';
                 configParams.start = UTILS.HMSToSecondsOnly(TryActiveTimestamp('start')) || configParams.start;
                 configParams.end = UTILS.HMSToSecondsOnly(TryActiveTimestamp('end')) || configParams.end;
             }
