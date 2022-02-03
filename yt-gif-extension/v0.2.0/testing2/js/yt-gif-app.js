@@ -1819,7 +1819,7 @@ async function Ready()
         if (click || rghtclick) // success
         {
             if (e['altKey'])
-                await ClickResetWrapper(lastWrapperInBlock(root));
+                await ClickResetWrapper(lastWrapperInBlock(root), { 'delete-obs-tm': true });
             else if (click)
                 await playLastBlockOnly_SimHover(root);
             else if (rghtclick)
@@ -4742,7 +4742,18 @@ async function ClickResetWrapper(targetWrapper, assignObj = {})
     if (!targetWrapper) return;
 
     const reset = targetWrapper.querySelector('.yt-gif-reset-boundaries');
-    // await reset?.dispatchEvent(new Event('click'));
+
+    if ('delete-obs-tm' in assignObj) // alright
+        reset.dispatchEvent(new CustomEvent('customDelObsTimestmp',
+            {
+                bubbles: true,
+                cancelBubble: true,
+                cancelable: true,
+                detail: {
+                    blockID: assignObj?.blockID,
+                },
+            }));
+
     await reset?.ResetBoundaries_smart?.(assignObj);
 }
 /* ***************** */
