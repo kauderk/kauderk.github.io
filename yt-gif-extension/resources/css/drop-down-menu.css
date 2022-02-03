@@ -493,12 +493,15 @@ a.rm-video-timestamp[active-timestamp]
 
 @keyframes pulseText{
   0%{
+    --c: rgb(var(--pulse-c));
       text-shadow: 0px 0px 0px rgb(var(--pulse-c) , 70%)
   }
   70%{
+    --c: rgb(var(--pulse-c));
       text-shadow: 0px 0px 0px rgb(var(--pulse-c) , 100%);
   }
   100%{
+    --c: rgb(var(--pulse-c));
       text-shadow: 0px 0px 0px rgb(var(--pulse-c)  70%);
   }
 }
