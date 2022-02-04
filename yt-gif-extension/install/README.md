@@ -1,18 +1,15 @@
 # YT GIF Extension v0.2.0
 
 
-## [Features](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/README.md#features)
+## Features: [videos](https://www.youtube.com/watch?v=O6zULK3w5Go&list=PLsUa74AKSzOpEQvDmzDHFNUHu5tgXap_I&index=8) - [table](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/README.md#features)
 
 # Installation
 #### Keep in mind
   - The brand new installation might take some time.
   - Uninstall/disable previous versions, else untested code will be overwritten.
   - ![YT GIF Extension v0 2 0 cleaner c2](https://user-images.githubusercontent.com/65237382/141890136-27b41d51-ff22-430d-aa21-94b3162fe406.gif)
-  - If you are reading this, it is because I haven't announced v0.2.0 yet. Go ahead, install it; I've been testing it for a while now, it performs better than the previous versions.
-    - [v0.1.0](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/v0.1.0) - [announced](https://twitter.com/kauDerk_/status/1448886800798343206?s=20) on [Twitter](https://twitter.com/fbgallet/status/1449490195968110592?s=20) and many other social media platforms, is a stable version and it works, but v0.2.0 comes with more quality of life features and has potential for scalability and maintainability.
-
 ---
-# [This is how it should look like](https://user-images.githubusercontent.com/65237382/141892053-ef42814f-8fbb-4717-92f9-0348b8b0750b.png)
+# [This is how it should look like](https://user-images.githubusercontent.com/65237382/152562479-07b0ce90-c6fc-4cd5-8bd1-b665fcbc590c.png)
 
 ```javascript
 YT GIF EXTENSION v0.2.0 {{[[roam/js]]}}
@@ -20,10 +17,7 @@ YT GIF EXTENSION v0.2.0 {{[[roam/js]]}}
 
   - ```javascript
       /*
-        roam/js/kauderk/yt-gif/settings -> store session values | YT GIF Extension updates
-
         How do I use it? -> https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/install/faq/README.md#how-do-i-use-it
-
         Example ⬇️
         {{[[yt-gif]]: https://youtu.be/sFFwvr6l2mM?t=60&end=120 }}
       */
@@ -42,31 +36,28 @@ YT GIF EXTENSION v0.2.0 {{[[roam/js]]}}
 
 
 # Significant changes
-The [base features are here](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension#features), these on the other hand, are being tested; if you wish to try them out, replace the source to `extension.src = "https://kauderk.github.io/yt-gif-extension/v0.2.0/testing/js/yt-gif-main.js";` [like this...](https://user-images.githubusercontent.com/65237382/147715001-58694a2d-5826-4835-b9d6-6156a055b0e6.png)
-
 1. Embracing `{{[[embed]]}}` and `((xxxuidxxx))` block references - [more...](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#embracing-embed-and-xxxuidxxx-block-references)
-  - ![Snag_35eb7770](https://user-images.githubusercontent.com/65237382/148071646-f238d0a7-9598-45fe-b6d7-c2cdace68351.png)
-2. Toogle on and off `Timestamp Emulation` - [more...](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/install/components/README.md#workflow) - [click events...](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#click-events)
-  - ![image](https://user-images.githubusercontent.com/65237382/147398656-9d6f5c07-e861-4087-8c2c-751d0025ecf6.png)
+  - ![embeds](https://user-images.githubusercontent.com/65237382/152559217-91304aaa-baba-4a7e-bed6-7350252a4403.png)
+3. Major features have their own video tutorials
+  - ![tuts](https://user-images.githubusercontent.com/65237382/152561112-03641536-aee3-4c5a-ba19-53ae92db0579.png)
+2. `Timestamp Emulation` - [more...](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/install/components/README.md#workflow) - [click events...](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#click-events)
+  - ![tms](https://user-images.githubusercontent.com/65237382/152561122-403574d1-bdd2-47a5-a51e-db17a8ffd458.png)
 3. Click on YouTube URLs and format them to `{{[[yt-gif]]}}` components - [more...](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#simulate-url-button-to-video-component)
-  - ![Snag_3587bd78](https://user-images.githubusercontent.com/65237382/148058480-a1f3f175-590c-45fd-baf2-5cc97d14fe56.png)
+  - ![url](https://user-images.githubusercontent.com/65237382/152561116-596482d7-78d8-40d8-8e36-aaab60b2de0a.png)
 4. You decide how to initialize your YT GIFs
-  - ![image](https://user-images.githubusercontent.com/65237382/147398689-d223832c-afcd-435f-be1d-f5cf1d76cbd9.png)
-5. Lightweight iframes, faster graph - set a limit and unload the oldest ones
-  - ![image](https://user-images.githubusercontent.com/65237382/147398953-a5723293-c812-4e84-9325-968ee063233a.png)
-6. Keep playing even off screen
-  - ![image](https://user-images.githubusercontent.com/65237382/147398778-f26bf264-a8d8-411a-b184-a1359037931d.png)
-7. Customize each YT GIF, even multiple ones within the same block
-  - ![image](https://user-images.githubusercontent.com/65237382/147406576-0bac7a67-dad0-441b-9836-c6eeaef93d23.png)
+  - ![buffer](https://user-images.githubusercontent.com/65237382/152561120-1c3ed960-280f-4173-b52f-c21559f60406.png)
+5. Customize each YT GIF, even multiple ones within the same block
+  - ![sttgp](https://user-images.githubusercontent.com/65237382/152561125-c24bf9ab-fed8-4f11-8772-3b742cf60da7.png)
 
 
 ## Extra
-1. #### Watch [all the features in action and explained](https://www.youtube.com/watch?v=RW_vkyf0Uek&list=PLsUa74AKSzOrSLn0hYz6taAuQ_XfhPQIg&index=1)
-      - Or [skim through them in table form.](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension#features) 
-3. #### [YOU CAN CUSTOMIZE THE STYLES INSIDE YOUR GRAPH](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/resources/css/themes)
+1. #### Watch [all the features in action](https://www.youtube.com/watch?v=O6zULK3w5Go&list=PLsUa74AKSzOpEQvDmzDHFNUHu5tgXap_I&index=8)
+      - [![YT GIF - Showcase video](https://user-images.githubusercontent.com/65237382/152557440-bc172f73-91f7-4b8b-82c5-65ecd967c8b7.jpg)](https://www.youtube.com/watch?v=O6zULK3w5Go&list=PLsUa74AKSzOpEQvDmzDHFNUHu5tgXap_I&index=8) 
+      - Or [skim through them in table form.](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension#features)
+2. #### They will inherit your graph's style, you can also [modify them](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/resources/css/themes)
       - ![Snag_ccb5385](https://user-images.githubusercontent.com/65237382/141852554-6689103e-1489-4cc2-a03b-b460b5f4427d.png)
 ![Snag_ccb5d2a](https://user-images.githubusercontent.com/65237382/141852562-2efd0f96-921a-44e3-99a9-c9a201789753.png) 
-4. #### [HERE ARE SOME DEMOS AND USE CASES](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/DEMOS#my-use-cases)
+3. #### [HERE ARE SOME DEMOS AND USE CASES](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/DEMOS#my-use-cases)
 
 # Update
 Whitin your `roam/js/kauderk/yt-gif/settings` page :D
@@ -76,4 +67,5 @@ Something broke, doesn't work, strange/opposite behaviour or the extension does 
 
 - Submit your issue [![Issue URL](https://img.shields.io/badge/GitHub-issue-yellow)](https://github.com/kauderk/kauderk.github.io/issues)
 - Contact me on [![Twitter URL](https://img.shields.io/twitter/url?label=KauDerK_&style=social&url=https%3A%2F%2Ftwitter.com%2FkauDerk_)](https://twitter.com/kauDerk_)
-ﾠ
+
+
