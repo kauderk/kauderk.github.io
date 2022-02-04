@@ -1,5 +1,5 @@
 // version 4 - semi-refactored
-const TARGET_PAGE = 'roam/js/kauderk/yt-gif/settings2';
+const TARGET_PAGE = 'roam/js/kauderk/yt-gif/settings';
 const UTIL_K = window.kauderk.util;
 const RAP = window.kauderk.rap;
 
