@@ -534,6 +534,10 @@ a.rm-video-timestamp[last-active-timestamp]:hover {
   width: 24px;
   aspect-ratio: 1 / 1;
 }
+.yt-gif-controls .yt-gif-btn > .bp3-button::before{
+  color: white;
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+}
 .yt-gif-controls :is([data-tooltip])::before,
 .yt-gif-controls :is([data-tooltip])::after{
 max-width: fit-content;

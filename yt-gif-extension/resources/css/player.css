@@ -68,7 +68,7 @@
 
   --h: 1.5em;
   height: calc(var(--h) + 0.1em);
-  font-size: 1.5em; /* everyone's font size varies */
+  font-size: 1.15em;
 
   cursor: row-resize;
 }
