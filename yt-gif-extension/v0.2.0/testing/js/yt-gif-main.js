@@ -3,7 +3,7 @@
 {
     await LoadExternalResources();
     await window.YT_GIF_SETTINGS_PAGE_INIT();
-    await createXload('https://kauderk.github.io/yt-gif-extension/v0.2.0/testing2/js/yt-gif-app.js');
+    await createXload('https://kauderk.github.io/yt-gif-extension/v0.2.0/testing/js/yt-gif-app.js');
 })();
 
 async function LoadExternalResources()
@@ -24,7 +24,7 @@ async function LoadExternalResources()
         await createXload('https://kauderk.github.io/yt-gif-extension/resources/js/utils.js');
         await createXload('https://kauderk.github.io/yt-gif-extension/resources/js/utils-roam-alpha-api.js');
 
-        await createXload('https://kauderk.github.io/yt-gif-extension/v0.2.0/testing2/js/settings-page.js');
+        await createXload('https://kauderk.github.io/yt-gif-extension/v0.2.0/testing/js/settings-page.js');
 
         return null;
     }
