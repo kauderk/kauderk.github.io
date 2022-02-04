@@ -485,6 +485,10 @@ async function Ready()
     const anchorObs = new MutationObserver(async mutations => await Mutation_cb_raw_rm_cmpts(mutations, raw_anchorSel, onRenderedCmpt_cb));
     anchorObs.observe(targetNode, config);
 
+    // 3.2 pre startup - iframes
+    togglePlayPauseSytles();
+
+
 
     // 4. run extension and events - set up
     //#region relevant variables
@@ -1200,21 +1204,21 @@ async function Ready()
     {
         const selectObjs = [...document.querySelectorAll('.ddm-tut select')].filter(el => !!el)
             .map(sel => selectObj(sel))
-            .forEach(obj =>
+            .forEach(o =>
             {
-                toogleFoldAnim(false, obj.ddm);
+                toogleFoldAnim(false, o.ddm);
 
-                obj.select.addEventListener('change', async (e) =>
+                o.select.addEventListener('change', async (e) =>
                 {
-                    resetOptions(obj);
-                    await ShowOption(obj);
+                    o.resetOptions();
+                    await o.ShowOption();
                 });
-                obj.container.addEventListener('mouseenter', async (e) => await ShowOption(obj));
+                o.container.addEventListener('mouseenter', async (e) => await o.ShowOption());
 
                 // fire change on selected attr
-                const selected = obj.select.querySelector('[selected]')?.value;
+                const selected = o.select.querySelector('[selected]')?.value;
                 if (selected)
-                    obj.select.dispatchEvent(new Event('change'));
+                    o.select.dispatchEvent(new Event('change'));
             })
     }
     function SetUpTutorials_smartNotification()
@@ -1334,49 +1338,65 @@ async function Ready()
     }
 
     //#region Select tutorial
-    function selectObj(sel)
+    function selectObj(select)
     {
-        const ddm = sel.closest('.ddm-tut');
-        const options = [...sel.options].map(o => o.value);
+        const ddm = select.closest('.ddm-tut');
+        const tuts = ddm.querySelector('.yt-gifs-tuts');
+
+        const options = [...select.options].map(o => o.value);
         const htmls = [...options].reduce((acc, crr) =>
         {
-            acc[crr] = ddm.querySelector(`[select="${crr}"]`)?.innerHTML;
+            const { item, itemHtmml } = assebleTutElm(crr);
+            tuts.appendChild(item);
+            acc[crr] = itemHtmml;
             return acc;
         }, {});
 
+        const target = (v) => ddm.querySelector(`[select="${v}"]`); // alrigth...
+        const html = (v) => htmls[v];
+
         return {
-            options,
-            target: (v) => ddm.querySelector(`[select="${v}"]`),
+            select, ddm,
+            container: select.closest('.dropdown'),
 
-            html: (v) => htmls[v],
+            resetOptions: async function () 
+            {
+                for (const value of options)
+                {
+                    const wrapper = target(value);
+                    if (!(wrapper instanceof Element))
+                        continue;
+                    wrapper.style.display = 'none';
+                    wrapper.innerHTML = html(value);
+                }
+            },
+            ShowOption: async function ()
+            {
+                if (select.value == 'disabled')
+                    return toogleFoldAnim(false, ddm);
 
-            select: sel, ddm,
-            container: sel.closest('.dropdown'),
+                toogleFoldAnim(true, ddm);
+
+                const wrapper = target(select.value);
+                wrapper.style.display = 'block';
+
+                await DDM_DeployTutorial(wrapper);
+            }
         }
-    }
-    async function ShowOption(obj)
-    {
-        if (obj.select.value == 'disabled')
-            return toogleFoldAnim(false, obj.ddm);
 
-        toogleFoldAnim(true, obj.ddm);
-
-        const target = obj.target(obj.select.value);
-        target.style.display = 'block';
-
-        await DDM_DeployTutorial(target);
-    }
-    function resetOptions(obj)
-    {
-        for (const option of obj.options)
+        function assebleTutElm(crr)
         {
-            const wrapper = obj.target(option);
-            if (!(wrapper instanceof Element))
-                continue;
-            wrapper.style.display = 'none';
-            wrapper.innerHTML = obj.html(option);
+            const item = UTILS.div(['dropdown-item']);
+            item.setAttribute('select', crr);
+
+            const tut = UTILS.div();
+            tut.setAttribute('data-video-url', `https://youtu.be/${crr}`);
+
+            item.appendChild(tut);
+            return { item, itemHtmml: item.innerHTML };
         }
     }
+
     function toogleFoldAnim(bol, el)
     {
         UTILS.toggleClasses(!bol, ['absolute'], el); // vertical
@@ -2451,6 +2471,22 @@ async function Ready()
         UTILS.ObserveRemovedEl_Smart(options);
     }
     //#endregion
+
+
+    //#region 3.2 pre startup - iframes
+    function togglePlayPauseSytles()
+    {
+        const mute = UI.playerSettings.mute_style;
+        const play = UI.playerSettings.play_style;
+
+        const ilogicSoftStyle = () => mute.value == 'soft' && play.value == 'soft';
+        const playState = () => getOption(play, 'soft').disabled = ilogicSoftStyle();
+
+        playState();
+        mute.addEventListener('change', playState)
+        play.addEventListener('change', playState)
+    }
+    //#region 
 
 
     //#region local utils
@@ -3544,7 +3580,7 @@ async function onPlayerReady(event)
     {
         if (!UTILS.isElementVisible(iframe)) return; //play all VISIBLE Players, this will be called on all visible iframes
 
-        if (UI.playerSettings.play_style.value == 'all-visible')
+        if (playIs('all_visible'))
         {
             togglePlay(true);
             isSoundingFine(false);
@@ -3558,7 +3594,7 @@ async function onPlayerReady(event)
     {
         if (!UTILS.isElementVisible(iframe)) return; //mute all VISIBLE Players, this will be called on all visible iframes
 
-        if (UI.playerSettings.mute_style.value == 'strict' || UI.playerSettings.mute_style.value == 'all-muted')
+        if (muteIs('strict') || muteIs('all_muted'))
         {
             isSoundingFine(false);
         }
@@ -3569,13 +3605,18 @@ async function onPlayerReady(event)
     //#region 3. hover over the frame - mute | pause
     function OutState(e)
     {
-        StopAllOtherPlayers(e);
+        toogleAllActivePlayers(false, true)
+
+        if (playIs('strict'))
+            PauseAllOthersPlaying()
+        else if (muteIs('strict'))
+            MuteAllOtherPlayers()
 
         t.__proto__.newVol = t.getVolume(); // spaguetti isSoundingFine unMute
         t.__proto__.globalHumanInteraction = false;
 
         //                            the same as: if it's true, then the other posibilities are false
-        if (anyValidInAndOutKey(e) && UI.playerSettings.mute_style.value != 'all-muted')
+        if (anyValidInAndOutKey(e) && !muteIs('all_muted'))
         {
             toogleActive(true)
             videoIsPlayingWithSound()
@@ -3592,7 +3633,12 @@ async function onPlayerReady(event)
     function InState(e)
     {
         if (isSelected(UI.playerSettings.ps_options, 'mantain_last_active_player'))
-            ToogleAllOthers(false, true)
+            toogleAllActivePlayers(false, true)
+
+        if (playIs('strict'))
+            PauseAllOthersPlaying()
+        else if (muteIs('strict'))
+            MuteAllOtherPlayers()
 
         t.__proto__.globalHumanInteraction = true; // I'm afraid this event is slower to get attached than 200ms intervals... well 
         togglePlay(true)
@@ -3601,24 +3647,9 @@ async function onPlayerReady(event)
         {
             isSoundingFine()
         }
-        else if (UI.playerSettings.mute_style.value == 'soft')
+        else if (muteIs('soft'))
         {
             isSoundingFine(false)
-        }
-    }
-
-    function StopAllOtherPlayers(e)
-    {
-        toogleAllActivePlayers(false, true)
-
-        if (UI.playerSettings.mute_style.value == 'strict')
-        {
-            if (anyValidInAndOutKey(e))
-                MuteAllOtherPlayers()
-        }
-        if (UI.playerSettings.play_style.value == 'soft')
-        {
-            PauseAllOthersPlaying()
         }
     }
 
@@ -3824,7 +3855,7 @@ async function onPlayerReady(event)
         {
             PauseAllOthersPlaying();
         }
-        else if (UI.playerSettings.play_style.value == 'all-visible')
+        else if (playIs('all_visible'))
         {
             UI.playerSettings.play_style.visible_clips_start_to_play_unmuted.dispatchEvent(new Event('change'));
         }
@@ -3968,7 +3999,7 @@ async function onPlayerReady(event)
 
         if (tick() > updateStartTime + loadingMarginOfError && !t.__proto__.globalHumanInteraction) // and the interval function 'OneFrame' to prevent the loading black screen
         {
-            if (UI.playerSettings.play_style.value != 'all-visible')
+            if (!playIs('all_visible'))
                 return stopIfInactive()
 
             if (entries[0].isIntersecting)
@@ -4033,7 +4064,7 @@ async function onPlayerReady(event)
                     }
                     else if (UTILS.isElementVisible(iframe) && !t.__proto__.globalHumanInteraction)
                     {
-                        togglePlay(UI.playerSettings.play_style.value == 'all-visible'); // pause?
+                        togglePlay(playIs('all_visible')); // pause?
                     }
                     else if (!isParentHover())
                     {
@@ -4118,7 +4149,7 @@ async function onPlayerReady(event)
     }
     function CanUnmute() // NotMuteAnyHover
     {
-        return UI.playerSettings.mute_style.value != 'soft' && UI.playerSettings.mute_style.value != 'all-muted';
+        return !muteIs('soft') && !muteIs('all_muted');
     }
     //#endregion
 
@@ -4156,7 +4187,17 @@ async function onPlayerReady(event)
             t.mute();
         }
     }
-    //#endregion
+    function muteIs(v)
+    {
+        return UI.playerSettings.mute_style.value == v
+    }
+    function playIs(v)
+    {
+        const play = UI.playerSettings.play_style;
+        const is = play.value == v;
+        return is// && !getOption(play, v).disabled;
+    }
+    //#endregion, v
 
 
     //#region hover/interactions utils
@@ -4173,7 +4214,7 @@ async function onPlayerReady(event)
     }
     function AnyPlayOnHover()
     {
-        return UI.playerSettings.play_style.value == 'soft' || UI.playerSettings.play_style.value == 'strict'
+        return playIs('soft') || playIs('strict')
     }
     function isParentHover()
     {// https://stackoverflow.com/questions/36767196/check-if-mouse-is-inside-div#:~:text=if%20(element.parentNode.matches(%22%3Ahover%22))%20%7B
