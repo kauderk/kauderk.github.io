@@ -202,7 +202,7 @@ YT GIFs, YT GIFs Timestamps & YT GIF Url Buttons will be rendered along with Roa
 
 ### What is "roam/js/kauderk/yt-gif/settings" really doing in my graph?
 - The main and only purpose of this file is to store settings for the extension. Because Roam Research can be accesed from any device with a browser, it's wiser to store users data within their own graphs. Now, so far it stores numeric values, on and off switches, and strings.
-It is a [javascript file](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/v0.2.0/testing/js/settings-page.js) that uses the `Roam Alpha API` to read and write the settings in the form of blocks, with the following structure: 
+It is a [javascript file](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/v0.2.0/js/settings-page.js) that uses the `Roam Alpha API` to read and write the settings in the form of blocks, with the following structure: 
     -  `(xxxuidxxx)` : `yt_gif_settings_key` : `<value>`
     
 ### I change the `<values>` but nothing happens
