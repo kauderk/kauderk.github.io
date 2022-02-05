@@ -46,7 +46,7 @@ UI.playerSettings = { // 🧼
 }
 UI.experience = { // 🧼
     awaiting_for_user_input_to_initialize: '1',
-    awaiting_with_video_thumnail_as_bg: '1',
+    thumbnail_as_bg: '1',
     awaiting_input_type: 'mousedown',
     sound_when_video_loops: '1',
 }
@@ -451,7 +451,7 @@ async function Ready()
     const { ddm_icon, ddm_focus, ddm_info_message_selector, dropdown__hidden, awaitng_input_with_thumbnail } = cssData;
     // const { timestamp_display_scroll_offset, end_loop_sound_volume, iframe_buffer_slider } = UI.range;
     // const { rangeValue, loop_volume_displayed, iframe_buffer_label } = UI.label;
-    const { awaiting_with_video_thumnail_as_bg } = UI.experience;
+    const { thumbnail_as_bg } = UI.experience;
     // const { iframe_buffer_stack, awaiting_for_user_input_to_initialize, try_to_load_on_intersection_beta } = UI.experience;
     // const { ddm_css_theme_input } = UI.dropdownMenu;
     //#endregion
@@ -464,7 +464,7 @@ async function Ready()
     // ⛔ UpdateOnScroll_RTM(end_loop_sound_volume, loop_volume_displayed);
     // ⛔ UpdateOnScroll_RTM(iframe_buffer_slider, iframe_buffer_label);
 
-    TogglePlayerThumbnails_DDM_RTM(awaiting_with_video_thumnail_as_bg, awaitng_input_with_thumbnail);
+    ToggleThumbnails(thumbnail_as_bg, awaitng_input_with_thumbnail);
 
     // ⛔ navigateToSettingsPageInSidebar();
     // ⛔ ToggleTheme_DDM_RTM(ddm_css_theme_input, themes, ddm_css_theme_stt, ddm_main_theme_id);
@@ -652,6 +652,24 @@ async function Ready()
     //#region 2. filter UI user inputs variables
     function DDM_to_UI_variables()
     {
+        document.querySelectorAll(".select").forEach(fakeSel =>
+        {
+            if (!fakeSel) return;
+
+            const { select, originalSelect } = new CustomSelect({ fakeSel });
+
+            const attrs = [...originalSelect.attributes].map(a => ({ name: a.name, value: a.value }));
+            const ignore = ['class', 'multiple'];
+
+            for (const { name, value } of attrs)
+            {
+                if (ignore.includes(name))
+                    continue;
+                select.setAttribute(name, value)
+                originalSelect.removeAttribute(name);
+            }
+        })
+
         // this took a solid hour. thak you thank you
         // also, how would this looks like with the array functions filter|map|fill? Hmmm
         for (const parentKey in UI)
@@ -685,13 +703,23 @@ async function Ready()
                             parentObj[childKey].value = Number(sessionValue);
                             break;
                         case 'label':
-                            parentObj[childKey].innerHTML = sessionValue;
+                            parentObj[childKey].textContent = sessionValue;
                             break;
                         default:
                             const input = parentObj[childKey];
 
                             if (domEl.tagName == 'SELECT')
-                                input.value = sessionValue.toString();
+                            {
+                                const sesionOptions = sessionValue.toString().split(',').filter(s => !!s);
+                                const options = [...input.options].forEach(o =>
+                                {
+                                    const selected = sesionOptions.includes(o.value);
+                                    o.selected = selected;
+                                    if (selected && input.type == 'select-one')
+                                        input.value = o.value;
+                                    o['customSelect']?.(o.selected); // Hmmmmm
+                                })
+                            }
                             else // checkbox
                                 input.checked = UTILS.isTrue(sessionValue);
 
@@ -764,7 +792,7 @@ async function Ready()
 
         const expecptions = [ // 🧼
             document.getElementById('awaiting_for_user_input_to_initialize'),
-            document.getElementById('awaiting_with_video_thumnail_as_bg'),
+            document.getElementById('thumbnail_as_bg'),
         ]
         expecptions.filter(el => !!el).forEach(el => el.disabled = false);
     }
@@ -831,40 +859,62 @@ async function Ready()
         }
     }
     /* ************* */
+    // 🧼
     function DDM_FlipBindedDataAttr_RTM(toggleClassArr = [], attrData)
     {
         for (const key in attrData)
         {
             const main = document.querySelector(`[data-main='${key}']`);
-            const binds = [...document.querySelectorAll(`[data-bind*='${key}']`)];
+            const binds = () => [...document.querySelectorAll(`[data-bind*='${key}']`)];
 
-            toggleValidItemClasses();
-            main.addEventListener('change', toggleValidItemClasses);
-
-            function toggleValidItemClasses()
+            const toogleOnCheck = () => binds().forEach(b => UTILS.toggleClasses(!main.checked, toggleClassArr, b));
+            const toogleOnSelect = () => binds().forEach(b =>
             {
-                binds.forEach(b => UTILS.toggleClasses(!main.checked, toggleClassArr, b));
+                const on = b.getAttribute('on');
+                const not = b.getAttribute('not');
+
+                const selOpts = main.type == 'select-multiple' ? [...main.selectedOptions].map(o => o.value) : [main.value];
+                const is = (v) => selOpts.includes(v);
+
+                const equals = (s) => s.split(',').map(s => s.trim()).some(v => is(v));
+                const any = (v) => !is('disabled') && v == 'any';
+
+                if (on) // showMatch || showIfAny
+                    UTILS.toggleClasses(!(equals(on) || any(on)), toggleClassArr, b);
+                else if (not) // hideMatch || hideIfAny
+                    UTILS.toggleClasses((equals(not) || any(not)), toggleClassArr, b);
+            })
+
+            if (!main) { continue; }
+            if (main.tagName == 'INPUT')
+            {
+                toogleOnCheck();
+                main.addEventListener('change', toogleOnCheck);
+                main.addEventListener('customBind', toogleOnCheck);
+            }
+            else if (main.tagName == 'SELECT')
+            {
+                toogleOnSelect();
+                main.addEventListener('change', toogleOnSelect);
+                main.addEventListener('customBind', toogleOnSelect);
             }
         }
     }
-    function TogglePlayerThumbnails_DDM_RTM(awaiting_with_video_thumnail_as_bg, awaitng_input_with_thumbnail)
+    // 🧼
+    function ToggleThumbnails(thumbnail_as_bg, awaiting_cls)
     {
         // BIND TO SETTINGS PAGE
 
-        awaiting_with_video_thumnail_as_bg.addEventListener('change', handleIMGbgSwap);
+        thumbnail_as_bg?.addEventListener?.('customChange', handleIMGbgSwap);
         function handleIMGbgSwap(e)
         {
-            const awaitingGifs = [...document.querySelectorAll(`.${awaitng_input_with_thumbnail}`)];
+            const awaitingGifs = [...document.querySelectorAll(`.${awaiting_cls}`)];
             for (const el of awaitingGifs)
             {
-                if (awaiting_with_video_thumnail_as_bg.checked)
-                {
-                    UTILS.applyIMGbg(el, el.dataset.videoUrl);
-                }
+                if (e.target.selected)
+                    UTILS.applyIMGbg(el, el.getAttribute('data-video-url'));
                 else
-                {
                     UTILS.removeIMGbg(el); // spaguetti
-                }
             }
         }
     }
@@ -1022,26 +1072,26 @@ async function Ready()
     //#endregion
 
 
-    //#region 5. Setting up tutorials
+    //#region 5. Setting up tutorials // 🧼
     function SetUpSelectTurorials()
     {
         const selectObjs = [...document.querySelectorAll('.ddm-tut select')].filter(el => !!el)
             .map(sel => selectObj(sel))
-            .forEach(obj =>
+            .forEach(o =>
             {
-                toogleFoldAnim(false, obj.ddm);
+                toogleFoldAnim(false, o.ddm);
 
-                obj.select.addEventListener('change', async (e) =>
+                o.select.addEventListener('change', async (e) =>
                 {
-                    resetOptions(obj);
-                    await ShowOption(obj);
+                    o.resetOptions();
+                    await o.ShowOption();
                 });
-                obj.container.addEventListener('mouseenter', async (e) => await ShowOption(obj));
+                o.container.addEventListener('mouseenter', async (e) => await o.ShowOption());
 
                 // fire change on selected attr
-                const selected = obj.select.querySelector('[selected]')?.value;
+                const selected = o.select.querySelector('[selected]')?.value;
                 if (selected)
-                    obj.select.dispatchEvent(new Event('change'));
+                    o.select.dispatchEvent(new Event('change'));
             })
     }
     function SetUpTutorials_smartNotification()
@@ -1069,15 +1119,15 @@ async function Ready()
                 {
                     if (UTILS.hasOneDayPassed_localStorage(id))
                     {
-                        btn.checked = false;
+                        btn.checked = true;
                         btn.dispatchEvent(new Event('change'));
                     }
                     else
                     {
-                        // ⛔ 
-                        // const sessionValue = window.YT_GIF_DIRECT_SETTINGS.get(id)?.sessionValue;
-                        // const bol = typeof sessionValue === 'undefined' ? true : sessionValue;
-                        ToogleVisualFeedback(btn.checked = true);
+                        const sessionValue = false; // window.YT_GIF_DIRECT_SETTINGS.get(id)?.sessionValue;
+                        const bol = typeof sessionValue === 'undefined' ? true : sessionValue;
+                        btn.checked = bol;
+                        ToogleVisualFeedback(bol);
                     }
                 }
             }
@@ -1112,16 +1162,19 @@ async function Ready()
 
         const awaitingWrapper = await onYouTubePlayerAPIReady(tutWrapper, 'yt-gif-ddm-tutorial', 'force-awaiting', 'testing manual ty gif tutorial');
 
+        const getContent = () => parentTarget?.closest('.dropdown-content');
+
         icon.addEventListener('blur', localBlur);
 
         awaitingWrapper.addEventListener('mouseenter', (e) =>
         {
-            icon.dispatchEvent(new Event('click'))
+            icon.dispatchEvent(new Event('click'));
+            UnfocusEverytingButThis(true);
             toggle_VisualFeedback(e.currentTarget, false);
         })
         awaitingWrapper.addEventListener('mouseleave', (e) =>
         {
-            toggleFocusOnDMMsparents(true)
+            toggleFocusOnDMMsparents(true);
             toggle_VisualFeedback(e.currentTarget, true)
         })
 
@@ -1135,12 +1188,21 @@ async function Ready()
         }
         function toggleFocusOnDMMsparents(toggle = true)
         {
-            const updateTutParents = [parentTarget?.closest('.dropdown-content'), mainDDM];
-            for (const el of updateTutParents)
-                UTILS.toggleClasses(toggle, [ddm_focus], el);
+            const ownContent = [getContent(), mainDDM];
+
+            for (const el of ownContent)
+                UTILS.toggleClasses(toggle, [ddm_focus], el); // focus this
 
             if (toggle)
                 icon.dispatchEvent(new Event('click'));
+        }
+        function UnfocusEverytingButThis(toggle)
+        {
+            const otherTutContent = [...document.querySelectorAll('.dropdown-item.yt-gif-wrapper-parent')]
+                .map(tut => tut.closest('.dropdown-info-box.dropdown-focus'))
+                .filter((v, i, a) => !!v && v != getContent() && a.indexOf(v) === i);
+            for (const el of otherTutContent)
+                UTILS.toggleClasses(!toggle, [ddm_focus], el);
         }
         function toggle_VisualFeedback(el, bol)
         {
@@ -1148,50 +1210,66 @@ async function Ready()
         }
     }
 
-    //#region Select tutorial
-    function selectObj(sel)
+    //#region Select tutorial // 🧼
+    function selectObj(select)
     {
-        const ddm = sel.closest('.ddm-tut');
-        const options = [...sel.options].map(o => o.value);
+        const ddm = select.closest('.ddm-tut');
+        const tuts = ddm.querySelector('.yt-gifs-tuts');
+
+        const options = [...select.options].map(o => o.value);
         const htmls = [...options].reduce((acc, crr) =>
         {
-            acc[crr] = ddm.querySelector(`[select="${crr}"]`)?.innerHTML;
+            const { item, itemHtmml } = assebleTutElm(crr);
+            tuts.appendChild(item);
+            acc[crr] = itemHtmml;
             return acc;
         }, {});
 
+        const target = (v) => ddm.querySelector(`[select="${v}"]`); // alrigth...
+        const html = (v) => htmls[v];
+
         return {
-            options,
-            target: (v) => ddm.querySelector(`[select="${v}"]`),
+            select, ddm,
+            container: select.closest('.dropdown'),
 
-            html: (v) => htmls[v],
+            resetOptions: async function () 
+            {
+                for (const value of options)
+                {
+                    const wrapper = target(value);
+                    if (!(wrapper instanceof Element))
+                        continue;
+                    wrapper.style.display = 'none';
+                    wrapper.innerHTML = html(value);
+                }
+            },
+            ShowOption: async function ()
+            {
+                if (select.value == 'disabled')
+                    return toogleFoldAnim(false, ddm);
 
-            select: sel, ddm,
-            container: sel.closest('.dropdown'),
+                toogleFoldAnim(true, ddm);
+
+                const wrapper = target(select.value);
+                wrapper.style.display = 'block';
+
+                await DDM_DeployTutorial(wrapper);
+            }
         }
-    }
-    async function ShowOption(obj)
-    {
-        if (obj.select.value == 'disabled')
-            return toogleFoldAnim(false, obj.ddm);
 
-        toogleFoldAnim(true, obj.ddm);
-
-        const target = obj.target(obj.select.value);
-        target.style.display = 'block';
-
-        await DDM_DeployTutorial(target);
-    }
-    function resetOptions(obj)
-    {
-        for (const option of obj.options)
+        function assebleTutElm(crr)
         {
-            const wrapper = obj.target(option);
-            if (!(wrapper instanceof Element))
-                continue;
-            wrapper.style.display = 'none';
-            wrapper.innerHTML = obj.html(option);
+            const item = UTILS.div(['dropdown-item']);
+            item.setAttribute('select', crr);
+
+            const tut = UTILS.div();
+            tut.setAttribute('data-video-url', `https://youtu.be/${crr}`);
+
+            item.appendChild(tut);
+            return { item, itemHtmml: item.innerHTML };
         }
     }
+
     function toogleFoldAnim(bol, el)
     {
         UTILS.toggleClasses(!bol, ['absolute'], el); // vertical
@@ -1768,16 +1846,10 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             const awaitingAnimation = [awiting_player_pulse_anim, awaitng_player_user_input];
             const awaitingAnimationThumbnail = [...awaitingAnimation, awaitng_input_with_thumbnail];
 
-            let mainAnimation = awaitingAnimationThumbnail;
+            const mainAnimation = awaitingAnimationThumbnail;
 
-            if (UI.experience.awaiting_with_video_thumnail_as_bg.checked)
-            {
-                UTILS.applyIMGbg(wrapper, url);
-            }
-            else
-            {
-                mainAnimation = awaitingAnimation;
-            }
+            //if (isSelected(UI.experience.xp_options, 'thumbnail_as_bg'))
+            UTILS.applyIMGbg(wrapper, url);
 
             UTILS.toggleClasses(true, mainAnimation, wrapper);
             return mainAnimation;
@@ -1852,10 +1924,11 @@ async function onPlayerReady(event)
     const iframe = document.getElementById(key) || t.getIframe();
     const parent = getParent(iframe);
 
-    const map = allVideoParameters.get(key); //videoParams
-    const start = map?.start || 0;
-    const end = map?.end || t.getDuration();
-    const clipSpan = end - start;
+    const map = allVideoParameters.get(key); // 🧼
+    map.start = map?.start || 0;
+    map.end = map?.end || t.getDuration();
+    const clipSpan = () => map.end - map.start;
+
     const speed = map?.speed || 1;
     const entryVolume = validVolumeURL();
     const tickOffset = 1000 / speed;
@@ -1868,7 +1941,7 @@ async function onPlayerReady(event)
         rocording.target = t;
 
     const loadingMarginOfError = 1; //seconds
-    let updateStartTime = start;
+    let updateStartTime = map.start;
 
 
     // javascript is crazy
@@ -2191,16 +2264,16 @@ async function onPlayerReady(event)
     }
     function UpdateTimeDisplay()
     {
-        const sec = Math.abs(clipSpan - (end - tick()));
+        const sec = Math.abs(clipSpan() - (map.end - tick()));
 
         //timeDisplay.innerHTML = '00:00/00:00'
         if (UI.display.clip_life_span_format.checked) 
         {
-            timeDisplay.innerHTML = `${fmtMSS(sec)}/${fmtMSS(clipSpan)}`; //'sec':'clip end'
+            timeDisplay.innerHTML = `${fmtMSS(sec)}/${fmtMSS(clipSpan())}`; //'sec':'clip end'
         }
         else
         {
-            timeDisplay.innerHTML = `${fmtMSS(tick())}/${fmtMSS(end)}`; //'update':'end'
+            timeDisplay.innerHTML = `${fmtMSS(tick())}/${fmtMSS(map.end)}`; //'update':'end'
         }
 
 
@@ -2223,11 +2296,11 @@ async function onPlayerReady(event)
 
         if (UI.display.clip_life_span_format.checked)
         {
-            if (dir <= start)
-                dir = end - 1; //can go beyond that
+            if (dir <= map.start)
+                dir = map.end - 1; //can go beyond that
 
-            if (dir >= end)
-                dir = start; //can go beyond that
+            if (dir >= map.end)
+                dir = map.start; //can go beyond that
         }
 
         t.seekTo(dir);
@@ -2311,12 +2384,12 @@ async function onPlayerReady(event)
         const media = JSON.parse(JSON.stringify(videoParams));
         media.src = getWrapperUrlSufix(parent);
         media.id = map.id;
-        media.updateTime = isBounded(tick()) ? tick() : start;
+        media.updateTime = isBounded(tick()) ? tick() : map.start;
         media.updateVolume = isValidVolNumber(t.__proto__.newVol) ? t.__proto__.newVol : validUpdateVolume();
         if (media.timeURLmapHistory.length == 0) // kinda spaguetti, but it's super necesary - This will not ignore the first block editing - stack change
-        {
-            media.timeURLmapHistory.push(start);
-        }
+            media.timeURLmapHistory.push(map.start);
+        if (media.volumeURLmapHistory.length == 0)
+            media.volumeURLmapHistory.push(videoParams.volume);
         if (blockID != null)
         {
             lastBlockIDParameters.set(blockID, media);
@@ -2352,7 +2425,7 @@ async function onPlayerReady(event)
             {
                 t.destroy();
 
-                console.count('Destroyed! ' + key);
+                // console.count('Destroyed! ' + key);
             }
         }
     }
@@ -2468,7 +2541,7 @@ async function onPlayerReady(event)
     //#region validate - check values utils
     function isBounded(x)
     {
-        return start < x && x < end;
+        return map.start < x && x < map.end;
     }
     function validUpdateVolume()
     {
@@ -2683,7 +2756,7 @@ function CleanAndBrandNewWrapper(wrapper_p, attr_name = attrInfo.creation.name, 
 }
 function isValid_Awaiting_check()
 {
-    return UI.experience.awaiting_for_user_input_to_initialize.checked // 🧼
+    return UI?.experience?.awaiting_input_type?.value // 🧼
 }
 //#endregion
 
@@ -3023,6 +3096,130 @@ function clean_rm_string(rawText)
 //#endregion
 
 
+
+
+//#region custom elms // 🧼
+class CustomSelect
+{// https://codepen.io/dcode-software/pen/MWmrqGQ // https://www.youtube.com/watch?v=zbjGcA3iEME
+    constructor({ fakeSel, classes })
+    {
+        this.classes = classes ?? {};
+        this.fakeSel = fakeSel;
+        this.customSelect = document.createElement("select");
+
+        if (this.fakeSel.hasAttribute('multiple'))
+            this.customSelect.setAttribute('multiple', '');
+
+        this._removeFakeSibling();
+
+        Array.from(this.fakeSel.children).forEach((fake, idx, arr) =>
+        {
+            const option = document.createElement("option"); // binded to the fake select
+
+            option.setAttribute('value', fake.getAttribute('value'));
+            option.textContent = fake.textContent;
+            this.customSelect.appendChild(option);
+
+            if (fake.hasAttribute('selected'))
+                this._select(fake);
+
+            fake.addEventListener('click', handleSelect.bind(this));
+            option.customSelect = customSelect.bind(this);
+            option.customHandleSelect = handleSelect.bind(this);
+            option.fake = fake;
+
+            function handleSelect() 
+            {
+                if (fake.hasAttribute('disabled') || option.disabled)
+                    return;
+
+                const previous = option.selected;
+                if (
+                    this.fakeSel.hasAttribute('multiple') &&
+                    (fake.hasAttribute('selected') || option.selected)
+                )
+                {
+                    this._deselect(fake)
+                    this._fireCustomChange(option, false, previous)
+                } else
+                {
+                    this._select(fake)
+                    this._fireCustomChange(option, true, previous)
+                }
+                this.customSelect.dispatchEvent(new Event('change'))
+            }
+            function customSelect(bol)
+            {
+                if (bol)
+                    this._select(fake)
+                else
+                    this._deselect(fake)
+                this.customSelect.dispatchEvent(new Event('customBind'))
+            }
+        });
+
+        this.fakeSel.insertAdjacentElement("afterend", this.customSelect);
+        this.customSelect.style.display = "none";
+        this.customSelect.setAttribute('hidden-fake-select', '');
+
+        return {
+            select: this.customSelect,
+            originalSelect: this.fakeSel,
+        }
+    }
+
+    _removeFakeSibling()
+    {
+        const fakeSibling = this.fakeSel.nextElementSibling?.hasAttribute('hidden-fake-select');
+        if (fakeSibling)
+            this.fakeSel.parentNode.removeChild(this.fakeSel.nextElementSibling);
+    }
+    _select(fake)
+    {
+        if (!this.fakeSel.hasAttribute('multiple'))
+            Array.from(this.fakeSel.children).forEach((el) => this._vsSelected(false, el));
+
+        this._isSelected(true, fake);
+        this._vsSelected(true, fake);
+    }
+    _deselect(fake)
+    {
+        this._isSelected(false, fake);
+        this._vsSelected(false, fake);
+    }
+    _vsSelected(bol, el)
+    {
+        UTILS.toggleAttribute(bol, 'selected', el);
+        if (this.classes.selected)
+            UTILS.toggleClasses(bol, [this.classes.selected], el);
+    }
+    _isSelected(bol, fake)
+    {
+        const index = Array.from(this.fakeSel.children).indexOf(fake);
+        const option = this.customSelect.children[index];
+        option.selected = bol;
+    }
+    _fireCustomChange(option, bol, previousValue)
+    {
+        if (previousValue != bol) // nothing changed, skip
+            option.dispatchEvent(new CustomEvent('customChange',
+                {
+                    bubbles: false,
+                    cancelBubble: true,
+                    cancelable: true,
+                    //composed: false,
+                    detail: {
+                        previousValue,
+                        currentValue: bol,
+                    },
+                }));
+    }
+}
+function isSelected(select, ...value)
+{
+    return [...select.selectedOptions].find(o => value.includes(o.value))
+}
+//#endregion
 
 
 /*
