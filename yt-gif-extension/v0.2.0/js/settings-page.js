@@ -12,6 +12,7 @@ const cptrPrfx = '<',
 
 const rad = 'radio',
     chk = 'checkbox',
+    sel = 'string',
     str = 'string',
     pmt = 'prompt',
     int = 'integer',
@@ -36,48 +37,49 @@ window.YT_GIF_SETTINGS_PAGE = {
     },
     display: {
         baseKey: BaseSetting(chk),
-        clip_life_span_format: dom('1'),
+        simulate_roam_research_timestamps: dom(),
+        ms_options: dom('clip_lifespan_format', sel),
+        fmt_options: dom('avoid_redundancy', sel),
     },
-    previousTimestamp: {
-        baseKey: BaseSetting(rad),
-        /* one a time */
-        strict_start_timestamp: dom('1'),
-        start_timestamp: dom(),
-        fixed_start_timestamp: dom(),
+
+    timestamps: {
+        baseKey: BaseSetting(sel),
+        tm_recovery: dom('1', chk),
+        tm_seek_to: dom('strict'),
+        tm_restore: dom('match'),
+        tm_reset_on_removal: dom('container'),
+
+        tm_loop_hierarchy: dom('disabled'),
+        tm_loop_to: dom('start'),
+        tm_loop_options: dom('skip,include_player'),
+        tm_seek_action: dom('disabled'),
+
+        tm_workflow_display: dom('default'),
+        tm_workflow_grab: dom('HMS'),
+        tm_options: dom(''),
     },
-    previousVolume: {
-        baseKey: BaseSetting(rad),
-        /* one a time */
-        strict_start_volume: dom('1'),
-        start_volume: dom(),
-        fixed_start_volume: dom(),
-    },
+
     experience: {
-        baseKey: BaseSetting(chk),
-        sound_when_video_loops: dom('1'),
-        awaiting_for_mouseenter_to_initialize: dom(),
-        awaiting_with_video_thumnail_as_bg: dom('1'),
-        iframe_buffer_stack: dom('1'),
-        try_to_load_on_intersection_beta: dom(),
+        baseKey: BaseSetting(sel),
+
+        initialize_mode: dom('buffer'),
+        awaiting_input_type: dom('mouseenter'),
+        xp_options: dom('thumbnail_as_bg'),
     },
-    fullscreenStyle: {
-        baseKey: BaseSetting(chk),
-        smoll_vid_when_big_ends: dom('1'),
-        mute_on_exit_fullscreenchange: dom(),
-        pause_on_exit_fullscreenchange: dom(),
+
+    playerSettings: {
+        baseKey: BaseSetting(sel),
+
+        play_style: dom('strict'),
+        mute_style: dom('strict'),
+        fullscreen_style: dom('disabled'),
+
+        url_boundaries: dom('strict'),
+        url_volume: dom('strict'),
+
+        ps_options: dom('mantain_last_active_player'),
     },
-    muteStyle: {
-        baseKey: BaseSetting(chk),
-        strict_mute_everything_except_current: dom('1'),
-        muted_on_mouse_over: dom(),
-        muted_on_any_mouse_interaction: dom(),
-    },
-    playStyle: {
-        baseKey: BaseSetting(chk),
-        strict_play_current_on_mouse_over: dom('1'),
-        play_on_mouse_over: dom(),
-        visible_clips_start_to_play_unmuted: dom(),
-    },
+
     range: {
         baseKey: BaseSetting(rng),
         timestamp_display_scroll_offset: {
@@ -93,18 +95,12 @@ window.YT_GIF_SETTINGS_PAGE = {
             ibs_opt: InlinePmt(`integers from 1 to 30`),
         },
     },
-    InAndOutKeys: {
-        baseKey: BaseSetting(chk),
-        ctrlKey: dom('1'),
-        shiftKey: dom(),
-        altKey: dom(),
-        iaok_opt: InlinePmt(`middle mouse button is on by default`),
-    },
     defaultPlayerValues: {
         baseKey: BaseSetting(),
         player_span: {
             baseKey: BaseInitSetting('50%', str),
             ps_opt: InlinePmt(`empty means 50% - only valid css units like px  %  vw`),
+            pv_opt_2: InlinePmt("each block's url parameter `&sp=` has priority over this"),
         },
         player_volume: {
             baseKey: BaseInitSetting(40, int),
@@ -128,10 +124,6 @@ window.YT_GIF_SETTINGS_PAGE = {
     },
     defaultValues: {
         baseKey: BaseSetting(),
-        css_theme: {
-            baseKey: BaseInitSetting('dark', str),
-            ct_opt: InlinePmt(`"dark" or "light"`),
-        },
         override_roam_video_component: {
             baseKey: BaseInitSetting('', [bol, str]),
             orvc_opt: InlinePmt('distinguish between `{{[[video]]:}}` from `{{[[yt-gif]]:}}` or "both" which is also valid'),
@@ -139,6 +131,25 @@ window.YT_GIF_SETTINGS_PAGE = {
         end_loop_sound_src: {
             baseKey: BaseInitSetting('https://freesound.org/data/previews/256/256113_3263906-lq.mp3', url),
             elss_opt: InlinePmt(`src sound when yt gif makes a loop, empty if unwanted`),
+        },
+        override_simulate_url_to_video_component: {
+            baseKey: BaseInitSetting('', bol),
+            orsuvc_opt: InlinePmt(`Because of browsers' external problems, I'd like to set this as the "usage key" replacement`),
+        },
+        YT_API_KEY_V3: {
+            baseKey: BaseInitSetting('', str),
+            yakv_opt: InlinePmt(``),
+        },
+        InAndOutKeys: {
+            baseKey: BaseInitSetting('ctrlKey', str),
+            iaok_opt: InlinePmt(`Any permutation of: altKey, shiftKey, ctrlKey \nfollowed by a "," coma\n\nMiddle mouse button is on by default`),
+        },
+    },
+    dropdownMenu: {
+        baseKey: BaseSetting(),
+        ddm_css_theme_input: {
+            baseKey: BaseInitSetting('', chk),
+            ct_opt: InlinePmt(`"dark" == "true" or "light" == "false"`),
         },
     },
     LogStatus: {
@@ -160,7 +171,6 @@ window.YT_GIF_SETTINGS_PAGE.Workflow.baseKey.string = `The ${Object.keys(window.
 // this looks like a bad idea...
 window.YT_GIF_DIRECT_SETTINGS = null;
 window.YT_GIF_SETTINGS_PAGE_INIT = async () => await init();
-
 
 
 async function init()
