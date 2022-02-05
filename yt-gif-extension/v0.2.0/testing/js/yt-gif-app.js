@@ -2845,9 +2845,9 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     // 5.0 timestamp recovery
     function SetUpTimestampRecovery(rm_container)
     {
-        if (!rm_container || rm_container?.hasAttribute('active-timestamp-observer'))
+        if (!rm_container || rm_container?.hasAttribute('timestamp-observer'))
             return;
-        rm_container.setAttribute('active-timestamp-observer', '');
+        rm_container.setAttribute('timestamp-observer', '');
         rm_container.addEventListener('customDelObsTimestmp', delObsTimestmp);
 
 
@@ -2990,12 +2990,12 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     {
         let added = [];
         let lastActive = [];
-
+        const rm_container = getCrrContainer();
 
         for (const record of mutationsList)
         {
             const t = record.target;
-            if (t == getCrrContainer())
+            if (t == rm_container || !underSameObs(t))
                 continue;
             if (record.type == "attributes")
             {
@@ -3018,6 +3018,13 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         function validArr(arr) { return arr.flat(Infinity).filter(x => !!x) }
 
         return { lastActive, added };
+
+        function underSameObs()
+        {
+            const rmAt = (el, attr) => closest_attr(el, attr).found;
+            return (el) => [rmAt(el, 'yt-gif-block-uid'), rmAt(el, 'yt-gif-anchor-container')]
+                .some(v => v == rm_container);
+        }
     }
     function NodesRecord(Nodes, attr, target)
     {
@@ -4614,6 +4621,11 @@ function closest_anchor_container(el)
     if (buid(rm) == yuid(anc(rm)))
         return anc(rm)
     return rm || yt
+}
+function closest_attr(el, attr)
+{
+    const found = el?.closest(`[${attr}]`);
+    return { found, value: found?.getAttribute(attr) }
 }
 function closest_container(el)
 {
