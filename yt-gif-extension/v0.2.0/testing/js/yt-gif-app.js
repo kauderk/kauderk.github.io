@@ -570,8 +570,8 @@ async function Ready()
     // 6.2 run timestampObserver
     // 6.3 registerKeyCombinations (keyupEventHanlder)
     //      6.3.1 addBlockTimestamps
-    toggleTimestampEmulation(simulate_roam_research_timestamps.checked);
-    simulate_roam_research_timestamps.addEventListener('change', (e) => toggleTimestampEmulation(e.currentTarget.checked));
+    await toggleTimestampEmulation(simulate_roam_research_timestamps.checked);
+    simulate_roam_research_timestamps.addEventListener('change', async (e) => toggleTimestampEmulation(e.currentTarget.checked));
     shortcuts_option.addEventListener('customChange', e => ToogleTimestampShortcuts(e.detail.currentValue));
     tm_workflow_display.addEventListener('change', e => ChangeTimestamapsDisplay(e.currentTarget.value));
 
@@ -1464,28 +1464,28 @@ async function Ready()
 
 
     //#region 6. Emulate slash menu & timestamps
-    function toggleTimestampEmulation(bol)
+    async function toggleTimestampEmulation(bol)
     {
         if (bol)
-            RunEmulation();
+            await RunEmulation();
         else
-            StopEmulation();
+            await StopEmulation();
 
         UTILS.toggleClasses(!bol, [`${cssData.dropdown__hidden}`], document.querySelector('.dropdown_timestamp-style'));
 
-        function RunEmulation()
+        async function RunEmulation()
         {
-            StopEmulation();
-            ToogleTimestampSetUp(true);
+            await StopEmulation();
+            await ToogleTimestampSetUp(true);
             ToogleTimestampShortcuts(shortcuts_option.selected);
         }
-        function StopEmulation()
+        async function StopEmulation()
         {
-            ToogleTimestampSetUp(false);
+            await ToogleTimestampSetUp(false);
             ToogleTimestampShortcuts(false);
         }
     }
-    function ToogleTimestampSetUp(bol)
+    async function ToogleTimestampSetUp(bol)
     {
         timestampObserver.disconnect();
 
@@ -1494,18 +1494,19 @@ async function Ready()
             const found = [];
             found.push(...targetNode.getElementsByClassName(timestampObj.start.targetClass));
             found.push(...targetNode.getElementsByClassName(timestampObj.end.targetClass));
-            cleanAndSetUp_TimestampEmulation(found);
+            await cleanAndSetUp_TimestampEmulation(found);
             timestampObserver.observe(targetNode, config);
         }
         else
         {
-            const foundToRemove = [...targetNode.querySelectorAll(`[${timestampObj.attr.emulation}]`)];
-            for (let i of foundToRemove)
+            const foundToRemove = [...targetNode.querySelectorAll(`[${timestampObj.attr.emulation}]`)]
+            for (const tm of foundToRemove)
             {
-                const key = i.getAttribute(timestampObj.attr.timestampStyle) || 'timestamp';
-                i.textContent = key;
-                i = UTILS.ChangeElementType(i, 'button');
-                i.className = timestampObj[key].buttonClass;
+                const key = tm.getAttribute(timestampObj.attr.timestampStyle) || 'timestamp';
+                let toReplace = tm.parentElement?.classList.contains('yt-gif-timestamp-parent') ? tm.parentElement : tm; // yikes
+                toReplace.innerHTML = key;
+                toReplace = UTILS.ChangeElementType(toReplace, 'button');
+                toReplace.className = timestampObj[key].buttonClass;
             }
             // already disconnected
         }
