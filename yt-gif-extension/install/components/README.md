@@ -15,11 +15,12 @@
 
 ### Once Imported
 It should resemble something like this:
-![image](https://user-images.githubusercontent.com/65237382/146626618-8a63c940-87c2-4cba-a696-72b7a4a5e9ac.png)
+![image](https://user-images.githubusercontent.com/65237382/152702650-c2ede2ed-ce4b-4729-8747-2933ce6187af.png)
 
 
 # **Workflow**
 1. Both the `shortcuts` and the `smartblocks` need to be enabled by the user:
-  - ![image](https://user-images.githubusercontent.com/65237382/147398858-96a06df3-982d-4893-91ff-2145ad0bc8b2.png) 
+  - Simulate Roam Timestamps > shortcuts
+  - Simulate Roam Timestamps > smartblocks
 2. Both the `shortcuts` and the `smartblocks` will output what you desire if you cast them under a `{{[[yt-gif]: }}` component block.
-![image](https://user-images.githubusercontent.com/65237382/147398656-9d6f5c07-e861-4087-8c2c-751d0025ecf6.png)
+  - ![image](https://user-images.githubusercontent.com/65237382/152702764-708a4644-7b5e-4d9a-b213-21beb611610f.png)
