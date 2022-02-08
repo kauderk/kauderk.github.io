@@ -51,13 +51,15 @@ YT GIF EXTENSION v0.2.0 {{[[roam/js]]}}
 
 
 ## Extra
-1. #### Watch [all the features in action](https://www.youtube.com/watch?v=O6zULK3w5Go&list=PLsUa74AKSzOpEQvDmzDHFNUHu5tgXap_I&index=8)
+1. #### 🎥 Watch [all the features in action](https://www.youtube.com/watch?v=O6zULK3w5Go&list=PLsUa74AKSzOpEQvDmzDHFNUHu5tgXap_I&index=1)
       - [![YT GIF - Showcase video](https://user-images.githubusercontent.com/65237382/152557440-bc172f73-91f7-4b8b-82c5-65ecd967c8b7.jpg)](https://www.youtube.com/watch?v=O6zULK3w5Go&list=PLsUa74AKSzOpEQvDmzDHFNUHu5tgXap_I&index=8) 
       - Or [skim through them in table form.](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension#features)
-2. #### They will inherit your graph's style, you can also [modify them](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/resources/css/themes)
+1. ### 🎥 Watch [a practical use of {{yt-gifs}}](https://www.youtube.com/watch?v=bKMop3MUIRU&list=PLsUa74AKSzOpEQvDmzDHFNUHu5tgXap_I&index=2) | Brainstorm ideas with YT GIFs | Roam Research
+      - [![ytg tut roam research brainstrom ideas on game design](https://user-images.githubusercontent.com/65237382/153094875-6574c0a3-de81-4369-8c33-6bc63d7ed7c2.jpg)](https://www.youtube.com/watch?v=bKMop3MUIRU&list=PLsUa74AKSzOpEQvDmzDHFNUHu5tgXap_I&index=2)
+1. #### They will inherit your graph's style, you can also [modify them](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/resources/css/themes)
       - ![Snag_ccb5385](https://user-images.githubusercontent.com/65237382/141852554-6689103e-1489-4cc2-a03b-b460b5f4427d.png)
 ![Snag_ccb5d2a](https://user-images.githubusercontent.com/65237382/141852562-2efd0f96-921a-44e3-99a9-c9a201789753.png) 
-3. #### [HERE ARE SOME DEMOS AND USE CASES](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/DEMOS#my-use-cases)
+1. #### [HERE ARE SOME DEMOS AND USE CASES](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/DEMOS#my-use-cases)
 
 # Update
 Whitin your `roam/js/kauderk/yt-gif/settings` page :D
