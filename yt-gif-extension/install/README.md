@@ -7,7 +7,10 @@
 #### Keep in mind
   - The brand new installation might take some time.
   - Uninstall/disable previous versions, else untested code will be overwritten.
-  - ![YT GIF Extension v0 2 0 cleaner c2](https://user-images.githubusercontent.com/65237382/141890136-27b41d51-ff22-430d-aa21-94b3162fe406.gif)
+
+https://user-images.githubusercontent.com/65237382/153699100-3cb2cd87-31a8-440a-ae48-fada9eca0934.mp4 
+##### [.gif file in case the video is down](https://user-images.githubusercontent.com/65237382/141890136-27b41d51-ff22-430d-aa21-94b3162fe406.gif)
+
 ---
 # [This is how it should look like](https://user-images.githubusercontent.com/65237382/152562479-07b0ce90-c6fc-4cd5-8bd1-b665fcbc590c.png)
 
