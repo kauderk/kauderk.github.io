@@ -3729,15 +3729,11 @@ async function onPlayerReady(event)
     // timeDisplay
     function ContinuouslyUpdateTimeDisplay()
     {
-        //🙋 this is too uggly
-        if (document.querySelector('#' + key) == null)
-        {
-            t.__proto__.enter = () => { };
-            t.destroy();
-            return;
-        }
+        if (!isRendered(iframe))
+            return destroyTarget(t);
 
-        if (!isThereAnyTimeDisplayInteraction()) return;
+        if (!isThereAnyTimeDisplayInteraction())
+            return;
 
         ClearTimers();
         UpdateTimeDisplay();
@@ -4019,7 +4015,7 @@ async function onPlayerReady(event)
         function stopIfInactive()
         {
             if (
-                !parent.hasAttribute('yt-active') ||
+                !isActive() ||
                 !isSelected(UI.playerSettings.ps_options, 'mantain_last_active_player')
             )
                 return togglePlay(false)
@@ -4094,7 +4090,13 @@ async function onPlayerReady(event)
         if (!t.__proto__.changedVolumeOnce)
         {
             t.__proto__.changedVolumeOnce = true;
-            t.setVolume(t.__proto__.newVol);
+            try
+            {
+                t.setVolume(t.__proto__.newVol);
+            } catch (error)
+            {
+                console.log(error);
+            }
         }
     }
     //#endregion
@@ -4201,7 +4203,11 @@ async function onPlayerReady(event)
         const is = play.value == v;
         return is// && !getOption(play, v).disabled;
     }
-    //#endregion, v
+    function isActive()
+    {
+        return parent?.hasAttribute?.('yt-active')
+    }
+    //#endregion
 
 
     //#region hover/interactions utils
@@ -4259,10 +4265,16 @@ async function onStateChange(state)
 {
     const t = state.target;
     const map = allVideoParameters.get(t.h.id);
+    const iframe = t.getIframe();
+
+
+    if (!isRendered(iframe))
+        return destroyTarget(t);
+
 
     if (state.data === YT.PlayerState.ENDED)
     {
-        t.getIframe()?.closest('.yt-gif-wrapper')?.dispatchEvent(new CustomEvent('customVideoEnded'));
+        iframe?.closest('.yt-gif-wrapper')?.dispatchEvent(new CustomEvent('customVideoEnded'));
 
         if (UI.timestamps.tm_loop_hierarchy.value != 'disabled')
         {
@@ -4641,6 +4653,13 @@ function properBlockIDSufix(url, urlIndex)
 function isRendered(el)
 {
     return document.body.contains(el);
+}
+function destroyTarget(t)
+{
+    //🙋 this is too uggly
+    if (!t) return;
+    t.__proto__.enter = () => { };
+    t.destroy();
 }
 //#endregion
 
