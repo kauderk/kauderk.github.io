@@ -3381,7 +3381,7 @@ async function onPlayerReady(event)
             t.__proto__.previousTick = null;
         }
         RunWithPreviousParamsONiframeLoad(); // The YT API reloads the iframe onload, it disorients the users, this a counter-measurement
-        HumanInteraction_FreezeAutoplay();
+        await HumanInteraction_FreezeAutoplay();
         return;
     }
 
@@ -3489,7 +3489,7 @@ async function onPlayerReady(event)
     else
     {
         // pause if user doesn't intents to watch
-        HumanInteraction_FreezeAutoplay(); // this being the last one, does matter
+        await HumanInteraction_FreezeAutoplay(); // this being the last one, does matter
     }
 
 
@@ -4038,11 +4038,13 @@ async function onPlayerReady(event)
 
 
     //#region 11. last - let me watch would you
-    function HumanInteraction_FreezeAutoplay()
+    async function HumanInteraction_FreezeAutoplay()
     {
         const autoplayParent = iframe.closest('.rm-alias-tooltip__content') || //tooltip
             iframe.closest('.bp3-card') || //card
             iframe.closest('.myPortal'); //myPortal
+
+        const playing = (bol) => videoIsPlayingWithSound(bol);
 
         if (autoplayParent) //simulate hover
         {
@@ -4057,36 +4059,30 @@ async function onPlayerReady(event)
         }
         else if (isParentHover()) // human wants to hear and watch
         {
-            videoIsPlayingWithSound(true);
+            playing(true);
+            setTimeout(() =>
+            {
+                if (!isActive() && !isParentHover())
+                    playing(false);
+            }, 1000);
         }
         else //Freeze
         {
-            const OneFrame = setInterval(() =>
+            while (isRendered(iframe) && !t?.getCurrentTime?.())
+                await RAP.sleep(200);
+
+            // or if mouse is inside parent
+            if (t.__proto__.globalHumanInteraction) // user wants to listen, don't interrupt
+                playing(true);
+            else if (UTILS.isElementVisible(iframe) && !t.__proto__.globalHumanInteraction)
             {
-                if (tick() > updateStartTime + loadingMarginOfError)
-                {
-                    // or if mouse is inside parent
-                    if (t.__proto__.globalHumanInteraction) // user wants to listen, don't interrupt
-                    {
-                        videoIsPlayingWithSound(true);
-                    }
-                    else if (UTILS.isElementVisible(iframe) && !t.__proto__.globalHumanInteraction)
-                    {
-                        togglePlay(playIs('all_visible')); // pause?
-                    }
-                    else if (!isParentHover())
-                    {
-                        togglePlay(false); // pause
-                    }
-
-                    if (!isParentHover() && (t.getPlayerState() === 1)) // if mouse is outside parent and video is playing
-                    {
-                        togglePlay(false); // FREEZE!!!
-                    }
-
-                    clearInterval(OneFrame);
-                }
-            }, 200);
+                const bol = playIs('all_visible');
+                playing(bol); // pause?
+                if (bol && !isParentHover() && (t.getPlayerState() === 1)) // if mouse is outside parent and video is playing
+                    playing(false); // FREEZE!!!
+            }
+            else if (!isParentHover())
+                playing(false); // pause
         }
     }
     //#endregion
