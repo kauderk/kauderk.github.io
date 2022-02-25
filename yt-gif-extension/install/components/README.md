@@ -15,7 +15,30 @@
 
 ### Once Imported
 It should resemble something like this:
-![image](https://user-images.githubusercontent.com/65237382/152702650-c2ede2ed-ce4b-4729-8747-2933ce6187af.png)
+![image](https://user-images.githubusercontent.com/65237382/155749762-7315d240-6092-4f7f-ab02-0708f94fbc2b.png)
+
+- 
+    ``` 
+    #SmartBlock YTGIF start timestamp 
+    ```
+    -   ``` 
+        const obj = await window.YTGIF?.getTimestampObj?.("start");
+        const select = UI?.select?.timestamp_workflow_grab?.value;
+        return obj?.[select]?.fmt ?? ''; 
+        ```
+- 
+    ``` 
+    #SmartBlock YTGIF end timestamp 
+    ```
+    -   ``` 
+        const obj = await window.YTGIF?.getTimestampObj?.("start");
+        const select = UI?.select?.timestamp_workflow_grab?.value;
+        return obj?.[select]?.fmt ?? ''; 
+        ```
+
+
+
+---
 
 
 # **Workflow**
