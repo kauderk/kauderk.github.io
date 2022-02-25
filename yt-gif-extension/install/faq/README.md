@@ -70,21 +70,21 @@ They can vary depending on the `Play Style` or `Sound Style` you choose.
 
     - 
         ``` 
-        #42SmartBlock YTGIF start timestamp 
+        #SmartBlock YTGIF start timestamp 
         ```
         -   ``` 
             const obj = await window.YTGIF?.getTimestampObj?.("start");
-            const select = UI?.select?.timestamp_workflow_grab?.value;
-            return obj?.[select]?.fmt ?? ''; 
+            const select = UI?.timestamps?.tm_workflow_grab?.value;
+            return obj?.[select]?.fmt ?? '';
             ```
     - 
         ``` 
-        #42SmartBlock YTGIF end timestamp 
+        #SmartBlock YTGIF end timestamp 
         ```
         -   ``` 
-            const obj = await window.YTGIF?.getTimestampObj?.("start");
-            const select = UI?.select?.timestamp_workflow_grab?.value;
-            return obj?.[select]?.fmt ?? ''; 
+            const obj = await window.YTGIF?.getTimestampObj?.("end");
+            const select = UI?.timestamps?.tm_workflow_grab?.value;
+            return obj?.[select]?.fmt ?? '';
             ```
 
 
