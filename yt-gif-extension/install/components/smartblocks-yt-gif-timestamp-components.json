@@ -7,13 +7,13 @@
         },
         "children": [
             {
-                "edit-time": 1639794089585,
+                "edit-time": 1645807250536,
                 "children": [
                     {
-                        "string": "<%JA:```javascript\nconst obj = await window.YTGIF?.getTimestampObj?.(\"start\");\nconst select = UI?.select?.timestamp_workflow_grab?.value;\nreturn obj?.[select]?.fmt ?? '';```%>",
-                        "create-time": 1639730540368,
+                        "string": "<%JA:```javascript\nconst obj = await window.YTGIF?.getTimestampObj?.(\"start\");\nconst select = UI?.timestamps?.tm_workflow_grab?.value;\nreturn obj?.[select]?.fmt ?? '';```%>",
                         "uid": "4FkQaNVBP",
-                        "edit-time": 1641559952147,
+                        "create-time": 1639730540368,
+                        "edit-time": 1645807245080,
                         ":create/user": {
                             ":user/uid": "HO1iZa5FjjQw6q3hLDx2bOSJewJ2"
                         },
@@ -24,32 +24,32 @@
                 ],
                 "refs": [
                     {
-                        "uid": "Ms9z4jEq9"
+                        "uid": "U5i26hdV_"
                     }
                 ],
-                "uid": "fBC0TjR9P",
+                "uid": "a3xiisTfh",
                 ":block/refs": [
                     {
-                        ":block/uid": "Ms9z4jEq9"
+                        ":block/uid": "U5i26hdV_"
                     }
                 ],
-                "string": "#42SmartBlock YTGIF start timestamp",
+                "string": "#SmartBlock YTGIF start timestamp",
                 ":create/user": {
                     ":user/uid": "HO1iZa5FjjQw6q3hLDx2bOSJewJ2"
                 },
-                "create-time": 1639794047104,
+                "create-time": 1639793367955,
                 ":edit/user": {
                     ":user/uid": "HO1iZa5FjjQw6q3hLDx2bOSJewJ2"
                 }
             },
             {
-                "edit-time": 1639732110284,
+                "edit-time": 1645808613583,
                 "children": [
                     {
-                        "string": "<%JA:```javascript\nconst obj = await window.YTGIF?.getTimestampObj?.(\"end\");\nconst select = UI?.select?.timestamp_workflow_grab?.value;\nreturn obj?.[select]?.fmt ?? '';```%>",
-                        "create-time": 1639730577119,
+                        "string": "<%JA:```javascript\nconst obj = await window.YTGIF?.getTimestampObj?.(\"end\");\nconst select = UI?.timestamps?.tm_workflow_grab?.value;\nreturn obj?.[select]?.fmt ?? '';```%>",
                         "uid": "DYsYiyT01",
-                        "edit-time": 1641559960228,
+                        "create-time": 1639730577119,
+                        "edit-time": 1645808621215,
                         ":create/user": {
                             ":user/uid": "HO1iZa5FjjQw6q3hLDx2bOSJewJ2"
                         },
@@ -60,16 +60,16 @@
                 ],
                 "refs": [
                     {
-                        "uid": "Ms9z4jEq9"
+                        "uid": "U5i26hdV_"
                     }
                 ],
                 "uid": "VpWt7GIcD",
                 ":block/refs": [
                     {
-                        ":block/uid": "Ms9z4jEq9"
+                        ":block/uid": "U5i26hdV_"
                     }
                 ],
-                "string": "#42SmartBlock YTGIF end timestamp",
+                "string": "#SmartBlock YTGIF end timestamp",
                 ":create/user": {
                     ":user/uid": "HO1iZa5FjjQw6q3hLDx2bOSJewJ2"
                 },
