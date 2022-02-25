@@ -120,7 +120,7 @@ Customize each YT GIF, even multiple ones within the same block
 - Well, they are centered at the bottom, and they appear once I hover over them. It's easier on the eyes, if you know where/what to look for, you don't know need see them all the time.
 - [You can follow these steps...](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/resources/css/Beautiful%20YT%20iframe%20controls)
     - yt-gif icon > Miscellaneous > (top left corner, tutorial drop down menu) > 🎥 [Video Controls video tutorial](https://youtu.be/1ABtb346pc0)
-        - shows you how it would look like
+        - shows you what it looks like
 
 
 
