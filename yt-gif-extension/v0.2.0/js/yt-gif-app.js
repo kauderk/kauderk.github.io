@@ -2141,19 +2141,16 @@ async function Ready()
     // 6.3
     async function registerKeyCombinations(e)
     {
-        if (e['ctrlKey'] && e['altKey']) 
-        {
-            let pageRefSufx = null;
-            if (e.key == 's') // Ctrl + Alt + s
-            {
-                pageRefSufx = 'start'
-            }
-            else if (e.key == 'd') // Ctrl + Alt + d
-            {
-                pageRefSufx = 'end'
-            }
-            await addBlockTimestamp_smart_local(pageRefSufx);
-        }
+        if (!((e.ctrlKey || e.metaKey) && e.altKey))
+            return;
+
+        let pageRefSufx = null;
+        if (e.key == 's') // Ctrl + Alt + s
+            pageRefSufx = 'start'
+        else if (e.key == 'd') // Ctrl + Alt + d
+            pageRefSufx = 'end'
+
+        await addBlockTimestamp_smart_local(pageRefSufx);
     }
     // 6.3.1
     async function addBlockTimestamp_smart_local(pageRefSufx)
