@@ -160,6 +160,7 @@ YT GIF's Url Buttons will try to find the one the user requested (clicked on).
     - Within your graph, search `simulate_url_to_video_component` under your `roam/js/kauderk/yt-gif/settings` page.
 
 ### How do I use it?
+- ##### yt-gif icon > Miscellaneous > (top left corner, tutorial drop down menu) > 🎥 [URL Formatter video tutorial](https://youtu.be/1ABtb346pc0) 
 - With the simulation running `YT GIF Icon > Miscellaneous > Simulate url button to video component`
 - Create blocks and paste urls such as this one `https://www.youtube.com/watch?v=loK7BWFdwlc`
 - Hover over the play ▶️ button next to the url
