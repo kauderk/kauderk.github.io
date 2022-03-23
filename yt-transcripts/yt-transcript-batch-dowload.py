@@ -50,7 +50,7 @@ def slugify(value, allow_unicode=False):
     return re.sub(r'[-\s]+', ' ', value)  # changed
 
 
-def tryto_write_transcript(url, path_prefix=''):
+def tryto_write_transcript(url, path_prefix='./'):
     """
     Download the transcript from a youtube video.
     Write it to a file with some metadata on the header.
@@ -99,6 +99,6 @@ channel_name = slugify(yt.owner)
 playlist_name = slugify(yt.title)
 for url in tqdm(yt):
     count += 1
-    # empty string, I want the output on this directory
+    # remove the path_prefix argument, I want the output on this directory
     path_prefix = f'./trasncripts-output/{channel_name}/{playlist_name}/{count}_'
     tryto_write_transcript(url, path_prefix)
