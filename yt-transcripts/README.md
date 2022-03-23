@@ -12,8 +12,9 @@ So far, API-KEY is not required.
     - place the script on a folder
     - open visual studio code
         - you might need to install the dependencies `py install ...`
-    - open the terminal and run
-        - `python yt-transcript-batch-dowload.py`
+    - open the terminal and go to the folder directory
+        - `cd C:{this-folder-path}`
+    - run it `python yt-transcript-batch-dowload.py`
 
 ## How I use it:
 - Change the variable `output_file_type` to `md` (markdown)
