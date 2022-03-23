@@ -11,13 +11,13 @@ So far, API-KEY is not required.
 
 ## How I use it:
 - Change the variable `output_file_type` to `md` (markdown)
-    - Run the script 
-- Go to https://logseq.com/#/
-    - Open the `/{playlist_name}` folder
-    - Export Graph > Export as Roam JSON
+- Run the script
 - Go to https://roamresearch.com/#/app/
-    - Import the JSON file
-    - Create keyword pages and LINK ALL UNLINKED REFERENCES
+- On top right corner, click on *Import Files* **· · ·** > Browse
+    - Go to the `/{playlist_name}` folder
+    - Select all the `.md` transcripts
+    - Import
+- Create keyword pages and LINK ALL UNLINKED REFERENCES
 
 ## What problems does it solve?
 Saving time. You might have a phrase stuck in your head, but you don't rememeber from which video you heard it, so... Instead of watching hours upon hours, just download the transcripts and search for the phrase.
