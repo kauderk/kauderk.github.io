@@ -1,3 +1,10 @@
 # work in progress
 #/yt-gif-extension/version-0.1
 #/yt-gif-extension/version-0.2
+
+# for yt-transcripts folder
+*transcript*.txt
+*transcript*.md
+*roam*.json
+/obsidian-youtube-transcript-search
+/venv
