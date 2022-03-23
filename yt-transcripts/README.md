@@ -5,7 +5,7 @@ So far, API-KEY is not required.
 ##### [github file](https://github.com/kauderk/kauderk.github.io/blob/main/yt-transcripts/yt-transcript-batch-dowload.py)
 
 ## How It works:
-- Input a `playlist_id` and run the script. It will download all the videos in the playlist to:
+- Input a `playlist_id` and run the script. It will download all the **available transcripts** in the playlist to:
     - `./trasncripts-output/{channel_name}/{playlist_name}/{unique-file-name}.txt`
 - You could also use the funcion `tryto_write_transcript(url)` by itself, you'll need to comment out the `for` loop. at the end.
 
