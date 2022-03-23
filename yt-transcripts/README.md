@@ -20,5 +20,5 @@ So far, API-KEY is not required.
 Saving time. You might have a phrase stuck in your head, you don't rememeber in which video you heard it, so... Instead of watching hours upon hours, just download the transcripts and search for the phrase.
 
 ## Extra Tools
-    - https://windowsloop.com/bulk-rename-file-extension/
-        - `for /R %x in (*.txt) do ren "%x" *.md` rename all .txt files to .md or vice versa 
+- https://windowsloop.com/bulk-rename-file-extension/
+    - `for /R %x in (*.txt) do ren "%x" *.md` rename all .txt files to .md or vice versa 
