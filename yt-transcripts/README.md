@@ -20,7 +20,7 @@ So far, API-KEY is not required.
 - Create keyword pages and LINK ALL UNLINKED REFERENCES
 
 ## What problems does it solve?
-Saving time. You might have a phrase stuck in your head, but you don't rememeber from which video you heard it, so... Instead of watching hours upon hours, just download the transcripts and search for the phrase.
+Saving time. You might have a phrase stuck in your head, but you don't remember from which video you heard it, so... Instead of watching hours upon hours, just download the transcripts and search for the phrase.
 
 ## Extra Tools
 - https://codetryout.com/vscode-save-terminal-output/
