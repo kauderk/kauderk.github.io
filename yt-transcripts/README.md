@@ -8,6 +8,7 @@ So far, API-KEY is not required.
 - Input a `playlist_id` and run the script. It will download all the **available transcripts** in the playlist to:
     - `./trasncripts-output/{channel_name}/{playlist_name}/{unique-file-name}.txt`
 - You could also use the funcion `tryto_write_transcript(url)` by itself, you'll need to comment out the `for` loop. at the end.
+- So far, I've only run it and test it on an enviroment (vs-code)
 
 ## How I use it:
 - Change the variable `output_file_type` to `md` (markdown)
