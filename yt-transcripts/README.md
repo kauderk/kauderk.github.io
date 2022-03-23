@@ -1,6 +1,9 @@
 # YouTube Transcript Batch Downloader
 So far, API-KEY is not required.
 
+📄 https://kauderk.github.io/yt-transcripts/yt-transcript-batch-dowload.py
+##### [github file](https://github.com/kauderk/kauderk.github.io/blob/main/yt-transcripts/yt-transcript-batch-dowload.py)
+
 ## How It works:
 - Input a `playlist_id` and run the script. It will download all the videos in the playlist to:
     - `./trasncripts-output/{channel_name}/{playlist_name}/{unique-file-name}.txt`
@@ -20,5 +23,8 @@ So far, API-KEY is not required.
 Saving time. You might have a phrase stuck in your head, you don't rememeber in which video you heard it, so... Instead of watching hours upon hours, just download the transcripts and search for the phrase.
 
 ## Extra Tools
+- https://codetryout.com/vscode-save-terminal-output/
+    - By saving it, you have the success/failure ratio, the percentage bar (build in) plus the exact `video-id` shows what went wrong. In my experience 10% of videos don't have a transcript.
 - https://windowsloop.com/bulk-rename-file-extension/
     - `for /R %x in (*.txt) do ren "%x" *.md` rename all .txt files to .md or vice versa 
+- Referece for the `target_language` variable [ISO 639-1 two-letter language code](http://www.loc.gov/standards/iso639-2/php/code_list.php)
