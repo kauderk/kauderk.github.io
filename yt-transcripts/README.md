@@ -9,6 +9,11 @@ So far, API-KEY is not required.
     - `./trasncripts-output/{channel_name}/{playlist_name}/{unique-file-name}.txt`
 - You could also use the funcion `tryto_write_transcript(url)` by itself, you'll need to comment out the `for` loop. at the end.
 - So far, I've only run it and test it on an enviroment (vs-code)
+    - place the script on a folder
+    - open visual studio code
+        - you might need to install the dependencies `py install ...`
+    - open the terminal and run
+        - `python yt-transcript-batch-dowload.py`
 
 ## How I use it:
 - Change the variable `output_file_type` to `md` (markdown)
