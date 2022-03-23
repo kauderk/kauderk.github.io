@@ -11,23 +11,16 @@
 
 
 # How do i use it?
-- Core funcionality: while exiting the frame, hold down the middle mouse button ("InAndOutKeys") to unmute videos
-
-| [URL parameters](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#what-are-url-parameters-how-do-i-use-them) |                          |                                           |
-|----------------|--------------------------|-------------------------------------------|
-| ?t=            | start timestamp boundary | get the most out the extension - optional |
-| &end=          | end timestamp boundary   | get the most out the extension - optional |
-| &s=            | playback speed up to 2   | optional                                  |
-| &vl=           | volume form 0 to 100     | optional                                  |
-
-- Create `{{[[yt-gif]]}}` components
+- Main funcionality: while exiting the frame, hold down the middle mouse button ("InAndOutKeys") to unmute videos
+- Create `{{[[yt-gif]]}}` components with [url parameters](https://github.com/kauderk/kauderk.github.io/edit/main/yt-gif-extension/install/faq/README.md#what-are-the-url-parameters-how-do-i-use-them)
     - {{[[yt-gif]]: https://youtu.be/sFFwvr6l2mM?t=60&end=120 }}
 - Or simply paste a `YouTube url` and format it with [Simulate url button to video component](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#simulate-url-button-to-video-component) enabled.
-    - https://youtu.be/sFFwvr6l2mM?t=60 
+    - ##### yt-gif icon > Miscellaneous > (top left corner, tutorial drop down menu) > 🎥 [URL Formatter video tutorial](https://youtu.be/1ABtb346pc0) 
 
 
 ---
 ### What are "InAndOutKeys"?
+- ##### yt-gif icon > (bottom icons) Show Info > (bottom left corner, tutorial drop down menu) > 🎥 [InAndOutKeys video tutorial](https://youtu.be/sCC-QXRdcOc)
 - **While you exit** a frame/iframe/player/playbox/YTGIF **HOLD DOWN** either Alt - Ctrl - Shift or the Middle Mouse Button to unmute and or keep playing the video.
 They can vary depending on the `Play Style` or `Sound Style` you choose.
     - Search `: InAndOutKeys` within your graph and [enable the ones you'd like to use](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/install/faq/README.md#i-change-the-values-but-nothing-happens).
@@ -167,6 +160,7 @@ YT GIF's Url Buttons will try to find the one the user requested (clicked on).
     - Within your graph, search `simulate_url_to_video_component` under your `roam/js/kauderk/yt-gif/settings` page.
 
 ### How do I use it?
+- ##### yt-gif icon > Miscellaneous > (top left corner, tutorial drop down menu) > 🎥 [URL Formatter video tutorial](https://youtu.be/1ABtb346pc0) 
 - With the simulation running `YT GIF Icon > Miscellaneous > Simulate url button to video component`
 - Create blocks and paste urls such as this one `https://www.youtube.com/watch?v=loK7BWFdwlc`
 - Hover over the play ▶️ button next to the url
@@ -223,7 +217,21 @@ In this case, youtube video urls, `https://youtu.be/videoID?` notice the `?` que
 But after any of them you'd like to use - **every single one must be chained** with a `&` before the actual parameter, like `&t=` start or `&end` end.
 Now, most YTGIFs users are used to `https://youtu.be/videoID?t=0&end=100` for example. Starting form there, YT GIF supports additional parameters like `&s=` speed, ` &vl=` volume and [more...](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install#:~:text=Customize%20each%20YT%20GIF%2C%20even%20multiple%20ones%20within%20the%20same%20block)
 
+- URL parameters Table
 
+| [URL parameters](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#what-are-url-parameters-how-do-i-use-them) |                          |                                           |
+|----------------|--------------------------|-------------------------------------------|
+| ?t=            | start timestamp boundary | get the most out the extension - optional |
+| &end=          | end timestamp boundary   | get the most out the extension - optional |
+| &s=            | playback speed up to 2   | optional                                  |
+| &vl=           | volume form 0 to 100     | optional                                  |
+
+
+---
+
+---
+
+---
 
 
 > I can't find what I'm looking for.
