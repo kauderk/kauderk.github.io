@@ -1,8 +1,8 @@
 # YouTube Transcript Batch Downloader
 So far, API-KEY is not required.
 
-📄 https://kauderk.github.io/yt-transcripts/yt-transcript-batch-dowload.py
-##### [github file](https://github.com/kauderk/kauderk.github.io/blob/main/yt-transcripts/yt-transcript-batch-dowload.py)
+📄 https://kauderk.github.io/yt-transcripts/yt-transcript-batch-downloader.py
+##### [github file](https://github.com/kauderk/kauderk.github.io/blob/main/yt-transcripts/yt-transcript-batch-downloader.py)
 
 ## How It works:
 - Input a `playlist_id` and run the script. It will download all the **available transcripts** in the playlist to:
@@ -14,7 +14,7 @@ So far, API-KEY is not required.
         - you might need to install the dependencies `py install ...`
     - open the terminal and go to the folder directory
         - `cd C:{this-folder-path}`
-    - run it `python yt-transcript-batch-dowload.py`
+    - run it `python yt-transcript-batch-downloader.py`
 
 ## How I use it:
 - Change the variable `output_file_type` to `md` (markdown)
