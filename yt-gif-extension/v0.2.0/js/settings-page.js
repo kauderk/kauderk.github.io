@@ -1,4 +1,4 @@
-// version 4 - semi-refactored
+// version 5 - semi-refactored
 const TARGET_PAGE = 'roam/js/kauderk/yt-gif/settings';
 const UTIL_K = window.kauderk.util;
 const RAP = window.kauderk.rap;
@@ -182,6 +182,8 @@ async function init()
     {
         TARGET_UID = await RAP.getOrCreatePageUid(TARGET_PAGE); //navigateToUiOrCreate : getOrCreatePageUid
         const addedBlocks = await addAllMissingBlocks(); // 🐌
+        await RAP.SetNumberedViewWithUid(TARGET_UID);
+        await RAP.CollapseDirectcChildren(TARGET_UID, false);
     }
     else // Read and store Session Values
     {
@@ -190,15 +192,13 @@ async function init()
         const addedBlocks = await addAllMissingBlocks(); // 🐌 // THEY WILL STACK UP AGAINS EACHOTHER IF THEY ARE NOT EXAMINED - careful, bud
         for (const cb_closure of FinishRec_thenDisplace_cbArr) await cb_closure();
     }
-    await RAP.SetNumberedViewWithUid(TARGET_UID);
-    await RAP.CollapseDirectcChildren(TARGET_UID, false);
 }
 
 //#region HIDDEN FUNCTIONS
 async function assignChildrenMissingValues()
 {
     // 0.
-    let = keyObjMap = new Map(); // acc inside the Rec_func
+    let keyObjMap = new Map(); // acc inside the Rec_func
     const passAccObj = {
         accStr: '',
         nextStr: '',
@@ -322,19 +322,19 @@ async function Read_Write_SettingsPage(UID, keyObjMap = new Map())
 
 
     // ♾️ 🧱🧱🧱
-    async function Rec_Read_Write_SettingsPage(nextChildObj, accObj)
+    async function Rec_Read_Write_SettingsPage(blockInfo, accObj)
     {
         // 0.
+        const nextStr = blockInfo.string || blockInfo.title || '';
         let { accStr } = accObj;
         let parentState = {
             displaced: false, // can loop throughout its children
             overrideKey: null,
         }
 
-        const { nextUID, keyFromLevel0, selfOrder } = accObj;
-        const { tab, nextStr, indent, parentUid } = await RelativeChildInfo(nextChildObj); // var from obj .1
-        const { uid, key, value, caputuredValue, caputureValueOk, splitedStrArr, join } = getKeywordsFromBlockString(nextStr); // var from obj .2
-
+        const { keyFromLevel0 } = accObj;
+        const { uid, key, value, caputuredValue, caputureValueOk, splitedStrArr, join } = getKeywordsFromBlockString(nextStr); // var from obj .1
+        const { tab, indent, parentUid } = await RelativeChildInfo(blockInfo); // var from obj .2
         const { succesful, outKey, outUid } = await SettingsBlockReading(); // main logic
 
         // 1.
@@ -351,11 +351,10 @@ async function Read_Write_SettingsPage(UID, keyObjMap = new Map())
         }
 
 
-        // 2.
-        if (nextChildObj.children)
+        // 2. continue recursion if there are nested roam blocks
+        if (blockInfo.children)
         {
-            const object = await RAP.getBlockInfoByUIDM(nextChildObj.uid, true);
-            const children = RAP.sortObjectsByOrder(object[0][0].children);
+            const children = blockInfo.children;
 
             // 3. rec
             for (const child of children)
@@ -363,7 +362,7 @@ async function Read_Write_SettingsPage(UID, keyObjMap = new Map())
                 const nextAccObj = {
                     accStr: accStr,
                     nextUID: uid,
-                    keyFromLevel0: nextChildObj.overrideKey || key || TARGET_PAGE, // well well well - the page can't be avoided, can it?
+                    keyFromLevel0: blockInfo.overrideKey || key || TARGET_PAGE, // well well well - the page can't be avoided, can it?
                     selfOrder: child.order,
                     parentState: parentState,
                     RoamObj: child,
@@ -380,21 +379,6 @@ async function Read_Write_SettingsPage(UID, keyObjMap = new Map())
 
 
         // var from obj .1
-        async function RelativeChildInfo(obj)
-        {
-            const nextStr = obj.string || obj.title || '';
-            const parentsHierarchy = await RAP.getBlockParentUids(obj.uid);
-            let nestLevel = parentsHierarchy.length;
-            let tab = '\t';
-            return {
-                tab: tab.repeat(nestLevel),
-                nextStr,
-                indent: nestLevel,
-                parentUid: (parentsHierarchy[0])
-                    ? parentsHierarchy[0][0]?.uid : TARGET_UID, // if undefined - most defenetly it's the direct child (level 0) of page
-            }
-        }
-        // var from obj .2
         function getKeywordsFromBlockString(nextStr)
         {
             const rgxUid = new RegExp(/\(([^\)]+)\)/, 'gm'); //(XXXXXXXX)
@@ -443,7 +427,43 @@ async function Read_Write_SettingsPage(UID, keyObjMap = new Map())
                 return (match.length > 0) ? match[0] : fmtSplit; // filter first match or default
             }
         }
+        // var from obj .2
+        async function RelativeChildInfo(obj)
+        {
+            const tab = '\t';
+            let indent, parentUid;
+
+            if (keyObjMap.has(key)) // tryto get existing setting, from assignChildrenMissingValues()
+            {
+                const searchBlock = keyObjMap.get(key);
+                indent = searchBlock.indent;
+                if (keyObjMap.has(searchBlock.parentKey))
+                    parentUid = keyObjMap.get(searchBlock.parentKey).uid;
+                else
+                    await getRelativeInfoAsync();
+            }
+
+            if (!parentUid)
+                await getRelativeInfoAsync();
+
+            return {
+                tab: tab.repeat(indent),
+                indent, parentUid
+            }
+
+            async function getRelativeInfoAsync()
+            {
+                const parentsHierarchy = await RAP.getBlockParentUids(obj.uid);
+                indent = parentsHierarchy.length;
+                parentUid = (parentsHierarchy[0])
+                    ? parentsHierarchy[0][0]?.uid : TARGET_UID; // if undefined - most defenetly it's the direct child (level 0) of page
+            }
+        }
+
+
         /* ********************************************* */
+
+
         // main logic
         async function SettingsBlockReading()
         {
@@ -451,7 +471,7 @@ async function Read_Write_SettingsPage(UID, keyObjMap = new Map())
             let returnObj = {
                 succesful: false,
                 outKey: key,
-                outUid: nextChildObj.uid,
+                outUid: blockInfo.uid,
             }
 
             // 1.1
@@ -463,14 +483,14 @@ async function Read_Write_SettingsPage(UID, keyObjMap = new Map())
                     const n_string = await UpdateRoamBlock_Settings(invalidKey);
                     debugger;
                     //accObj.RoamObj.string = n_string;
-                    nextChildObj.string = n_string;
+                    blockInfo.string = n_string;
                     parentState.overrideKey = invalidKey; // it's facinating that this value will be lost in the recursion void - my understanding is that I can't grasp this shit... but attaching the value to a Rec_Fuc param as it's property... THAT! that will do the job... Facinating stuff indeed...
-                    nextChildObj.overrideKey = invalidKey;
+                    blockInfo.overrideKey = invalidKey;
 
                     return returnObj = {
                         succesful: false,
                         outKey: invalidKey,
-                        outUid: nextChildObj.uid,
+                        outUid: blockInfo.uid,
                     };
                 }
             }
@@ -521,8 +541,8 @@ async function Read_Write_SettingsPage(UID, keyObjMap = new Map())
             //1.2.1
             async function validateBlockUid(caputuredUID)
             {
-                const uidOk = (caputuredUID == nextChildObj.uid); // kinda redundant
-                const v_uid = (uidOk) ? caputuredUID : nextChildObj.uid; // : nextUID;
+                const uidOk = (caputuredUID == blockInfo.uid); // kinda redundant
+                const v_uid = (uidOk) ? caputuredUID : blockInfo.uid; // : nextUID;
                 return {
                     uidOk,
                     v_uid,
@@ -543,14 +563,14 @@ async function Read_Write_SettingsPage(UID, keyObjMap = new Map())
                         debugger;
                         /* 
                         If you are running this script twice in the same session
-                            you will get an error here,
-                            But you were to ...
-                            window.YT_GIF_DIRECT_SETTINGS = null
-                            then you can run the script again
-                            Keep in mind, the script is ment to be executed once PER SESSION
-                        But If you get this error on startup,
-                            Then it is a FATAL ERROR, please report it to the developer
-                            https://github.com/kauderk/kauderk.github.io/issues
+                            - you will get an error here,
+                              But if you write this command on the console...
+                                window.YT_GIF_DIRECT_SETTINGS = null
+                              then you can run the script again
+                            - Keep in mind, the script is ment to be executed once PER SESSION
+                              But If you get this error on startup,
+                              Then it is a FATAL ERROR, please report it to the developer
+                                https://github.com/kauderk/kauderk.github.io/issues
                         */
                         throw new Error(`YT GIF Settings Page: STOP! the string is invalid or was already set...`);
                     }
@@ -565,7 +585,7 @@ async function Read_Write_SettingsPage(UID, keyObjMap = new Map())
             }
 
             // 1.1  - 1.2.2
-            async function UpdateRoamBlock_Settings(newKey, newString, newUid = nextChildObj.uid)
+            async function UpdateRoamBlock_Settings(newKey, newString, newUid = blockInfo.uid)
             {
                 splitedStrArr.splice(0, 1, `(${newUid})`); //.replace(/\(([^\)]+)\)/, `(${nextChildObj.uid})`);;
                 splitedStrArr.splice(1, 1, newKey);
