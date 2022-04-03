@@ -3334,7 +3334,7 @@ async function onPlayerReady(event)
 
     map.speed = closestRate(map.speed || 1);
     const entryVolume = validVolumeURL();
-    const tickOffset = 1000 / map.speed;
+    let tickOffset; // playbackSpeedDDMO
 
     const blockID = getBlockID(iframe);
     const canBeCleanedByBuffer = UTILS.closestBlockID(iframe);
@@ -3608,8 +3608,9 @@ async function onPlayerReady(event)
     }
     function playbackSpeedDDMO()
     {
-        const ddmVal = Number(UI.display.yt_playback_speed.value);
-        const speed = (speed == 'Default') ? map.speed : ddmVal;
+        const value = UI.display.yt_playback_speed.value;
+        const speed = (value == 'Default') ? map.speed : Number(value);
+        tickOffset = 1000 / speed;
         t.setPlaybackRate(speed);
     }
     //#endregion
