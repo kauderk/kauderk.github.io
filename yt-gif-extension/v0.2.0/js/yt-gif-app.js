@@ -3397,7 +3397,7 @@ async function onPlayerReady(event)
 
     iframe.removeAttribute('title');
     t.setVolume(entryVolume);
-    t.setPlaybackRate(map.speed);
+    playbackSpeedDDMO();
 
 
     const timeDisplay = parent.querySelector('div.' + cssData.yt_gif_timestamp);
@@ -3567,6 +3567,8 @@ async function onPlayerReady(event)
     {
         UI.playerSettings.play_style = Flip(UI.playerSettings.play_style, playStyleDDMO);
         UI.playerSettings.mute_style = Flip(UI.playerSettings.mute_style, muteStyleDDMO);
+        UI.display.yt_playback_speed = Flip(UI.display.yt_playback_speed, playbackSpeedDDMO);
+
         function Flip(binaryInput, styleDDMO = () => { })
         {
             if (binaryInput?.tagName)
@@ -3603,6 +3605,12 @@ async function onPlayerReady(event)
         {
             isSoundingFine(false);
         }
+    }
+    function playbackSpeedDDMO()
+    {
+        const ddmVal = Number(UI.display.yt_playback_speed.value);
+        const speed = (speed == 'Default') ? map.speed : ddmVal;
+        t.setPlaybackRate(speed);
     }
     //#endregion
 
