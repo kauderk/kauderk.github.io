@@ -591,7 +591,7 @@ max-width: fit-content;
 .ty-gif-icon svg{
   margin: 0 !important;
 }
-.dropdown .bp3-icon-changes{
+.dropdown span:is([formatter],[insertoptions]){ /* huga buga */
   pointer-events: none;
 }
 .yt-gif-btn span {

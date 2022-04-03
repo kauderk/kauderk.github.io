@@ -157,10 +157,12 @@ const links = {
         playerControls: self_urlFolder('html/player-controls.html'),
         urlBtn: self_urlFolder('html/url-btn.html'),
         anchor: self_urlFolder('html/yt-gif-anchor.html'),
+        insertOptions: self_urlFolder('html/insert-options.html'),
         fetched: {
             playerControls: '',
             urlBtn: '',
             anchor: '',
+            insertOptions: '',
         },
     },
     js: {
@@ -423,7 +425,7 @@ async function Ready()
     //#region relevant variables
     const { ddm_css_theme_input: ddm_css_theme_stt, player_span: player_span_stt } = Object.fromEntries(window.YT_GIF_DIRECT_SETTINGS);
     const { themes, playerStyle, dropDownMenuStyle } = links.css;
-    const { playerControls, dropDownMenu, urlBtn, anchor } = links.html;
+    const { playerControls, dropDownMenu, urlBtn, insertOptions, anchor } = links.html;
     const { yt_gif } = cssData; // CssThemes_UCS
     const { ddm_main_theme: ddm_main_theme_id } = cssData.id;
     //#endregion
@@ -436,6 +438,7 @@ async function Ready()
 
     links.html.fetched.playerControls = await await UTILS.fetchTextTrimed(playerControls);
     links.html.fetched.urlBtn = await UTILS.fetchTextTrimed(urlBtn);
+    links.html.fetched.insertOptions = await UTILS.fetchTextTrimed(insertOptions);
     links.html.fetched.anchor = await UTILS.fetchTextTrimed(anchor);
 
     await smart_Load_DDM_onTopbar(dropDownMenu); // DDM - drop down menu
@@ -2360,8 +2363,8 @@ async function Ready()
 
             ReadyUrlBtns(allUrlBtns_rm);
 
-            const ytElms = [...document.querySelectorAll('.yt-gif-controls [formatter], [yt-gif-timestamp-emulation]')]
-                .forEach(el => el?.tryToAppendUrlBtns?.()); // YIKES!
+            const ytElms = [...document.querySelectorAll('.yt-gif-controls :is([formatter],[insertOptions]), [yt-gif-timestamp-emulation]')]
+                .forEach(el => el?.tryToAppendUrlBtns?.()); // YIKES! how do you implement an interface?
 
             obs.observe(targetNode, config);
         }
@@ -3129,6 +3132,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             return;
 
         appendVerticalUrlBtns(wrapper.querySelector('[formatter]'));
+        appendVerticalUrlBtns(wrapper.querySelector('[insertOptions]'), 'insertOptions');
 
         const { startCmpt, endCmpt, startEndCmpt, compt2Url, urlBtn, confirmBtns } = fmtTimestampsUrlObj(wrapper, '[formatter]');
 
@@ -3137,13 +3141,35 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         urlBtn('end').onclick = async (e) => await OnYtGifUrlBtn(e, endCmpt)
         urlBtn('start|end').onclick = async (e) => await OnYtGifUrlBtn(e, startEndCmpt)
         confirmBtns();
+
+
+        const { instParam, urlBtn: instBtn } = fmtIframe2Url(wrapper, '[insertOptions]');
+        const tick = () => record?.player?.getCurrentTime?.() || 0;
+        const rate = () => record?.player?.getPlaybackRate?.() || 1;
+        instBtn('start').onclick = async (e) => await OnYtGifInsertBtn(e, instParam, { param: 't', value: tick() })
+        instBtn('end').onclick = async (e) => await OnYtGifInsertBtn(e, instParam, { param: 'end', value: tick() })
+        instBtn('speed').onclick = async (e) => await OnYtGifInsertBtn(e, instParam, { param: 's', value: rate() })
+
+
     }
     async function OnYtGifUrlBtn(e, fmtCmpnt_cb)
     {
         e.preventDefault();
         e.stopPropagation();
 
-        const URL_formatter_settings = {
+        await TryToUpdateBlock_fmt(get_URL_formatter_settings(e, { fmtCmpnt_cb }));
+    }
+    async function OnYtGifInsertBtn(e, fmtCmpnt_cb, fromObj)
+    {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // ugly code :x
+        await TryToUpdateBlock_fmt(get_URL_formatter_settings(e, { fmtCmpnt_cb }, fromObj));
+    }
+    function get_URL_formatter_settings(e, outterObj = {}, fromObj = {})
+    {
+        return {
             block: grandParentBlock,
             targetNode: wrapper,
 
@@ -3153,13 +3179,11 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             getMap: async () => getUrlMap_smart(uid),
             isKey: 'is component',
 
-            fmtCmpnt_cb,
             tempUID: uid,
 
-            from: { caster: 'player', page: 'yt-gif', urlBtn: e.target },
+            from: { caster: 'player', page: 'yt-gif', urlBtn: e.target, ...fromObj },
+            ...outterObj
         }
-
-        await TryToUpdateBlock_fmt(URL_formatter_settings);
     }
 
 
@@ -3403,7 +3427,7 @@ async function onPlayerReady(event)
     const timeDisplay = parent.querySelector('div.' + cssData.yt_gif_timestamp);
     const timeDisplayStart = timeDisplay.querySelector('.yt-gif-timestamp-start');
     const timeDisplayEnd = timeDisplay.querySelector('.yt-gif-timestamp-end');
-    const resetBoundariesBtn = parent.querySelector('.yt-gif-reset-boundaries');
+    const resetBoundariesBtn = parent.querySelector('[yt-gif-url-btn="reset"]');
 
 
     // 1. previous parameters if available
@@ -4815,7 +4839,7 @@ async function ClickResetWrapper(targetWrapper, assignObj = {})
 {
     if (!targetWrapper) return;
 
-    const reset = targetWrapper.querySelector('.yt-gif-reset-boundaries');
+    const reset = targetWrapper.querySelector('[yt-gif-url-btn="reset"]');
 
     if ('delete-obs-tm' in assignObj) // alright
         reset.dispatchEvent(new CustomEvent('customDelObsTimestmp',
@@ -4921,11 +4945,11 @@ function fmtTimestamp(value = UI.timestamps.tm_workflow_display.value)
     let fmt = (tms) => tms;
 
     if (value == 'lessHMS')
-        fmt = (tms) => UTILS.seconds2time(str2sec(tms));
+        fmt = (tms) => UTILS.seconds2time(str2sec(tms.toString()));
     else if (value == 'HMS')
-        fmt = (tms) => UTILS.convertHMS(str2sec(tms));
+        fmt = (tms) => UTILS.convertHMS(str2sec(tms.toString()));
     else if (value == 'S')
-        fmt = (tms) => str2sec(tms);
+        fmt = (tms) => str2sec(tms.toString());
 
     return fmt;
 }
@@ -4941,6 +4965,8 @@ function awaitingAtrr(bol, el)
 //#region URL Formatter workflow
 function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
 {
+    const urlBtn = (page) => targetNode.querySelector(`${innerWrapperSel} [yt-gif-url-btn="${page}"]`);
+
     const getFmtPage = (p, url) => fmtTimestamp()(floatParam(p, url) || '0'); // javascript is crazy!
 
     const startTm = (url) => getFmtPage('t|start', url);
@@ -4991,10 +5017,10 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
     async function ExamineResObj(resObj) 
     {
         let { capture, from, to } = resObj; //  start, end, string,
-        let { contentObj, matchObj, hiddenObj } = CaptureInfoObj(capture, ExtractUrlsObj);
-
-
+        let { contentObj, matchObj, hiddenObj } = UrlBtnAction2InfoObj(capture, ExtractUrlsObj);
         let { type, match } = matchObj;
+
+        // try to keep running the logic, if there isn't a match exit
         const rely_on_hierarchy = isSelected(UI.display.fmt_options, 'rely_on_hierarchy');
         const lastUrl = await TryToAssertHierarchyUrl(false);
         if (!match && rely_on_hierarchy)
@@ -5007,14 +5033,18 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
         matchObj.match = url;
         const params = ExtractParamsFromUrl(url);
 
-        if (typeof contentObj.match == 'undefined')
+        if (typeof contentObj.match == 'undefined') // Hmmm...
             contentObj.hidden = contentObj.content;
 
         // remove redundant tm
         contentObj.hidden = TryToRemoveRedudantTmParam('self', contentObj);
 
         // append page param if missing
-        matchObj.match = tryFmtTmParam(from.page, from.tmSetObj?.self?.timestamp, matchObj.match);
+        matchObj.match = tryFmt_timestamp({
+            page: from.page,
+            value: from.tmSetObj?.self?.timestamp,
+            match: matchObj.match
+        });
 
         if (['start', 'end'].some(p => p == to))
         {
@@ -5034,7 +5064,7 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
             if (isSelected(UI.display.fmt_options, 'lift_pears'))
             {
                 const pearCaptureObj = await RemovePearFromString(from, resObj);
-                matchObj.match = await TryToFmtPearParam(pearCaptureObj, resObj, from, matchObj.match);
+                matchObj.match = await tryFmt_timestamp_pear(pearCaptureObj, from);
                 contentObj.hidden += TryToAppendHiddenPearContent(pearCaptureObj, contentObj);
                 contentObj.hidden = TryToRemoveRedudantTmParam('pear', contentObj);
             }
@@ -5054,66 +5084,60 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
             h = h.trim() ? (h.trim() + ' ') : '';
             return;
         }
-        function TryToAppendHiddenPearContent(pearCaptureObj, contentObj)
-        {
-            const h = pearCaptureObj.contentObj?.hidden;
-            if (!h)
-                return '';
-            contentObj.content == contentObj.content ?? '';
-            const c = getConcatS(contentObj.content)
-            return c + pearCaptureObj.contentObj?.content?.trim() + ' ';
-        }
-        function tryFmtTmParam(page, value, match)
+
+        function tryFmt_timestamp({ page, value, match })
         {
             // update url
             const p = page == 'end' ? 'end' : 't';
-            let m = match;
-            const c = [...m].pop() == '?' ? '' : (m.includes('?') ? '&' : '?'); // ends on '?' then it is blank, else add '&' or '?' depending on which is missing
-            value = fmtTimestamp('S')(value ?? '0');
-            if (!value || value == '0')
-                return match;
-            const replace = new RegExp(`(${paramRgx(p).source})`);
-            if (replace.test(match))
-                return m.replace(replace, `${p}=${value}`);
-            else
-                return m += `${c}${p}=${value}`;
+            return tryFmt_urlParam({ match, value, p });
         }
-        function CaptureInfoObj(capture, ExtractSubstringObj)
+        function fmtUrlsObj(to, params)
         {
-            const content = ExtractContentFromCmpt(capture);
+            const ignore = [to, 'type', 'src', 'defaultEnd', 'defaultStart', 'id',
+                'timeURLmapHistory', 'updateVolume', 'volumeURLmapHistory'];
+            const minVers = {
+                speed: ['s'],
+                volume: ['vl'],
+                start: ['t'],
+            }
 
-            const matchObj = ExtractSubstringObj(content);
-
-            let hidden = matchObj?.match ? delSubstr(content, matchObj.start, matchObj.end) : '';
-            if (hidden && matchObj?.match)
-                if (isSpace(hidden[matchObj.start - 1]) && isSpace(hidden[matchObj.start]))
-                    hidden = delSubstr(hidden, matchObj.start - 1, matchObj.start)
-            hidden = hidden.trim();
-
-            const hiddenObj = hidden ? ExtractSubstringObj(hidden) : {};
+            let urlPms = '';
+            for (const key in params)
+            {
+                if (ignore.includes(key) || !params[key])
+                    continue;
+                const min = minVers[key]?.[0] ?? key;
+                urlPms += `&${min}=${params[key]}`; // E.g. &t=10
+            }
+            urlPms = urlPms.slice(1); // remove first '&'
+            const c = isSelected(UI.display.fmt_options, 'avoid_redundancy') ? '/' : 'https://youtu.be/';
+            const base = (c) => c + params.id;
+            const full = urlPms.slice(1);
+            const url = full ? `${base(c)}?${urlPms}` : base(c);
 
             return {
-                hiddenObj, matchObj,
-                contentObj: {
-                    match: matchObj?.match,
-                    hidden, content
-                },
+                minimal: `${base('/')}?${urlPms}`,
+                full: `${base('https://youtu.be/')}?${urlPms}`,
+                fmtUrl: url
             }
         }
-        function ExtractTmsObj_cb(string)
+        function TryToRemoveRedudantTmParam(pear = 'self', contentObj)
         {
-            return indexPairObj(rgx2Gm(StartEnd_Config.targetStringRgx), string, 'timestamp')?.[0];
+            const tm = from.tmSetObj?.[pear]?.timestamp;
+            if (!tm)//|| !contentObj.match)
+                return contentObj.hidden;
+            const value = fmtTimestamp()(tm);
+            const rawValue = fmtTimestamp()(contentObj.content?.match(StartEnd_Config.targetStringRgx)?.[0] ?? '-1');
+            if (rawValue === value && isSelected(UI.display.fmt_options, 'avoid_redundancy'))
+            {
+                if (pear == 'self')
+                    contentObj.content = contentObj.content.trim().replace(tm.toString(), '');
+                return contentObj.hidden.replace(tm.toString(), '');
+            }
+            return contentObj.hidden;
         }
-        async function TryToFmtPearParam(pearCaptureObj, resObj, from, match)
-        {
-            const value = pearCaptureObj.matchObj?.match;
-            if (!value)
-                return matchObj.match;
 
-            const p = from.tmSetObj?.pear.page;
-            // if (typeof params[p] == 'undefined') // start - end
-            return tryFmtTmParam(p, value, matchObj.match);
-        }
+        // from.page start, end
         async function RemovePearFromString(from, resObj)
         {
             if (!from.tmSetObj?.pear)
@@ -5146,38 +5170,32 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
             {
                 resObj.string = delSubstr(resObj.string, resPear.start - 1, resPear.start)
             }
-            return CaptureInfoObj(capture, ExtractTmsObj_cb);
-        }
-        function fmtUrlsObj(to, params)
-        {
-            const ignore = [to, 'type', 'src', 'defaultEnd', 'defaultStart', 'id',
-                'timeURLmapHistory', 'updateVolume', 'volumeURLmapHistory'];
-            const minVers = {
-                speed: ['s'],
-                volume: ['vl'],
-                start: ['t'],
-            }
+            return UrlBtnAction2InfoObj(capture, ExtractTmsObj_cb);
 
-            let urlPms = '';
-            for (const key in params)
+            function ExtractTmsObj_cb(string)
             {
-                if (ignore.includes(key) || !params[key])
-                    continue;
-                const min = minVers[key]?.[0] ?? key;
-                urlPms += `&${min}=${params[key]}`; // E.g. &t=10
-            }
-            urlPms = urlPms.slice(1); // remove first '&'
-            const c = isSelected(UI.display.fmt_options, 'avoid_redundancy') ? '/' : 'https://youtu.be/';
-            const base = (c) => c + params.id;
-            const full = urlPms.slice(1);
-            const url = full ? `${base(c)}?${urlPms}` : base(c);
-
-            return {
-                minimal: `${base('/')}?${urlPms}`,
-                full: `${base('https://youtu.be/')}?${urlPms}`,
-                fmtUrl: url
+                return indexPairObj(rgx2Gm(StartEnd_Config.targetStringRgx), string, 'timestamp')?.[0];
             }
         }
+        async function tryFmt_timestamp_pear(pearCaptureObj, from)
+        {
+            const value = pearCaptureObj.matchObj?.match;
+            if (!value)
+                return matchObj.match;
+            const page = from.tmSetObj?.pear.page;
+            return tryFmt_timestamp({ page, value, match: matchObj.match });
+        }
+        function TryToAppendHiddenPearContent(pearCaptureObj, contentObj)
+        {
+            const h = pearCaptureObj.contentObj?.hidden;
+            if (!h)
+                return '';
+            contentObj.content == contentObj.content ?? '';
+            const c = getConcatS(contentObj.content)
+            return c + pearCaptureObj.contentObj?.content?.trim() + ' ';
+        }
+
+        // to url, yt-gif
         function TryToReorderTmParams(p, url)
         {
             const t = 'start|t'; // this is annoying...
@@ -5188,21 +5206,6 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
             if (wrongOrderRegex.test(url))
                 url = url.replace(wrongOrderRegex, '$5$4$1');
             return url;
-        }
-        function TryToRemoveRedudantTmParam(pear = 'self', contentObj)
-        {
-            const tm = from.tmSetObj?.[pear]?.timestamp;
-            if (!tm)//|| !contentObj.match)
-                return contentObj.hidden;
-            const value = fmtTimestamp()(tm);
-            const rawValue = fmtTimestamp()(contentObj.content?.match(StartEnd_Config.targetStringRgx)?.[0] ?? '-1');
-            if (rawValue === value && isSelected(UI.display.fmt_options, 'avoid_redundancy'))
-            {
-                if (pear == 'self')
-                    contentObj.content = contentObj.content.trim().replace(tm.toString(), '');
-                return contentObj.hidden.replace(tm.toString(), '');
-            }
-            return contentObj.hidden;
         }
         async function TryToAssertHierarchyUrl(origin = true)
         {
@@ -5220,10 +5223,7 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
         const ce = isSpace(resObj.string[resObj.end]) ? '' : cs;
         h = cs + h + ce;
     }
-    function urlBtn(page)
-    {
-        return targetNode.querySelector(`[yt-gif-url-btn="${page}"]`);
-    }
+
     function StopPropagations()
     {
         let innerWrapper;
@@ -5242,6 +5242,45 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
                 if (!btn.onclick && p)
                     p.style.display = 'none';
             });
+    }
+}
+
+
+function fmtIframe2Url(targetNode, innerWrapperSel = '.yt-gif-url-btns')
+{
+    const urlBtn = (page) => targetNode.querySelector(`${innerWrapperSel} [yt-gif-url-btn="${page}"]`);
+
+    let u, h = '';
+
+    async function ExamineResObj(resObj) 
+    {
+        let { capture } = resObj;
+        const { param, value } = resObj.from ?? {};
+        let { contentObj, matchObj } = UrlBtnAction2InfoObj(capture, ExtractUrlsObj);
+
+        matchObj.match = tryFmt_urlParam({
+            match: matchObj.match,
+            value,
+            p: param,
+            float: true
+        });
+
+        updateVars();
+        function updateVars()
+        {
+            u = matchObj.match;
+            h = contentObj.hidden ?? '';
+            h = h.trim() ? (h.trim() + ' ') : '';
+        }
+    }
+
+    return {
+        urlBtn,
+        instParam: async o =>
+        {
+            await ExamineResObj(o);
+            return `{{[[yt-gif]]: ${u} ${h}}}`
+        }
     }
 }
 async function TryToUpdateBlock_fmt({ block, targetNode, siblingSel, selfSel, getMap, isKey, fmtCmpnt_cb, tempUID, from })
@@ -5271,7 +5310,9 @@ async function TryToUpdateBlock_fmt({ block, targetNode, siblingSel, selfSel, ge
     } catch (error)
     {
         const tp = from?.urlBtn?.closest('[data-tooltip]');
-        return tp?.setAttribute('data-tooltip', `${error?.message} ((${tempUID}))`);
+        const err = `${error?.message} ((${tempUID}))`;
+        console.error(err);
+        return tp?.setAttribute('data-tooltip', err);
     }
     return { success: true }
 }
@@ -5387,18 +5428,21 @@ function indexPairObj(regex, str, type)
     }))
 }
 /* ***************** */
-function appendVerticalUrlBtns(targetNode)
+function appendVerticalUrlBtns(targetNode, kind = 'formatter')
 {
-    const urlBtns = appendlUrlBtns(targetNode);
+    const urlBtns = appendlUrlBtns(targetNode, kind);
     UTILS.toggleClasses(true, ['vertical'], urlBtns);
 }
-function appendlUrlBtns(targetNode)
+function appendlUrlBtns(targetNode, kind = 'formatter')
 {
     const c = 'yt-gif-url-btns-wrapper';
-    const div = targetNode.querySelector(`.${c}`) ?? UTILS.div([c]);
+    const div = targetNode.querySelector(`[${kind}]`) ?? UTILS.div([c]);
+
+    // hardcoded for now
+    const dir = (kind == 'formatter') ? 'urlBtn' : 'insertOptions';
 
     if (!div.querySelector('.yt-gif-url-btns'))
-        div.insertAdjacentHTML('afterbegin', links.html.fetched.urlBtn);
+        div.insertAdjacentHTML('afterbegin', links.html.fetched[dir]);
     if (!isRendered(div))
         targetNode.insertAdjacentElement('afterbegin', div);
 
@@ -5419,6 +5463,30 @@ function valid_url_formatter()
     return isSelected(UI.display.ms_options, s_u_f_key) && ValidUrlBtnUsage();
 }
 /* ***************** */
+function UrlBtnAction2InfoObj(capture, ExtractSubstringObj)
+{
+    const content = ExtractContentFromCmpt(capture);
+
+    const matchObj = ExtractSubstringObj(content);
+
+    let hidden = matchObj?.match ? delSubstr(content, matchObj.start, matchObj.end) : '';
+    if (hidden && matchObj?.match)
+        if (isSpace(hidden[matchObj.start - 1]) && isSpace(hidden[matchObj.start]))
+            hidden = delSubstr(hidden, matchObj.start - 1, matchObj.start)
+    hidden = hidden.trim();
+
+    const hiddenObj = hidden ? ExtractSubstringObj(hidden) : {};
+
+    return {
+        hiddenObj, matchObj,
+        contentObj: {
+            match: matchObj?.match,
+            hidden, content
+        },
+    }
+}
+/* ******** */
+
 function ExtractContentFromCmpt(capture)
 {
     return [...capture.matchAll(BlockRegexObj().componentRgx)][0]?.[5] || capture;
@@ -5523,6 +5591,22 @@ function stopEvents(e)
 {
     e.preventDefault();
     e.stopPropagation();
+}
+/**
+ * append page param if missing
+ */
+function tryFmt_urlParam({ match, value, p, float })
+{
+    let m = match;
+    const c = [...m].pop() == '?' ? '' : (m.includes('?') ? '&' : '?'); // ends on '?' then it is blank, else add '&' or '?' depending on which is missing
+    value = !float ? fmtTimestamp('S')(value ?? '0') : Number(value);
+    if (!value || value == '0')
+        return match;
+    const replace = new RegExp(`(${paramRgx(p).source})`);
+    if (replace.test(match))
+        return m.replace(replace, `${p}=${value}`);
+    else
+        return m += `${c}${p}=${value}`;
 }
 //#endregion
 
