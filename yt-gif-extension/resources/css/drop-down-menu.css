@@ -808,6 +808,9 @@ span.bp3-button.select__item[selected] {
   cursor: not-allowed !important;
   background: var(--sel-disabled-bg) !important;
 }
+.dropdown-item .select [selected] [class*="bp3-icon"] {
+  filter: brightness(2);
+}
 
 /* yt-gif anchor */
 span.yt-gif-anchor .bp3-button.bp3-minimal:hover {
