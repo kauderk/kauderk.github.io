@@ -3363,7 +3363,8 @@ async function onPlayerReady(event)
     let updateStartTime = map.start;
 
     map.speed = closestRate(map.speed || 1);
-    const entryVolume = validVolumeURL();
+    const entryVolume = validateMapVolume();
+    let volume = entryVolume;
     let tickOffset; // playbackSpeedDDMO
 
     const blockID = getBlockID(iframe);
@@ -3408,17 +3409,14 @@ async function onPlayerReady(event)
             sesion.updateTime = t.__proto__.previousTick;
             t.__proto__.previousTick = null;
         }
-        RunWithPreviousParamsONiframeLoad(); // The YT API reloads the iframe onload, it disorients the users, this a counter-measurement
+        setupPreviousParams(); // The YT API reloads the iframe onload, it disorients the users, this a counter-measurement
         await HumanInteraction_FreezeAutoplay();
+        trytoRunPreviousParams();
         return;
     }
 
 
     // javascript is crazy
-    t.__proto__.changedVolumeOnce = false;
-    t.__proto__.readyToChangeVolumeOnce = readyToChangeVolumeOnce;
-    t.__proto__.newVol = entryVolume;
-
     t.__proto__.timers = [];
     t.__proto__.timerID;
     t.__proto__.ClearTimers = ClearTimers;
@@ -3427,8 +3425,6 @@ async function onPlayerReady(event)
 
 
     iframe.removeAttribute('title');
-    t.setVolume(entryVolume);
-    playbackSpeedDDMO();
 
 
     const timeDisplay = parent.querySelector('div.' + cssData.yt_gif_timestamp);
@@ -3438,7 +3434,7 @@ async function onPlayerReady(event)
 
 
     // 1. previous parameters if available
-    RunWithPreviousParamsONiframeLoad();
+    setupPreviousParams();
 
 
 
@@ -3523,6 +3519,7 @@ async function onPlayerReady(event)
 
 
     // 12. Guard clause - onPlayerReady executed
+    trytoRunPreviousParams();
     parent.setAttribute('loaded', '');
     iframe.addEventListener('load', () => t.__proto__.previousTick = tick(t));
     ValidateHierarchyTimestamps(parent, t);
@@ -3530,14 +3527,14 @@ async function onPlayerReady(event)
 
 
     //#region 1. previous parameters
-    function RunWithPreviousParamsONiframeLoad()
+    function setupPreviousParams()
     {
         const sesion = lastBlockIDParameters.get(blockID);
         if (sesion)
         {
             const { url_boundaries, url_volume } = UI.playerSettings;
             RunWithPrevious_TimestampStyle(sesion, url_boundaries);
-            RunWithPrevious_VolumeStyle(sesion, url_volume);
+            volume = RunWithPrevious_VolumeStyle(sesion, url_volume);
         }
     }
     /* ******************* */
@@ -3549,21 +3546,15 @@ async function onPlayerReady(event)
             if (vl_Hist[vl_Hist.length - 1] != entryVolume) // new entry is valid ≡ user updated "&vl="
             {
                 vl_Hist.push(entryVolume);
-                t.__proto__.newVol = entryVolume;
+                return entryVolume;
             }
             else // updateVolume has priority then
-            {
-                t.__proto__.newVol = sesion.updateVolume;
-            }
+                return sesion.updateVolume;
         }
         else if (value == 'soft')
-        {
-            t.__proto__.newVol = sesion.updateVolume;
-        }
-        else if (value == 'start-only')
-        {
-            t.__proto__.newVol = validVolumeURL();
-        }
+            return sesion.updateVolume;
+        else //if (value == 'start-only')
+            return validateMapVolume();
     }
 
     function RunWithPrevious_TimestampStyle(sesion, { value })
@@ -3657,7 +3648,7 @@ async function onPlayerReady(event)
         else if (muteIs('strict'))
             MuteAllOtherPlayers()
 
-        t.__proto__.newVol = t.getVolume(); // spaguetti isSoundingFine unMute
+        volume = t.getVolume(); // spaguetti isSoundingFine unMute
         t.__proto__.globalHumanInteraction = false;
 
         //                            the same as: if it's true, then the other posibilities are false
@@ -3962,19 +3953,16 @@ async function onPlayerReady(event)
 
 
         //🚧 UpdateNextSesionValues
-        const media = JSON.parse(JSON.stringify(videoParams));
+        const sesion = lastBlockIDParameters.get(blockID) ?? videoParams;
+        const media = JSON.parse(JSON.stringify(sesion));
         media.src = getWrapperUrlSufix(parent);
         media.id = map.id;
         media.updateTime = isBounded(tick()) ? tick() : map.start;
-        media.updateVolume = isValidVolNumber(t.__proto__.newVol) ? t.__proto__.newVol : validUpdateVolume();
+        media.updateVolume = t.getVolume() ?? validateMapVolume('updateVolume');
         if (media.timeURLmapHistory.length == 0) // kinda spaguetti, but it's super necesary - This will not ignore the first block editing - stack change
-        {
             media.timeURLmapHistory.push(map.start);
-        }
-        if (blockID != null)
-        {
-            lastBlockIDParameters.set(blockID, media);
-        }
+        if (media.volumeURLmapHistory.length == 0)
+            media.volumeURLmapHistory.push(entryVolume);
 
 
 
@@ -4146,23 +4134,18 @@ async function onPlayerReady(event)
                 playing(false); // pause
         }
     }
-    //#endregion
-
-
-    //#region closure to change volume on load
-    function readyToChangeVolumeOnce()
+    function trytoRunPreviousParams()
     {
-        if (!t.__proto__.changedVolumeOnce)
+        // volume
+        try
         {
-            t.__proto__.changedVolumeOnce = true;
-            try
-            {
-                t.setVolume(t.__proto__.newVol);
-            } catch (error)
-            {
-                console.log(error);
-            }
+            t.setVolume(volume);
+        } catch (error)
+        {
+            console.log(error);
         }
+        // playback rate
+        playbackSpeedDDMO();
     }
     //#endregion
 
@@ -4195,28 +4178,14 @@ async function onPlayerReady(event)
     {
         return map.start < x && x < map.end;
     }
-    function validUpdateVolume()
+    function validateMapVolume(property = 'volume')
     {
-        const newVl = map?.updateVolume;
+        let newVl = map?.[property];
+        newVl = Number(newVl);
         if (typeof newVl == 'number')
             return newVl;
 
         return videoParams.volume || 40;
-    }
-    function validVolumeURL()
-    {
-        const newVl = map?.volume;
-        if (typeof newVl == 'number')
-            return newVl;
-
-        return videoParams.volume || 40;
-    }
-    function isValidVolNumber(vol)
-    {
-        if (typeof vol == 'number')
-            return true;
-
-        return false;
     }
     function CanUnmute() // NotMuteAnyHover
     {
@@ -4250,7 +4219,7 @@ async function onPlayerReady(event)
         {
             SoundIs(ytGifAttr.sound.unMute, el);
             t.unMute();
-            t.setVolume(t.__proto__.newVol); // spaguetti InAndOutHoverStatesDDMO mouseleave
+            t.setVolume(volume); // spaguetti InAndOutHoverStatesDDMO mouseleave
         }
         else
         {
@@ -4372,12 +4341,8 @@ async function onStateChange(state)
 
     if (state.data === YT.PlayerState.PLAYING)
     {
-        t.__proto__.readyToChangeVolumeOnce(); //man...
-
         if (t.__proto__.timerID === null) // NON ContinuouslyUpdateTimeDisplay
-        {
             t.__proto__.enter();
-        }
     }
 
 
@@ -5546,7 +5511,7 @@ function ExtractParamsFromUrl(url)
 
         media.speed = fParam('s|speed');
 
-        media.volume = new RegExp(/(vl=|volume=)(?:\d+)/).exec(url)?.[2];
+        media.volume = fParam('vl|volume');
 
         media.hl = new RegExp(/(hl=)((?:\w+))/, 'gm').exec(url)?.[2];
         media.cc = new RegExp(/(cc=|cc_lang_pref=)((?:\w+))/, 'gm').exec(url)?.[2];
