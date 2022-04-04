@@ -180,7 +180,7 @@ kauderk.util = ((util) =>
 
         async function MutationRemoval_cb(mutationsList, observer)
         {
-            mutationsList.forEach(function (mutation)
+            for (const mutation of mutationsList)
             {
                 const nodes = Array.from(mutation.removedNodes);
                 const directMatch = nodes.indexOf(options.el) > -1
@@ -199,7 +199,7 @@ kauderk.util = ((util) =>
                     await options.OnRemmovedFromDom_cb(observer);
                     observer.disconnect();
                 }
-            });
+            }
         };
     }
     util.includesAtlest = (arr, string, defaultString) =>
