@@ -174,11 +174,11 @@ kauderk.util = ((util) =>
             return null;
         }
         const config = { subtree: true, childList: true };
-        const RemovedObserver = new MutationObserver(MutationRemoval_cb); // will fire OnRemmovedFromDom... the acutal logic
+        const RemovedObserver = new MutationObserver(async () => await MutationRemoval_cb(ml, obs)); // will fire OnRemmovedFromDom... the acutal logic
         RemovedObserver.observe(document.body, config);
         return RemovedObserver;
 
-        function MutationRemoval_cb(mutationsList, observer)
+        async function MutationRemoval_cb(mutationsList, observer)
         {
             mutationsList.forEach(function (mutation)
             {
@@ -190,13 +190,13 @@ kauderk.util = ((util) =>
                 {
                     observer.disconnect();
                     if (options.directMatch)
-                        options.OnRemmovedFromDom_cb(observer);
+                        await options.OnRemmovedFromDom_cb(observer);
                     else
                         console.log(`node ${options.el} was directly removed!`);
                 }
                 else if (parentMatch)
                 {
-                    options.OnRemmovedFromDom_cb(observer);
+                    await options.OnRemmovedFromDom_cb(observer);
                     observer.disconnect();
                 }
             });
