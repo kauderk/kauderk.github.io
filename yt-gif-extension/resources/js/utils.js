@@ -174,7 +174,7 @@ kauderk.util = ((util) =>
             return null;
         }
         const config = { subtree: true, childList: true };
-        const RemovedObserver = new MutationObserver(async () => await MutationRemoval_cb(ml, obs)); // will fire OnRemmovedFromDom... the acutal logic
+        const RemovedObserver = new MutationObserver(async (ml, obs) => await MutationRemoval_cb(ml, obs)); // will fire OnRemmovedFromDom... the acutal logic
         RemovedObserver.observe(document.body, config);
         return RemovedObserver;
 
