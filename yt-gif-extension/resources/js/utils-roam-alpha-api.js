@@ -16,6 +16,23 @@ kauderk.rap = ((rap) =>
     Also, this piece of code is less dependent on external resources.
     */
 
+    rap.isBlockRef = async (uid) =>
+    {
+        try
+        {
+            if (uid.startsWith("(("))
+            {
+                uid = uid.slice(2, uid.length);
+                uid = uid.slice(0, -2);
+            }
+
+            var block_ref = await window.roamAlphaAPI.q(`
+              [:find (pull ?e [:block/string])
+                  :where [?e :block/uid "${uid}"]]`);
+
+            return (block_ref.length > 0 && block_ref[0][0] != null) ? true : false;
+        } catch (e) { return ''; }
+    }
     rap.getBlockByPhrase = async (search_phrase) =>
     {
         var blocks = await window.roamAlphaAPI.q(`[:find (pull ?e [:block/uid :block/string] ) :where [?e :block/string ?contents][(clojure.string/includes? ?contents "${search_phrase}")]]`);
