@@ -2611,7 +2611,7 @@ function ObserveIframesAndDelployYTPlayers(targetClass)
 async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, message = 'I dunno')
 {
     if (!wrapper || !wrapper.parentNode) return;
-
+    let deployed = false;
 
 
     // 1. search and get urlIndex and uid
@@ -2679,6 +2679,11 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         {
             const rm_container = getCrrContainer();
             UIDtoURLInstancesMapMap.delete(uid);
+            if (!deployed)
+            {
+                recordedIDs.delete(blockID);
+                allVideoParameters.delete(newId);
+            }
             if (!UI.timestamps.tm_recovery.checked)
                 DeactivateTimestampsInHierarchy(rm_container, wrapper);
             if (!isRendered(rm_container) && rm_container?.closest('.rm-sidebar-outline'))
@@ -3328,6 +3333,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     }
     async function DeployYT_IFRAME()
     {
+        deployed = true;
         return record.player = new window.YT.Player(newId, playerConfig(configParams));
     }
 }
@@ -3361,6 +3367,7 @@ async function onPlayerReady(event)
     let tickOffset; // playbackSpeedDDMO
 
     const blockID = getBlockID(iframe);
+    const blcokID_prfx = closestYTGIFparentID(iframe);
     const canBeCleanedByBuffer = UTILS.closestBlockID(iframe);
     const recording = recordedIDs.get(blockID);
     // 🚧?
@@ -3945,7 +3952,7 @@ async function onPlayerReady(event)
 
 
     //#region 8. on destroyed - clean up and ready next session
-    function IframeRemmovedFromDom_callback(observer)
+    async function IframeRemmovedFromDom_callback(observer)
     {
         // expensive for sure 🙋
         UTILS.RemoveElsEventListeners(withEventListeners);
@@ -3976,6 +3983,34 @@ async function onPlayerReady(event)
         ClearTimers();
         recordedIDs.delete(blockID);
         allVideoParameters.delete(key);
+
+        const prefix = closestYTGIFparentID(iframe) ?? blcokID_prfx;
+        const sufix = parent.getAttribute(attrInfo.url.index);
+        // remove usless previous entries
+        for (const key of lastBlockIDParameters.keys())
+        {
+            const remove = () => lastBlockIDParameters.delete(key);
+            const isYTgif = key?.endsWith(sufix) && key?.includes(media.id);
+            const isBlock = key.startsWith(prefix);
+            if (isYTgif && isBlock)
+            {
+                remove();
+                continue;
+            }
+            if (!isYTgif)
+                continue;
+            // i'm trying to avoid the await func
+            const wasDeletedExternally = canBeCleanedByBuffer && await RAP.isBlockRef(prefix.slice(-9));
+            if (wasDeletedExternally)
+            {
+                debugger;
+                remove();
+            }
+        }
+        // yet add latest params
+        if (blockID != null)
+            lastBlockIDParameters.set(blockID, media);
+
         t.__proto__.enter = () => { };
 
         if (canBeCleanedByBuffer)
