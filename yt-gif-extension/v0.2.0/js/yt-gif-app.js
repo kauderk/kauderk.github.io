@@ -4180,9 +4180,8 @@ async function onPlayerReady(event)
     }
     function validateMapVolume(property = 'volume')
     {
-        let newVl = map?.[property];
-        newVl = Number(newVl);
-        if (typeof newVl == 'number')
+        const newVl = Number(map?.[property]);
+        if (!isNaN(newVl))
             return newVl;
 
         return videoParams.volume || 40;
