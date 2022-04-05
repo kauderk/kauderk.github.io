@@ -789,7 +789,7 @@ async function Ready()
                     return await updateSettingsPageBlock(e, e.currentTarget, childKey, siblingKeys)
                 }
 
-                if (!child?.addEventListener) { debugger; continue; }
+                if (!child?.addEventListener) { console.log('yt-gif debugger'); continue; }
                 child.addEventListener('change', HandleSettingsPageBlockUpdate, true);
                 child.addEventListener('customChange', HandleSettingsPageBlockUpdate, true);
             }
@@ -922,7 +922,7 @@ async function Ready()
                     UTILS.toggleClasses((equals(not) || any(not)), toggleClassArr, b);
             })
 
-            if (!main) { debugger; continue; }
+            if (!main) { console.log('yt-gif debugger'); continue; }
             if (main.tagName == 'INPUT')
             {
                 toogleOnCheck();
@@ -2806,7 +2806,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
             // https://roamresearch.slack.com/archives/CTAE9JC2K/p1638578496037700
             if (!resObj?.nestedComponentMap || resObj?.nestedComponentMap.size == 0)
             {
-                debugger;
+                console.log('yt-gif debugger');
                 resObj.nestedComponentMap = [...tempMap.values()][resObj.preUrlIndex];
             }
             if (!resObj?.nestedComponentMap || resObj?.nestedComponentMap.size == 0)
@@ -3991,7 +3991,7 @@ async function onPlayerReady(event)
             const wasDeletedExternally = canBeCleanedByBuffer && await RAP.isBlockRef(prefix.slice(-9));
             if (wasDeletedExternally)
             {
-                debugger;
+                console.log('yt-gif debugger');
                 remove();
             }
         }
@@ -5381,7 +5381,7 @@ async function TryToUpdateBlockSubString(tempUid, replaceIndex, toReplace, recyc
     }
     catch (error)
     {
-        debugger;
+        console.log('yt-gif debugger');
         throw new Error(`YT GIF Formatter: Crashed because of out of bounds target...`);
     }
 
