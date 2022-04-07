@@ -3133,12 +3133,16 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
     // 6
     function tryToAppendUrlBtns()
     {
-        if (!valid_url_formatter())
-            return;
-
-        appendVerticalUrlBtns(wrapper.querySelector('[formatter]'));
+        // 2.
         appendVerticalUrlBtns(wrapper.querySelector('[insertOptions]'), 'insertOptions');
+        const iframe2urlObj = fmtIframe2Url(wrapper, '[insertOptions]');
 
+        // 0.
+        if (!valid_url_formatter())
+            return iframe2urlObj?.confirmBtns();
+
+        // 1.
+        appendVerticalUrlBtns(wrapper.querySelector('[formatter]'));
         const { startCmpt, endCmpt, startEndCmpt, compt2Url, urlBtn, confirmBtns } = fmtTimestampsUrlObj(wrapper, '[formatter]');
 
         urlBtn('url').onclick = async (e) => await OnYtGifUrlBtn(e, compt2Url)
@@ -3147,8 +3151,8 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         urlBtn('start|end').onclick = async (e) => await OnYtGifUrlBtn(e, startEndCmpt)
         confirmBtns();
 
-
-        const { instParam, urlBtn: instBtn } = fmtIframe2Url(wrapper, '[insertOptions]');
+        // 2.1 | the reset btn doesn't belong here, TODO
+        const { instParam, urlBtn: instBtn } = iframe2urlObj;
         const tick = () => record?.player?.getCurrentTime?.() || 0;
         const rate = () => record?.player?.getPlaybackRate?.() || 1;
         instBtn('start').onclick = async (e) => await OnYtGifInsertBtn(e, instParam, { param: 't', value: tick() })
@@ -5237,8 +5241,8 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
         const btns = ['yt-gif', 'url', 'start', 'end', 'start|end'].map(s => urlBtn(s))
             .forEach(btn =>
             {
-                const p = btn.closest('.btn-row') || btn.closest('.yt-gif-url-btn-wrapper');
-                if (!btn.onclick && p)
+                const p = btn?.closest('.btn-row') || btn?.closest('.yt-gif-url-btn-wrapper');
+                if (p && !btn.onclick)
                     p.style.display = 'none';
             });
     }
@@ -5274,12 +5278,22 @@ function fmtIframe2Url(targetNode, innerWrapperSel = '.yt-gif-url-btns')
     }
 
     return {
-        urlBtn,
+        urlBtn, confirmBtns,
         instParam: async o =>
         {
             await ExamineResObj(o);
             return `{{[[yt-gif]]: ${u} ${h}}}`
         }
+    }
+    function confirmBtns()
+    { // how do you know which ppts are being used before hand?
+        const btns = ['speed', 'start', 'end'].map(s => urlBtn(s))
+            .forEach(btn =>
+            {
+                const p = btn?.closest('.btn-row') || btn?.closest('.yt-gif-url-btn-wrapper');
+                if (p && !btn.onclick)
+                    p.style.display = 'none';
+            });
     }
 }
 async function TryToUpdateBlock_fmt({ block, targetNode, siblingSel, selfSel, getMap, isKey, fmtCmpnt_cb, tempUID, from })
