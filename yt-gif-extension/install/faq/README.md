@@ -229,6 +229,9 @@ Now, most YTGIFs users are used to `https://youtu.be/videoID?t=0&end=100` for ex
 | &end=          | end timestamp boundary   | get the most out the extension - optional |
 | &s=            | playback speed up to 2   | optional                                  |
 | &vl=           | volume form 0 to 100     | optional                                  |
+| &sp=           | player span              | optional                                  |
+| &hl=           | player interface language| optional                                  |
+| &cc=           | player captions language | optional                                  |
 
 
 ---
