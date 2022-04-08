@@ -6,6 +6,7 @@ from tqdm import tqdm
 from youtube_transcript_api import YouTubeTranscriptApi
 from pytube import Playlist
 from pytube import YouTube
+# https://github.com/mps-youtube/pafy/pull/305#:~:text=You%20could%20just%20install%20pafy%20from%20this%20pull%20request%20(until%20the%20request%20is%20accepted)
 import pafy
 
 
