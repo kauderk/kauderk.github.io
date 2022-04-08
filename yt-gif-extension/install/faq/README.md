@@ -11,9 +11,12 @@
 
 
 # How do i use it?
-- Main funcionality: while exiting the frame, hold down the middle mouse button ("InAndOutKeys") to unmute videos
+- Main funcionality: while exiting the frame, hold down the middle mouse button ("[InAndOutKeys](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#what-are-inandoutkeys)") to unmute videos
 - Create `{{[[yt-gif]]}}` components with [url parameters](https://github.com/kauderk/kauderk.github.io/edit/main/yt-gif-extension/install/faq/README.md#what-are-the-url-parameters-how-do-i-use-them)
-    - {{[[yt-gif]]: https://youtu.be/sFFwvr6l2mM?t=60&end=120 }}
+
+    - ```
+      {{[[yt-gif]]: https://youtu.be/sFFwvr6l2mM?t=60&end=120 }}
+      ```
 - Or simply paste a `YouTube url` and format it with [Simulate url button to video component](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#simulate-url-button-to-video-component) enabled.
     - ##### yt-gif icon > Miscellaneous > (top left corner, tutorial drop down menu) > 🎥 [URL Formatter video tutorial](https://youtu.be/1ABtb346pc0) 
 
