@@ -5,16 +5,13 @@ So far, API-KEY is not required.
 ##### [github file](https://github.com/kauderk/kauderk.github.io/blob/main/yt-transcripts/yt-transcript-batch-downloader.py)
 
 ## How It works:
-- Input a `playlist_id` and run the script. It will download all the **available transcripts** in the playlist to:
+- Change `playlist_id` a variable within the script, to download all the **available transcripts** in the playlist:
     - `./trasncripts-output/{channel_name}/{playlist_name}/{unique-file-name}.txt`
-- You could also use the funcion `tryto_write_transcript(url)` by itself, you'll need to comment out the `for` loop. at the end.
-- So far, I've only run it and test it on an enviroment (vs-code)
-    - place the script on a folder
-    - open visual studio code
-        - you might need to install the dependencies `py install ...`
-    - open the terminal and go to the folder directory
-        - `cd C:{this-folder-path}`
-    - run it `python yt-transcript-batch-downloader.py`
+- Single video? use `tryto_write_transcript(url)` by itself and comment out the `for` loop
+- Tested on an virtual enviroment (vs-code)
+    - [Create a virtual enviroment](https://youtu.be/6W6iY7uUu34): `python -m venv venv`
+    - [Install the dependencies](https://note.nkmk.me/en/python-pip-install-requirements/): `pip install -r requirements.txt`
+    - On the terminal directory, run it: `python yt-transcript-batch-downloader.py`
 
 ## How I use it:
 - Change the variable `output_file_type` to `md` (markdown)
@@ -36,7 +33,7 @@ Saving time. You might have a phrase stuck in your head, but you don't remember 
     - By saving it, you have the success/failure ratio, the percentage bar (build in) plus the exact `video-id` shows that a video is missing it's transcript. In my experience 10% of videos don't have a transcript.
 - [bulk rename file extension](https://windowsloop.com/bulk-rename-file-extension/)
     - `for /R %x in (*.txt) do ren "%x" *.md` rename all .txt files to .md or vice versa 
-- Referece for the `target_language` variable [ISO 639-1 two-letter language code](http://www.loc.gov/standards/iso639-2/php/code_list.php)
+- Referece for `target_language` variable [ISO 639-1 two-letter language code](http://www.loc.gov/standards/iso639-2/php/code_list.php)
 - `pafy` import dependency workaround [Cupcakus/pafy](https://github.com/mps-youtube/pafy/pull/305#:~:text=You%20could%20just%20install%20pafy%20from%20this%20pull%20request%20(until%20the%20request%20is%20accepted))
     -  ``` 
         pip uninstall -y pafy
