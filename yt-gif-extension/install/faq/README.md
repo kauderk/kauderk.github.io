@@ -115,7 +115,7 @@ Customize each YT GIF, even multiple ones within the same block
 
 - Well, they are centered at the bottom, and they appear once I hover over them. It's easier on the eyes, if you know where/what to look for, you don't know need see them all the time.
 - [You can follow these steps...](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/resources/css/Beautiful%20YT%20iframe%20controls)
-    - yt-gif icon > Miscellaneous > (top left corner, tutorial drop down menu) > 🎥 [Video Controls video tutorial](https://youtu.be/1ABtb346pc0)
+    - ##### yt-gif icon > Miscellaneous > (top left corner, tutorial drop down menu) > 🎥 [Video Controls video tutorial](https://youtu.be/1ABtb346pc0)
         - shows you what it looks like
 
 
@@ -133,6 +133,7 @@ Customize each YT GIF, even multiple ones within the same block
 
 ### What does "Iframe/Player Buffer" do?
 - The nature of Roam Research makes it so you can open multiple pages with multiple blocks within them; YT GIFs, ultimately iframes, are way too expensive to have them loaded in the background all the time. The solution is to use a buffer; those oldest ones will be unloaded and ready to be played once you interact with them.
+    - ##### yt-gif icon > Experience > (top left corner, tutorial drop down menu) > 🎥 [Iframe Buffer video tutorial](https://youtu.be/_96XDmFPzbU)
 
 
 ### Why is the playbox is so small? Can the playbox of GIf be resized?
