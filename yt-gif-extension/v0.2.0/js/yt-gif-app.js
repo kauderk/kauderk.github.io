@@ -3153,7 +3153,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
         // 2.1 | the reset btn doesn't belong here, TODO
         const { instParam, urlBtn: instBtn } = iframe2urlObj;
-        const tick = () => record?.player?.getCurrentTime?.() || 0;
+        const tick = () => parseInt(record?.player?.getCurrentTime?.()) || 0;
         const rate = () => record?.player?.getPlaybackRate?.() || 1;
         instBtn('start').onclick = async (e) => await OnYtGifInsertBtn(e, instParam, { param: 't', value: tick() })
         instBtn('end').onclick = async (e) => await OnYtGifInsertBtn(e, instParam, { param: 'end', value: tick() })
