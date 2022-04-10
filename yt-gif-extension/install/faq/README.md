@@ -59,7 +59,11 @@ They can vary depending on the `Play Style` or `Sound Style` you choose.
 
 
 #### The capture shortcuts don't work
-- I'm afraid it's a Javascript cross Browser compatibility issue.
+- `yt-gif icon > YT GIF Timestmap > (bottom row) Shortcut` [toggle ON 🖼️](https://user-images.githubusercontent.com/65237382/162631765-e2a7e60a-5ac9-4251-b38e-e57faf82ae01.png)
+- ##### yt-gif icon > YT GIF Timestmap > (top left corner, tutorial drop down menu) > 🎥 [Creation video tutorial](https://youtu.be/cXf-PB1Vae4)
+- Place your cursor under a `{{[[yt-gif]]}}` block:
+    - `"Ctrl or cmd" + Alt + S` > outuputs {{start}} component
+    - `"Ctrl or cmd" + Alt + D` > outputs {{end}} component
 #### The capture smartblocks don't work
 - There are `Smartblocks` and `SmartblocksV2`, the YT GIF extension uses the latest version of Smartblocks.
 - Update them from here or [re-import them](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/components).
