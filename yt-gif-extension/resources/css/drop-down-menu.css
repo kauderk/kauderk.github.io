@@ -817,3 +817,8 @@ span.yt-gif-anchor .bp3-button.bp3-minimal:hover {
   background: transparent !important;
 }
 
+/* Hmmm yes go on 2 */
+.bp3-button.bp3-icon-video.yt-gif {
+  display: inline-flex !important;
+  margin: 0 !important;
+}
