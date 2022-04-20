@@ -822,3 +822,8 @@ span.yt-gif-anchor .bp3-button.bp3-minimal:hover {
   display: inline-flex !important;
   margin: 0 !important;
 }
+.yt-gif-awaiting-for-user-input:hover 
+.yt-gif-invisible-element {
+    opacity: 1;
+    color: white;
+}
