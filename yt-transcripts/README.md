@@ -1,17 +1,41 @@
 # YouTube Transcript Batch Downloader
 So far, API-KEY is not required.
 
-📄 https://kauderk.github.io/yt-transcripts/yt-transcript-batch-downloader.py
-##### [github file](https://github.com/kauderk/kauderk.github.io/blob/main/yt-transcripts/yt-transcript-batch-downloader.py)
+📄 https://kauderk.github.io/yt-transcripts/yt-transcript.py
+##### [github file](https://github.com/kauderk/kauderk.github.io/blob/main/yt-transcripts/yt-transcript.py)
 
 ## How It works:
-- Change `playlist_id` a variable within the script, to download all the **available transcripts** in the playlist:
-    - `./trasncripts-output/{channel_name}/{playlist_name}/{unique-file-name}.txt`
-- Single video? use `tryto_write_transcript(url)` by itself and comment out the `for` loop
 - Tested on an virtual enviroment (vs-code)
     - [Create a virtual enviroment](https://youtu.be/6W6iY7uUu34): `python -m venv venv`
     - [Install the dependencies](https://note.nkmk.me/en/python-pip-install-requirements/): `pip install -r requirements.txt`
-    - On the terminal directory, run it: `python yt-transcript-batch-downloader.py`
+    - On the terminal directory, run it: `python yt-transcript.py [--playlist|--id|--url]`
+
+
+## Usage:
+- `yt-transcript.py [--hl 'language code'] [--f 'file name'] [--prfx 'file name prefix'] [--path_prfx 'path prefix'] [--ft 'file type'] [--playlist 'playlist id'] [--id 'video id'] [--url 'youtube url']` [how to read this...](https://docs.python.org/3/using/cmdline.html) [syntax comprehension](https://github.com/Battleman/zoomdl#:~:text=the%20cookies%20once-,About%20syntax,-I%20see%20a)
+- Mandatory, at least one of the following:
+    - `--playlist` [help...](https://www.sociablekit.com/find-youtube-playlist-id/)
+    - `--id` [help...](https://help.tcgplayer.com/hc/en-us/articles/115008106868-Finding-Your-YouTube-Video-ID)
+    - `--url` [help...](https://www.computerhope.com/issues/ch002162.htm)
+    - ###### add more separated by ","
+
+- Optional:
+  - `--hl` language code [help...](http://www.loc.gov/standards/iso639-2/php/code_list.php) | default: en
+  - `--f` filename | default: [videoid]\_transcript_[title]
+  - `--prfx` append to filename
+  - `--path_prfx` | default: ./trasncripts-output/channel_name/...
+  - `--ft` | default: "txt" file format
+
+- Default output path: `./trasncripts-output/{channel_name}/{playlist_name}/{unique-file-name}.txt`
+
+
+-  ``` 
+    python yt-transcript.py --playlist 'my_playlist'
+    python yt-transcript.py --id 'my_video_id'
+    python yt-transcript.py --url 'https://www.youtube.com/watch?v=my_video' --f "my_file_name"
+    python yt-transcript.py --playlist 'my_playlist' --id 'my_video_id' --url 'https://youtu.be/my_video_id' --hl 'en' --f 'my_file_name' --prfx 'my_prefix' --path_prfx './my_directory' --ft 'txt'
+    ```
+
 
 ## How I use it:
 - Change the variable `output_file_type` to `md` (markdown)
@@ -39,4 +63,5 @@ Saving time. You might have a phrase stuck in your head, but you don't remember 
         pip uninstall -y pafy
         pip install git+https://github.com/Cupcakus/pafy
         ``` 
+- Inpired by https://github.com/Battleman/zoomdl
 
