@@ -40,37 +40,69 @@ kauderk.util = ((util) =>
     }
     util.HMSToSecondsOnly = (str) =>
     {
-        var p = str.split(':'),
-            s = 0, m = 1;
-
-        while (p.length > 0)
+        if (/:/.test(str))
         {
-            s += m * parseInt(p.pop(), 10);
-            m *= 60;
+            var p = str.split(':'),
+                s = 0, m = 1;
+
+            while (p.length > 0)
+            {
+                s += m * parseInt(p.pop(), 10);
+                m *= 60;
+            }
+
+            return s;
+        }
+        else if (/h|m|s/.test(str))
+        {
+            const hms = str.split(/(?<=h)|(?<=m)|(?<=s)/)
+
+            return hms.reduce((acc, crr) =>
+            {
+                var t = parseInt(crr) || 0
+
+                if (/s/.test(crr))
+                    return t + acc
+                if (/m/.test(crr))
+                    return (t * 60) + acc
+                if (/h/.test(crr))
+                    return (t * 3600) + acc
+
+                return acc
+            }, 0);
         }
 
-        return s;
+        return parseFloat(str) || null;
     }
-    util.seconds2time = (seconds) =>
+    util.seconds2time = (seconds, useLetters) =>
     {// https://stackoverflow.com/questions/6312993/javascript-seconds-to-time-string-with-format-hhmmss#:~:text=Variation%20on%20a%20theme.%20Handles%20single%20digit%20seconds%20a%20little%20differently
         const hours = Math.floor(seconds / 3600);
         let minutes = Math.floor((seconds - (hours * 3600)) / 60);
         const _seconds = seconds - (hours * 3600) - (minutes * 60);
         let time = "";
+        const t = {
+            h: useLetters ? "h" : ":",
+            m: useLetters ? "m" : ":",
+            s: useLetters ? "s" : ""
+        }
+        const cero = useLetters ? "" : "0";
 
         if (hours != 0)
-            time = hours + ":";
+            time = hours + t.h;
 
-        if (minutes != 0 || time !== "")
+        if (!useLetters || minutes > 0)
         {
-            minutes = (minutes < 10 && time !== "") ? "0" + minutes : String(minutes);
-            time += minutes + ":";
+            minutes = (minutes < 10) ? cero + minutes : String(minutes);
+            time += minutes + t.m;
         }
 
         if (time === "")
-            time = _seconds;
-        else
-            time += (_seconds < 10) ? "0" + _seconds : String(_seconds);
+            time = _seconds + t.s;
+        else if (!useLetters || _seconds > 0)
+        {
+            time += (_seconds < 10) ? cero + _seconds : String(_seconds);
+            time += t.s;
+        }
 
         return time;
     }
