@@ -115,7 +115,7 @@ const YTvideoIDs = new Map();
 /*-----------------------------------*/
 const StartEnd_Config = {
     componentPage: 'yt-gif\\/(start|end)',
-    targetStringRgx: /((\d{1,2}):)?((\d{1,2}):)((\d{1,2}))|(\d+(?:(\.\d{1})|(?=\s|\}|\w+|$)))/,
+    targetStringRgx: /(\d+h)?(\d+m)?(\d+s)|(\d+m)|(\d+h)|((\d{1,2}):)?((\d{1,2}):)((\d{1,2}))|(\d+(?:(\.\d{1})|(?=\s|\}|\w+|$)))/,
 }
 const YTGIF_Config = {
     componentPage: 'yt-gif|video',
@@ -2646,7 +2646,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 
 
     // 2.1 OnPlayerReady video params point of reference
-    allVideoParameters.set(newId, ExtractParamsFromUrl(url));
+    allVideoParameters.set(newId, ExtractParamsFromUrl(url, true));
     const configParams = allVideoParameters.get(newId);
 
     // 2.2 target's point of reference
@@ -4735,7 +4735,7 @@ async function getTimestampObj_smart(page)
         const { formats, foundBlock, targetBlock } = await getLastAnchorCmptInHierarchy(uid);
         if (!foundBlock) return failObj;
 
-        const { lessHMS, HMS, S } = formats;
+        const { lessHMS, HMS, hmsSufix, S } = formats;
 
         const obj = (v) => ({
             value: v,
@@ -4745,6 +4745,7 @@ async function getTimestampObj_smart(page)
         return {
             lessHMS: obj(fmt({ lessHMS })),
             HMS: obj(fmt({ HMS })),
+            hmsSufix: obj(fmt({ hmsSufix })),
             S: obj(parseInt(S ?? targetBlock[page].S)),
             uid: targetBlock?.uid,
         }
@@ -4970,6 +4971,8 @@ function fmtTimestamp(value = UI.timestamps.tm_workflow_display.value)
         fmt = (tms) => UTILS.convertHMS(str2sec(tms.toString()));
     else if (value == 'S')
         fmt = (tms) => str2sec(tms.toString());
+    else if (value == 'hmsSufix')
+        fmt = (tms) => UTILS.seconds2time(str2sec(tms.toString()), true);
 
     return fmt;
 }
@@ -5859,6 +5862,7 @@ function AssembleFilterObjs()
     const getBoundaryObj = (v) => ({
         lessHMS: UTILS.seconds2time(parseInt(v)),
         HMS: UTILS.convertHMS(v),
+        hmsSufix: UTILS.seconds2time(parseInt(v), true),
         S: v,
     })
 
