@@ -2259,9 +2259,12 @@ async function Ready()
             appendlUrlBtns(rm_btn);
 
 
+            const { updUrl, urlBtn: instBtn } = fmtIframe2Url(rm_btn);
+            if (validTmParam(getYTUrlObj(rm_btn).url))
+                instBtn('format').onclick = async (e) => await OnYtGifUrlBtn(e, updUrl, { param: 't', float: false })
+
+
             const { startCmpt, endCmpt, startEndCmpt, ytGifCmpt, urlBtn, confirmBtns } = fmtTimestampsUrlObj(rm_btn);
-
-
             urlBtn('yt-gif').onclick = async (e) => await OnYtGifUrlBtn(e, ytGifCmpt)
             urlBtn('start').onclick = async (e) => await OnYtGifUrlBtn(e, startCmpt)
             urlBtn('end').onclick = async (e) => await OnYtGifUrlBtn(e, endCmpt)
@@ -2270,7 +2273,7 @@ async function Ready()
 
 
 
-            async function OnYtGifUrlBtn(e, fmtCmpnt_cb)
+            async function OnYtGifUrlBtn(e, fmtCmpnt_cb, fromObj)
             {
                 // 0.
                 const tEl = e.currentTarget;
@@ -2297,23 +2300,26 @@ async function Ready()
 
                 awaiting(true);
 
-                const URL_formatter_settings = {
-                    block,
-                    targetNode: ytUrlEl,
+                function get_URL_formatter_settings(e, outterObj = {}, fromObj = {})
+                {
+                    return {
+                        block,
+                        targetNode: ytUrlEl,
 
-                    siblingSel: `.bp3-icon-video + a[href*="youtu"]`,
-                    selfSel: `.bp3-icon-video + a[href*="${url}"]`,
+                        siblingSel: `.bp3-icon-video + a[href*="youtu"]`,
+                        selfSel: `.bp3-icon-video + a[href*="${url}"]`,
 
-                    getMap: async () => getComponentMap(tempUID, URL_Config),
-                    isKey: 'is substring',
+                        getMap: async () => getComponentMap(tempUID, URL_Config),
+                        isKey: 'is substring',
 
-                    fmtCmpnt_cb,
-                    tempUID,
+                        tempUID,
 
-                    from: { caster: 'rm-btn', urlBtn: e.target },
+                        from: { caster: 'rm-btn', urlBtn: e.target, ...fromObj },
+                        ...outterObj
+                    }
                 }
 
-                await TryToUpdateBlock_fmt(URL_formatter_settings);
+                await TryToUpdateBlock_fmt(get_URL_formatter_settings(e, { fmtCmpnt_cb }, fromObj));
 
 
                 // 8. set free for any possible future clicks
