@@ -5521,36 +5521,25 @@ function ExtractUrlsObj(string)
     return indexPairObj(rgx2Gm(urlRgx), string, 'url')?.[0] ||
         indexPairObj(rgx2Gm(minimalRgx), string, 'minimal')?.[0] || {};
 }
-function ExtractParamsFromUrl(url)
+function ExtractParamsFromUrl(url, copyBaseObject = false)
 {
-    let success = false;
-    const media = JSON.parse(JSON.stringify(videoParams));
+    const media = copyBaseObject ? JSON.parse(JSON.stringify(videoParams)) : {};
     if (YTGIF_Config.guardClause(url))
     {
-        const fParam = (p) => floatParam(p, url);
+        // params
+        for (const pair of [...url.matchAll(/(\w+)=([^&]+)/gm)])
+            media[pair[1]] = pair[2];
+
+        media.start = media.defaultStart = time2sec(media.t);
+        media.end = media.defaultEnd = time2sec(media.end);
         media.id = UTILS.getYouTubeVideoID(url);
-
-        media.start = media.defaultStart = fParam('t|start');
-        media.end = media.defaultEnd = fParam('end');
-
-        media.speed = fParam('s|speed');
-
-        media.volume = fParam('vl|volume');
-
-        media.hl = new RegExp(/(hl=)((?:\w+))/, 'gm').exec(url)?.[2];
-        media.cc = new RegExp(/(cc=|cc_lang_pref=)((?:\w+))/, 'gm').exec(url)?.[2];
-
-        media.sp = new RegExp(/(sp=|span=)((?:\w+))/, 'gm').exec(url)?.[2];
-
         media.src = url;
         media.type = 'youtube';
 
-        success = true;
+        return media;
     }
-
-    if (success) { return media; }
     else { console.warn(`${newId}    Invalid youtube url detected for yt-gifs ${((uid))}`); }
-    return false;
+    return null;
 }
 
 //#region helpers
@@ -5605,11 +5594,36 @@ function rgx2Gm(rgx)
 }
 function paramRgx(p, f = 'gm')
 {
-    return new RegExp(`((?:${p})=)([-+]?\\d*\\.\\d+|\\d+)`, f)
+    return new RegExp(`((?:${p})=)(([^&]+))`, f);
 }
 function floatParam(p, url)
 {
-    return paramRgx(p)?.exec(url)?.[2];
+    const raw = paramRgx(p)?.exec(url)?.[2];
+
+    return time2sec(raw);
+}
+function time2sec(raw)
+{
+    if (/h|m|s/.test(raw))
+    {
+        const hms = raw.split(/(?<=h)|(?<=m)|(?<=s)/)
+
+        return hms.reduce((acc, crr) =>
+        {
+            var t = parseInt(crr) || 0
+
+            if (/s/.test(crr))
+                return t + acc
+            if (/m/.test(crr))
+                return (t * 60) + acc
+            if (/h/.test(crr))
+                return (t * 3600) + acc
+
+            return acc
+        }, 0);
+    }
+
+    return parseFloat(raw) || undefined;
 }
 function stopEvents(e)
 {
@@ -5619,18 +5633,50 @@ function stopEvents(e)
 /**
  * append page param if missing
  */
-function tryFmt_urlParam({ match, value, p, float })
+function tryFmt_urlParam({ match, value, p, float, fmt = 'S' })
 {
-    let m = match;
-    const c = [...m].pop() == '?' ? '' : (m.includes('?') ? '&' : '?'); // ends on '?' then it is blank, else add '&' or '?' depending on which is missing
-    value = !float ? fmtTimestamp('S')(value ?? '0') : Number(value);
-    if (!value || value == '0')
-        return match;
+    let m = match, v = value;
+
+    v = !float ? fmtTimestamp(fmt)(v ?? '0') : Number(v);
+    if (!v || v == '0' || v == '0s')
+        return m;
+
     const replace = new RegExp(`(${paramRgx(p).source})`);
-    if (replace.test(match))
-        return m.replace(replace, `${p}=${value}`);
+    if (replace.test(m))
+    {
+        return m.replace(replace, `${p}=${v}`);
+    }
     else
-        return m += `${c}${p}=${value}`;
+    {
+        const c = [...m].pop() == '?' ? '' : (m.includes('?') ? '&' : '?'); // ends on '?' then it is blank, else add '&' or '?' depending on which is missing
+        return m += `${c}${p}=${v}`;
+    }
+}
+function assertTmParams(url, fmt_)
+{
+    // HOLY SHIT THIS IS MADNESS!
+    const fmt = (p, v) => tryFmt_urlParam({ match: url, value: v, p, fmt: fmt_ ?? UI.timestamps.tm_workflow_grab.value })
+    url = fmt('t', floatParam('t', url));
+    url = fmt('end', floatParam('end', url));
+    return url
+}
+function getAnyTmParamType(url)
+{
+    return (getTypeOfTmParam('t', url) || getTypeOfTmParam('end', url))
+}
+function validTmParam(url)
+{
+    return floatParam('t', url) ?? floatParam('end', url);
+}
+function getTypeOfTmParam(p, url)
+{
+    const str = paramRgx(p)?.exec(url)?.[2];
+    if (/:/.test(str))
+        return 'HMS' // lessHMS
+    if (/h|m|s/.test(str))
+        return 'hmsSufix'
+    if (/\d+/.test(str))
+        return 'S'
 }
 //#endregion
 
