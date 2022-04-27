@@ -4979,9 +4979,10 @@ function awaitingAtrr(bol, el)
 //#region URL Formatter workflow
 function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
 {
+    const btnNames = ['yt-gif', 'format', 'url', 'start', 'end', 'start|end'];
     const urlBtn = (page) => targetNode.querySelector(`${innerWrapperSel} [yt-gif-url-btn="${page}"]`);
 
-    const getFmtPage = (p, url) => fmtTimestamp()(floatParam(p, url) || '0'); // javascript is crazy!
+    const getFmtPage = (p, url) => fmtTimestamp(UI.timestamps.tm_workflow_grab.value)(floatParam(p, url) || '0'); // javascript is crazy!
 
     const startTm = (url) => getFmtPage('t|start', url);
     const endTm = (url) => getFmtPage('end', url);
@@ -5091,6 +5092,7 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
 
         return updateVars();
 
+        //#region ExamineResObj Body
         function updateVars()
         {
             u = matchObj.match;
@@ -5103,36 +5105,38 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
         {
             // update url
             const p = page == 'end' ? 'end' : 't';
-            return tryFmt_urlParam({ match, value, p });
+            const fmt = UI.timestamps.tm_workflow_grab.value != 'S' ? 'hmsSufix' : 'S';
+            return tryFmt_urlParam({ match, value, p, fmt });
         }
-        function fmtUrlsObj(to, params)
+        function fmtUrlsObj(to, urlObj)
         {
             const ignore = [to, 'type', 'src', 'defaultEnd', 'defaultStart', 'id',
-                'timeURLmapHistory', 'updateVolume', 'volumeURLmapHistory'];
+                'timeURLmapHistory', 'updateVolume', 'volumeURLmapHistory', 'v', 't'];
             const minVers = {
                 speed: ['s'],
                 volume: ['vl'],
                 start: ['t'],
             }
 
-            let urlPms = '';
-            for (const key in params)
+            let params = '';
+            for (const key in urlObj)
             {
-                if (ignore.includes(key) || !params[key])
+                if (ignore.includes(key) || !urlObj[key])
                     continue;
                 const min = minVers[key]?.[0] ?? key;
-                urlPms += `&${min}=${params[key]}`; // E.g. &t=10
+                params += `&${min}=${urlObj[key]}`; // E.g. &t=10
             }
-            urlPms = urlPms.slice(1); // remove first '&'
+            params = params.slice(1); // remove first '&'
+            const fmt = UI.timestamps.tm_workflow_grab.value != 'S' ? 'hmsSufix' : 'S';
+            params = assertTmParams('?' + params, fmt);// '?' for calculations pourposes only
+
             const c = isSelected(UI.display.fmt_options, 'avoid_redundancy') ? '/' : 'https://youtu.be/';
-            const base = (c) => c + params.id;
-            const full = urlPms.slice(1);
-            const url = full ? `${base(c)}?${urlPms}` : base(c);
+            const base = (c) => c + urlObj.id;
 
             return {
-                minimal: `${base('/')}?${urlPms}`,
-                full: `${base('https://youtu.be/')}?${urlPms}`,
-                fmtUrl: url
+                minimal: `${base('/')}?${params}`,
+                full: `${base('https://youtu.be/')}?${params}`,
+                fmtUrl: params.slice(1) ? `${base(c)}?${params}` : base(c),
             }
         }
         function TryToRemoveRedudantTmParam(pear = 'self', contentObj)
@@ -5229,6 +5233,8 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
 
             return foundBlock.lastUrl;
         }
+        //#endregion
+
     }
     function concatNoCmpt(resObj)
     {
@@ -5244,12 +5250,12 @@ function fmtTimestampsUrlObj(targetNode, innerWrapperSel = '.yt-gif-url-btns')
         if (innerWrapperSel)
             if (innerWrapper = targetNode.querySelector(innerWrapperSel))
                 innerWrapper.onmousedown = stopEvents;
-        const btns = ['yt-gif', 'url', 'start', 'end', 'start|end'].map(s => urlBtn(s))
+        const btns = btnNames.map(s => urlBtn(s))
             .forEach(btn => btn.onmousedown = stopEvents);
     }
     function confirmBtns()
-    { // how do you know which ppts are being used before hand?
-        const btns = ['yt-gif', 'url', 'start', 'end', 'start|end'].map(s => urlBtn(s))
+    { // TODO : how do you know which ppts are being used before hand?
+        const btns = btnNames.map(s => urlBtn(s))
             .forEach(btn =>
             {
                 const p = btn?.closest('.btn-row') || btn?.closest('.yt-gif-url-btn-wrapper');
