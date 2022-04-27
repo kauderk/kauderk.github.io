@@ -5274,24 +5274,23 @@ function fmtIframe2Url(targetNode, innerWrapperSel = '.yt-gif-url-btns')
 
     async function ExamineResObj(resObj) 
     {
-        let { capture } = resObj;
-        const { param, value } = resObj.from ?? {};
-        let { contentObj, matchObj } = UrlBtnAction2InfoObj(capture, ExtractUrlsObj);
+        const actionObj = UrlBtnAction2InfoObj(resObj.capture, ExtractUrlsObj);
 
-        matchObj.match = tryFmt_urlParam({
-            match: matchObj.match,
-            value,
-            p: param,
-            float: true
+
+        actionObj.matchObj.match = tryFmt_urlParam({
+            match: actionObj.matchObj.match,
+            value: resObj.from.value ?? paramRgx(resObj.from.param)?.exec(actionObj.matchObj.match)?.[2], // no value? try itself
+            p: resObj.from.param,
+            fmt: UI.timestamps.tm_workflow_grab.value,
+            float: float ?? true
         });
-
-        updateVars();
-        function updateVars()
-        {
-            u = matchObj.match;
-            h = contentObj.hidden ?? '';
-            h = h.trim() ? (h.trim() + ' ') : '';
-        }
+        updateVars(actionObj);
+    }
+    function updateVars(actionObj)
+    {
+        u = actionObj.matchObj.match;
+        h = actionObj.contentObj.hidden ?? '';
+        h = h.trim() ? (h.trim() + ' ') : '';
     }
 
     return {
@@ -5300,6 +5299,18 @@ function fmtIframe2Url(targetNode, innerWrapperSel = '.yt-gif-url-btns')
         {
             await ExamineResObj(o);
             return `{{[[yt-gif]]: ${u} ${h}}}`
+        },
+        updUrl: async o =>
+        {
+            o.to = 'url';
+            const actionObj = UrlBtnAction2InfoObj(o.capture, ExtractUrlsObj);
+            let match = actionObj.matchObj.match;
+            let fmt = getAnyTmParamType(match);
+            fmt = fmt == 'S' ? 'hmsSufix' : 'S';
+            actionObj.matchObj.match = assertTmParams(match, fmt);
+
+            updateVars(actionObj);
+            return `${u}${h}`
         }
     }
     function confirmBtns()
