@@ -2152,6 +2152,8 @@ async function Ready()
             pageRefSufx = 'start'
         else if (e.key == 'd') // Ctrl + Alt + d
             pageRefSufx = 'end'
+        if (!pageRefSufx)
+            return;
 
         await addBlockTimestamp_smart_local(pageRefSufx);
     }
@@ -2161,7 +2163,11 @@ async function Ready()
         const timestampObj = await getTimestampObj_smart(pageRefSufx);
         const uid = timestampObj.uid;
         const component = timestampObj[UI.timestamps.tm_workflow_grab.value]?.fmt ?? '';
-        if (!uid) return;
+
+        if (!uid)
+            return console.warn(`YT GIF Timestamps: couldn't find YT GIFs within the Hierarchy: ((${uid}))`);
+        if (!component)
+            return console.warn(`YT GIF Timestamps: couldn't find values with the keyword "${UI.timestamps.tm_workflow_grab.value}" from ((${uid}))`);
 
         const { updatedString, el } = concatStringAtCaret(getCurrentInputBlock(), component);
 
@@ -2225,7 +2231,12 @@ async function Ready()
         const fmt = fmtTimestamp(value);
 
         document.querySelectorAll('[yt-gif-timestamp-emulation]')
-            .forEach(tms => tms.a.textContent = fmt(tms.a.textContent));
+            .forEach(tms =>
+            {
+                if (value == 'Default')
+                    return tms.a.textContent = tms.getAttribute('timestamp') ?? tms.a.textContent;
+                tms.a.textContent = fmt(tms.a.textContent)
+            });
     }
 
     //#endregion
