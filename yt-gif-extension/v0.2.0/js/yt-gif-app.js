@@ -115,7 +115,7 @@ const YTvideoIDs = new Map();
 /*-----------------------------------*/
 const StartEnd_Config = {
     componentPage: 'yt-gif\\/(start|end)',
-    targetStringRgx: /(\d+h)?(\d+m)?(\d+s)|(\d+m)|(\d+h)|((\d{1,2}):)?((\d{1,2}):)((\d{1,2}))|(\d+(?:(\.\d{1})|(?=\s|\}|\w+|$)))/,
+    targetStringRgx: /(\d+h)(\d+m)|(\d+h)?(\d+m)?(\d+s)|(\d+m)|(\d+h)|((\d{1,2}):)?((\d{1,2}):)((\d{1,2}))|(\d+(?:(\.\d{1})|(?=\s|\}|\w+|$)))/,
 }
 const YTGIF_Config = {
     componentPage: 'yt-gif|video',
