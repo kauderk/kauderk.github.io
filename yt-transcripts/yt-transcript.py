@@ -1,10 +1,12 @@
 # Python 3.10.3 64-bit
+from ast import Try
 import os
 import re
 import argparse
 import unicodedata
 from copy import deepcopy
 from datetime import timedelta
+from warnings import catch_warnings
 from tqdm import tqdm
 from youtube_transcript_api import YouTubeTranscriptApi
 from pytube import Playlist, YouTube, extract
@@ -65,9 +67,9 @@ def tryto_write_transcript(url, args, path_prfx=None):
         transcript = get_available_transcript(id, args.hl)
 
         if not (transcript):
-            raise Exception(f'\nERROR: Transcript? {id}')
+            raise Exception(f'\nERROR: Transcript for video id "{id}" with language code "{args.hl}" not found')
     except:
-        return print(f'\nERROR: Video transcript {id} not found')
+        return print(f'\nERROR: Video id "{id}" publically not available or not found')
 
     # 2. output
     txt = f'title: {video.title}\nduration: {str(timedelta(seconds=video.length))}\ndescription: {video.description}\n\n{transcript}\n'
@@ -102,8 +104,13 @@ def tryto_write_transcript(url, args, path_prfx=None):
 def loop_playlist(playlist_id, args):
     yt = Playlist(f'https://www.youtube.com/playlist?list={playlist_id}')
     count = 0
-    channel_name = slugify(yt.owner)
-    playlist_name = slugify(yt.title)
+    channel_name, playlist_name = None, None
+    try:
+        channel_name = slugify(yt.owner)
+        playlist_name = slugify(yt.title)
+    except:
+        return print(f'\nERROR: Playlist {playlist_id} not found, with owner {channel_name}')
+    
     for url in tqdm(yt):
         count += 1
         # remove the path_prfx argument, I want the output on this directory
@@ -114,25 +121,25 @@ def loop_playlist(playlist_id, args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--hl', default='en', help='language code')  # language
-    parser.add_argument('--f', default='default',
+    parser.add_argument('-hl', default='en', help='language code')  # language
+    parser.add_argument('-f', default='default',
                         help='filename default [videoid]_transcript_[title]')  # file name
-    parser.add_argument('--prfx', default='',
+    parser.add_argument('-prfx', default='',
                         help='append to filename')  # file prefix
-    parser.add_argument('--path_prfx', default='./',
+    parser.add_argument('-path_prfx', default='./',
                         help='default ./this-directory/channel_name/...')  # file prefix
-    parser.add_argument('--ft', default='txt',
+    parser.add_argument('-ft', default='txt',
                         help='default "txt" file format')  # file type
     parser.add_argument(
-        '--playlist', help='playlist id | download every video | add more separated by ","')  # playlist id
+        '-playlist', help='playlist id | download every video | add more separated by ","')  # playlist id
     parser.add_argument(
-        '--id', help='video id | standalone download | add more separated by ","')  # video id
+        '-id', help='video id | standalone download | add more separated by ","')  # video id
     parser.add_argument(
-        '--url', help='video url | standalone download | add more separated by ","')  # video url
+        '-url', help='video url | standalone download | add more separated by ","')  # video url
     args = parser.parse_args()
 
     if not any((args.playlist, args.id, args.url)):
-        print('\nUse either --playlist --id --url | add more separated by ","\n')
+        print('\nUse either -playlist -id -url | add more separated by ","\n')
         print(parser.print_help())
         exit()
 
