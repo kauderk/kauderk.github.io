@@ -3402,9 +3402,9 @@ async function onPlayerReady(event)
             if (!tg)
                 return false;
 
-            const key = tg.h.id;
+            const key = tg.i.id;
             const { start: startM, end: endM } = allVideoParameters.get(key);
-            const { start, end } = tg?.i?.h?.playerVars;
+            const { start, end } = tg.j.i.playerVars;
 
             return startM == start && endM == end;
         }
@@ -4798,7 +4798,7 @@ async function ReloadYTVideo({ t, start, end })
     if (!t)
         return; //console.log(`YT GIF : Couldn't reload a video. Internal target is missing.`);
 
-    const vars = t.i.h;
+    const vars = t.j.i;
     const map = allVideoParameters.get(t.i.id);
     const iframe = t?.getIframe?.();
 
@@ -4830,7 +4830,7 @@ async function ReloadYTVideo({ t, start, end })
     // though I'm waiting to see what bugs it's going to cause
 
     await t?.loadVideoById?.({ // but it requieres you to load the video again to set "endSeconds" once again
-        'videoId': t.i.h.videoId,
+        'videoId': t.j.i.videoId,
         'startSeconds': start,
         'endSeconds': end,
     });
