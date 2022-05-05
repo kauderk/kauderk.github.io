@@ -8,32 +8,32 @@ So far, API-KEY is not required.
 - Tested on an virtual enviroment (vs-code)
     - [Create a virtual enviroment](https://youtu.be/6W6iY7uUu34): `python -m venv venv`
     - [Install the dependencies](https://note.nkmk.me/en/python-pip-install-requirements/): `pip install -r requirements.txt`
-    - On the terminal directory, run it: `python yt-transcript.py [--playlist|--id|--url]`
+    - On the terminal directory, run it: `python yt-transcript.py [-playlist|-id|-url]`
 
 
 ## Usage:
-- `yt-transcript.py [--hl 'language code'] [--f 'file name'] [--prfx 'file name prefix'] [--path_prfx 'path prefix'] [--ft 'file type'] [--playlist 'playlist id'] [--id 'video id'] [--url 'youtube url']` [how to read this...](https://docs.python.org/3/using/cmdline.html) [syntax comprehension](https://github.com/Battleman/zoomdl#:~:text=the%20cookies%20once-,About%20syntax,-I%20see%20a)
+- `yt-transcript.py [-hl 'language code'] [-f 'file name'] [-prfx 'file name prefix'] [-path_prfx 'path prefix'] [-ft 'file type'] [-playlist 'playlist id'] [-id 'video id'] [-url 'youtube url']` [how to read this...](https://docs.python.org/3/using/cmdline.html) [syntax comprehension](https://github.com/Battleman/zoomdl#:~:text=the%20cookies%20once-,About%20syntax,-I%20see%20a)
 - Mandatory, at least one of the following:
-    - `--playlist` [help...](https://www.sociablekit.com/find-youtube-playlist-id/)
-    - `--id` [help...](https://help.tcgplayer.com/hc/en-us/articles/115008106868-Finding-Your-YouTube-Video-ID)
-    - `--url` [help...](https://www.computerhope.com/issues/ch002162.htm)
+    - `-playlist` [help...](https://www.sociablekit.com/find-youtube-playlist-id/)
+    - `-id` [help...](https://help.tcgplayer.com/hc/en-us/articles/115008106868-Finding-Your-YouTube-Video-ID)
+    - `-url` [help...](https://www.computerhope.com/issues/ch002162.htm)
     - ###### add more separated by ","
 
 - Optional:
-  - `--hl` language code [help...](http://www.loc.gov/standards/iso639-2/php/code_list.php) | default: en
-  - `--f` filename | default: [videoid]\_transcript_[title]
-  - `--prfx` append to filename
-  - `--path_prfx` | default: ./trasncripts-output/channel_name/...
-  - `--ft` | default: "txt" file format
+  - `-hl` language code [help...](http://www.loc.gov/standards/iso639-2/php/code_list.php) | default: en
+  - `-f` filename | default: [videoid]\_transcript_[title]
+  - `-prfx` append to filename
+  - `-path_prfx` | default: ./trasncripts-output/channel_name/...
+  - `-ft` | default: "txt" file format
 
 - Default output path: `./trasncripts-output/{channel_name}/{playlist_name}/{unique-file-name}.txt`
 
 
 -  ``` 
-    python yt-transcript.py --playlist 'my_playlist'
-    python yt-transcript.py --id 'my_video_id'
-    python yt-transcript.py --url 'https://www.youtube.com/watch?v=my_video' --f "my_file_name"
-    python yt-transcript.py --playlist 'my_playlist' --id 'my_video_id' --url 'https://youtu.be/my_video_id' --hl 'en' --f 'my_file_name' --prfx 'my_prefix' --path_prfx './my_directory' --ft 'txt'
+    python yt-transcript.py -playlist 'my_playlist'
+    python yt-transcript.py -id 'my_video_id'
+    python yt-transcript.py -url 'https://www.youtube.com/watch?v=my_video' -f "my_file_name"
+    python yt-transcript.py -playlist 'my_playlist' -id 'my_video_id' -url 'https://youtu.be/my_video_id' -hl 'en' -f 'my_file_name' -prfx 'my_prefix' -path_prfx './my_directory' -ft 'txt'
     ```
 
 
