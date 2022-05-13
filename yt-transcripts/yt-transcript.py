@@ -6,7 +6,7 @@ import argparse
 import unicodedata
 from copy import deepcopy
 from datetime import timedelta
-from warnings import catch_warnings
+import click
 from tqdm import tqdm
 from youtube_transcript_api import YouTubeTranscriptApi
 from pytube import Playlist, YouTube, extract
@@ -92,8 +92,15 @@ def tryto_write_transcript(url, args, path_prfx=None):
         if(open(filename, 'r', encoding='utf8').read() == txt):
             return print(f'\nFile: {filename} already exists with the same content')
         else:
-            # clean file
-            open(filename, 'w', encoding='utf8').close()
+            cleanFile = lambda : open(filename, 'w', encoding='utf8').close()
+            # clean file if urser's args says so
+            if args.verify.lower() in ("yes", "true", "1"):
+                if click.confirm(f'\nFile: {filename} already exists.\nDo you want to override it?', default=True):
+                    cleanFile()
+                else:
+                    return
+            else:
+                cleanFile()
 
     # 4. write file
     with open(filename, 'a', encoding='utf8') as f:
@@ -130,6 +137,7 @@ if __name__ == '__main__':
                         help='default ./this-directory/channel_name/...')  # file prefix
     parser.add_argument('-ft', default='txt',
                         help='default "txt" file format')  # file type
+    parser.add_argument('-verify', default='', help='If files should be overwritten')  # file type
     parser.add_argument(
         '-playlist', help='playlist id | download every video | add more separated by ","')  # playlist id
     parser.add_argument(
