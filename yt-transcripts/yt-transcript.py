@@ -126,7 +126,7 @@ if __name__ == '__main__':
                         help='filename default [videoid]_transcript_[title]')  # file name
     parser.add_argument('-prfx', default='',
                         help='append to filename')  # file prefix
-    parser.add_argument('-path_prfx', default='./',
+    parser.add_argument('-path-prfx', default='./',
                         help='default ./this-directory/channel_name/...')  # file prefix
     parser.add_argument('-ft', default='txt',
                         help='default "txt" file format')  # file type
@@ -148,10 +148,10 @@ if __name__ == '__main__':
             loop_playlist(ply.strip(), deepcopy(args))
 
     if(args.id):
-        for id in args.id.split(","):
+        for id in tqdm(args.id.split(",")):
             tryto_write_transcript(
                 'https://youtu.be/' + id.strip(), deepcopy(args))
 
     if(args.url):
-        for url in args.url.split(","):
+        for url in tqdm(args.url.split(",")):
             tryto_write_transcript(url.strip(), deepcopy(args))

@@ -12,7 +12,7 @@ So far, API-KEY is not required.
 
 
 ## Usage:
-- `yt-transcript.py [-hl 'language code'] [-f 'file name'] [-prfx 'file name prefix'] [-path_prfx 'path prefix'] [-ft 'file type'] [-playlist 'playlist id'] [-id 'video id'] [-url 'youtube url']` [how to read this...](https://docs.python.org/3/using/cmdline.html) [syntax comprehension](https://github.com/Battleman/zoomdl#:~:text=the%20cookies%20once-,About%20syntax,-I%20see%20a)
+- `yt-transcript.py [-hl 'language code'] [-f 'file name'] [-prfx 'file name prefix'] [-path-prfx 'path prefix'] [-ft 'file type'] [-playlist 'playlist id'] [-id 'video id'] [-url 'youtube url']` [how to read this...](https://docs.python.org/3/using/cmdline.html) [syntax comprehension](https://github.com/Battleman/zoomdl#:~:text=the%20cookies%20once-,About%20syntax,-I%20see%20a)
 - Mandatory, at least one of the following:
     - `-playlist` [help...](https://www.sociablekit.com/find-youtube-playlist-id/)
     - `-id` [help...](https://help.tcgplayer.com/hc/en-us/articles/115008106868-Finding-Your-YouTube-Video-ID)
@@ -23,7 +23,7 @@ So far, API-KEY is not required.
   - `-hl` language code [help...](http://www.loc.gov/standards/iso639-2/php/code_list.php) | default: en
   - `-f` filename | default: [videoid]\_transcript_[title]
   - `-prfx` append to filename
-  - `-path_prfx` | default: ./trasncripts-output/channel_name/...
+  - `-path-prfx` | default: ./trasncripts-output/channel_name/...
   - `-ft` | default: "txt" file format
 
 - Default output path: `./trasncripts-output/{channel_name}/{playlist_name}/{unique-file-name}.txt`
@@ -33,7 +33,8 @@ So far, API-KEY is not required.
     python yt-transcript.py -playlist 'my_playlist'
     python yt-transcript.py -id 'my_video_id'
     python yt-transcript.py -url 'https://www.youtube.com/watch?v=my_video' -f "my_file_name"
-    python yt-transcript.py -playlist 'my_playlist' -id 'my_video_id' -url 'https://youtu.be/my_video_id' -hl 'en' -f 'my_file_name' -prfx 'my_prefix' -path_prfx './my_directory' -ft 'txt'
+    python yt-transcript.py -id 'my_video_id1,my_video_id2,my_video_id3' -path-prfx './trasncripts-output/new-folder/'
+    python yt-transcript.py -playlist 'my_playlist' -id 'my_video_id' -url 'https://youtu.be/my_video_id' -hl 'en' -f 'my_file_name' -prfx 'my_prefix' -path-prfx './my_directory' -ft 'txt'
     ```
 
 
