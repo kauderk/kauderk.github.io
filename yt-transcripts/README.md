@@ -25,7 +25,7 @@ So far, API-KEY is not required.
   - `-prfx` append to filename
   - `-path-prfx` | default: ./trasncripts-output/channel_name/...
   - `-ft` | default: "txt" file format
-  - `-verify` | default: False If files should be overwritten
+  - `-verify` | default: False
 
 - Default output path: `./trasncripts-output/{channel_name}/{playlist_name}/{unique-file-name}.txt`
 
