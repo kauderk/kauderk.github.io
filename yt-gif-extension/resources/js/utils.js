@@ -264,7 +264,7 @@ kauderk.util = ((util) =>
     util.getUniqueSelectorSmart = (elSrc) =>
     {
         const sel = util.getUniqueSelector(elSrc);
-        return assertSelector(sel);
+        return util.assertSelector(sel);
     }
     util.assertSelector = (sel) =>
     {
