@@ -4821,13 +4821,17 @@ async function ReloadYTVideo({ t, start, end })
         await RAP.sleep(50);
 
     // https://stackoverflow.com/questions/60409231/why-does-my-youtube-react-component-fire-the-playerstate-ended-event-twice-befor
-    // t.l.h[5] = async () => { }; // the craziet shinanigans EVER!
+    // t.m.i[5] = async () => { }; // the craziet shinanigans EVER!
     // t.seekTo?.(start); // not only it was preserving it's state
     // t.pauseVideo?.(); // and performing it's onStateChange func twice
     if (t.playerInfo?.playerState ?? 0)
         t.playerInfo.playerState = 'F';
-    if (t.l?.h?.[5])
-        t.l.h[5] = async () => { }; // the only way to prevent double fire...? man...
+    try { t.m.i[5] = async () => { }; }
+    catch (error)
+    {
+        console.warn("YT GIF: ReloadYTVideo | onStateChange assignment to undefined");
+    }
+    // the only way to prevent double fire...? man...
     // though I'm waiting to see what bugs it's going to cause
 
     await t?.loadVideoById?.({ // but it requieres you to load the video again to set "endSeconds" once again
@@ -4836,11 +4840,11 @@ async function ReloadYTVideo({ t, start, end })
         'endSeconds': end,
     });
 
-    while (isRendered(iframe) && !t?.getCurrentTime?.())
+    while (isRendered(iframe) && !t?.getCurrentTime?.()) // iframe exist && time isn't 0 or undefined
         await RAP.sleep(50);
     t?.setVolume?.(vol);
 
-    try { t.l.h[5] = onStateChange; } catch (error) { }
+    try { t.m.i[5] = onStateChange; } catch (error) { }
 
     return t?.getCurrentTime?.();
 }
