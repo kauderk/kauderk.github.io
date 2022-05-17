@@ -261,9 +261,13 @@ kauderk.util = ((util) =>
         span.classList.add(...classList);
         return span;
     }
-    util.getUniqueSelectorSmart = (selector) =>
+    util.getUniqueSelectorSmart = (elSrc) =>
     {
-        let sel = util.getUniqueSelector(selector);
+        const sel = util.getUniqueSelector(elSrc);
+        return assertSelector(sel);
+    }
+    util.assertSelector = (sel) =>
+    {
         if (sel.includes('@')) // if string begins with invalid character, such as '@---.com' -> '\\@---.com\\
         {
             let selArr = sel.split(' > ');

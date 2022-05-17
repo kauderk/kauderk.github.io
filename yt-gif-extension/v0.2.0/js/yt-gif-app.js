@@ -2974,6 +2974,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
         {
             if ('block' == UI.timestamps.tm_reset_on_removal.value)
             {
+                id = UTILS.assertSelector(id);
                 if (!document.querySelector('div.rm-block__input#' + id))
                     return true;
             }
