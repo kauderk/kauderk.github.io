@@ -11,13 +11,13 @@
 
 
 # How do i use it?
-- Main funcionality: while exiting the frame, hold down the middle mouse button ("[InAndOutKeys](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#what-are-inandoutkeys)") to unmute videos
-- Create `{{[[yt-gif]]}}` components with [url parameters](https://github.com/kauderk/kauderk.github.io/edit/main/yt-gif-extension/install/faq/README.md#what-are-the-url-parameters-how-do-i-use-them)
+- Main funcionality: while exiting the frame, hold down the middle mouse button ("[InAndOutKeys](#what-are-inandoutkeys)") to unmute videos
+- Create `{{[[yt-gif]]}}` components with [url parameters](#what-are-the-url-parameters-how-do-i-use-them)
 
     - ```
       {{[[yt-gif]]: https://youtu.be/sFFwvr6l2mM?t=60&end=120 }}
       ```
-- Or simply paste a `YouTube url` and format it with [Simulate url button to video component](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#simulate-url-button-to-video-component) enabled.
+- Or simply paste a `YouTube url` and format it with [Simulate url button to video component](#simulate-url-button-to-video-component) enabled.
     - ##### yt-gif icon > Miscellaneous > (top left corner, tutorial drop down menu) > 🎥 [URL Formatter video tutorial](https://youtu.be/1ABtb346pc0) 
 
 
@@ -26,7 +26,7 @@
 - ##### yt-gif icon > (bottom icons) Show Info > (bottom left corner, tutorial drop down menu) > 🎥 [InAndOutKeys video tutorial](https://youtu.be/sCC-QXRdcOc)
 - **While you exit** a frame/iframe/player/playbox/YTGIF **HOLD DOWN** either Alt - Ctrl - Shift or the Middle Mouse Button to unmute and or keep playing the video.
 They can vary depending on the `Play Style` or `Sound Style` you choose.
-    - Search `: InAndOutKeys` within your graph and [enable the ones you'd like to use](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/install/faq/README.md#i-change-the-values-but-nothing-happens).
+    - Search `: InAndOutKeys` within your graph and [enable the ones you'd like to use](#i-change-the-values-but-nothing-happens).
 
 
 
@@ -39,7 +39,8 @@ They can vary depending on the `Play Style` or `Sound Style` you choose.
 - `{{[[video]]}}` and `{{[[yt-gif]]}}` components will use their own timestamps. They do not share logic, nor functionality.
 
 ### Hod do I use them?
-- [How to enable them...](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/install/components/README.md#workflow)
+
+- [Download The Capture Smartblocks](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/install/components/README.md#get-started)
 - ![image](https://user-images.githubusercontent.com/65237382/147398656-9d6f5c07-e861-4087-8c2c-751d0025ecf6.png)
 
 ### How do they differentiate from the native feature?
@@ -99,10 +100,10 @@ Customize each YT GIF, even multiple ones within the same block
   - ![image](https://user-images.githubusercontent.com/65237382/147406576-0bac7a67-dad0-441b-9836-c6eeaef93d23.png)
 
 #### How do I change the volume?
-- Append `&vl=50` [url parameter](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#what-are-url-parameters-how-do-i-use-them) to the youtube video url within a YTGIF. Keep in mind this is a custom parameter, and it's not supported by YouTube.
+- Append `&vl=50` [url parameter](#what-are-url-parameters-how-do-i-use-them) to the youtube video url within a YTGIF. Keep in mind this is a custom parameter, and it's not supported by YouTube.
 
 #### Can I set a custom playback speed?
-- Append `&s=2` [url parameter](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#what-are-url-parameters-how-do-i-use-them) to the youtube video url within a YTGIF. Keep in mind this is a custom parameter, and it's not supported by YouTube.
+- Append `&s=2` [url parameter](#what-are-url-parameters-how-do-i-use-them) to the youtube video url within a YTGIF. Keep in mind this is a custom parameter, and it's not supported by YouTube.
 
 #### Does it support multiple languages?
 - Only the video player interface does. You will find more information within your own graph: `player_captions_on_load `, `player_captions_language` and `player_interface_language`.
@@ -140,10 +141,11 @@ Customize each YT GIF, even multiple ones within the same block
     - ##### yt-gif icon > Experience > (top left corner, tutorial drop down menu) > 🎥 [Iframe Buffer video tutorial](https://youtu.be/_96XDmFPzbU)
 
 
-### Why is the playbox is so small? Can the playbox of GIf be resized?
-- Append `&sp=100` [url parameter](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#what-are-url-parameters-how-do-i-use-them) to the youtube video url within a YTGIF you should be able to override the playbox/player span.
-If this doesn't work, most likely you're using a custom css rules that conflicts with the YT GIF extension; downwards the `rm-block__input` element.
-
+### Resizing the player
+> Why is the playbox is so small? Can the playbox of GIf be resized? Player resize feature
+- Append `&sp=100` [url parameter](#what-are-the-url-parameters-how-do-i-use-them) to the youtube video url within a YTGIF you should be able to override the playbox/player span.
+- If this doesn't work, most likely you're using a custom css rules that conflicts with the YT GIF extension; downwards the `rm-block__input` element.
+- You will find more information within your own graph: `player_span`
 
 
 ---
@@ -159,7 +161,7 @@ If this doesn't work, most likely you're using a custom css rules that conflicts
 YT GIF's Url Buttons will try to find the one the user requested (clicked on).
 
 ### Caution Prompt
-- But I shall warn everybody who's reading this, it is using the function `window.roamAlphaAPI.updateBlock` to perform the changes (formatting), which means: that block on which you clicked on **will be updated [after it passes my standards](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#embracing-embed-and-xxxuidxxx-block-references)**. If Roam Research where to change: `css classes`, `uid's structure` or the `updateBlock` function itself. People might lose information related to that particular block.
+- But I shall warn everybody who's reading this, it is using the function `window.roamAlphaAPI.updateBlock` to perform the changes (formatting), which means: that block on which you clicked on **will be updated [after it passes my standards](#embracing-embed-and-xxxuidxxx-block-references)**. If Roam Research where to change: `css classes`, `uid's structure` or the `updateBlock` function itself. People might lose information related to that particular block.
 
 - LocalStorage Key
     - The browser on which you accept to simulate the feature.
@@ -167,7 +169,7 @@ YT GIF's Url Buttons will try to find the one the user requested (clicked on).
 - Graph Key
     - Within your graph, search `simulate_url_to_video_component` under your `roam/js/kauderk/yt-gif/settings` page.
 
-### How do I use it?
+### How do I use the URL Button Formatter?
 - ##### yt-gif icon > Miscellaneous > (top left corner, tutorial drop down menu) > 🎥 [URL Formatter video tutorial](https://youtu.be/1ABtb346pc0) 
 - With the simulation running `YT GIF Icon > Miscellaneous > Simulate url button to video component`
 - Create blocks and paste urls such as this one `https://www.youtube.com/watch?v=loK7BWFdwlc`
@@ -176,10 +178,10 @@ YT GIF's Url Buttons will try to find the one the user requested (clicked on).
 - Click on it to format it like this: `{{[[yt-gif]]: https://www.youtube.com/watch?v=loK7BWFdwlc }}`
     - ![Snag_3587bd78](https://user-images.githubusercontent.com/65237382/148058480-a1f3f175-590c-45fd-baf2-5cc97d14fe56.png)
 
-### Url Button Troubleshooting
+### URL Button Troubleshooting
 - Particularly for "Safary" users
     - It seems that `localStorage` [is stopping users form using the feature](https://www.reddit.com/r/learnprogramming/comments/8x5keq/javascript_localstorage_not_working_on_safari/).
-    - You can search `override_simulate_url_to_video_component` within your graph and [enable it](https://github.com/kauderk/kauderk.github.io/blob/main/yt-gif-extension/install/faq/README.md#i-change-the-values-but-nothing-happens) to overcome this issue.
+    - You can search `override_simulate_url_to_video_component` within your graph and [enable it](#i-change-the-values-but-nothing-happens) to overcome this issue.
         - Why Doing all of this?
             - As explained above on the Caution Prompt, I'm very serious about functions that write on people's graphs; this is a script (and automated workflow) and it is susceptible to changes from the source - `Roam Research`.
 
@@ -223,11 +225,11 @@ It is a [javascript file](https://github.com/kauderk/kauderk.github.io/blob/main
 - Well, it depends, the way url parameters work:
 In this case, youtube video urls, `https://youtu.be/videoID?` notice the `?` question mark, the first parameter will be anything supported, like `t=` start and `end=` etc.
 But after any of them you'd like to use - **every single one must be chained** with a `&` before the actual parameter, like `&t=` start or `&end` end.
-Now, most YTGIFs users are used to `https://youtu.be/videoID?t=0&end=100` for example. Starting form there, YT GIF supports additional parameters like `&s=` speed, ` &vl=` volume and [more...](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install#:~:text=Customize%20each%20YT%20GIF%2C%20even%20multiple%20ones%20within%20the%20same%20block)
+Now, most YTGIFs users are used to `https://youtu.be/videoID?t=0&end=100` for example. Starting form there, YT GIF supports additional parameters like `&s=` speed, ` &vl=` volume and [more...](#player-customizations)
 
-- URL parameters Table
+## URL parameters Table
 
-| [URL parameters](https://github.com/kauderk/kauderk.github.io/tree/main/yt-gif-extension/install/faq#what-are-url-parameters-how-do-i-use-them) |                          |                                           |
+| URL parameters |                          |                                           |
 |----------------|--------------------------|-------------------------------------------|
 | ?t=            | start timestamp boundary | get the most out the extension - optional |
 | &end=          | end timestamp boundary   | get the most out the extension - optional |
