@@ -827,3 +827,19 @@ span.yt-gif-anchor .bp3-button.bp3-minimal:hover {
     opacity: 1;
     color: white;
 }
+
+/* Hmmm yes go on 3 - Fix aligments on electron app */
+.dropdown-item-select {
+  grid-template-columns: auto auto;
+}
+.dropdown-info-box .dropdown-item label {
+  margin: 0;
+  font-size: .85em;
+}
+.select.select-vertcial {
+  align-self: flex-end;
+}
+.dropdown-info-box span.dropdown-item {
+  max-width: 18em;
+  align-self: center;
+}
