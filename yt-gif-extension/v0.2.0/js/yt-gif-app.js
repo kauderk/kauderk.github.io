@@ -3368,7 +3368,7 @@ async function onYouTubePlayerAPIReady(wrapper, targetClass, dataCreation, messa
 async function onPlayerReady(event)
 {
     const t = event.target;
-    const key = t.i.id;
+    const key = GetIframeID(t);
 
     const getParent = (i) => i.closest('.' + cssData.yt_gif_wrapper) || i.parentElement;
     const getBlockID = (iframe) => closestYTGIFparentID(iframe) + getWrapperUrlSufix(getParent(iframe))
@@ -3403,7 +3403,7 @@ async function onPlayerReady(event)
             if (!tg)
                 return false;
 
-            const key = tg.i.id;
+            const key = GetIframeID(tg);
             const { start: startM, end: endM } = allVideoParameters.get(key);
             const { start, end } = tg.j.i.playerVars;
 
@@ -3888,7 +3888,7 @@ async function onPlayerReady(event)
     //#region 5. fullscreen
     function fullscreenStyle_Handler(params)
     {
-        currentFullscreenPlayer = t.i.id;
+        currentFullscreenPlayer = GetIframeID(t);
 
         if (!document.fullscreenElement)
         {
@@ -4319,7 +4319,7 @@ async function onPlayerReady(event)
 async function onStateChange(state)
 {
     const t = state.target;
-    const map = allVideoParameters.get(t.i.id);
+    const map = allVideoParameters.get(GetIframeID(t));
     const iframe = t.getIframe();
 
 
@@ -4349,7 +4349,7 @@ async function onStateChange(state)
             }
         }
 
-        if (isSelected(UI.playerSettings.ps_options, 'minimize_on_video_ended') && (currentFullscreenPlayer === t.i.id)) // let's not talk about that this took at least 30 mins. Don't. Ughhhh
+        if (isSelected(UI.playerSettings.ps_options, 'minimize_on_video_ended') && (currentFullscreenPlayer === GetIframeID(t))) // let's not talk about that this took at least 30 mins. Don't. Ughhhh
         {
             if (document.fullscreenElement)
             {
@@ -4800,7 +4800,7 @@ async function ReloadYTVideo({ t, start, end })
         return; //console.log(`YT GIF : Couldn't reload a video. Internal target is missing.`);
 
     const vars = t.j.i;
-    const map = allVideoParameters.get(t.i.id);
+    const map = allVideoParameters.get(GetIframeID(t));
     const iframe = t?.getIframe?.();
 
     start = start || 0;
@@ -4937,9 +4937,10 @@ async function getWrapperInHierarchyObj(pointOfReferenceElm)
         const wrapper = hasSel(el.firstElementChild, '.yt-gif-wrapper'); // this it a wrapper
         return wrapper ?? hasSel(el.firstElementChild, '.rm-xparser-default-yt-gif'); // this is a raw wrapper
     }
+	
     // wrapperObjs = wrapperObjs.reduce((acc, crr) =>
     // { // https://dev.to/marinamosti/removing-duplicates-in-an-array-of-objects-in-js-with-sets-3fep
-    //     const is = acc.find(i => i.id === crr.id);
+    //     const is = acc.find(i => GetIframeID(t) === crr.id);
     //     return is ? acc : acc.concat([crr]);
     // }, []);
 }
@@ -6346,6 +6347,15 @@ async function Mutation_cb_raw_rm_cmpts(mutationsList, targetClass, onRenderedCm
     for (const node of found)
         if (UTILS.isNotZoomPath(node))
             await onRenderedCmpt_cb(node);
+}
+//#endregion
+
+
+
+
+//#region YT API Helpers
+function GetIframeID(t){
+	return t.i?.id || t.g?.id || t.getIframe()?.id
 }
 //#endregion
 
