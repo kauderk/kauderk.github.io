@@ -1,0 +1,90 @@
+{
+	"files.exclude": {
+		"**/.git": true,
+		"**/.github": true,
+		"**/.gitignore": true,
+		//
+		"**/.svelte-kit": true,
+		"**/node_modules": true,
+		"**/patches": true,
+		"**/dist": false,
+		//
+		"**/build": true,
+		"**/.histoire": true,
+		"**/.turbo": true,
+		//
+		"**/*.netlify": true,
+		"**/*.toml": true,
+		//
+		"**/*.d.ts": true,
+		"**/.env*": true,
+		//
+		"**/.npm*": true,
+		"**/.husky": true,
+		"**/.templates": true,
+		"**/.changeset": true,
+		"**/*.dump": true,
+		//
+		"**/.prettier*": true,
+		"**/.*lint*": true,
+		"**/plopfile.mjs": true,
+		//
+		"**/*.config.*": true,
+		"**/tsconfig*.json": true,
+		"**/*-lock.*": true
+	},
+	"editor.tabSize": 4,
+	"editor.detectIndentation": false,
+	"search.exclude": {
+		"package-lock.json": true
+	},
+	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"editor.formatOnSave": true,
+	"editor.codeActionsOnSave": [
+		"source.addMissingImports",
+		"source.fixAll.eslint"
+	],
+	"eslint.validate": [
+		"javascript",
+		"javascriptreact",
+		"typescript",
+		"typescriptreact",
+		"astro"
+	],
+	"jest.autoRun": {
+		"watch": true, // Start the jest with the watch flag
+		"onSave": "test-src-file", // Trigger test run for the given test or source file upon save
+		"onStartup": ["all-tests"] // Run all tests upon project launch
+	},
+	"jest.showCoverageOnLoad": true, // Show code coverage when the project is launched
+	// Multiple language settings for json and jsonc files
+	"[json][jsonc]": {
+		"editor.formatOnSave": true,
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"prettier.documentSelectors": ["**/*.astro"],
+	"[astro]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode",
+		"editor.formatOnSave": true
+	},
+	"[svelte]": {
+		"editor.formatOnSave": true,
+		"editor.defaultFormatter": "svelte.svelte-vscode"
+	},
+	"[typescriptreact]": {
+		"editor.formatOnSave": true
+	},
+	"cSpell.words": [
+		"Btns",
+		"Cmpt",
+		"Congif",
+		"devlog",
+		"Drawflow",
+		"gifs",
+		"iframes",
+		"unrendered",
+		"YTGIF"
+	],
+	"explorer.sortOrder": "filesFirst",
+	"workbench.tree.indent": 16
+}

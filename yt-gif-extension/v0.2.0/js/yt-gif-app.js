@@ -3405,7 +3405,7 @@ async function onPlayerReady(event)
 
             const key = GetIframeID(tg);
             const { start: startM, end: endM } = allVideoParameters.get(key);
-            const { start, end } = tg.j.i.playerVars;
+            const { start, end } = GetPlayerVars(tg)
 
             return startM == start && endM == end;
         }
@@ -4783,7 +4783,7 @@ function TimestampsInHierarchy(rm_container, targetWrapper, allSelector)
 }
 function ValidateHierarchyTimestamps(wrapper, t)
 {
-    const videoId = t?.i?.h?.videoId;
+    const videoId = GetVideoID(t);
     YTvideoIDs.set(videoId, t.getDuration?.());
 
     const d = parseInt(YTvideoIDs.get(videoId));
@@ -4799,7 +4799,7 @@ async function ReloadYTVideo({ t, start, end })
     if (!t)
         return; //console.log(`YT GIF : Couldn't reload a video. Internal target is missing.`);
 
-    const vars = t.j.i;
+    const playerVars = GetPlayerVars(t);
     const map = allVideoParameters.get(GetIframeID(t));
     const iframe = t?.getIframe?.();
 
@@ -4813,8 +4813,8 @@ async function ReloadYTVideo({ t, start, end })
         return t?.seekTo(start);
     }
 
-    vars.playerVars.start = map.start = start;
-    vars.playerVars.end = map.end = end;
+    playerVars.start = map.start = start;
+    playerVars.end = map.end = end;
     const vol = t?.getVolume?.();
 
     while (isRendered(iframe) && !t?.seekTo)
@@ -4835,7 +4835,7 @@ async function ReloadYTVideo({ t, start, end })
     // though I'm waiting to see what bugs it's going to cause
 
     await t?.loadVideoById?.({ // but it requieres you to load the video again to set "endSeconds" once again
-        'videoId': t.j.i.videoId,
+        'videoId': GetVideoID(t),
         'startSeconds': start,
         'endSeconds': end,
     });
@@ -5843,7 +5843,7 @@ function getYTGIFparams(blockObj, lastUrlObj, filterUrlObj, originBlockObj)
 }
 function AssembleFilterObjs()
 {
-    const baseObj = { blockID: null, start: 0, end: 0, HMS: 000, crrTime: null, };
+    const baseObj = { blockID: null, start: 0, end: 0, HMS: 0, crrTime: null, };
 
     const endsWith = (sfx, map) => [...map.keys()].find(k => k?.endsWith(sfx));
     const iframeMaps = {
@@ -6356,6 +6356,17 @@ async function Mutation_cb_raw_rm_cmpts(mutationsList, targetClass, onRenderedCm
 //#region YT API Helpers
 function GetIframeID(t){
 	return t.i?.id || t.g?.id || t.getIframe()?.id
+}
+function GetPlayerVars(t)
+{	
+	return t.j?.i?.playerVars || t.i?.h?.playerVars || UTILS.keyFinder(t, 'playerVars')
+}
+function GetVideoID(t)
+{
+	return t.i?.h?.videoId ||
+	t.playerInfo?.videoData?.video_id ||
+	JSON.parse(t.playerInfo?.debugText || '{}')?.debug_videoId ||
+	UTILS.keyFinder(t, 'videoId')
 }
 //#endregion
 

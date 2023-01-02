@@ -733,7 +733,17 @@ kauderk.util = ((util) =>
         element.parentNode.replaceChild(newelement, element);
         return newelement;
     }
-
+	// https://stackoverflow.com/questions/50749322/javascript-nested-properties
+	util.keyFinder = (object, key) =>
+	{
+		if(object.hasOwnProperty(key)) return object[key];
+		for(let subkey in object) {
+			if(!object.hasOwnProperty(subkey) || typeof object[subkey] !== "object") continue;
+			let match = keyFinder(object[subkey], key);
+			if(match) return match;
+		}
+		return null;
+	}
 
 
     return util;
